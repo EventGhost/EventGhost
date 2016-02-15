@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -198,7 +198,7 @@ class FindWindow(eg.ActionBase):
             cbIncludeInvisible.Enable(flag)
             if not flag:
                 stopMacroCtrl_1.SetValue(False)
-                stopMacroCtrl_2.SetValue(False)            
+                stopMacroCtrl_2.SetValue(False)
             stopMacroCtrl_1.Enable(flag)
             stopMacroCtrl_2.Enable(flag)
             waitCtrl.Enable(flag)

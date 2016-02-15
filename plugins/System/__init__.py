@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster & blackwind",
-    version = "1.1.6",
+    version = "1.1.10",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -79,14 +79,22 @@ from eg.cFunctions import SetIdleTime as HookSetIdleTime
 
 from ChangeDisplaySettings import ChangeDisplaySettings
 from Execute import Execute
+from Command import Command
 from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 from PIL import Image
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from StringIO import StringIO
+from qrcode import QRCode, constants as QRconstants
 import Registry
 
+ACV          = wx.ALIGN_CENTER_VERTICAL
 
+oldGetDeviceId = SoundMixer.GetDeviceId
+def GetDeviceId_(*args, **kwargs):
+    id = oldGetDeviceId(*args, **kwargs)
+    return id.encode(eg.systemEncoding) if not isinstance(id, int) else id
+SoundMixer.GetDeviceId = GetDeviceId_
 
 class Text:
     class MonitorGroup:
@@ -110,6 +118,7 @@ class Text:
     forced        = "Forced: %s"
     forcedCB      = "Force close of all programs"
     primaryDevice = "Primary Sound Driver"
+    device        = "Device:"
 
     RegistryGroup = Registry.Text
 
@@ -181,11 +190,14 @@ class System(eg.PluginBase):
         self.AddEvents(*EVENT_LIST)
 
         self.AddAction(Execute)
+        self.AddAction(Command)
         self.AddAction(OpenDriveTray)
         self.AddAction(SetClipboard)
         self.AddAction(WakeOnLan)
         self.AddAction(SetIdleTime)
         self.AddAction(ResetIdleTimer)
+        self.AddAction(GetUpTime)
+        self.AddAction(GetBootTimestamp)
 
         group = self.AddGroup(
             text.SoundGroup.name,
@@ -211,6 +223,7 @@ class System(eg.PluginBase):
         group.AddAction(MonitorPowerOn)
         group.AddAction(ShowPicture)
         group.AddAction(DisplayImage)
+        group.AddAction(ShowQRcode)
         group.AddAction(HideImage)
         group.AddAction(SetWallpaper)
         group.AddAction(ChangeDisplaySettings)
@@ -302,13 +315,17 @@ class System(eg.PluginBase):
                 return newValue
 
             def GetMute2(self, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                newvalue=None
                 try:
-                    newvalue=vistaVolumeDll.GetMute(deviceId)
+                    #deviceId = SoundMixer.GetDeviceId(deviceId, True).encode(eg.systemEncoding)
+                    deviceId = SoundMixer.GetDeviceId(deviceId, True)
+                    newvalue=None
+                    try:
+                        newvalue = vistaVolumeDll.GetMute(deviceId)
+                    except:
+                        pass
+                    return newvalue
                 except:
-                    pass
-                return newvalue
+                    eg.PrintTraceback()
 
             def SetMasterVolume2(self, value=200, deviceId=0):
                 deviceId = SoundMixer.GetDeviceId(deviceId, True)
@@ -420,6 +437,54 @@ class SetIdleTime(eg.ActionBase):
         panel.AddLine(self.text.label1, waitTimeCtrl, self.text.label2)
         while panel.Affirmed():
             panel.SetResult(waitTimeCtrl.GetValue())
+
+
+
+class GetUpTime(eg.ActionBase):
+    class text:
+        name = "Get Uptime"
+        description  = """
+            Returns a runtime of system in seconds. 
+            If checkbox is not checked, returns the number of days, 
+            hours, minutes and seconds.
+        """
+        ticks = "Return result as the number of seconds (ticks)"
+
+    def __call__(self, ticks = True):
+        return eg.Utils.GetUpTime(seconds = ticks)
+
+
+    def Configure(self, ticks = True):
+        panel = eg.ConfigPanel()
+        checkbox = panel.CheckBox(ticks, self.text.ticks)
+        panel.sizer.Add(checkbox, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(checkbox.GetValue())
+
+
+
+
+class GetBootTimestamp(eg.ActionBase):
+    class text:
+        name = "Get Boot Timestamp"
+        description  = """
+            Returns the time of the last system boot. 
+            If checkbox is checked, result is a unix temestamp. 
+            Otherwise it is in human readable form.
+        """
+        timestamp = "Result return as an unix timestamp"
+
+
+    def __call__(self, timestamp = True):
+        return eg.Utils.GetBootTimestamp(unix_timestamp = timestamp)
+    
+
+    def Configure(self, timestamp = True):
+        panel = eg.ConfigPanel()
+        checkbox = panel.CheckBox(timestamp, self.text.timestamp)
+        panel.sizer.Add(checkbox, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(checkbox.GetValue())
 
 
 
@@ -626,7 +691,8 @@ class SetClipboard(eg.ActionWithStringParameter):
         def Do():
             if wx.TheClipboard.Open():
                 tdata = wx.TextDataObject(self.clipboardString)
-                wx.TheClipboard.SetData(tdata)
+                wx.TheClipboard.Clear()
+                wx.TheClipboard.AddData(tdata)
                 wx.TheClipboard.Close()
                 wx.TheClipboard.Flush()
             else:
@@ -917,7 +983,8 @@ class MuteOn(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -946,7 +1013,8 @@ class MuteOff(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -974,10 +1042,10 @@ class ToggleMute(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
-
 
 
 class GetMute(eg.ActionBase):
@@ -985,7 +1053,6 @@ class GetMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.GetMute(deviceId)
 
 
@@ -1002,10 +1069,10 @@ class GetMute(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
-
 
 
 class SetMasterVolume(eg.ActionBase):
@@ -1044,25 +1111,39 @@ class SetMasterVolume(eg.ActionBase):
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
+        )
+#        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
-        sizer = eg.HBoxSizer(
-            (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
-            (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+        label1 = panel.StaticText(self.text.text1)
+        label3 = panel.StaticText(self.plugin.text.device)
+        eg.EqualizeWidths((label1, label3))
+        sizer1 = eg.HBoxSizer(
+            (label3, 0, wx.ALIGN_CENTER_VERTICAL),
+            (deviceCtrl, 1, wx.LEFT|wx.RIGHT, 5),
+        )
+        style1 = wx.LEFT|wx.RIGHT
+        style2 = wx.TOP
+        if isinstance(valueCtrl.ctrl, wx._controls.TextCtrl):
+            style1 |= wx.EXPAND
+            style2 |= wx.EXPAND
+        sizer2 = eg.HBoxSizer(
+            (label1, 0, wx.ALIGN_CENTER_VERTICAL),
+            (valueCtrl, 1, style1, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-        panel.AddLine("Device:", deviceCtrl)
-        panel.AddLine(sizer)
+        panel.sizer.Add(sizer1, 0, wx.TOP, 10)
+        panel.sizer.Add(sizer2, 0, style2, 10)
         while panel.Affirmed():
             panel.SetResult(
                 valueCtrl.GetValue(),
                 deviceCtrl.GetStringSelection(),
             )
-
-
+#===============================================================================
 
 class ChangeMasterVolumeBy(eg.ActionBase):
     name = "Change Master Volume"
@@ -1113,7 +1194,8 @@ class ChangeMasterVolumeBy(eg.ActionBase):
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
 
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
             panel.SetResult(
@@ -1135,7 +1217,9 @@ def piltoimage(pil, hasAlpha):
         image.SetData(data)
     return image
 #===============================================================================
+
 class ShapedFrame(wx.Frame):
+    timer = None
 
     def __init__(
         self,
@@ -1159,22 +1243,30 @@ class ShapedFrame(wx.Frame):
         center,
         noFocus,
         name,
-        plugin
+        plugin,
+        data = None
         ):
-        try:
-            pil = Image.open(imageFile)
-        except:
+        if data is None:
+            try:
+                pil = Image.open(imageFile)
+            except:
+                try:
+                    pil = Image.open(StringIO(b64decode(imageFile)))
+                except:
+                    eg.PrintError(error % imageFile[:256])
+                    return
+        else:
             try:
                 pil = Image.open(StringIO(b64decode(imageFile)))
             except:
-                eg.PrintError(error % imageFile[:256])
-                return
+                eg.PrintError(error % data)
+                return            
         self.name = name
         self.plugin = plugin
         self.imageFile = imageFile
         style = wx.FRAME_NO_TASKBAR
         self.hasAlpha = (pil.mode in ('RGBA', 'LA') or (pil.mode == 'P' and 'transparency' in pil.info))
-        if self.hasAlpha and shaped:
+        if self.hasAlpha:
             style |= wx.FRAME_SHAPED
         if onTop:
             style |= wx.STAY_ON_TOP
@@ -1231,10 +1323,9 @@ class ShapedFrame(wx.Frame):
                 if stretch and w <= width_ and h <= height_:
                     res = True
 
-                elif fit and w >= width_ and h >= height_:
+                #elif fit and w >= width_ and h >= height_:
+                elif fit and w >= width_ or h >= height_:
                     res = True
-
-
         if res: #resize !
             if fitMode == 0: #ignore aspect
                 w = width_
@@ -1264,14 +1355,16 @@ class ShapedFrame(wx.Frame):
         else:
             im = pil
 
-        im = piltoimage(im, self.hasAlpha and shaped)
+        im = piltoimage(im, self.hasAlpha)
 
         cliSize = (width_, height_)
         self.SetClientSize(cliSize)
-        im.ConvertAlphaToMask()
         self.bmp = wx.BitmapFromImage(im)
-        if self.hasAlpha and self.shaped:
-            self.SetWindowShape()
+        if self.hasAlpha:
+            im.ConvertAlphaToMask() # Here we can set threshold of alpha channel
+            self.region = wx.RegionFromBitmap(wx.BitmapFromImage(im))
+            if self.shaped:
+                self.SetWindowShape()
 
         dc = wx.ClientDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)
@@ -1284,6 +1377,7 @@ class ShapedFrame(wx.Frame):
         self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
         if name:
             self.plugin.images[name] = self
+            self.plugin.TriggerEvent("ImageDisplayed", payload = name)
         if noFocus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:
@@ -1291,8 +1385,7 @@ class ShapedFrame(wx.Frame):
 
 
     def SetWindowShape(self, *evt):
-        r = wx.RegionFromBitmap(self.bmp)
-        self.hasShape = self.SetShape(r)
+        self.hasShape = self.SetShape(self.region)
 
 
     def OnDoubleClick(self, evt):
@@ -1301,7 +1394,7 @@ class ShapedFrame(wx.Frame):
             prefix = "System.DisplayImage",
             payload = self.imageFile
         )
-        if self.hasAlpha and self.shaped:
+        if self.hasAlpha:
             if self.hasShape:
                 self.SetShape(wx.Region())
                 self.hasShape = False
@@ -1371,7 +1464,7 @@ class ShowPictureFrame(wx.Frame):
         self.timer = Timer(2.0, self.HideCursor)
 
 
-    def SetPicture(self, picturePath=None, display=0):
+    def SetPicture(self, picturePath = None, display = 0):
         if not picturePath:
             return
         width_ = GetMonitorDimensions()[display][2]
@@ -1571,7 +1664,7 @@ or insert the image as a base64 string"""
                 center,
                 noFocus,
                 title,
-                self.plugin
+                self.plugin,
             )
 
 
@@ -1877,6 +1970,180 @@ class ShowPicture(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
+#===============================================================================
+
+class ShowQRcode(eg.ActionBase):
+    name = "Show QR code"
+    description = "Shows a QR code on the screen."
+    iconFile = "icons/QRcode"
+    class text:
+        data = "Data:"
+        display = "Monitor:"
+        Error = 'Exception in action "%s": Failed to show data "%%s" !'
+        timeout1 = "The QR code automatically disappears after"
+        timeout2 = "seconds (0 = feature disabled)"
+        main = "Mandatory parameters"
+        other = "Options"
+        box = "Box size [px]:"
+        border = "Border width [box]:"
+        title = "Name of image:"
+        sizeMode = "Fullscreen:"
+        titleTool = """Required only if you want to close the image window 
+programmatically\nUse the action: Hide image"""
+
+
+    def __call__(
+        self,
+        data = '',
+        display = 0,
+        timeout = 0,
+        box = 12,
+        border = 4,
+        title = 'QRcode',
+        sizeMode = 0
+        ):
+        data = eg.ParseString(data)
+        title = eg.ParseString(title)
+        def parseArgument(arg):
+            if not arg:
+                return 0
+            if isinstance(arg, int):
+                return arg
+            else:
+                from locale import localeconv
+                decimal_point = localeconv()['decimal_point']
+                arg = eg.ParseString(arg).replace(decimal_point, ".")
+                return int(float(arg))
+        timeout = parseArgument(timeout)
+        box = parseArgument(box)
+        border = parseArgument(border)
+        if data:
+            qr = QRCode(
+                version = None, 
+                border = border,
+                error_correction = QRconstants.ERROR_CORRECT_M,
+                box_size = box,
+            )
+            qr.add_data(data)
+            qr.make(fit = True)
+            img = qr.make_image()        
+            buff = StringIO()
+            img.save(buff)
+            b64 = b64encode(buff.getvalue())
+            if title in self.plugin.images:
+                self.plugin.HideImage(title)
+            wx.CallAfter(
+                ShapedFrame,
+                self.text.Error % (self.name),
+                b64,
+                (0, 3)[int(sizeMode)],
+                1,
+                False,
+                False,
+                0,
+                True,
+                1,
+                timeout,
+                display,
+                0,
+                0,
+                640,
+                360,
+                (0, 0, 0), 
+                True,
+                True,
+                True,
+                title if title else 'QRcode',
+                self.plugin,
+                data
+            )
+
+
+    def Configure(
+        self,
+        data='',
+        display=0,
+        timeout = 0,
+        box = 12,
+        border = 4,
+        title = 'QRcode',
+        sizeMode = 0
+        ):
+        panel = eg.ConfigPanel()
+        text = self.text
+        dataCtrl = wx.TextCtrl(panel, -1, data)
+        displayChoice = eg.DisplayChoice(panel, display)
+        timeoutLbl_1=wx.StaticText(panel, -1, text.timeout1)
+        timeoutLbl_2=wx.StaticText(panel, -1, text.timeout2)
+        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth = 105)
+        boxLbl = wx.StaticText(panel, -1, text.box)
+        borderLbl = wx.StaticText(panel, -1, text.border)
+        titleLbl = wx.StaticText(panel, -1, text.title)
+        boxCtrl = eg.SmartSpinIntCtrl(
+            panel,
+            -1,
+            box,
+            min = 5,
+            max = 50,
+            textWidth = 105
+        )
+        borderCtrl = eg.SmartSpinIntCtrl(
+            panel,
+            -1,
+            border,
+            min = 1,
+            max = 20,
+            textWidth = 105
+        )
+        titleCtrl = wx.TextCtrl(panel, -1, title)
+        titleLbl.SetToolTipString(self.text.titleTool)
+        titleCtrl.SetToolTipString(self.text.titleTool)
+        sizeModeLbl = wx.StaticText(panel, -1, self.text.sizeMode)
+        sizeModeCtrl = wx.CheckBox(panel, -1, "")
+        sizeModeCtrl.SetValue(sizeMode)
+        box0 = wx.StaticBox(panel,-1,text.main)
+        box1 = wx.StaticBox(panel,-1,text.other)
+        inTopSizer = wx.FlexGridSizer(1, 2, 5, 5)
+        inTopSizer.AddGrowableCol(1)
+        inTopSizer.Add(wx.StaticText(panel, -1, text.data),0,ACV)
+        inTopSizer.Add(dataCtrl,0,wx.EXPAND)
+        topSizer = wx.StaticBoxSizer(box0, wx.VERTICAL)
+        topSizer.Add(inTopSizer,0,wx.EXPAND)
+
+        inOtherSizer = wx.FlexGridSizer(5, 2, 5, 5)
+        inOtherSizer.AddGrowableCol(1)
+        inOtherSizer.Add(wx.StaticText(panel, -1, text.display),0,ACV)
+        inOtherSizer.Add(displayChoice)
+        inOtherSizer.Add(sizeModeLbl,0,ACV)
+        inOtherSizer.Add(sizeModeCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(boxLbl,0,ACV)
+        inOtherSizer.Add(boxCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(borderLbl,0,ACV)
+        inOtherSizer.Add(borderCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(titleLbl,0,ACV)
+        inOtherSizer.Add(titleCtrl,0,wx.EXPAND)
+        timeoutSizer = wx.BoxSizer(wx.HORIZONTAL)
+        timeoutSizer.Add(timeoutLbl_1,0,ACV)
+        timeoutSizer.Add(timeoutCtrl,0,wx.LEFT|wx.RIGHT,5)
+        timeoutSizer.Add(timeoutLbl_2,0,ACV)
+        otherSizer = wx.StaticBoxSizer(box1, wx.VERTICAL)
+        otherSizer.Add(inOtherSizer,0,wx.EXPAND)
+        otherSizer.Add(timeoutSizer,0,wx.TOP,5)
+
+        panel.sizer.Add(topSizer,0,wx.EXPAND)
+        panel.sizer.Add(otherSizer,0,wx.EXPAND|wx.TOP,5)
+
+
+        while panel.Affirmed():
+            panel.SetResult(
+                dataCtrl.GetValue(),
+                displayChoice.GetValue(),
+                timeoutCtrl.GetValue(),
+                boxCtrl.GetValue(),
+                borderCtrl.GetValue(),
+                titleCtrl.GetValue(),
+                sizeModeCtrl.GetValue()
+            )
 #===============================================================================
 
 def _CreateShowPictureFrame():

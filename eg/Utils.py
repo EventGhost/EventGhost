@@ -27,9 +27,11 @@ import threading
 import time
 import inspect
 from types import ClassType
+from ctypes import windll, c_ulonglong
 from functools import update_wrapper
 from docutils.core import publish_parts as ReSTPublishParts
 from docutils.writers.html4css1 import Writer
+from datetime import datetime as dt, timedelta as td
 
 
 
@@ -431,6 +433,22 @@ def SplitFirstParagraph(text):
         return ' '.join(result.split()), remaining
 
 
+def AppUrl(description, url):
+    if url:
+        txt = '<p><div align=right><i><font color="#999999" size=-1>%s <a href="%s">%s</a>.</font></i></div></p>' % (
+            eg.text.General.supportSentence,
+            url,
+            eg.text.General.supportLink
+        )
+    else:
+        return description
+    pos = description.find("<rst>")
+    if pos != -1:
+        description = description[pos + 5:]
+        description = DecodeReST(description)
+    return description + txt
+
+
 def ExecFile(filename, globals=None, locals=None):
     """
     Replacement for the Python built-in execfile() function, but handles
@@ -440,3 +458,29 @@ def ExecFile(filename, globals=None, locals=None):
     flnm = filename.encode(FSE) if isinstance(filename, unicode) else filename
     return execfile(flnm, globals, locals)
 
+
+
+def GetBootTimestamp(unix_timestamp = True):
+    """
+    Returns the time of the last system boot. 
+    If unix_timestamp == True, result is a unix temestamp. 
+    Otherwise it is in human readable form.
+    """
+    now = time.time()
+    GetTickCount64 = windll.kernel32.GetTickCount64
+    GetTickCount64.restype = c_ulonglong
+    up = GetTickCount64() / 1000.0
+    st = str(dt.fromtimestamp(now - up))
+    return now-up if unix_timestamp else st[:st.index(".")]
+    
+
+def GetUpTime(seconds = True):
+    """
+    Returns a runtime of system in seconds. 
+    If seconds == False, returns the number of days, hours, minutes and seconds.
+    """
+    GetTickCount64 = windll.kernel32.GetTickCount64
+    GetTickCount64.restype = c_ulonglong
+    ticks = GetTickCount64()/1000.0
+    delta = str(td(seconds = ticks))
+    return ticks if seconds else delta[:delta.index(".")]

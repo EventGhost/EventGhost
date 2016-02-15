@@ -35,7 +35,7 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster & Sem;colon",
-    version = "1.0.3",
+    version = "1.1.1",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."
@@ -43,6 +43,7 @@ eg.RegisterPlugin(
     kind = "core",
     guid = "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",
     icon = ICON,
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=5481",
 )
 
 import wx
@@ -53,9 +54,10 @@ from math import sin, cos, radians, pi
 from time import sleep, clock
 from eg import HasActiveHandler
 from eg.cFunctions import SetMouseCallback
-from win32api import EnumDisplayMonitors
+from win32api import EnumDisplayMonitors, GetSystemMetrics, mouse_event as mouse_event2
 from eg.WinApi.Dynamic import mouse_event, GetCursorPos, SetCursorPos, POINT
 from eg.WinApi.Utils import GetMonitorDimensions
+from win32con import MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_MOVE
 #===============================================================================
 
 # this is the real worker thread
@@ -64,15 +66,14 @@ class MouseThread(Thread):
     newAngle = 0
     acceleration = 0
     speed = 0
-    maxSpeed = 7
-    accelerationFactor = 0.003
-    accelerationStopFactor = 0.1
     maxTicks = 5
-    iniSpeed = 0.06
     yRemainder = 0
     xRemainder = 0
     leftButtonDown = False
     lastTime = 0
+    initSpeed = 0.06
+    maxSpeed = 7.0
+    useAlternateMethod = False
 
     def __init__(self):
         Thread.__init__(self, name="MouseThread")
@@ -82,26 +83,29 @@ class MouseThread(Thread):
 
     @eg.LogItWithReturn
     def run(self):
-        upTime = 0
+        stop = False
         point = POINT()
         while True:
             self.lastTime = clock()
             if not self.receiveQueue.empty():
                 data = self.receiveQueue.get()
-                if data == -1:
+                if data[0] == -1:
                     break
-                elif data == -2:
-                    upTime = clock()
+                elif data[0] == -2:
+                    stop = True
                 else:
-                    self.newAngle = radians(data)
-                    self.acceleration = self.accelerationFactor
-                    upTime = 0
+                    self.newAngle = radians(data[0])
+                    self.initSpeed = data[1]
+                    self.maxSpeed = data[2]
+                    self.acceleration = data[3]
+                    self.useAlternateMethod = data[4]
 
-            if upTime != 0 and clock() - upTime > 0.05:
+            if stop:
                 self.acceleration = 0
                 self.speed = 0
-
-
+                stop = False
+                continue
+                
             if self.acceleration == 0:
                 sleep(0.05)
                 continue
@@ -109,8 +113,7 @@ class MouseThread(Thread):
             ticks = 10
             if self.speed == 0:
                 self.currentAngle = self.newAngle
-                self.speed = self.iniSpeed
-                #self.speed = 0.06
+                self.speed = self.initSpeed
             else:
                 diff = self.newAngle - self.currentAngle
                 if diff > pi:
@@ -135,8 +138,11 @@ class MouseThread(Thread):
             self.xRemainder = xCurrent - x
             self.yRemainder = yCurrent - y
             try:
-                GetCursorPos(point)
-                SetCursorPos(point.x + x, point.y + y)
+                if self.useAlternateMethod:
+                    mouse_event2(MOUSEEVENTF_MOVE,x,y)
+                else:
+                    GetCursorPos(point)
+                    SetCursorPos(point.x + x, point.y + y)
             except:
                 pass
             if self.speed == 0:
@@ -175,7 +181,7 @@ class Mouse(eg.PluginBase):
     @eg.LogIt
     def __stop__(self):
         SetMouseCallback(None)
-        self.thread.receiveQueue.put(-1)
+        self.thread.receiveQueue.put([-1])
 
 
     @eg.LogIt
@@ -204,26 +210,52 @@ class GoDirection(eg.ActionBase):
         label = u"Start mouse movement in direction %.2f\u00B0"
         text1 = "Start moving mouse pointer in direction"
         text2 = "degrees. (0-360)"
+        text3 = "Initial mouse speed:"
+        text4 = "Maximum mouse speed:"
+        text5 = "Acceleration factor:"
+        label_AM= "Use alternate method"
 
-    def __call__(self, direction=0):
+    def __call__(self, direction=0, initSpeed = 60, maxSpeed = 7000, accelerationFactor = 3, useAlternateMethod=False):
         def UpFunc():
-            self.plugin.thread.receiveQueue.put(-2)
-        self.plugin.thread.receiveQueue.put(float(direction))
+            self.plugin.thread.receiveQueue.put([-2])
+        self.plugin.thread.receiveQueue.put([float(direction),float(initSpeed)/1000,float(maxSpeed)/1000,float(accelerationFactor)/1000,useAlternateMethod])
         eg.event.AddUpFunc(UpFunc)
 
 
-    def GetLabel(self, direction=0):
+    def GetLabel(self, direction=0, initSpeed = 60, maxSpeed = 7000, accelerationFactor = 3, useAlternateMethod=False):
         direction = float(direction)
         return self.text.label % direction
 
 
-    def Configure(self, direction=0):
+    def Configure(self, direction=0, initSpeed = 60, maxSpeed = 7000, accelerationFactor = 3, useAlternateMethod=False):
+        text = self.text
         panel = eg.ConfigPanel()
         direction = float(direction)
         valueCtrl = panel.SpinNumCtrl(float(direction), min=0, max=360)
-        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        panel.AddLine(text.text1, valueCtrl, text.text2)
+        
+        initSpeedLabel = wx.StaticText(panel, -1, text.text3)
+        initSpeedSpin = eg.SpinIntCtrl(panel, -1, initSpeed, 10, 2000)
+        maxSpeedLabel = wx.StaticText(panel, -1, text.text4)
+        maxSpeedSpin = eg.SpinIntCtrl(panel, -1, maxSpeed, 4000, 32000)
+        accelerationFactorLabel = wx.StaticText(panel, -1, text.text5)
+        accelerationFactorSpin = eg.SpinIntCtrl(panel, -1, accelerationFactor, 1, 200)
+        eg.EqualizeWidths((initSpeedLabel,maxSpeedLabel,accelerationFactorLabel))
+        panel.AddLine(initSpeedLabel, initSpeedSpin)
+        panel.AddLine(maxSpeedLabel, maxSpeedSpin)
+        panel.AddLine(accelerationFactorLabel, accelerationFactorSpin)
+        
+        uAMCB = panel.CheckBox(useAlternateMethod, text.label_AM)
+        panel.AddLine(uAMCB)
+        
         while panel.Affirmed():
-            panel.SetResult(valueCtrl.GetValue())
+            panel.SetResult(
+                valueCtrl.GetValue(),
+                initSpeedSpin.GetValue(),
+                maxSpeedSpin.GetValue(),
+                accelerationFactorSpin.GetValue(),
+                uAMCB.GetValue(),
+            )
 #===============================================================================
 
 class LeftButton(eg.ActionBase):
@@ -327,6 +359,7 @@ class MoveAbsolute(eg.ActionBase):
         label_X = "x: %i,  "
         label_Y = "y: %i"
         label_C = "Set position to screen center"
+        label_AM= "Use alternate method"
         center = "center"
         text1 = "Set horizontal position X to"
         text2 = "pixels"
@@ -334,7 +367,7 @@ class MoveAbsolute(eg.ActionBase):
         note = 'Note: The coordinates X and Y are related to the monitor \
 (not to the "virtual screen")'
 
-    def __call__(self, x = None, y = None, displayNumber = None, center = False):
+    def __call__(self, x = None, y = None, displayNumber = None, center = False, useAlternateMethod=False):
         point = POINT()
         GetCursorPos(point)
         X = point.x
@@ -365,10 +398,15 @@ class MoveAbsolute(eg.ActionBase):
 
         x += displayRect[0]
         y += displayRect[1]
-        SetCursorPos(x, y)
+        if useAlternateMethod:
+            x = x*65535/GetSystemMetrics(0)
+            y = y*65535/GetSystemMetrics(1)
+            mouse_event2(MOUSEEVENTF_ABSOLUTE|MOUSEEVENTF_MOVE,x,y)
+        else:
+            SetCursorPos(x, y)
 
 
-    def GetLabel(self, x, y, displayNumber, center):
+    def GetLabel(self, x, y, displayNumber, center, useAlternateMethod=False):
         if center:
             res = self.text.display + " " + self.text.center
             if displayNumber is not None:
@@ -382,10 +420,11 @@ class MoveAbsolute(eg.ActionBase):
             )
 
 
-    def Configure(self, x = None, y = None, displayNumber = None, center = False):
+    def Configure(self, x = None, y = None, displayNumber = None, center = False, useAlternateMethod=False):
         panel = eg.ConfigPanel()
         text = self.text
 
+        uAMCB = panel.CheckBox(useAlternateMethod, text.label_AM)
         cCB = panel.CheckBox(center, text.label_C)
         xCB = panel.CheckBox(x is not None, text.text1)
         yCB = panel.CheckBox(y is not None, text.text3)
@@ -421,6 +460,7 @@ class MoveAbsolute(eg.ActionBase):
         sizer.Add(note, (3, 0), (1, 3))
         sizer.Add(displayCB, (4, 0), (1, 1), flag = wx.TOP, border = 14)
         sizer.Add(displayChoice, (4, 1), (1, 2), flag = wx.TOP, border = 13)
+        sizer.Add(uAMCB, (5, 0), (1, 3))
         panel.sizer.Add(sizer, 1, wx.EXPAND)
         panel.sizer.Add(monsCtrl,0,wx.TOP,8)
 
@@ -480,7 +520,7 @@ class MoveAbsolute(eg.ActionBase):
             else:
                 displayNumber = None
 
-            panel.SetResult(x, y, displayNumber, cCB.GetValue())
+            panel.SetResult(x, y, displayNumber, cCB.GetValue(), uAMCB.GetValue())
 #===============================================================================
 
 class MoveRelative(eg.ActionBase):
@@ -490,25 +530,31 @@ class MoveRelative(eg.ActionBase):
         text1 = "Change horizontal position X by"
         text2 = "pixels"
         text3 = "Change vertical position Y by"
+        label_AM= "Use alternate method"
 
-    def __call__(self, x, y):
-        point = POINT()
-        GetCursorPos(point)
+    def __call__(self, x, y, useAlternateMethod=False):
         if x is None:
             x = 0
         if y is None:
             y = 0
-        SetCursorPos(point.x + x, point.y + y)
+        if useAlternateMethod:
+            mouse_event2(MOUSEEVENTF_MOVE,x,y)
+        else:
+            point = POINT()
+            GetCursorPos(point)
+            SetCursorPos(point.x + x, point.y + y)
 
 
-    def GetLabel(self, x, y):
+    def GetLabel(self, x, y, useAlternateMethod=False):
         return self.text.label % (str(x), str(y))
 
 
-    def Configure(self, x=0, y=0):
+    def Configure(self, x=0, y=0, useAlternateMethod=False):
         panel = eg.ConfigPanel()
         text = self.text
-
+        
+        uAMCB = panel.CheckBox(useAlternateMethod, text.label_AM)
+        
         xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
@@ -529,6 +575,7 @@ class MoveRelative(eg.ActionBase):
 
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text2)
+        panel.AddLine(uAMCB)
 
         while panel.Affirmed():
             if xCtrl.IsEnabled():
@@ -540,7 +587,7 @@ class MoveRelative(eg.ActionBase):
                 y = yCtrl.GetValue()
             else:
                 y = None
-            panel.SetResult(x, y)
+            panel.SetResult(x, y, uAMCB.GetValue())
 #===============================================================================
 
 class MouseWheel(eg.ActionBase):

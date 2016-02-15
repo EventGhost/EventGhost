@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.6"
+version="0.1.15"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -12,6 +12,9 @@ version="0.1.6"
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
+
+
+
 #
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
@@ -22,9 +25,27 @@ version="0.1.6"
 #
 # Revision history:
 # -----------------
-# 0.1.6 by Pako 2013-05-05 11:06 UTC+1
+# 0.1.15 by Sem;colon 2015-12-07 20:30 UTC+1
+#     - added option "Do not trigger events for a chosen day if the next day happens to be a holiday" to schedule type "Weekly" and "Monthly / weekday"
+#     - added option "Do also trigger events for a non-chosen day if the next day happens to be a holiday" to schedule type "Weekly"
+#     - bugfix "Do also trigger events for a non-chosen day if it happens to be a holiday" wasn't working if no weekday has been selected
+# 0.1.14 by Sem;colon 2015-10-15 20:00 UTC+1
+#     - removed the distinction between weekend days and workdays
+# 0.1.13 by Pako 2015-03-03 17:51 UTC+1
+#     - Immediate start schedule now has no effect on the scheduled run
+# 0.1.12 by Sem;colon 2014-11-26 22:00 UTC+1
+#     - added option "Update 'Last run' field when executed" to "Run schedule immediately"
+# 0.1.11 by Pako 2014-06-08 10:00 UTC+1
+#     - changes caused by a new eg.Scheduler
+# 0.1.10 by Pako 2014-06-06 15:20 UTC+1
+#     - added action "Force to run schedule immediately"
+# 0.1.9 by Pako 2014-05-17 18:15 UTC+1
+#     - added option to abort egg-timer by name
+# 0.1.8 by Pako 2014-03-09 10:48 UTC+1
+#     - http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740&start=75#p30126
+# 0.1.7 by Pako 2013-05-05 11:06 UTC+1
 #     - added ReloadXML action (rekall request)
-# 0.1.5 by Pako 2012-09-06 06:46 UTC+1
+# 0.1.6 by Pako 2012-09-06 06:46 UTC+1
 #     - bugfix - malfunction, when the action "Disable schedule"
 #       is executed between the start and stop events
 # 0.1.5 by Pako 2012-08-16 19:09 UTC+1
@@ -166,7 +187,7 @@ class Text:
     xmlComment = "SchedulGhost configuration file. Updated at %s."
     eggStart = 'Egg timer "%s.%s" (%s) started.'
     eggElaps = 'Egg timer "%s.%s" - time %s has elapsed.'
-    eggCancel = 'Egg timer "%s.%s" (%s) canceled.'
+    eggCancel = 'Egg timer "%s: %s.%s" (%s) canceled.'
     popupTitle = 'Egg Timer Popup Window'
     popupTip1 = 'Right click to close window and stop playing the sound \nTime elapsed at %s'
     popupTip2 = 'Drag-and-move to setup of window position'
@@ -245,6 +266,8 @@ Change the file name or folder !"""
         stopSuffix = "Stop event suffix:"
         holidCheck_1 = "Do not trigger events for a chosen day if it happens to be a holiday"
         holidCheck_2 = "Do also trigger events for a non-chosen day if it happens to be a holiday"
+        holidCheck_3 = "Do not trigger events for a chosen day if the next day happens to be a holiday"
+        holidCheck_4 = "Do also trigger events for a non-chosen day if the next day happens to be a holiday"
 #===============================================================================
 
 def Ticks2Delta(start, end):
@@ -732,6 +755,18 @@ class schedulerDialog(wx.Dialog):
                         self.ctrls[4],
                         self.text.holidCheck_1
                     )
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_4 = wx.CheckBox(
+                        self,
+                        self.ctrls[5],
+                        self.text.holidCheck_4
+                    )
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_3 = wx.CheckBox(
+                        self,
+                        self.ctrls[6],
+                        self.text.holidCheck_3
+                    )
                     topSizer.Add((40,1), 0, wx.ALIGN_CENTER)
                     topSizer.Add(
                         wx.StaticText(
@@ -746,10 +781,14 @@ class schedulerDialog(wx.Dialog):
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP,2)
                     dynamicSizer.Add(holidCheck_1, 0, wx.TOP, 2)
                     dynamicSizer.Add(holidCheck_2, 0, wx.TOP, 2)
+                    dynamicSizer.Add(holidCheck_3, 0, wx.TOP, 2)
+                    dynamicSizer.Add(holidCheck_4, 0, wx.TOP, 2)
                 else:
                     weekdayCtrl = wx.FindWindowById(self.ctrls[2])
                     holidCheck_2 = wx.FindWindowById(self.ctrls[3])
                     holidCheck_1 = wx.FindWindowById(self.ctrls[4])
+                    holidCheck_4 = wx.FindWindowById(self.ctrls[5])
+                    holidCheck_3 = wx.FindWindowById(self.ctrls[6])
                 val = 127 if not data else data[2]
                 if self.plugin.first_day:
                     exp = [6, 0, 1, 2, 3, 4, 5]
@@ -757,14 +796,28 @@ class schedulerDialog(wx.Dialog):
                     exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
                     weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
-                enable = val & 31 and not val & 96
+                enable = data[3]==0
                 holidCheck_1.Enable(enable)
                 check = 0 if (not data or not enable) else data[4]
                 holidCheck_1.SetValue(check)
-                enable = val & 96 and not val & 31
+                if enable:
+                    enable = data[4]==0
+                else:
+                    enable = True
                 holidCheck_2.Enable(enable)
                 check = 0 if (not data or not enable) else data[3]
                 holidCheck_2.SetValue(check)
+                enable = data[5]==0
+                holidCheck_3.Enable(enable)
+                check = 0 if (not data or not enable) else data[6]
+                holidCheck_3.SetValue(check)
+                if enable:
+                    enable = data[6]==0
+                else:
+                    enable = True
+                holidCheck_4.Enable(enable)
+                check = 0 if (not data or not enable) else data[5]
+                holidCheck_4.SetValue(check)
             elif type == 3: # Monthly/weekday ...
                 if flag:
                     dateSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -832,12 +885,20 @@ class schedulerDialog(wx.Dialog):
                         self.text.holidCheck_1
                     )
                     dynamicSizer.Add(holidCheck_1, 0, wx.TOP, 2)
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_3 = wx.CheckBox(
+                        self,
+                        self.ctrls[7],
+                        self.text.holidCheck_3
+                    )
+                    dynamicSizer.Add(holidCheck_3, 0, wx.TOP, 2)
                 else:
                     serialCtrl = wx.FindWindowById(self.ctrls[2])
                     weekdayCtrl = wx.FindWindowById(self.ctrls[3])
                     monthsCtrl_1 = wx.FindWindowById(self.ctrls[4])
                     monthsCtrl_2 = wx.FindWindowById(self.ctrls[5])
                     holidCheck_1 = wx.FindWindowById(self.ctrls[6])
+                    holidCheck_3 = wx.FindWindowById(self.ctrls[7])
                 val = 0 if not data else data[2]
                 for i in range(6):
                     serialCtrl.Check(i, bool(val & (2 ** i)))
@@ -848,16 +909,20 @@ class schedulerDialog(wx.Dialog):
                     exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
                     weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
-                enable = val & 31 and not val & 96
-                holidCheck_1.Enable(enable)
                 val = 63 if not data else data[4]
                 for i in range(6):
                     monthsCtrl_1.Check(i, bool(val & (2 ** i)))
                 val = 63 if not data else data[5]
                 for i in range(6):
                     monthsCtrl_2.Check(i, bool(val & (2 ** i)))
+                enable = True
+                holidCheck_1.Enable(enable)
                 check = 0 if (not data or not enable) else data[6]
                 holidCheck_1.SetValue(check)
+                enable = True
+                holidCheck_3.Enable(enable)
+                check = 0 if (not data or not enable) else data[7]
+                holidCheck_3.SetValue(check)
             elif type == 4: # Monthly/day ...
                 if flag:
                     dateSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1092,22 +1157,6 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][3][ix] |= 2 ** exp
             else:
                 self.tmpData[self.lastRow][3][ix] &= 255 - 2 ** exp
-            if cond:
-                holidCheck_1 = wx.FindWindowById(self.ctrls[-1])
-                val = self.tmpData[self.lastRow][3][ix]
-                flg = val & 31 and not val & 96
-                holidCheck_1.Enable(flg)
-                if not flg:
-                    holidCheck_1.SetValue(0)
-                    self.tmpData[self.lastRow][3][-1] = 0
-                if type == 2:
-                    holidCheck_2 = wx.FindWindowById(self.ctrls[3])
-                    val = self.tmpData[self.lastRow][3][2]
-                    flg = val & 96 and not val & 31
-                    holidCheck_2.Enable(flg)
-                    if not flg:
-                        holidCheck_2.SetValue(0)
-                        self.tmpData[self.lastRow][3][3] = 0
             next = self.plugin.NextRun(
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
@@ -1163,10 +1212,38 @@ class schedulerDialog(wx.Dialog):
         def onCheckBox(evt):
             val = evt.IsChecked()
             ix = self.ctrls.index(evt.GetId())
-            if self.tmpData[self.lastRow][2] == 2 and ix == 3:
-                self.tmpData[self.lastRow][3][3] = int(val)
+            type = self.tmpData[self.lastRow][2]
+            if type == 2:
+                if ix == 3 or ix == 5:
+                    self.tmpData[self.lastRow][3][ix] = int(val)
+                    holidCheck_2 = wx.FindWindowById(self.ctrls[4])
+                    holidCheck_4 = wx.FindWindowById(self.ctrls[6])
+                    if int(val) == 1:
+                        self.tmpData[self.lastRow][3][4] = 0
+                        holidCheck_2.SetValue(0)
+                        holidCheck_2.Enable(False)
+                        self.tmpData[self.lastRow][3][6] = 0
+                        holidCheck_4.SetValue(0)
+                        holidCheck_4.Enable(False)
+                    elif self.tmpData[self.lastRow][3][3] == 0 and self.tmpData[self.lastRow][3][5] == 0:
+                        holidCheck_2.Enable(True)
+                        holidCheck_4.Enable(True)
+                elif ix == 4 or ix == 6:
+                    self.tmpData[self.lastRow][3][4] = int(val)
+                    holidCheck_1 = wx.FindWindowById(self.ctrls[3])
+                    holidCheck_3 = wx.FindWindowById(self.ctrls[5])
+                    if int(val) == 1:
+                        self.tmpData[self.lastRow][3][3] = 0
+                        holidCheck_1.SetValue(0)
+                        holidCheck_1.Enable(False)
+                        self.tmpData[self.lastRow][3][5] = 0
+                        holidCheck_3.SetValue(0)
+                        holidCheck_3.Enable(False)
+                    elif self.tmpData[self.lastRow][3][4] == 0 and self.tmpData[self.lastRow][3][6] == 0:
+                        holidCheck_1.Enable(True)
+                        holidCheck_3.Enable(True)
             else:
-                self.tmpData[self.lastRow][3][-1] = int(val)
+                self.tmpData[self.lastRow][3][ix] = int(val)
             next = self.plugin.NextRun(
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
@@ -1376,8 +1453,8 @@ class schedulerDialog(wx.Dialog):
                 empty_data = [
                     ["", "", 0, 0],
                     ["", ""],
-                    ["", "", 127, 0, 0],
-                    ["", "", 0, 0, 63, 63, 0],
+                    ["", "", 127, 0, 0, 0, 0],
+                    ["", "", 0, 0, 63, 63, 0, 0],
                     ["", "", 0, 0, 0, 0, 63, 63],
                     ["", "", 0, 1, 0],
                     ["", ""],
@@ -1438,7 +1515,7 @@ class schedulerDialog(wx.Dialog):
         dynamicSizer = wx.BoxSizer(wx.VERTICAL)
         wDynamic = fillDynamicSizer(3)
         fillDynamicSizer(-1)
-        self.SetSize(wx.Size(wDynamic + 37, 632))
+        self.SetSize(wx.Size(wDynamic + 37, 662))
         grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(grid, 0, wx.ALL, 5)
@@ -1499,7 +1576,7 @@ class schedulerDialog(wx.Dialog):
             wx.StaticBox(self, -1, ""),
             wx.VERTICAL
         )
-        dynamicSizer.SetMinSize((-1, 226))
+        dynamicSizer.SetMinSize((-1, 256))
         typeSizer.Add(nameSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         typeSizer.Add(dynamicSizer, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, 5)
         sizer.Add(typeSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
@@ -1882,27 +1959,35 @@ class SchedulGhost(eg.PluginBase):
 
     def NextRun(self, type, data):
 
-        def FindRunDateTime(runList, cond):
+        def FindRunDateTime(runList, cond, cond2):
             runList.sort()
             runDateTime = ""
             if len(runList) > 0:
-                if not cond:
+                if not cond and not cond2:
                     return runList[0]
-                found = False
                 for item in runList:
-                    if item.weekday() > 4:
-                        found = True
-                        break
-                    else:
+                    found1 = True
+                    if cond:
+                        found1 = False
                         if (item.month, item.day) in self.holidays[0]:
-                            pass
+                            continue
                         elif (item.year, item.month, item.day) in self.holidays[1]:
-                            pass
+                            continue
                         else:
-                            found = True
-                            break
-                if found:
-                    runDateTime = item
+                            found1 = True
+                    found2 = True
+                    if cond2:
+                        found2 = False
+                        tmpItem=item + td(days = 1)
+                        if (tmpItem.month, tmpItem.day) in self.holidays[0]:
+                            continue
+                        elif (tmpItem.year, tmpItem.month, tmpItem.day) in self.holidays[1]:
+                            continue
+                        else:
+                            found2 = True
+                    if found1 and found2:
+                        runDateTime = item
+                        break
             return runDateTime
 
         now = dt.now()
@@ -1926,7 +2011,8 @@ class SchedulGhost(eg.PluginBase):
                 runDateTime += td(days = 1)
             return str(runDateTime)
         elif type == 2: # weekly
-            if not data[2]:
+            if not data[2] and (len(self.holidays[0])==0 or not data[3] and not data[5]):
+                print len(self.holidays[0])
                 return ""
             runDateTime = dt.combine(now.date(), runTime)
             weekdaysLower = []
@@ -1938,67 +2024,99 @@ class SchedulGhost(eg.PluginBase):
                         weekdaysLower.append(weekday)
                     else:
                         weekdaysLarger.append(weekday)
-            if not data[4] and not data[3]: # without holiday check
+            if not data[4] and not data[3] and not data[6] and not data[5]: # without holiday check
                 if len(weekdaysLarger) > 0:
                     delta = weekdaysLarger[0] - nowDay
                     return str(runDateTime + td(days = delta))
                 delta = 7 + weekdaysLower[0] - nowDay
                 return str(runDateTime + td(days = delta))
-            elif data[4]: # holiday check
+            if data[4] or data[6]: # holiday check
                 found = False
                 shift = 0
                 while True:
                     for day in weekdaysLarger:
                         delta = day + shift - nowDay
                         tmpRunDT = runDateTime + td(days = delta)
-                        if tmpRunDT.weekday() > 4: # weekend
+                        found1=True
+                        if data[4]:
+                            found1=False
+                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                                continue
+                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                                continue
+                            else:
+                                found1 = True
+                        found2=True
+                        if data[6]:
+                            found2=False
+                            delta += 1
+                            tmpRunDT2 = runDateTime + td(days = delta)
+                            if (tmpRunDT2.month, tmpRunDT2.day) in self.holidays[0]:
+                                continue
+                            elif (tmpRunDT2.year, tmpRunDT2.month, tmpRunDT2.day) in self.holidays[1]:
+                                continue
+                            else:
+                                found2 = True
+                        if found1 and found2:
                             found = True
                             break
-                        else: # workday
-                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                                pass
-                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                                pass
-                            else:
-                                found = True
-                                break
                     if found:
                         break
                     shift += 7
                     for day in weekdaysLower:
                         delta = day + shift - nowDay
                         tmpRunDT = runDateTime + td(days = delta)
-                        if tmpRunDT.weekday() > 4: # weekend
+                        found1=True
+                        if data[4]:
+                            found1=False
+                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                                continue
+                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                                continue
+                            else:
+                                found1 = True
+                        found2=True
+                        if data[6]:
+                            found2=False
+                            delta += 1
+                            tmpRunDT2 = runDateTime + td(days = delta)
+                            if (tmpRunDT2.month, tmpRunDT2.day) in self.holidays[0]:
+                                continue
+                            elif (tmpRunDT2.year, tmpRunDT2.month, tmpRunDT2.day) in self.holidays[1]:
+                                continue
+                            else:
+                                found2 = True
+                        if found1 and found2:
                             found = True
                             break
-                        else: # workday
-                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                                pass
-                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                                pass
-                            else:
-                                found = True
-                                break
                     if found:
                         break
-                return str(tmpRunDT)
             else: # holiday_2 check
                 if len(weekdaysLarger) > 0:
                     Delta = weekdaysLarger[0] - nowDay
-                else:
+                elif len(weekdaysLower) > 0:
                     Delta = 7 + weekdaysLower[0] - nowDay
-                start = 0 if now.time() < runTime else 1
-                found = False
-                for delta in range(start, Delta):
-                    tmpRunDT = runDateTime + td(days = delta)
-                    if tmpRunDT.weekday() < 5:
+                else:
+                    Delta =-1
+                delta = 0 if now.time() < runTime else 1
+                while True:
+                    if Delta!=-1 and delta>=Delta:
+                        tmpRunDT = runDateTime + td(days = Delta)
+                        break
+                    if data[3]:
+                        tmpRunDT = runDateTime + td(days = delta)
                         if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                            found = True
                             break
                         elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                            found = True
                             break
-                return str(tmpRunDT if found else runDateTime + td(days = Delta))
+                    if data[5]:
+                        tmpRunDT = runDateTime + td(days = (delta+1))
+                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                            break
+                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                            break
+                    delta+=1
+            return str(tmpRunDT)
         elif type == 3: # monthly/weekday
             if data[2] == 0 or data[3] == 0 or (data[4] + data[5]) == 0:
                 return ""
@@ -2020,7 +2138,7 @@ class SchedulGhost(eg.PluginBase):
                                     runDateTime = dt.combine(dt(currYear, currMonth, day).date(), runTime)
                                     if now < runDateTime:
                                         runList.append(runDateTime)
-                tmpRunDT = FindRunDateTime(runList, data[6])
+                tmpRunDT = FindRunDateTime(runList, data[6], data[7])
                 if tmpRunDT:
                     return str(tmpRunDT)
             lower = []
@@ -2043,7 +2161,7 @@ class SchedulGhost(eg.PluginBase):
                                     if day:
                                         runDateTime = dt.combine(dt(year, month, day).date(), runTime)
                                         runList.append(runDateTime)
-                    tmpRunDT = FindRunDateTime(runList, data[6])
+                    tmpRunDT = FindRunDateTime(runList, data[6], data[7])
                     if tmpRunDT:
                         break
                 if tmpRunDT:
@@ -2059,7 +2177,7 @@ class SchedulGhost(eg.PluginBase):
                                     if day:
                                         runDateTime = dt.combine(dt(year, month, day).date(), runTime)
                                         runList.append(runDateTime)
-                    tmpRunDT = FindRunDateTime(runList, data[6])
+                    tmpRunDT = FindRunDateTime(runList, data[6], data[7])
                     if tmpRunDT:
                         break
                 if tmpRunDT:
@@ -2189,7 +2307,7 @@ class SchedulGhost(eg.PluginBase):
             span = params[3][1]
             if span != "00:00:00":
                 stopTicks = ticks + int(span[6:]) + 60 * int(span[3:5]) + 3600 * int(span[:2])
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     stopTicks,
                     self.SchedulGhostScheduleRun,
                     params[1],
@@ -2198,7 +2316,7 @@ class SchedulGhost(eg.PluginBase):
             next = self.NextRun(params[2], params[3])
             if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
                 startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     startTicks,
                     self.SchedulGhostScheduleRun,
                     params[1],
@@ -2270,7 +2388,7 @@ class SchedulGhost(eg.PluginBase):
                 if not sched[2][1] and sched[0] != startTicks: # re-scheduling
                     self.updateLogFile(self.text.re_Sched % (schedule[1], startMoment))
                     eg.scheduler.CancelTask(sched)
-                    eg.scheduler.AddTaskAbsolute(
+                    eg.scheduler.AddShortTaskAbsolute(
                         startTicks,
                         self.SchedulGhostScheduleRun, 
                         schedule[1],
@@ -2279,7 +2397,7 @@ class SchedulGhost(eg.PluginBase):
                     )
             elif schedule[0] and startMoment: # new schedule
                 startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     startTicks,
                     self.SchedulGhostScheduleRun,
                     schedule[1],
@@ -2355,6 +2473,14 @@ class SchedulGhost(eg.PluginBase):
                 holiday2Text = dom.createTextNode(unicode(item[3][3]))
                 holiday2Node.appendChild(holiday2Text)
                 dateTimeNode.appendChild(holiday2Node)
+                holiday3Node = dom.createElement(u'HolidayCheck_3')
+                holiday3Text = dom.createTextNode(unicode(item[3][6]))
+                holiday3Node.appendChild(holiday3Text)
+                dateTimeNode.appendChild(holiday3Node)
+                holiday4Node = dom.createElement(u'HolidayCheck_4')
+                holiday4Text = dom.createTextNode(unicode(item[3][5]))
+                holiday4Node.appendChild(holiday4Text)
+                dateTimeNode.appendChild(holiday4Node)
             if item[2] == 3:
                 orderNode = dom.createElement(u'Order')
                 orderText = dom.createTextNode(unicode(item[3][2]))
@@ -2376,6 +2502,10 @@ class SchedulGhost(eg.PluginBase):
                 holidayText = dom.createTextNode(unicode(item[3][6]))
                 holidayNode.appendChild(holidayText)
                 dateTimeNode.appendChild(holidayNode)
+                holiday3Node = dom.createElement(u'HolidayCheck_3')
+                holiday3Text = dom.createTextNode(unicode(item[3][7]))
+                holiday3Node.appendChild(holiday3Text)
+                dateTimeNode.appendChild(holiday3Node)
             if item[2] == 4:
                 q_1_Node = dom.createElement(u'Q_1')
                 q_1_Text = dom.createTextNode(unicode(item[3][2]))
@@ -2454,6 +2584,10 @@ class SchedulGhost(eg.PluginBase):
                 params.append(holiday2)
                 holiday = int(dateTime.getElementsByTagName('HolidayCheck')[0].firstChild.data)
                 params.append(holiday)
+                holiday4 = int(dateTime.getElementsByTagName('HolidayCheck_4')[0].firstChild.data) if dateTime.getElementsByTagName('HolidayCheck_4') else 0
+                params.append(holiday4)
+                holiday3 = int(dateTime.getElementsByTagName('HolidayCheck_3')[0].firstChild.data) if dateTime.getElementsByTagName('HolidayCheck_3') else 0
+                params.append(holiday3)
             if type == 3:
                 order = int(dateTime.getElementsByTagName('Order')[0].firstChild.data)
                 params.append(order)
@@ -2465,6 +2599,8 @@ class SchedulGhost(eg.PluginBase):
                 params.append(second_half)
                 holiday = int(dateTime.getElementsByTagName('HolidayCheck')[0].firstChild.data)
                 params.append(holiday)
+                holiday3 = int(dateTime.getElementsByTagName('HolidayCheck_3')[0].firstChild.data) if dateTime.getElementsByTagName('HolidayCheck_3') else 0
+                params.append(holiday3)
             if type == 4:
                 q_1 = int(dateTime.getElementsByTagName('Q_1')[0].firstChild.data)
                 params.append(q_1)
@@ -2536,10 +2672,10 @@ class SchedulGhost(eg.PluginBase):
         val =  int(val[6:]) + 60 * int(val[3:5]) + 3600 * int(val[:2])
         now = mktime(localtime())
         self.eggTimers[now] = args
-        eg.scheduler.AddTask(val, self.SchedulGhost_EggFunction, now)
+        eg.scheduler.AddShortTask(val, self.SchedulGhost_EggFunction, now)
 
 
-    def AbortEggTimers(self):
+    def AbortEggTimers(self, eggName = None):
         egg_list = eg.scheduler.__dict__['heap']
         tmpLst = []
         for egg in egg_list:
@@ -2548,9 +2684,12 @@ class SchedulGhost(eg.PluginBase):
         if len(tmpLst) > 0:
             for egg in tmpLst:
                 args = self.eggTimers[egg[2][0]]
-                delta = Ticks2Delta(egg[2][0], egg[0])
-                self.updateLogFile(self.text.eggCancel % (args[1], args[2], delta))
-                eg.scheduler.CancelTask(egg)
+                if eggName is None or eggName == args[9]:
+                    delta = Ticks2Delta(egg[2][0], egg[0])
+                    self.updateLogFile(
+                        self.text.eggCancel % (args[9], args[1], args[2], delta)
+                    )
+                    eg.scheduler.CancelTask(egg)
 #===============================================================================
 #cls types for Actions list:
 #===============================================================================
@@ -2665,38 +2804,61 @@ class RunScheduleImmediately(eg.ActionBase):
         scheduleTitle = "Schedule title:"
         notFound = 'Can not find schedule "%s" !'
         immedRun = 'Schedule "%s" - IMMEDIATELY execution. Possible next time: %s'
+        update = 'Update "Last run" field when executed'
 
-    def __call__(self, schedule=""):
+    def __call__(self, schedule="", update=False):
         schedule = eg.ParseString(schedule)
         data = self.plugin.data
         tmpLst = [item[1] for item in data]
         if schedule in tmpLst:
             ix = tmpLst.index(schedule)
             sched = self.plugin.data[ix]
-            if sched[0]:
-                for sch in eg.scheduler.__dict__['heap']:
-                    if sch[1] == self.plugin.SchedulGhostScheduleRun:
-                        if sch[2][0] == sched[1]:
-                            eg.scheduler.CancelTask(sch)
-                            self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
-                            break
-                next = self.plugin.Execute(sched, False, mktime(localtime()), True)
-                next = next[:19] if next else self.plugin.text.none
-                self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
+            if sched[0] or self.value: #enabled or force
+                eg.TriggerEvent(
+                    sched[6],
+                    sched[8],
+                    sched[5]
+                )
+                span = sched[3][1]
+                if span != "00:00:00":
+                    stopTicks = mktime(localtime()) + int(span[6:])\
+                        + 60 * int(span[3:5]) + 3600 * int(span[:2])
+                    eg.scheduler.AddShortTaskAbsolute(
+                        stopTicks,
+                        eg.TriggerEvent,
+                        sched[7],
+                        sched[8],
+                        sched[5]
+                    )                 
+                #for sch in eg.scheduler.__dict__['heap']:
+                #    if sch[1] == self.plugin.SchedulGhostScheduleRun:
+                #        if sch[2][0] == sched[1]:
+                #            eg.scheduler.CancelTask(sch)
+                #            self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
+                #            break
+                #next = self.plugin.Execute(sched, False, mktime(localtime()), True)
+                if update:
+                    last = str(dt.now())[:19]
+                    self.plugin.data[ix][4] = last
+                #next = next[:19] if next else self.plugin.text.none
+                #self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
         else:
             self.PrintError(self.text.notFound % schedule)
             return self.text.notFound % schedule
 
 
-    def Configure(self, schedule = ""):
+    def Configure(self, schedule = "", update=False):
         panel = eg.ConfigPanel()
         data = self.plugin.data
         choices = [item[1] for item in data]
         textControl = wx.ComboBox(panel, -1, schedule, size = (300, -1), choices = choices)
+        updateCtrl = wx.CheckBox(panel, -1, self.text.update)
+        updateCtrl.SetValue(update)
         panel.sizer.Add(wx.StaticText(panel, -1, self.text.scheduleTitle), 0, wx.LEFT | wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
+        panel.sizer.Add(updateCtrl, 0, wx.LEFT|wx.TOP, 10)
         while panel.Affirmed():
-            panel.SetResult(textControl.GetValue())
+            panel.SetResult(textControl.GetValue(),updateCtrl.GetValue())
 #===============================================================================
 
 class AddSchedule(eg.ActionBase):
@@ -2728,7 +2890,7 @@ This is the syntax of the python expression::
 * 1 (daily): u'startEventTime', u'span'
 * 2 (weekly): u'startEventTime', u'span', daysWeek, DoNotTriggerOnAHoliday?,\
 TriggerNotChosenDayOnAHoliday?
-* 3 (monthly  / weekday): u'startEventTime', u'span', daysWeek, monthsYear(Jan-Jun),\
+* 3 (monthly  / weekday): u'startEventTime', u'span', orderOfDay, daysWeek, monthsYear(Jan-Jun),\
 monthsYear(Jul-Dec), DoNoTriggerOnAHoliday?
 * 4 (monthly / day): u'startEventTime', u'span', daysMonth(1-8), daysMonth(9-16),\
 daysMonth(17-24), daysMonth(24-31), monthsYear(Jan-Jun), monthsYear(Jul-Dec)
@@ -2742,12 +2904,15 @@ Explanation:
 * scheduleType = a number
 * date = year-month-day (2012-12-31)
 * time and span = hours:minutes:seconds (23:59:59)
+* orderOfDay = sum of the days (first = 1, second = 2; thirt = 4, ..., last = 32)
 * daysWeek = sum of the days (Monday = 1, Tuesday = 2; Wednesday = 4, ..., Sunday = 64)
 * monthsYear(Jan-Jul) = sum of the months (January = 1, ..., June = 32)
 * monthsYear(Jul-Dec) = sum of the months (July = 1, ..., December = 32)
 * timeFormat: seconds = 0, minutes = 1, hours = 2, days = 3, weeks = 4, months = 5, years = 6
 
-| *Make sure to use  \\\\'  instead of  '  within a string literal if you use this function in a python script.*
+::
+
+ Make sure to use '\\\\' instead of '\\' within a string literal if you use this function in a python script.
 '''
 
     def __call__(self, expr = ""):
@@ -2757,7 +2922,11 @@ Explanation:
             data = self.plugin.data
             tmpLst = [item[1] for item in data]
             if schedule[1] in tmpLst:
-                data[tmpLst.index(schedule[1])] = cpy(schedule)
+                ix = tmpLst.index(schedule[1])
+                if data[ix][0]:
+                    data[ix][0] = 0
+                    self.plugin.UpdateEGscheduler()
+                data[ix] = cpy(schedule)
             else:
                 data.append(schedule)
             self.plugin.UpdateEGscheduler()
@@ -2970,7 +3139,7 @@ class EggTimersList(wx.Frame):
             None,
             -1,
             text.title,
-            style = wx.DEFAULT_DIALOG_STYLE | wx.CLOSE_BOX | wx.TAB_TRAVERSAL | wx.RESIZE_BORDER ,
+            style = wx.DEFAULT_DIALOG_STYLE | wx.CLOSE_BOX | wx.TAB_TRAVERSAL | wx.RESIZE_BORDER,
             name = text.title
         )
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
@@ -2985,6 +3154,7 @@ class EggTimersList(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
 
         mainSizer = wx.GridBagSizer(0, 0)
+        self.SetSizer(mainSizer)
         mainSizer.AddGrowableRow(0)
         mainSizer.AddGrowableCol(0)
         eggListCtrl = wx.ListCtrl(
@@ -2999,14 +3169,14 @@ class EggTimersList(wx.Frame):
             eggListCtrl.InsertColumn(
                 i,
                 text.header[i-1],
-                wx.LIST_FORMAT_CENTRE if i in (1, 4) else wx.LIST_FORMAT_LEFT
+                wx.LIST_FORMAT_CENTRE if i in (2, 5) else wx.LIST_FORMAT_LEFT
             )
         size = 0
-        for i in range(5):
+        for i in range(6):
             if i == 0:
                 eggListCtrl.SetColumnWidth(i, 0)
-            elif i==2:
-                eggListCtrl.SetColumnWidth(i, 120)
+            elif i == 3:
+                eggListCtrl.SetColumnWidth(i, 80)
             else:
                 eggListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             size += eggListCtrl.GetColumnWidth(i)
@@ -3015,14 +3185,16 @@ class EggTimersList(wx.Frame):
         rect = eggListCtrl.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hh = rect[1]
         hi = rect[3]
-        rem2Size = size  - eggListCtrl.GetColumnWidth(3) + 4
+        self.SetClientSize((size, -1))
+        self.SetMinSize((1.5*size, -1))
+        rem2Size = size  - eggListCtrl.GetColumnWidth(4) + 4
         mainSizer.Add(eggListCtrl, (0,0), (1,1), flag = wx.EXPAND)
 
 
         def OnSize(event):
-            eggListCtrl.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-            w1 = eggListCtrl.GetColumnWidth(2)
-            eggListCtrl.SetColumnWidth(3, 120 + self.GetClientSize()[0] - rem2Size  - w1)
+            eggListCtrl.SetColumnWidth(3, wx.LIST_AUTOSIZE)
+            w1 = eggListCtrl.GetColumnWidth(3)
+            eggListCtrl.SetColumnWidth(4, 80 + self.GetClientSize()[0] - rem2Size  - w1)
             event.Skip()
         self.Bind(wx.EVT_SIZE, OnSize)
 
@@ -3041,17 +3213,16 @@ class EggTimersList(wx.Frame):
                 for row in range(cnt):
                     args = self.plugin.eggTimers[tmpLst[row][2][0]]
                     eggListCtrl.InsertStringItem(row, "")  #Dummy column 0
-                    eggListCtrl.SetStringItem(row, 1, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
-                    eggListCtrl.SetStringItem(row, 2, "%s.%s" % (args[1], args[2]))
-                    eggListCtrl.SetStringItem(row, 3, args[4])
-                    eggListCtrl.SetStringItem(row, 4, self.text.yes if len(args[3]) > 0 else "")
+                    eggListCtrl.SetStringItem(row, 1, args[9])
+                    eggListCtrl.SetStringItem(row, 2, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
+                    eggListCtrl.SetStringItem(row, 3, "%s.%s" % (args[1], args[2]))
+                    eggListCtrl.SetStringItem(row, 4, args[4])
+                    eggListCtrl.SetStringItem(row, 5, self.text.yes if len(args[3]) > 0 else "")
             self.SetClientSize((self.GetClientSize()[0], 4 + hh + cnt * hi))
             if event:
                 event.Skip()
 
         self.Bind(wx.EVT_TIMER, FillListCtrl)
-        self.SetSizer(mainSizer)
-        self.SetClientSize(mainSizer.GetMinSize())
         self.timer = wx.Timer(self)
         self.timer.Start(1000)
         FillListCtrl()
@@ -3094,8 +3265,9 @@ class SetEggTimer(eg.ActionBase):
         playWav = "Wav file test"
         defaultPopup = "Wake up, eggs are cooked !!!"
         defaultTime = ("Default time:", "Time to elapse:")
-        treeLabel = "%s: %s.%s: %s"
+        treeLabel = "%s: %s: %s.%s: %s"
         defSuffix = "EggTimer"
+        nameLbl = "Egg timer name:"
 
     def __call__(self, args = [
         "00:03:00",
@@ -3106,8 +3278,13 @@ class SetEggTimer(eg.ActionBase):
         (191, 191, 255),
         (64, 0, 128),
         "",
-        (10, 10)
+        (10, 10),
+        "EggTimer"
     ]):
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
         if not self.value:
             if not self.plugin.eggTimer:
                 wx.CallAfter(EggTimerFrame, self.text, self.plugin, args)
@@ -3116,7 +3293,17 @@ class SetEggTimer(eg.ActionBase):
 
 
     def GetLabel(self, args):
-        return self.text.treeLabel % (self.name, args[1], args[2], args[4])
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
+        return self.text.treeLabel % (
+            self.name,
+            args[9],
+            args[1],
+            args[2],
+            args[4]
+        )
 
 
     def Configure(self, args = [
@@ -3128,10 +3315,15 @@ class SetEggTimer(eg.ActionBase):
         (191, 191, 255),
         (64, 0, 128),
         "",
-        (10, 10)
+        (10, 10),
+        "EggTimer"
     ]):
         panel = self.panel = eg.ConfigPanel()
-        self.args = args[:]
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
+        self.args = cpy(args)
         del args
         self.panel.popupFrame = None
         if self.args[2] is None:
@@ -3140,9 +3332,11 @@ class SetEggTimer(eg.ActionBase):
             self.args[1] = self.plugin.prefix
         prefCtrl = wx.TextCtrl(panel, -1, self.args[1], size = (100, -1))
         suffCtrl = wx.TextCtrl(panel, -1, self.args[2], size = (100, -1))
+        nameCtrl = wx.TextCtrl(panel, -1, self.args[9], size = (100, -1))
         topSizer = wx.GridBagSizer(1,1)
         topSizer.AddGrowableCol(2,1)
         topSizer.AddGrowableCol(4,1)
+        topSizer.AddGrowableCol(6,1)
         spinBtn = wx.SpinButton(
             panel,
             -1,
@@ -3164,8 +3358,10 @@ class SetEggTimer(eg.ActionBase):
         topSizer.Add(spinBtn, (1, 1))
         topSizer.Add(wx.StaticText(panel, -1, self.text.prefLbl), (0, 3),(1,2))
         topSizer.Add(wx.StaticText(panel, -1, self.text.suffLbl), (0, 5))
+        topSizer.Add(wx.StaticText(panel, -1, self.text.nameLbl), (0, 7))
         topSizer.Add(prefCtrl, (1, 3))
         topSizer.Add(suffCtrl, (1, 5))
+        topSizer.Add(nameCtrl, (1, 7))
         sizerAdd = panel.sizer.Add
         sizerAdd(topSizer,0,wx.LEFT|wx.RIGHT|wx.EXPAND, 10)
         sizerAdd((-1,10))
@@ -3366,7 +3562,8 @@ class SetEggTimer(eg.ActionBase):
                 backColorBtn.GetValue(),
                 foreColorBtn.GetValue(),
                 fontBtn.GetValue(),
-                popPos
+                popPos,
+                nameCtrl.GetValue(),
             ),)
 #===============================================================================
 
@@ -3376,6 +3573,7 @@ class ShowRunningEggTimers(eg.ActionBase):
         title = "SchedulGhost: Currently running egg-timers"
         yes = "Yes"
         header = (
+            "Timer name",
             "Remaining time",
             "Event string",
             "Pop-up text",
@@ -3416,10 +3614,36 @@ class ReloadXML(eg.ActionBase):
             )            
 #===============================================================================
 
+class AbortEggTimer(eg.ActionBase):
+
+    class text:
+        lbl = "Egg timer name:"
+
+    def __call__(self, ttl = ""):
+        ttl = eg.ParseString(ttl)
+        self.plugin.AbortEggTimers(ttl)
+
+
+    def Configure(self, ttl = ""):
+        panel = eg.ConfigPanel()
+        lbl = wx.StaticText(panel, -1, self.text.lbl)
+        eggCtrl = wx.TextCtrl(panel, -1, ttl)
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer.Add(lbl,0,wx.ALIGN_CENTER_VERTICAL)
+        mainSizer.Add(eggCtrl,1,wx.EXPAND|wx.LEFT, 8)
+        panel.sizer.Add(mainSizer,0,wx.EXPAND|wx.ALL, 10)
+        
+        while panel.Affirmed():
+            panel.SetResult(
+                eggCtrl.GetValue(),
+            )
+#===============================================================================
+
 Actions = (
     (SetEggTimer, "SetEggTimer", "Adjust and start egg timer", "Adjust and start egg timer.", 0),
     (SetEggTimer, "StartEggTimer", "Start egg timer", "Start egg timer immediately (without the possibility to adjust the time to elapse).", 1),
     (ShowRunningEggTimers, "ShowRunningEggTimers", "Show currently running egg-timers", "Shows currently running egg-timers.", None),
+    (AbortEggTimer, "AbortEggTimer", "Abort egg timer by name", "Aborts egg timer by name.", None),
     (AbortEggTimers, "AbortEggTimers", "Abort egg timer(s)", "Abort egg timer(s).", None),
     (ShowSchedulGhost, "ShowSchedulGhost", "Show SchedulGhost", "Show SchedulGhost manager.", None),
     (HideSchedulGhost, "HideSchedulGhost", "Hide SchedulGhost", "Hide SchedulGhost manager.", None),
@@ -3431,6 +3655,7 @@ Actions = (
     (AddSchedule, "AddSchedule", "Add schedule", AddSchedule.text.descr, None),
     (DeleteSchedule, "DeleteSchedule", "Delete schedule", "Delete schedule.", None),
     (RunScheduleImmediately, "RunScheduleImmediately", "Run schedule immediately", "Runs schedule immediately.", None),
+    (RunScheduleImmediately, "ForceScheduleImmediately", "Force to run schedule immediately", "Force starts schedule immediately.", True),
     (DataToXML, "DataToXML", "Save data to xml", "Saves data to xml.", None),
     (ReloadXML, "ReloadXML", "Reload data from xml", "Reloads data from xml.", None),
 )

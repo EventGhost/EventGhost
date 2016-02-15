@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -167,7 +167,7 @@ class Window(eg.PluginBase):
         self.AddAction(DockWindow)
         self.AddAction(MinimizeToTray)
 
-
+        self.iconDict = {}
 
 class BringToFront(eg.ActionBase):
     name = "Bring to Front"
@@ -177,8 +177,14 @@ class BringToFront(eg.ActionBase):
     def __call__(self):
         for hwnd in GetTargetWindows():
             BringHwndToFront(hwnd)
-
-
+            if self.plugin.iconDict.has_key(hwnd):
+                try:  
+                    trayIcon = self.plugin.iconDict[hwnd] 
+                    del self.plugin.iconDict[hwnd]
+                    trayIcon.RemoveIcon()
+                    trayIcon.Destroy()
+                except:
+                    pass
 
 class MoveTo(eg.ActionBase):
     name = "Move Absolute"
@@ -310,16 +316,16 @@ class Resize(eg.ActionBase):
         yCheckBox = panel.CheckBox(y is not None, text.text3)
         yCtrl = panel.SpinIntCtrl(0 if y is None else y, min=-32768, max=32767)
         yCtrl.Enable(y is not None)
-        
+
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
-        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
             event.Skip()
-        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         panel.AddLine(xCheckBox, xCtrl, text.text2)
         panel.AddLine(yCheckBox, yCtrl, text.text2)
@@ -328,8 +334,8 @@ class Resize(eg.ActionBase):
             panel.SetResult(
                 xCtrl.GetValue() if xCtrl.IsEnabled() else None,
                 yCtrl.GetValue() if yCtrl.IsEnabled() else None,
-            )        
-        
+            )
+
 
 class Maximize(eg.ActionBase):
     name = "Maximize"
@@ -355,6 +361,14 @@ class Restore(eg.ActionBase):
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_RESTORE)
+            if self.plugin.iconDict.has_key(hwnd):
+                try:  
+                    trayIcon = self.plugin.iconDict[hwnd]
+                    del self.plugin.iconDict[hwnd]
+                    trayIcon.RemoveIcon()
+                    trayIcon.Destroy()
+                except:
+                    pass
 
 
 
@@ -638,7 +652,7 @@ For example: ComboBox, ListBox, ListView"""
         lvitem_buffer = create_string_buffer(lvitem_str)
         num_items = win32guiSendMessage(hwnd, LVM_GETITEMCOUNT)
         res = []
-        for column_index in range(col_count): 
+        for column_index in range(col_count):
             lvitem_buffer.__setslice__(8, 12, pack_int(column_index)) #column index increment
             _kernel32.WriteProcessMemory(hProcHnd, pLVI, addressof(lvitem_buffer), sizeof(lvitem_buffer), 0)
             target_buff = create_string_buffer(4096)
@@ -722,15 +736,22 @@ class MinimizeToTray(eg.ActionBase):
         if hwnd in eg.WinApi.GetTopLevelWindowList(False) and isinstance(icon, wx._gdi.Icon):
             trayIcon = wx.TaskBarIcon()
             trayIcon.SetIcon(icon, title)
-            def OnClick(self, *dummyArgs):
+            self.plugin.iconDict[hwnd] = trayIcon
+
+            def OnClick2():
                 # Remove our tray icon and restore the window
                 try:
                     BringHwndToFront(hwnd)
+                    del self.plugin.iconDict[hwnd]
                 except:
                     pass
                 finally:
                     trayIcon.RemoveIcon()
                     trayIcon.Destroy()
+
+            def OnClick(*dummyArgs):
+                wx.CallAfter(OnClick2)
+                
             trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, OnClick)
-            ShowWindow(hwnd, 0)
+            wx.CallAfter(ShowWindow, hwnd, 0)
 

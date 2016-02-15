@@ -1,25 +1,29 @@
-﻿# plugins/OSM/__init__.py
+﻿# -*- coding: utf-8 -*-
+#
+# plugins/OSM/__init__.py
 #
 # Copyright (C)  2009-2011 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.11 by Pako 2015-02-01 18:41 UTC+1
+#     - The Back part is divided only by the first found dot
+# 0.2.10 by Pako 2014-12-23 15:59 UTC+1
+#     - bugfix - Test button on dialog "Show menu"
 # 0.2.9 by Pako 2012-01-18 11:13 UTC+1
 #     - fixed bug - inversion of option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.8 by Pako 2012-01-18 10:23 UTC+1
@@ -42,7 +46,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.9",
+    version = "0.2.11",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -108,6 +112,7 @@ class Text:
 2) If the string contains more than three parts, truncated to three parts.
 3) Truncating is performed by slicing the front parts
 4) The third part is applied either as a suffix or as a payload
+5) The Back part is divided only by the first found dot !
 
 Some examples of event string compilation in mode **"suffix"**:
 
@@ -684,7 +689,7 @@ class ShowMenu(eg.ActionBase):
                     modeCtrl.GetSelection(),
                     CreateEvent(None, 0, 0, None),
                     triggEvtCtrl.GetValue(),
-                    focus.GetValue(),
+                    focusCtrl.GetValue(),
                 )
 
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -1315,7 +1320,13 @@ class Menu(wx.Frame):
     def SendEventSel(self, sel):
         self.destroyMenu()
         evtString = self.prefix.split(".")
-        evtString.extend(self.choices[sel][1].split("."))
+        sp = self.choices[sel][1]
+        ix = sp.find(".")
+        if ix > -1:
+            evtString.append(sp[:ix])
+            evtString.append(sp[ix+1:])
+        else:
+            evtString.append(sp)
         evtString = evtString[-3:]
         if len(evtString) == 3:
             if self.mode:

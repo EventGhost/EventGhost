@@ -19,7 +19,7 @@ different models."""
 eg.RegisterPlugin(
     name = "Onkyo AV Serial",
     author = "prostetnic, Bartman and Fiasco",
-    version = "0.2." + "$LastChangedRevision$".split()[1],
+    version = "0.2." + "$LastChangedRevision: 1246 $".split()[1],
     kind = "external",
     guid = "{E9EA99CC-40A7-40CC-94D9-01C9F6D25170}",
     description = "Control Onkyo A/V Receivers via RS232",

@@ -87,6 +87,7 @@ SPECIAL_THANKS_DATA = (
             ("noc123", "Polish"),
             ("somainit", "Japanese"),
             (" PedroV9", "Portuguese (Brazilian)"),
+            ("batto", "Vietnamese"),
         ),
     ),
     (
@@ -161,7 +162,7 @@ SPECIAL_THANKS_DATA = (
             (
                 'Benjamin Webb',
                 (
-                    'for the nice <a href="http://www.eventghost.net/wiki/'
+                    'for the nice <a href="http://www.eventghost.net/mediawiki/'
                     'Controlling%20your%20living%20room%20with%20EventGhost">'
                     'wiki article</a>'
                 )

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "IgorPlug-USB",
     author = "Bitmonster",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision: 1175 $".split()[1],
     kind = "remote",
     guid = "{B89FD3E9-3E57-4752-89ED-2F62AF7B65DF}",
     description = __doc__,

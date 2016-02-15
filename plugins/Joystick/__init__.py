@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -35,7 +35,7 @@ I="""
 eg.RegisterPlugin(
     name = "Joystick",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1175 $".split()[1],
     kind = "remote",
     guid = "{615F3B89-FB7E-4FD9-B7D5-9F07FEF0BED9}",
     description = (
@@ -45,12 +45,12 @@ eg.RegisterPlugin(
 )
 
 
-EVT_DIRECTION    = 0
+EVT_DIRECTION = 0
 EVT_BTN_RELEASED = 1
-EVT_BTN_PUSHED   = 2
-EVT_X_AXIS       = 3
-EVT_Y_AXIS       = 4
-EVT_Z_AXIS       = 5
+EVT_BTN_PUSHED = 2
+EVT_X_AXIS = 3
+EVT_Y_AXIS = 4
+EVT_Z_AXIS = 5
 
 
 

@@ -6,3 +6,4 @@ win32_ctrls = {
     'listviews'   : ("SysListView32", "TListView", "TfcDirView"),
     'statusbars'  : ("TStatusBar", "msctls_statusbar32", "TTntStatusBar.UnicodeClass")
 }
+

@@ -1,24 +1,23 @@
-# This file is (not yet) part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
+# $LastChangedRevision: 1093 $
+# $LastChangedBy: Bitmonster $
 
 # POWER ON      80 70 C0 3F     
 # POWER OFF     80 70 9F 60     
@@ -94,7 +93,7 @@
 eg.RegisterPlugin(
     name = "Harman Kardon Serial Control",
     author = "Kingtd & Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
     guid = "{460D31E6-231D-483D-8B9B-2781F9D2377A}",

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -78,32 +78,32 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
 
         self.SetColumnWidth(0, 200)
         self.ExpandAll(root)
-        
+
         self.__inSizing = False
         self.GetMainWindow().Bind(wx.EVT_SIZE, self.OnSize)
-        
-    
+
+
     def GetNewMenuId(self):
         newMenuId = self.highestMenuId + 1
         self.highestMenuId = newMenuId
         return newMenuId
-    
-        
+
+
     def OnSize(self, event):
         event.Skip()
         if not self.__inSizing:
             self.__inSizing = True
             wx.CallAfter(self.OnSize2)
-        
-        
+
+
     def OnSize2(self):
         w, h = self.GetMainWindow().GetClientSize()
         newWidth = w - self.GetColumnWidth(0)
         if self.GetColumnWidth(1) != newWidth:
             self.SetColumnWidth(1, newWidth)
         self.__inSizing = False
-        
-        
+
+
     def GetPrevious(self, item):
         previous = self.GetPrevSibling(item)
         if previous.IsOk():
@@ -428,5 +428,4 @@ class Disable(Enable):
         item = self.plugin.menuIdToWxItem.get(menuId, None)
         if item is not None:
             item.Enable(False)
-
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -34,6 +34,7 @@ eg.RegisterPlugin(
         "WRlxsa4sp1ydkiRxkstmlEFRrWT4nrRer3vmlf6mb883fK8AoF1d+Bqc6Xkt+cufT6e3"
         "dnb9DJJrq+uYpunZ2WcFfA0ol8v8N5Qgvr/EN8Lzfbs+L0goAAAAAElFTkSuQmCC"
     ),
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=4&t=959",
 )
 
 import wx
@@ -64,7 +65,7 @@ else:
 class ServerHandler(asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
 
-    def __init__(self, sock, addr, hex_md5, cookie, plugin, server):
+    def __init__(self, sock, addr, password, plugin, server):
         log("Server Handler inited")
         self.plugin = plugin
 
@@ -79,8 +80,10 @@ class ServerHandler(asynchat.async_chat):
         self.state = self.state1
         self.ip = addr[0]
         self.payload = [self.ip]
-        self.hex_md5 = hex_md5
-        self.cookie = cookie
+        #self.cookie = hex(random.randrange(65536))
+        #self.cookie = self.cookie[len(self.cookie) - 4:]
+        self.cookie = format(random.randrange(65536), '04x')
+        self.hex_md5 = md5(self.cookie + ":" + password).hexdigest().upper()
 
 
     def handle_close(self):
@@ -172,9 +175,7 @@ class Server(asyncore.dispatcher):
 
     def __init__ (self, port, password, handler):
         self.handler = handler
-        self.cookie = hex(random.randrange(65536))
-        self.cookie = self.cookie[len(self.cookie) - 4:]
-        self.hex_md5 = md5(self.cookie + ":" + password).hexdigest().upper()
+        self.password = password
 
         # Call parent class constructor explicitly
         asyncore.dispatcher.__init__(self)
@@ -204,8 +205,7 @@ class Server(asyncore.dispatcher):
         ServerHandler(
             sock,
             addr,
-            self.hex_md5,
-            self.cookie,
+            self.password,
             self.handler,
             self
         )

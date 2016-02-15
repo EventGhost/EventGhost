@@ -36,34 +36,34 @@ eg.RegisterPlugin(
         u'<center><img src="picture.jpg" /></a></center>'
     ),
     version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
-	kind = "remote",
+    kind = "remote",
     guid = "{BAD86ECC-5B21-4F47-9ADE-9CC8FFF8D191}",
     canMultiLoad = True,
     author = "Melloware Inc",
-	url="http://www.melloware.com/products/eventphone",
-	help = """
+    url="http://www.melloware.com/products/eventphone",
+    help = """
         <b>Instructions:</b> <p>1. Simply purchase <a href="http://www.melloware.com/products/eventphone">EventPhone Native Application</a> from the Apple Appstore to install it.   
-		<p>2. Install EventPhone plugin for EventGhost found on <a href="http://www.melloware.com">Melloware Website</a>
-		<p>3. In EventGhost configure the Port and Password in the plugin.
-		<p>4. On the iPhone configure the Settings to have the same port and password, and enter the IP address of the PC running EventGhost.
-		<p>5. Start EventPhone on the iPhone and it will connect to your PC and you can map events to whatever you want!
+        <p>2. Install EventPhone plugin for EventGhost found on <a href="http://www.melloware.com">Melloware Website</a>
+        <p>3. In EventGhost configure the Port and Password in the plugin.
+        <p>4. On the iPhone configure the Settings to have the same port and password, and enter the IP address of the PC running EventGhost.
+        <p>5. Start EventPhone on the iPhone and it will connect to your PC and you can map events to whatever you want!
     """,
     icon = (
-		"iVBORw0KGgoAAAANSUhEUgAAAA0AAAAPCAMAAAAI/bVFAAAAB3RJTUUH2AgaDAIK5pS6"
-		"IAAAAAlwSFlzAAAOwgAADsIBFShKgAAAAARnQU1BAACxjwv8YQUAAAGPUExURf///7LE"
-		"8XWW58PR87bH8neX6N7l+Gmc8gBA3wNL3wBH3ABB3ABA2wBG3gBK4AA73Lzb/+7F0ZAP"
-		"UKImWKAkVZ8jU6EjU6MiUqEiUp8iU58hUpgRSrshVbwfTrghTbUfSrYfSbYeSrgeSbce"
-		"SbgcSbYOPteIn/vPz/wODP0hG/4fGv4dGf0dGf0dGP0cF/wbFvwbFfwbE/oCAPmlpPyH"
-		"iv4TFv0eHf4cHP0bGv4aGv0ZGv4ZGf0YF/4EAfu6ufyBZ/5DHf1EH/1DHf1DHP5DHP1C"
-		"G/1DGf1DGv0/FvpJH/uKaP1MHvxQIPxOHvtMHfxMHPtMG/xNG/xLFvttP/3ujf/PH//Q"
-		"J//PJf/OI//SH//VH//VHf/XEv/+76mjBLusIbyoH7yqH7yqHbqqG76rHb6uHb6vGr2v"
-		"D7bCV6XXsAB+AAKDBgSECACBACeWKwyJDgSIBgaJCQGGARGOCPT58vz9+6TSn57Pl/j8"
-		"9rbZr6HOmczmx47IhrTbrZ/QlwCCAGe0XCiVGd3t2nu/cbndsqC5CdoAAAABdFJOUwBA"
-		"5thmAAAAtElEQVR42mNggILmFgYEaKxvQnDq6hugrNKy8orKquqaWhAnMys7Jzcvv6Cw"
-		"qLiEITYuPiExKTklNS09g4EhJDQsPCIiIjIqOgao0Mvbx9fP3z8gMCgYyLN3cHRydnF1"
-		"c/fwBPJMTM3MLSytLK1tbO0YGNQ1NLW0dXT19A0MjYwZGGRk5eQVFJWUlVRU1RgYBIWE"
-		"RUTFxCUkpaRB1rNzcHJx8/Dy8QuAncbIxMzAwMLKxsAAAAExJCRS1N69AAAAAElFTkSu"
-		"QmCC"
+        "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAPCAMAAAAI/bVFAAAAB3RJTUUH2AgaDAIK5pS6"
+        "IAAAAAlwSFlzAAAOwgAADsIBFShKgAAAAARnQU1BAACxjwv8YQUAAAGPUExURf///7LE"
+        "8XWW58PR87bH8neX6N7l+Gmc8gBA3wNL3wBH3ABB3ABA2wBG3gBK4AA73Lzb/+7F0ZAP"
+        "UKImWKAkVZ8jU6EjU6MiUqEiUp8iU58hUpgRSrshVbwfTrghTbUfSrYfSbYeSrgeSbce"
+        "SbgcSbYOPteIn/vPz/wODP0hG/4fGv4dGf0dGf0dGP0cF/wbFvwbFfwbE/oCAPmlpPyH"
+        "iv4TFv0eHf4cHP0bGv4aGv0ZGv4ZGf0YF/4EAfu6ufyBZ/5DHf1EH/1DHf1DHP5DHP1C"
+        "G/1DGf1DGv0/FvpJH/uKaP1MHvxQIPxOHvtMHfxMHPtMG/xNG/xLFvttP/3ujf/PH//Q"
+        "J//PJf/OI//SH//VH//VHf/XEv/+76mjBLusIbyoH7yqH7yqHbqqG76rHb6uHb6vGr2v"
+        "D7bCV6XXsAB+AAKDBgSECACBACeWKwyJDgSIBgaJCQGGARGOCPT58vz9+6TSn57Pl/j8"
+        "9rbZr6HOmczmx47IhrTbrZ/QlwCCAGe0XCiVGd3t2nu/cbndsqC5CdoAAAABdFJOUwBA"
+        "5thmAAAAtElEQVR42mNggILmFgYEaKxvQnDq6hugrNKy8orKquqaWhAnMys7Jzcvv6Cw"
+        "qLiEITYuPiExKTklNS09g4EhJDQsPCIiIjIqOgao0Mvbx9fP3z8gMCgYyLN3cHRydnF1"
+        "c/fwBPJMTM3MLSytLK1tbO0YGNQ1NLW0dXT19A0MjYwZGGRk5eQVFJWUlVRU1RgYBIWE"
+        "RUTFxCUkpaRB1rNzcHJx8/Dy8QuAncbIxMzAwMLKxsAAAAExJCRS1N69AAAAAElFTkSu"
+        "QmCC"
     ),
 )
 

@@ -153,7 +153,6 @@ class ThreadWorker(object):
         :meth:`Start` method and re-raised there.
         """
         pass
-            CoUninitialize()
 
 
     def Finish(self):

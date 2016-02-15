@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
 #                         André Weber <WeberAndre@gmx.de>
 #
@@ -233,7 +233,7 @@ class YARD(eg.PluginBase):
                 i = int(eventString[10:12])
                 self.buttons[i] = True
                 buttons = [
-                    "Button%i" % i
+                    "Button%i" % i 
                     for i, btn in enumerate(self.buttons) if btn
                 ]
                 self.TriggerEvent("+".join(buttons))
@@ -243,14 +243,14 @@ class YARD(eg.PluginBase):
                 self.EndLastEvent()
             elif eventString == "070000001080FF":
                 buttons = [
-                    "Button%i" % i
+                    "Button%i" % i 
                     for i, btn in enumerate(self.buttons) if btn
                 ]
                 buttons.append("JogLeft")
                 self.TriggerEvent("+".join(buttons))
             elif eventString == "070000001081FF":
                 buttons = [
-                    "Button%i" % i
+                    "Button%i" % i 
                     for i, btn in enumerate(self.buttons) if btn
                 ]
                 buttons.append("JogRight")
@@ -264,7 +264,7 @@ class YARD(eg.PluginBase):
             if self.disableUnmapped:
                 return
             timeout = self.timeout
-        self.timer.cancel()
+        self.timer.cancel()       
         if self.lastEvent != eventString:
             self.TriggerEnduringEvent(eventString)
             self.lastEvent = eventString
@@ -274,8 +274,8 @@ class YARD(eg.PluginBase):
 
     def Map(self, what, to, timeout=None):
         self.mapTable[what] = (to, timeout or self.timeout)
-
-
+        
+        
     def StartYardServer(self):
         try:
             rkey = RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Webers\\Y.A.R.D")
@@ -288,21 +288,21 @@ class YARD(eg.PluginBase):
             )
         try:
             hProcess = CreateProcess(
-                None,
-                path,
-                None,
-                None,
+                None, 
+                path, 
+                None, 
+                None, 
                 0,
-                CREATE_NEW_CONSOLE,
-                None,
-                None,
+                CREATE_NEW_CONSOLE, 
+                None, 
+                None, 
                 STARTUPINFO()
             )[0]
         except Exception, exc:
             raise eg.Exception(FormatError(exc[0]))
         WaitForInputIdle(hProcess, 10000)
-
-
+        
+        
 
 class SendRemoteKey(eg.ActionBase):
     name = "Sende IR"
@@ -313,7 +313,7 @@ class SendRemoteKey(eg.ActionBase):
     remoteName = None
     keyName = None
     numRepeats = None
-
+    
     def __call__(self, remoteName, keyName, numRepeats):
         if self.plugin.comObj is None:
             raise eg.Exception("YARD-Error: No connection")
@@ -321,24 +321,24 @@ class SendRemoteKey(eg.ActionBase):
             self.plugin.comObj.SendRemoteKey(remoteName, keyName, numRepeats)
         except com_error, err:
             raise eg.Exception("YARD-Error: " + err[1])
-
-
+            
+            
     def GetLabel(self, remoteName, keyName, numRepeats):
         return "YARD: Sende " + remoteName + ", " + keyName
 
 
     def Configure(self, remoteName=None, keyName=None, numRepeats=None):
         panel = eg.ConfigPanel()
-
+            
         remoteName = remoteName or self.remoteName or ""
         keyName = keyName or self.keyName or ""
         numRepeats = numRepeats or self.numRepeats or 1
-
+        
         mySizer = wx.FlexGridSizer(3, 2, 5, 5)
 
         st1 = wx.StaticText(panel, -1, "Fernbedienung")
         mySizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-
+        
         rchoices = []
         kchoices = []
         foundRemoteIndex = 0
@@ -360,10 +360,10 @@ class SendRemoteKey(eg.ActionBase):
 
         st2 = wx.StaticText(panel, -1, "Name der Taste")
         mySizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-
+        
         keyCtrl = wx.Choice(panel, -1, choices=kchoices)#, size=(150,-1))
         mySizer.Add(keyCtrl, 1, wx.EXPAND)
-
+        
         def UpdateKeys(event=None):
             foundKeyIndex = 0
             remoteIndex = remoteCtrl.GetSelection()
@@ -375,18 +375,18 @@ class SendRemoteKey(eg.ActionBase):
                 if key == keyName:
                     foundKeyIndex = i
             keyCtrl.Select(foundKeyIndex)
-
+                
         remoteCtrl.Bind(wx.EVT_CHOICE, UpdateKeys)
         remoteCtrl.Select(foundRemoteIndex)
         if comObj:
             UpdateKeys()
-
+        
         st3 = wx.StaticText(panel, -1, "Anzahl der Wiederholungen")
         mySizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
-
+        
         numRepeatsCtrl = eg.SpinIntCtrl(panel, value=numRepeats,  min=1)
         mySizer.Add(numRepeatsCtrl)
-
+        
         panel.sizer.Add(mySizer, 1, wx.EXPAND)
 
         while panel.Affirmed():
@@ -394,11 +394,11 @@ class SendRemoteKey(eg.ActionBase):
             self.keyName = keyCtrl.GetStringSelection()
             self.numRepeats = numRepeatsCtrl.GetValue()
             panel.SetResult(self.remoteName, self.keyName, self.numRepeats)
-
-
-
+        
+        
+        
 class ClearScreen(eg.ActionBase):
-
+    
     def __call__(self):
         lcd = self.plugin.comObj.GetLcd(0)
         lcd.ClrScr()
@@ -406,7 +406,7 @@ class ClearScreen(eg.ActionBase):
 
 
 class Print(eg.ActionWithStringParameter):
-
+    
     def __call__(self, theString):
         lcd = self.plugin.comObj.GetLcd(0)
         lcd.Print(eg.ParseString(theString))
