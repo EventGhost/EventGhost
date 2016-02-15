@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-version = "3.11"
+version = "3.12"
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -19,6 +19,8 @@ version = "3.11"
 # Changelog (in reverse chronological order):
 # -------------------------------------------
 
+# 3.12 by by Pako 2016-02-15 17:15 UTC+1
+#     - bugfix (Send all values)
 # 3.11 by by Pako 2016-02-06 08:44 UTC+1
 #     - bugfix (Send or Broadcast Value, when value is persistent)
 # 3.10 by by Pako 2016-01-12 11:01 UTC+1
@@ -1712,7 +1714,7 @@ class WsSendAllValues(eg.ActionBase):
         )
         return self.plugin.ServerSendMessage(
             client,
-            dumps({'method':'Values', 'kwargs':values}),
+            dumps(values),
         )
 
 
@@ -4718,7 +4720,7 @@ class ClSendAllValues(eg.ActionBase):
         values = self.plugin.GetAllValues()
         self.plugin.ClientSendMessage(
             eg.ParseString(title),
-            dumps({'method':'Values', 'kwargs':values})
+            dumps(values)
         )
 
 
