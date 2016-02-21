@@ -24,6 +24,68 @@ from builder.Utils import EncodePath
 
 
 RT_MANIFEST = 24
+DLL_EXCLUDES = [
+    "DINPUT8.dll",
+    "w9xpopen.exe",
+    # TODO: find out where the following comes from. Is it because of Win10?
+    "api-ms-win-core-com-l1-1-1.dll",
+    "api-ms-win-core-com-midlproxystub-l1-1-0.dll",
+    "api-ms-win-core-console-l1-1-0.dll",
+    "api-ms-win-core-console-l2-1-0.dll",
+    "api-ms-win-core-datetime-l1-1-1.dll",
+    "api-ms-win-core-debug-l1-1-1.dll",
+    "api-ms-win-core-delayload-l1-1-1.dll",
+    "api-ms-win-core-errorhandling-l1-1-1.dll",
+    "api-ms-win-core-errorhandling-l1-1-3.dll",
+    "api-ms-win-core-file-l1-2-1.dll",
+    "api-ms-win-core-file-l2-1-1.dll",
+    "api-ms-win-core-file-l2-1-2.dll",
+    "api-ms-win-core-handle-l1-1-0.dll",
+    "api-ms-win-core-heap-l1-2-0.dll",
+    "api-ms-win-core-heap-l2-1-0.dll",
+    "api-ms-win-core-heap-obsolete-l1-1-0.dll",
+    "api-ms-win-core-io-l1-1-1.dll",
+    "api-ms-win-core-kernel32-legacy-l1-1-1.dll",
+    "api-ms-win-core-libraryloader-l1-2-0.dll",
+    "api-ms-win-core-libraryloader-l1-2-1.dll",
+    "api-ms-win-core-localization-l1-2-1.dll",
+    "api-ms-win-core-localization-obsolete-l1-3-0.dll",
+    "api-ms-win-core-memory-l1-1-2.dll",
+    "api-ms-win-core-path-l1-1-0.dll",
+    "api-ms-win-core-processenvironment-l1-2-0.dll",
+    "api-ms-win-core-processthreads-l1-1-2.dll",
+    "api-ms-win-core-profile-l1-1-0.dll",
+    "api-ms-win-core-psapi-ansi-l1-1-0.dll",
+    "api-ms-win-core-psapi-l1-1-0.dll",
+    "api-ms-win-core-realtime-l1-1-0.dll",
+    "api-ms-win-core-registry-l1-1-0.dll",
+    "api-ms-win-core-registry-l2-2-0.dll",
+    "api-ms-win-core-rtlsupport-l1-2-0.dll",
+    "api-ms-win-core-shlwapi-legacy-l1-1-0.dll",
+    "api-ms-win-core-shlwapi-obsolete-l1-2-0.dll",
+    "api-ms-win-core-sidebyside-l1-1-0.dll",
+    "api-ms-win-core-string-l1-1-0.dll",
+    "api-ms-win-core-string-l2-1-0.dll",
+    "api-ms-win-core-string-obsolete-l1-1-0.dll",
+    "api-ms-win-core-stringansi-l1-1-0.dll",
+    "api-ms-win-core-synch-l1-2-0.dll",
+    "api-ms-win-core-synch-l1-2-1.dll",
+    "api-ms-win-core-sysinfo-l1-2-1.dll",
+    "api-ms-win-core-threadpool-l1-2-0.dll",
+    "api-ms-win-core-threadpool-legacy-l1-1-0.dll",
+    "api-ms-win-core-timezone-l1-1-0.dll",
+    "api-ms-win-core-url-l1-1-0.dll",
+    "api-ms-win-core-wow64-l1-1-0.dll",
+    "api-ms-win-eventing-classicprovider-l1-1-0.dll",
+    "api-ms-win-eventing-controller-l1-1-0.dll",
+    "api-ms-win-eventing-legacy-l1-1-0.dll",
+    "api-ms-win-eventing-provider-l1-1-0.dll",
+    "api-ms-win-eventlog-legacy-l1-1-0.dll",
+    "api-ms-win-power-base-l1-1-0.dll",
+    "api-ms-win-power-setting-l1-1-0.dll",
+    "api-ms-win-security-activedirectoryclient-l1-1-0.dll",
+    "api-ms-win-security-activedirectoryclient-l1-1-1.dll", "api-ms-win-security-base-l1-2-0.dll",
+]
 
 def RemoveAllManifests(scanDir):
     """
@@ -85,28 +147,30 @@ class Target:
         iconPath = join(buildSetup.dataDir, "Main.ico")
         if exists(iconPath):
             self.icon_resources.append((1, iconPath))
-        manifest = file(
-            join(buildSetup.pyVersionDir, "manifest.template")
-        ).read() % buildSetup.__dict__
-        self.other_resources = [(RT_MANIFEST, 1, manifest)]
+        # Todo: Do we need the manifest file?
+        #manifest = file(
+        #    join(buildSetup.pyVersionDir, "manifest.template")
+        #).read() % buildSetup.__dict__
+        #self.other_resources = [(RT_MANIFEST, 1, manifest)]
         self.name = buildSetup.name
         self.description = buildSetup.description
         self.company_name = buildSetup.companyName
         self.copyright = buildSetup.copyright
         self.dest_base = buildSetup.name
-        self.version = buildSetup.appNumericalVersion
+        self.version = buildSetup.appVersion
         self.script = join(buildSetup.sourceDir, buildSetup.mainScript)
 
 
 
 class CreateLibrary(Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
+    enabled = False
 
     def Setup(self):
         self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
         if not exists(join(self.buildSetup.libraryDir, self.zipName)):
             self.activated = True
-            self.enabled = False
+            self.enabled = True  # TODO: Change back to False
 
 
     def DoTask(self):
@@ -137,7 +201,7 @@ class CreateLibrary(Task):
                     compressed=0,
                     includes=["encodings", "encodings.*", "imports"],
                     excludes=buildSetup.excludeModules,
-                    dll_excludes = ["DINPUT8.dll", "w9xpopen.exe"],
+                    dll_excludes = DLL_EXCLUDES,
                     dist_dir = EncodePath(buildSetup.sourceDir),
                     custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
@@ -147,7 +211,7 @@ class CreateLibrary(Task):
         )
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
-        neededDlls = []
+        neededDlls = ['_ssl.pyd']
         for _, _, files in os.walk(dirname(sys.executable)):
             for filename in files:
                 if filename in dllNames:

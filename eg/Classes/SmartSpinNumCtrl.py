@@ -50,13 +50,13 @@ class SmartSpinNumCtrl(wx.Window):
         if 'textWidth' in self.kwargs:
             self.tW = self.kwargs['textWidth']
             del self.kwargs['textWidth']
-        
+
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.sizer)
         self.ctrl = self.CreateCtrl(int(not isinstance(value, (int, float))))
-        self.Bind(wx.EVT_SIZE, self.OnSize)        
+        self.Bind(wx.EVT_SIZE, self.OnSize)
 
 
     def UpdateWidth(self, ctrl):

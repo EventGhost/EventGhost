@@ -117,7 +117,7 @@ class Log(object):
         data = list(self.data)
         return data[start:end]
 
-   
+
     def AddLogListener(self, listener):
         if listener not in self.logListeners:
             self.logListeners.append(listener)
@@ -126,8 +126,8 @@ class Log(object):
     def RemoveLogListener(self, listener):
         if listener in self.logListeners:
             self.logListeners.remove(listener)
-            
-            
+
+
     def AddEventListener(self, listener):
         if listener not in self.eventListeners:
             self.eventListeners.append(listener)
@@ -136,7 +136,7 @@ class Log(object):
     def RemoveEventListener(self, listener):
         if listener in self.eventListeners:
             self.eventListeners.remove(listener)
-   
+
 
     def _WriteLine(self, line, icon, wRef, when, indent):
         if self.NativeLog:

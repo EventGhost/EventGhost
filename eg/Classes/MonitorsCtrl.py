@@ -21,7 +21,7 @@ class MonsListCtrl(wx.ListCtrl):
 
     def __init__(self, parent, pos, size = wx.DefaultSize):
         ID = wx.NewId()
-        style = wx.LC_REPORT| wx.LC_VRULES| wx.LC_HRULES| wx.LC_SINGLE_SEL                                
+        style = wx.LC_REPORT| wx.LC_VRULES| wx.LC_HRULES| wx.LC_SINGLE_SEL
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
         mons = [(i[0],i[1],i[2]-i[0],i[3]-i[1]) for i in [j[2] for j in Edm()]]
         for j, header in enumerate(eg.text.General.monitorsHeader):
@@ -79,6 +79,4 @@ class MonitorsCtrl(wx.Panel):
 
     def OnSize(self, dummyEvent):
         self.SetSize(self.size)
-
-
 

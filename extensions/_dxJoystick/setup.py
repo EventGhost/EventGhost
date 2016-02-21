@@ -18,7 +18,7 @@ setup(
             library_dirs=[os.path.join(sdkPath, "lib", "x86")],
             libraries=[
                 'dxguid', 
-                'dxerr9', 
+                'dxerr', 
                 'dinput8', 
             ],
         )

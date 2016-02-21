@@ -444,8 +444,8 @@ class GetUpTime(eg.ActionBase):
     class text:
         name = "Get Uptime"
         description  = """
-            Returns a runtime of system in seconds. 
-            If checkbox is not checked, returns the number of days, 
+            Returns a runtime of system in seconds.
+            If checkbox is not checked, returns the number of days,
             hours, minutes and seconds.
         """
         ticks = "Return result as the number of seconds (ticks)"
@@ -468,8 +468,8 @@ class GetBootTimestamp(eg.ActionBase):
     class text:
         name = "Get Boot Timestamp"
         description  = """
-            Returns the time of the last system boot. 
-            If checkbox is checked, result is a unix temestamp. 
+            Returns the time of the last system boot.
+            If checkbox is checked, result is a unix temestamp.
             Otherwise it is in human readable form.
         """
         timestamp = "Result return as an unix timestamp"
@@ -477,7 +477,7 @@ class GetBootTimestamp(eg.ActionBase):
 
     def __call__(self, timestamp = True):
         return eg.Utils.GetBootTimestamp(unix_timestamp = timestamp)
-    
+
 
     def Configure(self, timestamp = True):
         panel = eg.ConfigPanel()
@@ -1260,7 +1260,7 @@ class ShapedFrame(wx.Frame):
                 pil = Image.open(StringIO(b64decode(imageFile)))
             except:
                 eg.PrintError(error % data)
-                return            
+                return
         self.name = name
         self.plugin = plugin
         self.imageFile = imageFile
@@ -1988,7 +1988,7 @@ class ShowQRcode(eg.ActionBase):
         border = "Border width [box]:"
         title = "Name of image:"
         sizeMode = "Fullscreen:"
-        titleTool = """Required only if you want to close the image window 
+        titleTool = """Required only if you want to close the image window
 programmatically\nUse the action: Hide image"""
 
 
@@ -2019,14 +2019,14 @@ programmatically\nUse the action: Hide image"""
         border = parseArgument(border)
         if data:
             qr = QRCode(
-                version = None, 
+                version = None,
                 border = border,
                 error_correction = QRconstants.ERROR_CORRECT_M,
                 box_size = box,
             )
             qr.add_data(data)
             qr.make(fit = True)
-            img = qr.make_image()        
+            img = qr.make_image()
             buff = StringIO()
             img.save(buff)
             b64 = b64encode(buff.getvalue())
@@ -2049,7 +2049,7 @@ programmatically\nUse the action: Hide image"""
                 0,
                 640,
                 360,
-                (0, 0, 0), 
+                (0, 0, 0),
                 True,
                 True,
                 True,

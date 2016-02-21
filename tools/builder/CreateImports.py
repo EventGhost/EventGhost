@@ -35,6 +35,7 @@ MODULES_TO_IGNORE = [
     "wx.lib.rpcMixin",
     "wx.lib.wxcairo",
     "win32com.propsys.propsys",
+    "unittest"
 ]
 
 HEADER = """\
@@ -168,7 +169,7 @@ def ReadGlobalModuleIndex(infile):
     """
     modules = []
     badModules = []
-    inFile = open(infile, "rt")
+    inFile = open(infile, "r")
     for line in inFile.readlines():
         if line.startswith("#"):
             continue
@@ -235,12 +236,13 @@ def GetPackageModules(package):
 
 class CreateImports(builder.Task):
     description = "Create Imports.py"
+    enabled = False
 
     def Setup(self):
         self.outFileName = join(self.buildSetup.pyVersionDir, "imports.py")
         if not os.path.exists(self.outFileName):
             self.activated = True
-            self.enabled = False
+            self.enabled = True  # TODO: Change back to False
 
 
     def DoTask(self):

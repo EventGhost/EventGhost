@@ -43,7 +43,7 @@ class Configure(UndoHandlerBase):
 
     @eg.AssertInMainThread
     @eg.LogItWithReturn
-    def Do(self, item, isFirstConfigure = False):    
+    def Do(self, item, isFirstConfigure = False):
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
@@ -54,7 +54,7 @@ class Configure(UndoHandlerBase):
         oldArgs = DeepCopy(newArgs)                     # bugfix
         revertOnCancel = False
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
-    
+
         for event, newArgs in dialog:
             if event == wx.ID_OK:
                 break
@@ -72,7 +72,7 @@ class Configure(UndoHandlerBase):
             return False
         ActionThreadFunc(item.SetArguments)(newArgs)
         newArgumentString = ActionThreadFunc(item.GetArgumentString)()
-       
+
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:
                 self.treePosition = eg.TreePosition(item)

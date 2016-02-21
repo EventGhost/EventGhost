@@ -105,7 +105,7 @@ class MouseThread(Thread):
                 self.speed = 0
                 stop = False
                 continue
-                
+
             if self.acceleration == 0:
                 sleep(0.05)
                 continue
@@ -233,7 +233,7 @@ class GoDirection(eg.ActionBase):
         direction = float(direction)
         valueCtrl = panel.SpinNumCtrl(float(direction), min=0, max=360)
         panel.AddLine(text.text1, valueCtrl, text.text2)
-        
+
         initSpeedLabel = wx.StaticText(panel, -1, text.text3)
         initSpeedSpin = eg.SpinIntCtrl(panel, -1, initSpeed, 10, 2000)
         maxSpeedLabel = wx.StaticText(panel, -1, text.text4)
@@ -244,10 +244,10 @@ class GoDirection(eg.ActionBase):
         panel.AddLine(initSpeedLabel, initSpeedSpin)
         panel.AddLine(maxSpeedLabel, maxSpeedSpin)
         panel.AddLine(accelerationFactorLabel, accelerationFactorSpin)
-        
+
         uAMCB = panel.CheckBox(useAlternateMethod, text.label_AM)
         panel.AddLine(uAMCB)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 valueCtrl.GetValue(),
@@ -552,9 +552,9 @@ class MoveRelative(eg.ActionBase):
     def Configure(self, x=0, y=0, useAlternateMethod=False):
         panel = eg.ConfigPanel()
         text = self.text
-        
+
         uAMCB = panel.CheckBox(useAlternateMethod, text.label_AM)
-        
+
         xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())

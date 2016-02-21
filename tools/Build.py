@@ -40,13 +40,32 @@ from glob import glob
 
 # local imports
 import builder
+from builder.Utils import ListDir
+
+
+SKIP_DIRS = ['dist', '.git', '.idea', 'tools', 'extensions']
+DONT_INCLUDE = []
+INCLUDE_FILES = [
+    'CHANGELOG.TXT',
+    'EventGhost.chm',
+    'EventGhost.exe',
+    'Example.xml',
+    'LICENSE.TXT',
+    'Microsoft.VC90.CRT.manifest',
+    'msvcm90.dll',
+    'msvcp90.dll',
+    'msvcr90.dll',
+    'py.exe',
+    'pyw.exe',
+    'python27.dll',
+]
 
 
 class MyBuilder(builder.Builder):
     name = "EventGhost"
     description = "EventGhost Automation Tool"
     companyName = "EventGhost Project"
-    copyright = u"Copyright © 2005-2009 EventGhost Project"
+    copyright = u"Copyright © 2005-2016 EventGhost Project"
     mainScript = "EventGhost.pyw"
 
     includeModules = [
@@ -109,54 +128,33 @@ class MyBuilder(builder.Builder):
         """
         Return all files needed by the installer.
 
-        The code scans for all SVN versioned files in the working copy and adds
+        The code scans for all files in the working copy and adds
         them to the list, except if a "noinstall" property is set for the file
         or a parent directory of the file.
 
         Plugins with a "noinclude" file are also skipped.
         """
-        import pysvn
+        srcDir = self.sourceDir
+        files = set(ListDir(srcDir, SKIP_DIRS, fullpath=False))
+        files = files.difference(DONT_INCLUDE)
+        remove = []
+        for f in files:
+            if f.count('\\') == 0:
+                if f not in INCLUDE_FILES:
+                    remove.append(f)
+        files = files.difference(remove)
 
-        files = []
-        client = pysvn.Client()
-        workingDir = self.sourceDir
-        svnRoot = builder.getSvnRoot(workingDir)
-        #props = client.propget("noinstall", workingDir, recurse=True)
-        props = client.propget("noinstall", svnRoot, recurse=True)
-        # propget returns the pathes with forward slash as deliminator, but we
-        # need backslashes. It also seems to be encoded in UTF-8.
-        props = dict(
-            (k.replace("/", "\\").decode("utf8"), v)
-                for k, v in props.iteritems()
-        )
-        numPathParts = len(workingDir.split("\\"))
-        #for status in client.status(workingDir, ignore=True):
-        status = client.status(svnRoot, ignore=True)
-        workingDirStatus = [i for i in status if workingDir in i.path]
-        for status in workingDirStatus:
-            # we only want versioned files
-            if not status.is_versioned:
-                continue
-            if not os.path.exists(status.path):
-                continue
-            pathParts = status.path.split("\\")
-            # don't include plugins that have a 'noinclude' file
-            if len(pathParts) > numPathParts + 1:
-                if pathParts[numPathParts].lower() == "plugins":
-                    pluginDir = "\\".join(pathParts[:numPathParts + 2])
-                    if exists(join(pluginDir, "noinclude")):
-                        continue
+        noincludes = []
+        installFiles = []
+        for fname in files:
+            if fname.endswith('noinclude'):
+                noincludes.append(fname.replace('noinclude', ''))
+        for noinc in noincludes:
+                for fname in files:
+                    if not fname.startswith(noinc):
+                        installFiles.append(fname)
 
-            # make sure no parent directory has a noinstall property
-            for i in range(numPathParts, len(pathParts)+1):
-                path2 = "\\".join(pathParts[:i])
-                if path2 in props:
-                    break
-            else:
-                if not os.path.isdir(status.path):
-                    relativePath = status.path[len(workingDir) + 1:]
-                    files.append(relativePath)
-        return files
+        return installFiles
 
 
     def CreateInstaller(self):

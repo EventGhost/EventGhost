@@ -59,7 +59,14 @@ class MainDialog(wx.Dialog):
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add(ctrlsSizer)
 
+        lbl = wx.StaticText(self, wx.ID_ANY, 'Version:')
+        self.versionStr = wx.TextCtrl(self, wx.ID_ANY, value=buildSetup.appVersion)
+        szr = wx.BoxSizer(wx.HORIZONTAL)
+        szr.Add(lbl, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        szr.Add(self.versionStr)
+
         mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(szr, 0, wx.ALL, 5)
         mainSizer.Add(sizer2, 1, wx.ALL|wx.EXPAND, 0)
         mainSizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
         self.SetSizerAndFit(mainSizer)
@@ -80,6 +87,8 @@ class MainDialog(wx.Dialog):
                 task.activated = ctrl.GetValue()
                 ctrl.Enable(False)
         self.buildSetup.config.SaveSettings()
+        self.buildSetup.appVersion = self.versionStr.GetValue()
+        #self.buildSetup.appRevision = int(self.buildSetup.appVersion.split('.')[2])
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 

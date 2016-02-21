@@ -479,7 +479,7 @@ class MainFrame(wx.Frame):
 
 
     def CreateTreeCtrl(self):
-        treeCtrl = TreeCtrl(self, document=self.document)        
+        treeCtrl = TreeCtrl(self, document=self.document)
         self.auiManager.AddPane(
             treeCtrl,
             wx.aui.AuiPaneInfo().
@@ -490,11 +490,11 @@ class MainFrame(wx.Frame):
                 Dockable(True).
                 MaximizeButton(True).
                 Caption(" " + Text.Tree.caption).
-                CloseButton(False)      
+                CloseButton(False)
         )
         self.auiManager.Update()
         treeCtrl.SetFocus()
-        return treeCtrl          
+        return treeCtrl
 
 
     def CreateLogCtrl(self):
@@ -566,7 +566,7 @@ class MainFrame(wx.Frame):
         info = self.auiManager.SavePaneInfo(panel)
         pos = info.find(";dir=") + 5
         return info[pos]
-        
+
 
     def UpdateRatio(self):
         self.logCtrl.SetColumnWidth(
@@ -618,7 +618,7 @@ class MainFrame(wx.Frame):
                     l_val =self.logCtrl.GetSizeTuple()[coord]
                     t_val = self.treeCtrl.GetSizeTuple()[coord]
                     c_val = self.GetClientSizeTuple()[coord]
-                    k = c_val - l_val - t_val      
+                    k = c_val - l_val - t_val
                     l_val = int((c_val-k)/(1 + self.ratio))
                     #t_val = (c_val-k)-l_val
                     b1 = s.find("|dock_size(%s," % dir) + 1

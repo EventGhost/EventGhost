@@ -159,3 +159,4 @@ class ControlProviderMixin:
 
     def MonitorsCtrl(self, *args, **kwargs):
         return eg.MonitorsCtrl(self, -1, *args, **kwargs)
+

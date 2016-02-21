@@ -140,7 +140,7 @@ def ImportAll():
             path = join(root, name)
             if os.path.isdir(path):
                 name = basename(path)
-                if name == ".svn":
+                if name in [".svn", ".git", ".idea"]:
                     continue
                 if not os.path.exists(join(path, "__init__.py")):
                     continue

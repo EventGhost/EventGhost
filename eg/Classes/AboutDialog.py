@@ -354,7 +354,7 @@ class SystemInfoPanel(HtmlPanel):
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory = GetRam()[0]
-        pythonVersion = "%d.%d.%d %s %d" % sys.version_info
+        pythonVersion = "%d.%d.%d %s %d" % tuple(sys.version_info)
         if is_stackless:
             pythonVersion = "Stackless Python " + pythonVersion
         self.sysInfos = [
