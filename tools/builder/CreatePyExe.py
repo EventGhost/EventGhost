@@ -48,9 +48,9 @@ class CreatePyExe(builder.Task):
     def DoTask(self):
         buildSetup = self.buildSetup
         tmpDir = tempfile.mkdtemp()
-        #manifest = file(
-        #    join(buildSetup.pyVersionDir, "manifest.template")
-        #).read()
+        manifest = file(
+            join(buildSetup.pyVersionDir, "manifest.template")
+        ).read()
         setup(
             script_args = ["py2exe"],
             options=dict(
@@ -64,14 +64,14 @@ class CreatePyExe(builder.Task):
                 dict(
                     script=join(buildSetup.dataDir, "py.py"),
                     dest_base=PYW_BASE_NAME,
-                    #other_resources = [(24, 1, manifest)],
+                    other_resources = [(24, 1, manifest)],
                 )
             ],
             console=[
                 dict(
                     script=join(buildSetup.dataDir, "py.py"),
                     dest_base=PY_BASE_NAME,
-                    #other_resources = [(24, 1, manifest)],
+                    other_resources = [(24, 1, manifest)],
                 )
             ],
             verbose=0,

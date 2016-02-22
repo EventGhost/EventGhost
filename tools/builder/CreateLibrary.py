@@ -148,11 +148,10 @@ class Target:
         iconPath = join(buildSetup.dataDir, "Main.ico")
         if exists(iconPath):
             self.icon_resources.append((1, iconPath))
-        # Todo: Do we need the manifest file?
-        #manifest = file(
-        #    join(buildSetup.pyVersionDir, "manifest.template")
-        #).read() % buildSetup.__dict__
-        #self.other_resources = [(RT_MANIFEST, 1, manifest)]
+        manifest = file(
+            join(buildSetup.pyVersionDir, "manifest.template")
+        ).read() % buildSetup.__dict__
+        self.other_resources = [(RT_MANIFEST, 1, manifest)]
         self.name = buildSetup.name
         self.description = buildSetup.description
         self.company_name = buildSetup.companyName
