@@ -16,12 +16,9 @@
 
 import shutil
 import time
-import re
-import imp
 import pygit2
 from os.path import join
 import builder
-from .Utils import EncodePath
 
 
 class UpdateVersionFile(builder.Task):
@@ -29,18 +26,18 @@ class UpdateVersionFile(builder.Task):
     Update buildTime and revision for eg/Classes/VersionRevision.py
     """
     description = "Update version file"
-    visible = True
     enabled = False
 
     def DoTask(self):
         buildSetup = self.buildSetup
+        buildSetup.buildTime = time.time()
         filename = join(buildSetup.tmpDir, "VersionRevision.py")
         outfile = open(filename, "wt")
         major, minor, revision = buildSetup.appVersion.split('.')
         outfile.write("major = %r\n" % major)
         outfile.write("minor = %r\n" % minor)
         outfile.write("revision = %r\n" % revision)
-        outfile.write("buildTime = %f\n" % time.time())
+        outfile.write("buildTime = %f\n" % buildSetup.buildTime)
         outfile.close()
 
 
@@ -49,8 +46,6 @@ class UpdateChangeLog(builder.Task):
     Add a version header to CHANGELOG.TXT if needed.
     """
     description = "updating CHANGELOG.TXT"
-    visible = True
-    activated = False
 
     def DoTask(self):
         buildSetup = self.buildSetup
@@ -59,15 +54,20 @@ class UpdateChangeLog(builder.Task):
 
         # read from CHANGELOG.TXT the last version number for which an
         # entry exists (newest must be topmost).
-        infile = open(changelog_path, "r")
-        line = infile.readline().strip()
-        while line:
-            if line.startswith("**"):
-                latest_version_in_log_refname = 'refs/tags/v' + \
-                                            line[2:].split()[0]
-                break
+        latest_version_in_log_refname = 'refs/tags/v0.0.0'
+        try:
+            infile = open(changelog_path, "r")
+        except IOError:
+            pass
+        else:
             line = infile.readline().strip()
-        infile.close()
+            while line:
+                if line.startswith("**"):
+                    latest_version_in_log_refname = 'refs/tags/v' + \
+                                                line[2:].split()[0]
+                    break
+                line = infile.readline().strip()
+            infile.close()
 
         # Get the last release version number (=highest number) and increment it
         app_version = buildSetup.appVersion
@@ -110,7 +110,8 @@ class UpdateChangeLog(builder.Task):
         last_release_version_oid = last_log_ref.target
 
         # fetch all commit messages since the last version found in changelog.
-        new_logs = '** {0} **\n\n'.format(app_version)
+        bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
+        new_logs = '**{0} ({1})**\n\n'.format(app_version, bldDate)
 
         for commit in repo.walk(last_log_ref.target, pygit2.GIT_SORT_TIME):
             oid = commit.oid
@@ -118,28 +119,51 @@ class UpdateChangeLog(builder.Task):
                                 last_log_ref.name != buildSetup.branchFullname:
                 break
             elif oid in tags:
-                new_logs += '\n\n** {0} **\n\n'.format(
-                                            tagsdict[oid].shorthand.strip('v'))
-            lines = commit.message.split('\n')
-            chg = []
-            for l in lines:
-                # remove some unnecessary text
-                if not l.startswith('git-svn-id:') and l.strip() != '':
-                    chg.append(l)
-            msg = '\n  '.join(chg)
-            if msg:
-                new_logs += '- ' + msg + '\n'
+                commitTime = time.strftime("%Y-%m-%d", time.gmtime(
+                    commit.commit_time + (commit.commit_time_offset*60)))
+                new_logs += '\n\n**{0} ({1})**\n\n'.format(
+                                            tagsdict[oid].shorthand.strip('v'),
+                                            commitTime
+                )
+            message = commit.message.split('\n')[0]
+            new_logs += '- {0} ({1})\n'.format(message, commit.author.name)
+
+            # chg = []
+            # for l in lines:
+            #     # remove some unnecessary text
+            #     if not l.startswith('git-svn-id:') and l.strip() != '':
+            #         chg.append(l)
+            # msg = '\n  '.join(chg)
+            # if msg:
+            #     new_logs += '- ' + msg + '\n'
 
         # read the existing changelog...
-        infile = open(changelog_path, "r")
-        old_changelog = infile.readlines()
-        infile.close()
+        try:
+            infile = open(changelog_path, "r")
+        except IOError:
+            old_changelog = ''
+        else:
+            old_changelog = infile.readlines()
+            infile.close()
 
         # ... and put the new changelog on top
-        outfile = open(changelog_path, "w+")
-        outfile.write(new_logs + '\n\n')
-        outfile.writelines(old_changelog)
-        outfile.close()
+        try:
+            outfile = open(changelog_path, "w+")
+        except IOError:
+            import sys
+            import wx
+            parent = wx.GetApp().GetTopWindow()
+
+            msg = "CHANGELOG.TXT couldn't be written.\n({0})".format(
+                                                                sys.exc_value)
+            dlg = wx.MessageDialog(parent, msg, caption="Error",
+                                   style=wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+        else:
+            outfile.write(new_logs + '\n\n')
+            if old_changelog:
+                outfile.writelines(old_changelog)
+            outfile.close()
 
 
 class CreateInstaller(builder.Task):

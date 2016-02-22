@@ -88,7 +88,6 @@ class MainDialog(wx.Dialog):
                 ctrl.Enable(False)
         self.buildSetup.config.SaveSettings()
         self.buildSetup.appVersion = self.versionStr.GetValue()
-        #self.buildSetup.appRevision = int(self.buildSetup.appVersion.split('.')[2])
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 

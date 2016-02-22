@@ -236,13 +236,11 @@ def GetPackageModules(package):
 
 class CreateImports(builder.Task):
     description = "Create Imports.py"
-    enabled = False
 
     def Setup(self):
         self.outFileName = join(self.buildSetup.pyVersionDir, "imports.py")
-        if not os.path.exists(self.outFileName):
-            self.activated = True
-            self.enabled = True  # TODO: Change back to False
+        if os.path.exists(self.outFileName):
+            self.activated = False
 
 
     def DoTask(self):

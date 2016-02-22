@@ -95,8 +95,9 @@ def RemoveAllManifests(scanDir):
     This seems to be the only way how the setup can run with Python 2.6
     on Vista and above.
     """
-    import ctypes
+    # TODO: Check if the above is true for Python 2.7
 
+    import ctypes
     BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
     UpdateResource = ctypes.windll.kernel32.UpdateResourceW
     EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceW
@@ -164,13 +165,11 @@ class Target:
 
 class CreateLibrary(Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
-    enabled = False
 
     def Setup(self):
         self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
-        if not exists(join(self.buildSetup.libraryDir, self.zipName)):
-            self.activated = True
-            self.enabled = True  # TODO: Change back to False
+        if exists(join(self.buildSetup.libraryDir, self.zipName)):
+            self.activated = False
 
 
     def DoTask(self):
@@ -211,7 +210,7 @@ class CreateLibrary(Task):
         )
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
-        neededDlls = ['_ssl.pyd']
+        neededDlls = []
         for _, _, files in os.walk(dirname(sys.executable)):
             for filename in files:
                 if filename in dllNames:
@@ -219,6 +218,7 @@ class CreateLibrary(Task):
         for dllName in dllNames:
             if dllName not in neededDlls:
                 os.remove(join(libraryDir, dllName))
-        if buildSetup.pyVersionStr == "26":
+
+        if buildSetup.pyVersionStr == "27":
             RemoveAllManifests(libraryDir)
 

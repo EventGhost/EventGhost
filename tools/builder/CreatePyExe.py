@@ -37,16 +37,14 @@ PYW_BASE_NAME = "pyw%s" % PYVERSION
 
 class CreatePyExe(builder.Task):
     description = "Build py.exe and pyw.exe"
-    enabled = False
 
     def Setup(self):
         sourceDir = self.buildSetup.sourceDir
-        if (
-            not exists(join(sourceDir, PY_BASE_NAME + ".exe"))
-            or not exists(join(sourceDir, PYW_BASE_NAME + ".exe"))
-        ):
-            self.activated = True
-            self.enabled = True  # TODO: Change back to False
+        py27exe = exists(join(sourceDir, PY_BASE_NAME + ".exe"))
+        pyw27exe = exists(join(sourceDir, PYW_BASE_NAME + ".exe"))
+        py27 = py27exe and pyw27exe
+        if py27:
+            self.activated = False
 
 
     def DoTask(self):

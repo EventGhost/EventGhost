@@ -73,10 +73,6 @@ def GetRevision(buildSetup):
     Get the app version and revision.
     """
 
-    # TODO: get revison from git repository
-    versionFilePath = join(buildSetup.sourceDir, "eg", "Classes", "Version.py")
-    mod = imp.load_source("Version", versionFilePath)
-
     regex = re.compile('^refs/tags')
     all_tags = filter(lambda r: regex.match(r),
                       buildSetup.repo.listall_references())
@@ -96,6 +92,7 @@ def GetRevision(buildSetup):
         else:
             parts = ['wrong', 'version','format']
     buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
+
 
 def GetHtmlHelpCompilerPath():
     """
@@ -119,9 +116,11 @@ def ListDir(path, skip_dirs=[], fullpath=True):
     skip_dirs is a list of directories, which contents should not be listet.
 
     :param path: root directory (full path)
-    :param skip_dirs: list of directoy names to skip
+    :param skip_dirs: list of directory names to skip
+    :param fullpath: should the list contain the full path?
     :return: list of filenames with full path
     '''
+
     if not fullpath:
         cwd = os.getcwd()
         os.chdir(path)
