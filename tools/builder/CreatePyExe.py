@@ -40,10 +40,8 @@ class CreatePyExe(builder.Task):
 
     def Setup(self):
         sourceDir = self.buildSetup.sourceDir
-        py27exe = exists(join(sourceDir, PY_BASE_NAME + ".exe"))
-        pyw27exe = exists(join(sourceDir, PYW_BASE_NAME + ".exe"))
-        py27 = py27exe and pyw27exe
-        if py27:
+        if (exists(join(sourceDir, PY_BASE_NAME + ".exe")) and
+                exists(join(sourceDir, PYW_BASE_NAME + ".exe"))):
             self.activated = False
 
 
