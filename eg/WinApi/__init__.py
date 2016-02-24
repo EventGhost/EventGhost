@@ -48,3 +48,4 @@ def GetTopLevelWindowList(includeInvisible):
             topWindowsHwnds[i] = hwnd2
 
     return topWindowsHwnds
+

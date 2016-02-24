@@ -138,3 +138,4 @@ class DeviceChangeNotifier:
                 deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
                 self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1
+

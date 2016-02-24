@@ -14,12 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import tempfile
-import atexit
 import shutil
-from os.path import abspath, dirname, join
-from Utils import *
+import stat
+import pygit2
+import sys
+from os import chmod, mkdir
+from os.path import abspath, dirname, join, exists, isdir
+from Utils import GetRevision, DecodePath
+
 
 class Task(object):
     value = None
@@ -29,7 +32,6 @@ class Task(object):
 
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
-
 
     def Setup(self):
         pass
@@ -42,9 +44,7 @@ class Task(object):
         raise NotImplementedError
 
 
-
 class Builder(object):
-
     def __init__(self):
         from CheckDependencies import CheckDependencies
         global buildSetup
@@ -58,13 +58,14 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
-        self.outDir = abspath(join(self.sourceDir, ".."))
+        repoDir = pygit2.discover_repository(self.sourceDir)
+        self.repo = pygit2.Repository(repoDir)
+        self.branchFullname = self.repo.head.name
+        #self.appRevision = None
         if not CheckDependencies(self):
             sys.exit(1)
         self.tmpDir = tempfile.mkdtemp()
-        #atexit.register(shutil.rmtree, self.tmpDir)
         self.appName = self.name
-
 
     def RunGui(self):
         from Tasks import TASKS
@@ -74,5 +75,6 @@ class Builder(object):
         for task in self.tasks:
             task.Setup()
         import Gui
+        GetRevision(self)
         Gui.Main(self)
 

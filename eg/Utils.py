@@ -462,8 +462,8 @@ def ExecFile(filename, globals=None, locals=None):
 
 def GetBootTimestamp(unix_timestamp = True):
     """
-    Returns the time of the last system boot. 
-    If unix_timestamp == True, result is a unix temestamp. 
+    Returns the time of the last system boot.
+    If unix_timestamp == True, result is a unix temestamp.
     Otherwise it is in human readable form.
     """
     now = time.time()
@@ -472,11 +472,11 @@ def GetBootTimestamp(unix_timestamp = True):
     up = GetTickCount64() / 1000.0
     st = str(dt.fromtimestamp(now - up))
     return now-up if unix_timestamp else st[:st.index(".")]
-    
+
 
 def GetUpTime(seconds = True):
     """
-    Returns a runtime of system in seconds. 
+    Returns a runtime of system in seconds.
     If seconds == False, returns the number of days, hours, minutes and seconds.
     """
     GetTickCount64 = windll.kernel32.GetTickCount64
@@ -484,3 +484,4 @@ def GetUpTime(seconds = True):
     ticks = GetTickCount64()/1000.0
     delta = str(td(seconds = ticks))
     return ticks if seconds else delta[:delta.index(".")]
+

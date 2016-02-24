@@ -510,7 +510,7 @@ class Document(object):
 
 
     @eg.AssertInMainThread
-    def CmdPython(self):   
+    def CmdPython(self):
         self.selection.OnCmdPython()
 
 

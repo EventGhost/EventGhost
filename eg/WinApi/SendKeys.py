@@ -435,7 +435,7 @@ class SendKeysParser:
                     processID
                 )
             #self.WaitForInputProcessed()
-            
+
             oldKeyboardState = PBYTE256()
             GetKeyboardState(byref(oldKeyboardState))
 
@@ -519,7 +519,7 @@ class SendKeysParser:
                     SetKeyboardState(byref(keyboardStateBuffer))
                     PostMessage(hwnd, mesg, keyCode, lparam)
                     self.WaitForInputProcessed()
-                    
+
             if mode==0 or mode==2:
                 for virtualKey in reversed(block):
                     keyCode = virtualKey & 0xFF

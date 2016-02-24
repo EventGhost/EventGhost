@@ -47,8 +47,8 @@ from eg.WinApi.Dynamic import CreateEvent, SetEvent
 
 from win32con import (
     # constants:
-    MB_TOPMOST, MB_ABORTRETRYIGNORE, MB_ICONERROR, MB_ICONINFORMATION, 
-    MB_ICONQUESTION, MB_ICONWARNING, MB_NOFOCUS, MB_OK, MB_OKCANCEL, 
+    MB_TOPMOST, MB_ABORTRETRYIGNORE, MB_ICONERROR, MB_ICONINFORMATION,
+    MB_ICONQUESTION, MB_ICONWARNING, MB_NOFOCUS, MB_OK, MB_OKCANCEL,
     MB_RETRYCANCEL, MB_SYSTEMMODAL, MB_YESNO, MB_YESNOCANCEL
 )
 ACV   = wx.ALIGN_CENTER_VERTICAL
@@ -742,12 +742,12 @@ class MessageBoxDialog(wx.Dialog):
             PlaySound(self.SOUNDS[iconFlag], SND_ASYNC)
         message = wx.StaticText(self, -1, message)
         font = message.GetFont()
-        font.SetPointSize(10) 
+        font.SetPointSize(10)
         message.SetFont(font)
         message.Wrap(416)
         line = wx.StaticLine(self, -1, size=(1,-1), style = wx.LI_HORIZONTAL)
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        bottomSizer.Add((10, 1)) 
+        bottomSizer.Add((10, 1))
 
         if time:
             self.cnt = time
@@ -755,7 +755,7 @@ class MessageBoxDialog(wx.Dialog):
             info = wx.StaticText(self, -1, txt)
             info.Enable(False)
             bottomSizer.Add(info, 0, wx.TOP, 3)
-            
+
             def UpdateInfoLabel(evt):
                 self.cnt -= 1
                 txt = action.text.autoClose % self.cnt
@@ -776,7 +776,7 @@ class MessageBoxDialog(wx.Dialog):
             b = wx.Button(self, bttn, action.text.__dict__[self.LABELS[bttn]])
             b.SetFont(font)
             bottomSizer.Add(b, 0, wx.LEFT, 5)
-        bottomSizer.Add((10, 1)) 
+        bottomSizer.Add((10, 1))
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         topSizer.Add((1,1),0,wx.LEFT|wx.RIGHT,5)
         topSizer.Add(icon,0,wx.LEFT|wx.RIGHT|wx.TOP,10)
@@ -815,12 +815,12 @@ class MessageBoxDialog(wx.Dialog):
             SetEvent(self.event)
         self.Destroy()
 #===============================================================================
-        
+
 class ShowMessageBox(eg.ActionBase):
     retCode = None
     RESULTS = (0, "OK", "CANCEL", "ABORT", "RETRY", "IGNORE", "YES", "NO")
     RES_IDS = (
-        wx.ID_OK, 
+        wx.ID_OK,
         wx.ID_CANCEL,
         wx.ID_ABORT,
         wx.ID_RETRY,
@@ -881,8 +881,8 @@ class ShowMessageBox(eg.ActionBase):
         modal = "Modal"
         play = "Play a system sound"
 
-        #MB_TOPMOST=262144, MB_ABORTRETRYIGNORE=2, MB_ICONERROR=16, 
-        #MB_ICONINFORMATION=64, MB_ICONQUESTION=32, MB_ICONWARNING=48, MB_NOFOCUS=32768, MB_OK=0, 
+        #MB_TOPMOST=262144, MB_ABORTRETRYIGNORE=2, MB_ICONERROR=16,
+        #MB_ICONINFORMATION=64, MB_ICONQUESTION=32, MB_ICONWARNING=48, MB_NOFOCUS=32768, MB_OK=0,
         #MB_OKCANCEL=1, MB_RETRYCANCEL=5, MB_SYSTEMMODAL=4096, MB_YESNO=4, MB_YESNOCANCEL=3
 
     def getFlags(self, options, twk = True):
@@ -923,7 +923,7 @@ class ShowMessageBox(eg.ActionBase):
             if not alias:
                 alias=title
             result = MessageBox(0, body, title, options)
-            
+
             if result > 0 and result < 8:
                 result = self.RESULTS[result]
             else:
@@ -933,7 +933,7 @@ class ShowMessageBox(eg.ActionBase):
             else:
                 eg.TriggerEvent("%s.%s" % (alias,result), prefix = "MessageBox")
             return result
-    
+
 
     def showTweakedBox(self, parent, title, message, alias, payload, flags, time, event):
         optionid, iconid, buttonid = self.getFlags(flags)
@@ -981,7 +981,7 @@ class ShowMessageBox(eg.ActionBase):
                 ).start()
                 return None
 
-           
+
     def Configure(
         self,
         title = "",
@@ -994,7 +994,7 @@ class ShowMessageBox(eg.ActionBase):
         autoClose = 0
     ):
         ids = (wx.NewId(), wx.NewId(), wx.NewId())
-        
+
         def getOptions(mbt):
             result = buttonsArr[buttonsCtrl.GetSelection()]
             result += iconArr[iconCtrl.GetSelection()]
@@ -1006,7 +1006,7 @@ class ShowMessageBox(eg.ActionBase):
                     4 * wx.FindWindowById(ids[2]).GetValue()
                 result += 4096 * tmp
             return result
-        
+
         buttonsArr = [0,MB_OKCANCEL,MB_RETRYCANCEL,MB_ABORTRETRYIGNORE,MB_YESNO,MB_YESNOCANCEL]
         iconArr = [0,MB_ICONINFORMATION,MB_ICONQUESTION,MB_ICONWARNING,MB_ICONERROR]
         optionsArr = [0,MB_TOPMOST,MB_NOFOCUS,MB_SYSTEMMODAL]
@@ -1093,7 +1093,7 @@ class ShowMessageBox(eg.ActionBase):
             val = optionid if init else (0, 7)[twk]
             autoCloseLbl0.Enable(twk)
             autoCloseLbl1.Enable(twk)
-            autoCloseCtrl.Enable(twk) 
+            autoCloseCtrl.Enable(twk)
             waitCtrl.Enable(twk)
             optionSizer.Clear(True)
             if twk:
@@ -1125,14 +1125,14 @@ class ShowMessageBox(eg.ActionBase):
                     style=wx.RA_SPECIFY_ROWS
                 )
                 wx.EVT_RADIOBOX(optionCtrl, ids[0], onRadioBox)
-                optionCtrl.SetSelection(val)                
+                optionCtrl.SetSelection(val)
                 if val == 1:
                     waitCtrl.Enable(False)
                     waitCtrl.SetValue(False)
                 else:
                     waitCtrl.Enable(True)
                 optionSizer.Add(optionCtrl,0,wx.EXPAND)
-            panel.sizer.Layout()  
+            panel.sizer.Layout()
         fillOptSizer(mbType, True)
 
         def onMbType(event):
@@ -1154,8 +1154,8 @@ class ShowMessageBox(eg.ActionBase):
         while panel.Affirmed():
             mbt = mbTypeCtrl.GetSelection()
             panel.SetResult(
-                titleCtrl.GetValue(), 
-                bodyCtrl.GetValue(), 
+                titleCtrl.GetValue(),
+                bodyCtrl.GetValue(),
                 aliasCtrl.GetValue(),
                 payloadCtrl.GetValue(),
                 waitCtrl.GetValue(),
@@ -1163,3 +1163,4 @@ class ShowMessageBox(eg.ActionBase):
                 mbt,
                 autoCloseCtrl.GetValue(),
             )
+

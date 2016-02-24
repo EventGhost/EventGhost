@@ -15,12 +15,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 class Version:
-    base = "0.4.1"
     try:
-        from VersionRevision import revision, buildTime
-        string = base + ".r%s" % revision
+        from VersionRevision import major, minor, revision, buildTime
+        base = "{0}.{1}.{2}".format(major, minor, revision)
+        string = base
     except ImportError:
+        base = "developer"
         revision = 0
         buildTime = 0
-        string = base + ".dev"
+        string = "developer"
 

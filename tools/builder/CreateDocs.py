@@ -56,7 +56,7 @@ def WritePluginList(filepath):
             groups[info.kind] = [info]
         numPlugins += 1
 
-    outfile = codecs.open(filepath, "wt", "utf-8")
+    outfile = codecs.open(filepath, "w", "utf-8")
     outfile.write(".. This file is automatically created. Don't edit it!\n\n")
     outfile.write(".. _pluginlist:\n\n")
     outfile.write("List of Plugins\n")
@@ -171,14 +171,15 @@ def Prepare():
 
 class CreateHtmlDocs(builder.Task):
     description = "Build HTML docs"
+    activated = False
 
     def DoTask(self):
         Prepare()
-        sphinx.main([
+        sphinx.build_main([
             None,
-            #"-a",
+            "-a",
             "-b", "html",
-            #"-E",
+            "-E",
             "-P",
             "-D", "release=%s" % eg.Version.base,
             "-d", join(self.buildSetup.tmpDir, ".doctree"),
@@ -192,24 +193,25 @@ class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
-        if not os.path.exists(
+        if os.path.exists(
             join(self.buildSetup.sourceDir, "EventGhost.chm")
         ):
-            self.activated = True
-            self.enabled = False
+            self.activated = False
 
 
     def DoTask(self):
         tmpDir = join(self.buildSetup.tmpDir, "chm")
         Prepare()
         #warnings.simplefilter('ignore', DeprecationWarning)
-        sphinx.main([
+        sphinx.build_main([
             None,
-            #"-a",
+            "-a",  # always write all output files
             "-b", "htmlhelp",
-            "-E",
-            "-P",
-            "-D", "release=%s" % eg.Version.base,
+            "-E",  # Don’t use a saved environment (the structure
+                   # caching all cross-references),
+            "-P",  # (Useful for debugging only.) Run the Python debugger,
+                    # pdb, if an unhandled exception occurs while building.
+            "-D", "release=%s" % self.buildSetup.appVersion,
             "-D", "templates_path=[]",
             "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
             EncodePath(DOCS_SOURCE_DIR),

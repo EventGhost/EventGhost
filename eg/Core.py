@@ -104,9 +104,9 @@ def _CommandEvent():
 
         def GetValue(self):
             return self.value
-    
+
     return _Event, wx.PyEventBinder(evttype, 1)
-    
+
 eg.CommandEvent = _CommandEvent
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = eg.CommandEvent()
 

@@ -178,8 +178,8 @@ class BringToFront(eg.ActionBase):
         for hwnd in GetTargetWindows():
             BringHwndToFront(hwnd)
             if self.plugin.iconDict.has_key(hwnd):
-                try:  
-                    trayIcon = self.plugin.iconDict[hwnd] 
+                try:
+                    trayIcon = self.plugin.iconDict[hwnd]
                     del self.plugin.iconDict[hwnd]
                     trayIcon.RemoveIcon()
                     trayIcon.Destroy()
@@ -362,7 +362,7 @@ class Restore(eg.ActionBase):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_RESTORE)
             if self.plugin.iconDict.has_key(hwnd):
-                try:  
+                try:
                     trayIcon = self.plugin.iconDict[hwnd]
                     del self.plugin.iconDict[hwnd]
                     trayIcon.RemoveIcon()
@@ -751,7 +751,7 @@ class MinimizeToTray(eg.ActionBase):
 
             def OnClick(*dummyArgs):
                 wx.CallAfter(OnClick2)
-                
+
             trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, OnClick)
             wx.CallAfter(ShowWindow, hwnd, 0)
 

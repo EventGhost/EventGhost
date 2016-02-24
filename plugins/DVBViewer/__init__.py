@@ -67,7 +67,7 @@ HELPFILE = abspath(join(dirname(__file__.decode('mbcs')), "DVBViewer-Help.html")
 
 def GetHelp():
     try:
-        f = codecs.open(HELPFILE, mode="rt", encoding="latin_1", buffering=-1)
+        f = codecs.open(HELPFILE, mode="r", encoding="latin_1", buffering=-1)
         hlp = f.read()
         f.close()
         hlp = hlp % (PLUGIN_VERSION, SUPPORTED_DVBVIEWER_VERSIONS, SUPPORTED_RECORDING_SERVICE_VERSIONS)
