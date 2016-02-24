@@ -1,0 +1,6 @@
+# Visual Studio
+extensions/**/.vs
+extensions/**/Debug
+extensions/**/Release
+extensions/**/*.opendb
+extensions/**/*.sdf
