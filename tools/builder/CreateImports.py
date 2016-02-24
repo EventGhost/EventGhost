@@ -31,11 +31,12 @@ import builder
 
 MODULES_TO_IGNORE = [
     "__phello__.foo",
+    "antigravity",
+    "unittest",
+    "win32com.propsys.propsys",
     "wx.lib.graphics",
     "wx.lib.rpcMixin",
     "wx.lib.wxcairo",
-    "win32com.propsys.propsys",
-    "unittest"
 ]
 
 HEADER = """\
