@@ -181,7 +181,7 @@ class CreateHtmlDocs(builder.Task):
             "-b", "html",
             "-E",
             "-P",
-            "-D", "release=%s" % eg.Version.base,
+            "-D", "release=%s" % self.buildSetup.appVersion,
             "-d", join(self.buildSetup.tmpDir, ".doctree"),
             DOCS_SOURCE_DIR,
             join(self.buildSetup.sourceDir, "website", "docs"),
