@@ -1,6 +1,25 @@
+# Build output
+/*.chm
+/*.dll
+/*.exe
+/docs/pluginlist.rst
+/docs/eg/*
+!/docs/eg/index.rst
+/eg/StaticImports.py
+/lib27/*
+!/lib27/site-packages/
+/tools/Build.log
+/tools/builder/Data/Build.ini
+/tools/builder/Data/Python??/imports.py
+
+# Python
+__pycache__/
+*.py[co]
+*$py.class
+
 # Visual Studio
-extensions/**/.vs
-extensions/**/Debug
-extensions/**/Release
-extensions/**/*.opendb
-extensions/**/*.sdf
+/extensions/**/.vs/
+/extensions/**/Debug/
+/extensions/**/Release/
+/extensions/**/*.opendb
+/extensions/**/*.sdf
