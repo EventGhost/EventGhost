@@ -38,10 +38,10 @@ eg.RegisterPlugin(
 )
 
 # changelog
-# 4.1 by bitmonster 
+# 4.1 by bitmonster
 #     - changed code to use PluginClass.AddActionsFromList
 
-    
+
 ACTIONS = (
     ('Power', 'Power', None, 1),
     ('Mute', 'Mute', None, 2),
@@ -97,20 +97,20 @@ from eg.WinApi import SendMessageTimeout
 
 MyWindowMatcher = eg.WindowMatcher(
     u'dvbdream.exe', None, u'Tfmain', None, None, None, True, 0.0, 0
-) 
+)
 
 class MyActionTemplate(eg.ActionClass):
-    
+
     def __call__(self):
         hwnds = MyWindowMatcher()
         if len(hwnds) == 0:
             raise self.Exceptions.ProgramNotRunning
         try:
-    	    for hwnd in hwnds:           
-            	SendMessageTimeout(hwnd, 1347, 0, self.value)	
+            for hwnd in hwnds:
+                SendMessageTimeout(hwnd, 1347, 0, self.value)
         except:
             raise self.Exceptions.ProgramNotRunning
-    
+
 
 
 class DVBDream(eg.PluginClass):

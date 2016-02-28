@@ -59,18 +59,18 @@ from ctypes import Structure, c_char_p, c_wchar_p, POINTER, cast, addressof
 from eg.WinApi import FindWindow
 from eg.WinApi.Dynamic import (
     RegisterWindowMessage,
-    SendMessage, 
+    SendMessage,
     DWORD,
     PVOID,
-    COPYDATASTRUCT, 
-    PCOPYDATASTRUCT, 
-    WM_COPYDATA, 
+    COPYDATASTRUCT,
+    PCOPYDATASTRUCT,
+    WM_COPYDATA,
 )
 
 FFDSHOW_REMOTE_MESSAGE = "ffdshow_remote_message"
 FFDSHOW_REMOTE_CLASS = "ffdshow_remote_class"
 
-WPRM_SETPARAM_ID = 0 # lParam - parameter id to be used by WPRM_PUTPARAM, 
+WPRM_SETPARAM_ID = 0 # lParam - parameter id to be used by WPRM_PUTPARAM,
                      # WPRM_GETPARAM and COPY_PUTPARAMSTR
 WPRM_PUTPARAM = 1    # lParam - new value of parameter, returns TRUE or FALSE
 WPRM_GETPARAM = 2    # lParam - unused, return the value of parameter
@@ -85,36 +85,36 @@ WPRM_GETSTATE = 6    # returns playback status
 WPRM_GETDURATION = 7 # returns movie duration in seconds
 WPRM_GETCURTIME = 8  # returns current position in seconds
 WPRM_PREVPRESET = 11
-WPRM_NEXTPRESET = 12 
+WPRM_NEXTPRESET = 12
 WPRM_SETCURTIME = 13 # Set current time in seconds
 
-# WM_COPYDATA 
+# WM_COPYDATA
 # COPYDATASTRUCT.dwData=
 COPY_PUTPARAMSTR = 9              # lpData points to new param value
 COPY_SETACTIVEPRESET = 10         # lpData points to new preset name
-COPY_AVAILABLESUBTITLE_FIRST = 11 # lpData points to buffer where first file 
-                                  # name will be stored  - if no subtitle file 
-                                  # is available, lpData will contain empty 
+COPY_AVAILABLESUBTITLE_FIRST = 11 # lpData points to buffer where first file
+                                  # name will be stored  - if no subtitle file
+                                  # is available, lpData will contain empty
                                   # string
-COPY_AVAILABLESUBTITLE_NEXT = 12  # lpData points to buffer where next file 
-                                  # name will be stored  - if no subtitle file 
-                                  # is available, lpData will contain empty 
+COPY_AVAILABLESUBTITLE_NEXT = 12  # lpData points to buffer where next file
+                                  # name will be stored  - if no subtitle file
+                                  # is available, lpData will contain empty
                                   # string
-COPY_GETPARAMSTR = 13             # lpData points to buffer where param value 
+COPY_GETPARAMSTR = 13             # lpData points to buffer where param value
                                   # will be stored
 COPY_GET_PRESETLIST = 21          # Get the list of presets (array of strings)
 COPY_GET_SOURCEFILE = 15          # Get the filename currently played
 
 
 class WParamAction(eg.ActionClass):
-    
+
     def __call__(self):
         return self.plugin.SendFfdshowMessage(self.value)
-    
-    
-    
+
+
+
 class GetIntAction(eg.ActionClass):
-    
+
     def __call__(self):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
@@ -122,12 +122,12 @@ class GetIntAction(eg.ActionClass):
             raise self.Exceptions.ProgramNotRunning
 
         return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
-    
-    
-    
+
+
+
 class SetIntAction(eg.ActionClass):
     parameterDescription = "Set to:"
-    
+
     def __call__(self, value=0):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
@@ -136,24 +136,24 @@ class SetIntAction(eg.ActionClass):
 
         SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
         SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
-    
-    
+
+
     def Configure(self, value=0):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinIntCtrl(
-            value, 
-            min = -MAX_INT - 1, 
-            max = MAX_INT, 
+            value,
+            min = -MAX_INT - 1,
+            max = MAX_INT,
         )
         panel.AddLine(self.parameterDescription, valueCtrl)
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
-    
-    
-    
+
+
+
 class ChangeIntAction(SetIntAction):
     parameterDescription = "Change by:"
-    
+
     def __call__(self, value=0):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
@@ -168,21 +168,21 @@ class ChangeIntAction(SetIntAction):
 
 
 class ToggleAction(eg.ActionClass):
-    
+
     def __call__(self, action):
         #0: disable, 1: enable, 2: toggle, 3: getStatus
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
-            
+
         if action == 0 or action == 1:
             SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
             SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, action)
             return action
-            
+
         oldValue = SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
-        
+
         if action == 2:
             if oldValue:
                 newValue = 0
@@ -191,11 +191,11 @@ class ToggleAction(eg.ActionClass):
             SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
             SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
             return newValue
-            
+
         if action == 3:
             return oldValue
-            
-    
+
+
     def GetLabel(self, action):
         labels = (
             "Disable %s",
@@ -204,12 +204,12 @@ class ToggleAction(eg.ActionClass):
             "Get Status of %s"
         )
         return labels[action] % self.name
-    
+
 
     def Configure(self, action = 2):
         panel = eg.ConfigPanel(self)
         panel.AddLabel(self.description);
-        
+
         radioButtons = (
             wx.RadioButton(panel, -1, "Disable", style = wx.RB_GROUP),
             wx.RadioButton(panel, -1, "Enable"),
@@ -220,7 +220,7 @@ class ToggleAction(eg.ActionClass):
         radioButtons[action].SetValue(True)
         for rb in radioButtons:
             panel.AddCtrl(rb)
-        
+
         while panel.Affirmed():
             for i in range(len(radioButtons)):
                 if radioButtons[i].GetValue():
@@ -237,29 +237,29 @@ class IntegerAction(eg.ActionClass):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
-            raise self.Exceptions.ProgramNotRunning            
+            raise self.Exceptions.ProgramNotRunning
 
         if action == 2:
-            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
-            
+            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+
         if action == 1:
             value += SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
-            
+
         value = max(self.options[0], value)
         value = min(self.options[1], value)
-        
+
         SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
         SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
         return value
-            
-    
+
+
     def FormatValue(self, value):
         if self.options[3] == 1:
             return str(value)
         else:
             return "%.02f" % (value / float(self.options[3]))
-        
-    
+
+
     def GetLabel(self, action, value):
         labels = (
             "Set %s to %s",
@@ -269,15 +269,15 @@ class IntegerAction(eg.ActionClass):
             return labels[action] % (self.name, self.FormatValue(value))
         else:
             return "Get Value of %s" % self.name
-    
-    
+
+
 
     def Configure(self, action = 0, value = 0):
         """ this panel uses to controls
             one for setting and one for changing the value
             the right one is chosen depending on the value of the radiobuttons
         """
-        
+
         def OnRadioButton(event):
             valueCtrl.Show(radioButtons[0].GetValue())
             valueCtrl2.Show(radioButtons[1].GetValue())
@@ -287,7 +287,7 @@ class IntegerAction(eg.ActionClass):
                 panel.Layout()
             panel.Layout()
             event.Skip()
-            
+
         def OnSlider(event):
             val = event.GetEventObject().GetValue()
             if val != self.tempValue:
@@ -296,7 +296,7 @@ class IntegerAction(eg.ActionClass):
             valueCtrl.SetValue(self.tempValue)
             valueCtrl2.SetValue(self.tempValue)
             event.Skip()
-        
+
         def OnSpin(event):
             val = event.GetEventObject().GetValue()
             if val != self.tempValue:
@@ -306,9 +306,9 @@ class IntegerAction(eg.ActionClass):
             valueCtrl2.SetValue(self.tempValue)
             event.Skip()
 
-            
+
         panel = eg.ConfigPanel(self)
-        
+
         radioButtons = (
             wx.RadioButton(panel, -1, "Set to value", style = wx.RB_GROUP),
             wx.RadioButton(panel, -1, "Change by value"),
@@ -319,43 +319,43 @@ class IntegerAction(eg.ActionClass):
         for rb in radioButtons:
             rb.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
             panel.AddCtrl(rb)
-        
+
         if self.options[2]:
-            
+
             def LevelCallback(value):
                 return self.FormatValue(value)
-                
+
             self.tempValue = value
-            
+
             valueCtrl = eg.Slider(
-                panel, 
-                value = value, 
-                min = self.options[0], 
-                max = self.options[1], 
+                panel,
+                value = value,
+                min = self.options[0],
+                max = self.options[1],
                 minLabel = self.FormatValue(self.options[0]),
                 maxLabel = self.FormatValue(self.options[1]),
                 style = wx.SL_TOP | wx.EXPAND,
                 levelCallback=LevelCallback)
-                
+
             bound = self.options[1] - self.options[0]
             valueCtrl2 = eg.Slider(
-                panel, 
-                value = value, 
-                min = bound * -1, 
-                max = bound, 
+                panel,
+                value = value,
+                min = bound * -1,
+                max = bound,
                 minLabel = self.FormatValue(bound * -1),
                 maxLabel = self.FormatValue(bound),
                 style = wx.SL_TOP | wx.EXPAND,
                 levelCallback=LevelCallback)
-                
+
             valueCtrl.SetMinSize((300, -1))
             valueCtrl2.SetMinSize((300, -1))
             valueCtrl.Bind(wx.EVT_SCROLL, OnSlider)
             valueCtrl2.Bind(wx.EVT_SCROLL, OnSlider)
-                
+
         else:
             fractionWidth = len(str(self.options[3])) - 1
-            
+
             self.tempValue = value / float(self.options[3])
             minValue = self.options[0] / float(self.options[3])
             maxValue = self.options[1] / float(self.options[3])
@@ -371,15 +371,15 @@ class IntegerAction(eg.ActionClass):
                 panel,
                 -1,
                 max(min(self.tempValue, maxValue), minValue),
-                min = minValue, 
+                min = minValue,
                 max = maxValue,
                 fractionWidth = fractionWidth,
                 integerWidth = integerWidth + additionalWidth)
-        
+
             bound = (self.options[1] - self.options[0]) / float(self.options[3])
             minValue = bound * -1
             maxValue = bound
-            
+
             if minValue < 0:
                 additionalWidth = 0
             else:
@@ -393,15 +393,15 @@ class IntegerAction(eg.ActionClass):
                 max = maxValue,
                 fractionWidth = fractionWidth,
                 integerWidth = integerWidth + additionalWidth)
-                
+
             valueCtrl.Bind(wx.EVT_TEXT, OnSpin)
             valueCtrl2.Bind(wx.EVT_TEXT, OnSpin)
-        
+
         panel.AddCtrl(valueCtrl)
         panel.AddCtrl(valueCtrl2)
-        
+
         OnRadioButton(wx.CommandEvent())
-        
+
         while panel.Affirmed():
             if not self.options[2]:
                 value = int(self.tempValue * float(self.options[3]))
@@ -418,7 +418,7 @@ class IntegerAction(eg.ActionClass):
 
 class SelectAction(eg.ActionClass):
     options = ()
-    
+
     @classmethod
     def OnAddAction(cls):
         #rebuild the options sequence to quickly find entries
@@ -426,29 +426,29 @@ class SelectAction(eg.ActionClass):
         newOptions = {}
         i = 0
         optionLength = len(cls.options)
-        
+
         for key, text in cls.options:
             newOptions[key] = (
-                key, 
+                key,
                 i, #index
-                text, 
+                text,
                 cls.options[(i + 1) % optionLength][0], #next
                 cls.options[(i - 1) % optionLength][0]) #prev
             i += 1
-            
+
         cls.options = newOptions
-    
+
     def __call__(self, action, value):
         #0: set to, 1: next, 2: previous 3: get value
-   
+
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
-            raise self.Exceptions.ProgramNotRunning            
+            raise self.Exceptions.ProgramNotRunning
 
         if action == 3:
-            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
-            
+            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+
         if action == 1 or action == 2:
             value = SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
             if self.options.has_key(value):
@@ -463,11 +463,11 @@ class SelectAction(eg.ActionClass):
                 else:
                     value -= 1
 
-            
+
         SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
         SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
         return value
-        
+
 
     def GetLabel(self, action, value):
         if action == 0:
@@ -485,13 +485,13 @@ class SelectAction(eg.ActionClass):
             one for setting and one for changing the value
             the right one is chosen depending on the value of the radiobuttons
         """
-        
+
         def OnRadioButton(event):
             choiceCtrl.Enable(radioButtons[0].GetValue())
             event.Skip()
-            
+
         panel = eg.ConfigPanel(self)
-        
+
         #radiobuttons
         radioButtons = (
             wx.RadioButton(panel, -1, "Set to value", style = wx.RB_GROUP),
@@ -504,12 +504,12 @@ class SelectAction(eg.ActionClass):
         for rb in radioButtons:
             rb.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
             panel.AddCtrl(rb)
-        
+
         #create control and add dummy entries
         choiceCtrl = wx.Choice(panel, -1)
         for i in range(len(self.options)):
             choiceCtrl.Append("")
-        
+
         #set entries to real values
         for key, entry in self.options.iteritems():
             choiceCtrl.SetString(entry[1], entry[2])
@@ -518,11 +518,11 @@ class SelectAction(eg.ActionClass):
                 choiceCtrl.Select(entry[1])
         if choiceCtrl.GetSelection() == wx.NOT_FOUND:
             choiceCtrl.Select(0)
-        
+
         panel.AddCtrl(choiceCtrl)
-        
+
         OnRadioButton(wx.CommandEvent())
-        
+
         while panel.Affirmed():
             value = choiceCtrl.GetClientData(choiceCtrl.GetSelection())
             for i in range(len(radioButtons)):
@@ -535,7 +535,7 @@ class SelectAction(eg.ActionClass):
 
 #Name, internalName, description, filterXXX, isXXX, showXXX, orderXXX, fullXXX, halfXXX
 FILTERS = (
-    ("Avisynth", "Avisynth", None, 1250, 1251, 1260, 1252, 1253, None), 
+    ("Avisynth", "Avisynth", None, 1250, 1251, 1260, 1252, 1253, None),
     ("Bitmap overlay", "Bitmap", None, 1650, 1651, 1652, 1653, 1654, None),
     ("Blur & NR", "Blur", None, 900, 901, 936, 903, 905, None),
     ("Crop", "CropNzoom", None, 747, 712, 752, 754, 765, None),
@@ -557,14 +557,14 @@ FILTERS = (
     ("Sharpen", "Sharpen", None, 400, 401, 427, 407, 408, 428),
     ("Subtitles", "Subtitles", None, 800, 801, 828, 815, 817, None),
     ("Visualizations", "Vis", None, 1200, 1201, 1206, 1202, None, None),
-    ("Warpsharp", "Warpsharp", None, 430, 431, 442, 432, 433, 443)    
+    ("Warpsharp", "Warpsharp", None, 430, 431, 442, 432, 433, 443)
 )
 
 #aType, aGroup, aClsName, aName, aDescription, aValue, aOptions
 CMDS = (
     (WParamAction, None, "Run", "Run", None, 5, None),
     (WParamAction, None, "Stop", "Stop", None, 4, None),
-    
+
     #deprecated actions
     (GetIntAction, "deprecated", "GetSubtitleDelay", "Get Subtitle Delay", None, 812, None),
     (SetIntAction, "deprecated", "SetSubtitleDelay", "Set Subtitle Delay", None, 812, None),
@@ -574,10 +574,10 @@ CMDS = (
     (IntegerAction, "CropNzoom", "CropNzoomMagnificationX", "Crop: Magnification X", None, 714, (0, 100, True, 1)),
     (IntegerAction, "CropNzoom", "CropNzoomMagnificationY", "Crop: Magnification Y", None, 720, (0, 100, True, 1)),
     (ToggleAction, "CropNzoom", "CropNzoomMagnificationLock", "Crop: Magnification Lock", None, 721, None),
-    
+
     #DeBand
     (IntegerAction, "GradFun", "GradFunThreshold", "DeBand: Threshold", None, 1156, (101, 2000, True, 100)),
-    
+
     #Deinterlacing
     (ToggleAction, "Deinterlace", "DeinterlaceSwapFields", "Deinterlacing: Swap fields", None, 1409, None),
     (SelectAction, "Deinterlace", "DeinterlaceMethod", "Deinterlacing: Method", None, 1403,
@@ -595,7 +595,7 @@ CMDS = (
             (10, "5-tap lowpass"),
             (11, "Kernel deinterlacer"),
             (13, "Kernel bob" ))),
-    
+
     #Presets
     (WParamAction, "Presets", "PreviousPreset", "Previous Preset", None, 11, None),
     (WParamAction, "Presets", "NextPreset", "Next Preset", None, 12, None),
@@ -608,7 +608,7 @@ CMDS = (
 
 
 class Ffdshow(eg.PluginClass):
-    
+
     def __init__(self):
         groups = {}
         for filterName, internalName, description, filterId, isId, showId, orderId, fullId, halfId in FILTERS:
@@ -616,7 +616,7 @@ class Ffdshow(eg.PluginClass):
                 description = "Actions to control the %s filter within ffdshow" % filterName
             group = self.AddGroup(filterName, description)
             groups[internalName] = group
-            
+
             #enable/disable filter
             if isId:
                 class tmpAction(ToggleAction):
@@ -625,7 +625,7 @@ class Ffdshow(eg.PluginClass):
                     value = isId
                 tmpAction.__name__ = internalName + "Toggle"
                 group.AddAction(tmpAction)
-            
+
             if showId:
                 class tmpAction(ToggleAction):
                     name = filterName + " filter visibility"
@@ -676,17 +676,17 @@ class Ffdshow(eg.PluginClass):
                 else:
                     group = groups[aGroup]
                     group.AddAction(tmpAction)
-        
+
         group = groups["Presets"]
         group.AddAction(GetPresets)
         group.AddAction(SetPreset)
-        
-        
+
+
     def __start__(self):
         self.mesg = RegisterWindowMessage(FFDSHOW_REMOTE_MESSAGE)
         eg.messageReceiver.AddHandler(WM_COPYDATA, self.Handler)
-        
-        
+
+
     @eg.LogIt
     def Handler(self, hwnd, mesg, wParam, lParam):
         cdsPointer = cast(lParam, PCOPYDATASTRUCT)
@@ -699,7 +699,7 @@ class Ffdshow(eg.PluginClass):
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
-            
+
         return SendMessage(hwnd, self.mesg, wParam, lParam)
 
 
@@ -708,30 +708,30 @@ class SetPreset(eg.ActionWithStringParameter):
     class text:
         name = "Set Preset"
         parameterDescription = "Preset Name:"
-        
+
     def __call__(self, preset):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
-            
+
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_SETACTIVEPRESET
         cds.lpData = cast(c_wchar_p(preset), PVOID)
         cds.cbData = (len(preset) + 1)*2
         return SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
-        
-        
-    
+
+
+
 class GetPresets(eg.ActionClass):
     name = "Get Presets"
-    
+
     def __call__(self):
         try:
             hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
-        
+
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_GET_PRESETLIST
         SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))

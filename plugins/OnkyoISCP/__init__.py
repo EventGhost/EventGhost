@@ -44,8 +44,8 @@ class OnkyoISCP(eg.PluginBase):
         self.Connect()
 
     def __stop__(self):
-	if hasattr(self, 'stopThreadEvent'):
-	    self.stopThreadEvent.set()
+    if hasattr(self, 'stopThreadEvent'):
+        self.stopThreadEvent.set()
 
         self.socket.close()
 
@@ -59,8 +59,8 @@ class OnkyoISCP(eg.PluginBase):
                     reply = self.socket.recv(1024)
                     # unpack ISCP header
                     header, headersize, datasize, version = unpack('!4sIIBxxx',
-		            reply[0:self.headersize]
-			)
+                    reply[0:self.headersize]
+            )
 
                     if header != self.header:
                         self.PrintError("OnkyoISCP: Received packet not ISCP")
@@ -103,12 +103,12 @@ class OnkyoISCP(eg.PluginBase):
             self.PrintError("OnkyoISCP: Failed to connect to " + ip + ":" + str(port) + ": " + str(e))
         else:
             print "Connected to " + ip + ":" + str(port)
-	    self.stopThreadEvent = Event()
-	    thread = Thread(
-		target = self.Receive,
-	    )
+        self.stopThreadEvent = Event()
+        thread = Thread(
+        target = self.Receive,
+        )
             thread.start()
-        
+
 
     def Configure(self, ip="", port="60128", timeout="1"):
         text = self.text
@@ -150,9 +150,9 @@ class SendCommand(eg.ActionBase):
         line = pack('!4sIIBxxx',
                 self.plugin.header,
                 self.plugin.headersize,
-	        datasize,
+            datasize,
                 self.plugin.version
-	    ) + message
+        ) + message
         try:
             self.plugin.socket.sendall(line)
             sleep(0.1)

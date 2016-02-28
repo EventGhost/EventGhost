@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/xPL/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
 # Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     description = "Send and receive xPL messages.",
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1119",
 )
-    
+
 import sys, string, select, re
 from socket import *
 import wx
@@ -38,15 +38,15 @@ from threading import Event, Thread
 # core xPL code is from John Bent's python xPL monitor
 #
 class xPL(eg.PluginClass):
-    
+
   # Define maximum xPL message size
     buff = 1500
     def __init__(self):
         self.LocalIP=gethostbyname(gethostname())
         self.hostname="doghouse-eg."+str(gethostname())
-        # add class to send messages              
+        # add class to send messages
         self.AddAction(sendxPL)
-              
+
     def __start__(self):
         self.UDPSock = socket(AF_INET,SOCK_DGRAM)
         # Initialise the socket
@@ -60,7 +60,7 @@ class xPL(eg.PluginClass):
             except :
                 bound = 0
                 self.port += 1
-                
+
         print "xPL plugin, bound to port " + str(self.port)
 
         print "xPL is started"
@@ -86,7 +86,7 @@ class xPL(eg.PluginClass):
 
     def __close__(self):
         print "XPL is closed."
-  
+
 # Sub routine for sending a heartbeat
     def SendHeartbeat(self,hbThreadEvent) :
         hbSock = socket(AF_INET,SOCK_DGRAM)
@@ -96,7 +96,7 @@ class xPL(eg.PluginClass):
             msg = msg + str(self.port) + "\nremote-ip=" + str(self.LocalIP) + "\nversion=1.2\n}\n"
             hbSock.sendto(msg,("255.255.255.255",3865))
             hbThreadEvent.wait(5*60.0)
-            
+
 # Main Loop
     def main(self,mainThreadEvent):
         while not mainThreadEvent.isSet():
@@ -106,14 +106,14 @@ class xPL(eg.PluginClass):
                 message = str(data)
                 message = message.splitlines()
                 xpltype = message[0]
-                
+
                 msgheader = message[2:5]
                 xplsource = message[3].rsplit("=")[1]
                 xpltarget = message[4].rsplit("=")[1]
-                
+
                 msgschema = message[6]
                 xplschema = msgschema.rsplit(".")
-                
+
                 msgbody = message[8:-1]
                 msgbody2 = ""
                 # ignore heartbeat messages and messages from myself
@@ -122,9 +122,9 @@ class xPL(eg.PluginClass):
                         for element in msgbody:
                             msgbody2 = msgbody2 + element + ","
                         self.TriggerEvent(xpltype+":"+msgschema+":"+xplsource+":"+xpltarget+":"+msgbody2)
-  
-      
-      
+
+
+
 class Text:
     name = "send xPL Message"
     description = "sends an xPL message"
@@ -145,9 +145,9 @@ class sendxPL(eg.ActionClass):
         addr = ("255.255.255.255",3865)
         self.plugin.UDPSock.setsockopt(SOL_SOCKET,SO_BROADCAST,1)
         self.plugin.UDPSock.sendto(msg,addr)
-        
+
     def Configure(
-        self, 
+        self,
         xPLType="",
         xPLSchema="",
         xPLTarget="",
@@ -156,34 +156,34 @@ class sendxPL(eg.ActionClass):
         text = self.text
         panel = eg.ConfigPanel(self)
         plugin = self.plugin
-        
+
         #type box.  as an example, you would put this in the box: xpl-cmnd
-        textType = wx.TextCtrl(panel, -1, xPLType)           
+        textType = wx.TextCtrl(panel, -1, xPLType)
         staticBox = wx.StaticBox(panel, -1, text.textBoxLabel)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         sizerz = wx.BoxSizer(wx.HORIZONTAL)
         sizerz.Add(textType, 1, wx.EXPAND)
         staticBoxSizer.Add(sizerz, 0, wx.EXPAND|wx.ALL, 10)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         #schema box.  as an example, you would put this in the box: osd.basic
-        textSchema = wx.TextCtrl(panel, -1, xPLSchema)           
+        textSchema = wx.TextCtrl(panel, -1, xPLSchema)
         staticBox = wx.StaticBox(panel, -1, text.textBoxLabel0)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(textSchema, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer, 0, wx.EXPAND|wx.ALL, 10)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         #target box.  ex: *
-        textTarget = wx.TextCtrl(panel, -1, xPLTarget)           
+        textTarget = wx.TextCtrl(panel, -1, xPLTarget)
         staticBox = wx.StaticBox(panel, -1, text.textBoxLabel1)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         sizer0 = wx.BoxSizer(wx.HORIZONTAL)
         sizer0.Add(textTarget, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer0, 0, wx.EXPAND|wx.ALL, 10)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
 
         # body of message, you would enter into this box:
         # command=write
@@ -191,19 +191,19 @@ class sendxPL(eg.ActionClass):
         # text=hello world
         staticBox = wx.StaticBox(panel, -1, text.textBoxLabel2)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        
+
         textMsg1 = wx.TextCtrl(panel, -1, xPLMsg1, style=wx.TE_MULTILINE)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(textMsg1, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
-        
+
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                textType.GetValue(), 
-                textSchema.GetValue(), 
-                textTarget.GetValue(), 
-                textMsg1.GetValue(), 
-            )      
-      
+                textType.GetValue(),
+                textSchema.GetValue(),
+                textTarget.GetValue(),
+                textMsg1.GetValue(),
+            )
+

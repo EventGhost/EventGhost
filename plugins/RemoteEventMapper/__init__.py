@@ -32,9 +32,9 @@ version="0.0.1"
 
 from os import path
 if eg.Version.base >= "0.4.0":
-    IMAGES_DIR = eg.imagesDir 
+    IMAGES_DIR = eg.imagesDir
 else:
-    IMAGES_DIR = eg.IMAGES_DIR 
+    IMAGES_DIR = eg.IMAGES_DIR
 
 eg.RegisterPlugin(
     name = "Remote event mapper",
@@ -138,7 +138,7 @@ mapped to the common suffix "%s".'
 The file "%s" does not have the expected structure.'
     message6 = 'It is not possible to insert the suffix %s,\n\
 because the same prefix is already in the table.'
-    suffToolTip = """Native event suffix will be automatically inserted into this box, 
+    suffToolTip = """Native event suffix will be automatically inserted into this box,
 when you press a button on the remote control.
 ATTENTION! This applies only if that the event prefix
 agrees with the native event prefix !"""
@@ -180,7 +180,7 @@ class RemoteEventMapper(eg.PluginBase):
             self.time = clock()
             self.isEnded = False
             self.shouldEnd = Event()
-            self.upFuncList = []        
+            self.upFuncList = []
 
         eg.EventGhostEvent.__init__ = EventRemap
 
@@ -234,18 +234,18 @@ class RemoteEventMapper(eg.PluginBase):
         suffText.SetToolTipString(text.suffToolTip)
         labelText = wx.TextCtrl(panel, -1, "")
         suffChoice = wx.Choice(panel, -1, choices = panel.suffixes)
-        
+
         def UpdateChoices():
             suffChoice.Clear()
             suffChoice.AppendItems(panel.suffixes)
         panel.updateChoices = UpdateChoices
-        
+
         evtPrefSizer = wx.BoxSizer(wx.HORIZONTAL)
         evtPrefSizer.Add(prefLabel, 0, wx.TOP, 3)
         evtPrefSizer.Add(prefText, 1, wx.EXPAND|wx.LEFT, 5)
         eventSizer.Add(evtPrefSizer, 0, wx.EXPAND|wx.TOP, 4)
         suffButton = wx.Button(panel, -1, text.suffixes)
-        eventSizer.Add(suffButton, 0, wx.EXPAND|wx.TOP, 8)        
+        eventSizer.Add(suffButton, 0, wx.EXPAND|wx.TOP, 8)
         remListSizer = wx.GridBagSizer(1, 10)
         box2 = wx.StaticBox(panel, -1, "")
         rightStatSizer = wx.StaticBoxSizer(box2, wx.VERTICAL)
@@ -309,7 +309,7 @@ class RemoteEventMapper(eg.PluginBase):
         def EnableCtrls(enable):
             suffText.Enable(enable)
             labelText.Enable(enable)
-            suffChoice.Enable(enable) 
+            suffChoice.Enable(enable)
             if enable:
                 eg.EventGhostEvent.__init__ = EventRemap
             else:
@@ -516,7 +516,7 @@ class RemoteEventMapper(eg.PluginBase):
                 if len(self.remotes[rem][2]) < 2:
                     enable = False
             btnUP.Enable(enable)
-            btnDOWN.Enable(enable)        
+            btnDOWN.Enable(enable)
 
 
         def OnPrefText2(evt = None):
@@ -553,10 +553,10 @@ class RemoteEventMapper(eg.PluginBase):
                             plugin = self,
                             )
                         EnableLeftSide(False)
-                        panel.dialog.buttonRow.okButton.Enable(False)                
+                        panel.dialog.buttonRow.okButton.Enable(False)
                     else:
-                        EnableLeftSide(True)            
-                        panel.dialog.buttonRow.okButton.Enable(True)                
+                        EnableLeftSide(True)
+                        panel.dialog.buttonRow.okButton.Enable(True)
                 enable = prefix != "" and not s
                 buttonsListCtrl.Enable(enable)
                 if not enable or len(self.remotes[rem][2]) == 0:
@@ -632,7 +632,7 @@ class RemoteEventMapper(eg.PluginBase):
             EnableLeftSide(flag)
             panel.dialog.buttonRow.okButton.Enable(flag)
 
-        
+
         def EventRemap(self, suffix = "", payload = None, prefix = "Main", source = eg):
             SetSuffix(prefix, suffix)
             self.string = "%s.%s" % (prefix, suffix)
@@ -649,7 +649,7 @@ class RemoteEventMapper(eg.PluginBase):
         def SetSuffix(eventPrefix, eventSuffix):
             if prefix == eventPrefix:
                 suffText.SetValue(eventSuffix)
-            
+
 
         def OnButtonAddEvent(evt):
             if self.oldSel == -1:
@@ -672,7 +672,7 @@ class RemoteEventMapper(eg.PluginBase):
             EnableButtonsRight(True)
             evt.Skip()
         addEvent.Bind(wx.EVT_BUTTON, OnButtonAddEvent)
-        
+
 
         def OnButtonDuplEvent(evt):
             addEvent.Enable(False)
@@ -683,14 +683,14 @@ class RemoteEventMapper(eg.PluginBase):
             strng2 = suffChoice.GetStringSelection()
             row = self.oldSel + 1
             self.remotes[listBoxCtrl.GetSelection()][2].insert(row, ["", strng1, strng2])
-            buttonsListCtrl.InsertStringItem(row, "")            
+            buttonsListCtrl.InsertStringItem(row, "")
             buttonsListCtrl.SetStringItem(row, 1, strng1)
             buttonsListCtrl.SetStringItem(row, 2, strng2)
             SelRow(row)
             buttonsListCtrl.EnsureVisible(row)
             evt.Skip()
         duplEvent.Bind(wx.EVT_BUTTON, OnButtonDuplEvent)
-        
+
 
         def OnSuffText(evt):
             strng = evt.GetString()
@@ -739,14 +739,14 @@ class RemoteEventMapper(eg.PluginBase):
             row = evt.GetIndex()
             buttonsListCtrl.SetItemState(row, 0, wx.LIST_STATE_SELECTED)
             if row == self.oldSel:
-                evt.Skip()            
-                return                
+                evt.Skip()
+                return
             if not addEvent.IsEnabled() and self.oldSel > -1:
                 old = self.oldSel
                 self.oldSel = row
                 SelRow(old)
                 PlaySound('SystemExclamation', SND_ASYNC)
-                evt.Skip()            
+                evt.Skip()
                 return
             EnableCtrls(True)
             SelRow(row)
@@ -755,7 +755,7 @@ class RemoteEventMapper(eg.PluginBase):
             suffText.ChangeValue(buttonsListCtrl.GetItemText(row))
             labelText.ChangeValue(buttonsListCtrl.GetItem(row, 1).GetText())
             suffChoice.SetStringSelection(buttonsListCtrl.GetItem(row, 2).GetText())
-            evt.Skip()            
+            evt.Skip()
         buttonsListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, OnSuffixSelect)
 
 
@@ -765,7 +765,7 @@ class RemoteEventMapper(eg.PluginBase):
             dlg = wx.FileDialog(
                 panel,
                 message = text.save % name,
-                defaultDir = eg.configDir, 
+                defaultDir = eg.configDir,
                 defaultFile = name,
                 wildcard = text.wildcard,
                 style=wx.SAVE
@@ -782,7 +782,7 @@ class RemoteEventMapper(eg.PluginBase):
             dlg = wx.FileDialog(
                 panel,
                 message = text.choose % self.remotes[ix][0],
-                defaultDir = eg.configDir, 
+                defaultDir = eg.configDir,
                 defaultFile = "",
                 wildcard = text.wildcard,
                 style = wx.OPEN | wx.CHANGE_DIR
@@ -1091,7 +1091,7 @@ class SuffixesFrame(wx.Dialog):
         def boxEnable(enable):
             labelCtrl.Enable(enable)
             labelLbl.Enable(enable)
-            
+
         if len(self.suffixes) > 0:
             listBoxCtrl.Set(self.suffixes)
             listBoxCtrl.SetSelection(0)
@@ -1109,19 +1109,19 @@ class SuffixesFrame(wx.Dialog):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
 
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
 
         def onOK(evt):
             self.panel.suffixes = self.suffixes
             self.panel.updateChoices()
             self.Close()
         btn1.Bind(wx.EVT_BUTTON,onOK)
-        
+
 
         def validation():
             flag = True
@@ -1192,7 +1192,7 @@ class SuffixesFrame(wx.Dialog):
                     plugin = self.plugin,
                     time = 20
                     )
-                return        
+                return
             lngth=len(self.suffixes)
             if lngth==2:
                 btnUP.Enable(False)
@@ -1253,7 +1253,7 @@ class MessageBox(wx.Dialog):
         if flags:
             art = None
             if flags & wx.ICON_EXCLAMATION:
-                art = wx.ART_WARNING            
+                art = wx.ART_WARNING
             elif flags & wx.ICON_ERROR:
                 art = wx.ART_ERROR
             elif flags & wx.ICON_QUESTION:
@@ -1273,7 +1273,7 @@ class MessageBox(wx.Dialog):
         message = wx.StaticText(self, -1, message)
         line = wx.StaticLine(self, -1, size=(1,-1), style = wx.LI_HORIZONTAL)
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        bottomSizer.Add((10, 1)) 
+        bottomSizer.Add((10, 1))
 
         if time:
             self.cnt = time
@@ -1281,7 +1281,7 @@ class MessageBox(wx.Dialog):
             info = wx.StaticText(self, -1, txt)
             info.Enable(False)
             bottomSizer.Add(info, 0, wx.TOP, 3)
-            
+
             def UpdateInfoLabel(evt):
                 self.cnt -= 1
                 txt = plugin.text.auto % self.cnt
@@ -1297,7 +1297,7 @@ class MessageBox(wx.Dialog):
 
         button = wx.Button(self, -1, plugin.text.ok)
         button.SetDefault()
-        bottomSizer.Add((1,1),1,wx.EXPAND) 
+        bottomSizer.Add((1,1),1,wx.EXPAND)
         bottomSizer.Add(button, 0, wx.RIGHT, 10)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         topSizer.Add(icon,0,wx.LEFT|wx.RIGHT,10)
@@ -1310,7 +1310,7 @@ class MessageBox(wx.Dialog):
         mainSizer.Add(message, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,10)
         mainSizer.Add(line, 0, wx.EXPAND|wx.ALL,5)
         mainSizer.Add(bottomSizer, 0, wx.EXPAND|wx.BOTTOM,5)
-        
+
         def OnButton(evt):
             self.Close()
             evt.Skip()

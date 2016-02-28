@@ -102,7 +102,7 @@ class MeedioPlugin(eg.PluginClass):
     self.AddAction(Yellow)
     self.AddAction(Blue)
     self.AddAction(Focus)
-    
+
 
 
 class Up(eg.ActionClass):
@@ -116,375 +116,375 @@ class Down(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(2)
-    
+
 
 
 class Left(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(3)
-    
+
 
 
 class Right(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(4)
-    
+
 
 
 class Select(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(5)
-    
+
 
 
 class Back(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(6)
-    
+
 
 
 class ChannelUp(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(7)
-    
+
 
 
 class ChannelDn(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(8)
-    
+
 
 
 class Num0(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(10)
-    
+
 
 
 class Num1(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(11)
-    
+
 
 
 class Num2(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(12)
-    
+
 
 
 class Num3(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(13)
-    
+
 
 
 class Num4(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(14)
-    
+
 
 
 class Num5(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(15)
-    
+
 
 
 class Num6(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(16)
-    
+
 
 
 class Num7(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(17)
-    
+
 
 
 class Num8(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(18)
-    
+
 
 
 class Num9(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(19)
-    
+
 
 
 class Enter(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(20)
-    
+
 
 
 class Play(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(21)
-    
+
 
 
 class Pause(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(22)
-    
+
 
 
 class Next(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(23)
-    
+
 
 
 class Previous(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(24)
-    
+
 
 
 class FFwd(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(25)
-    
+
 
 
 class Rew(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(26)
-    
+
 
 
 class Stop(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(27)
-    
+
 
 
 class Record(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(28)
-    
+
 
 
 class Display(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(29)
-    
+
 
 
 class VolUp(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(30)
-    
+
 
 
 class VolDn(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(31)
-    
+
 
 
 class Mute(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(32)
-    
+
 
 
 class PrevCh(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(33)
-    
+
 
 
 class Guide(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(34)
-    
+
 
 
 class Menu(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(35)
-    
+
 
 
 class Info(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(36)
-    
+
 
 
 class Exit(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(37)
-    
+
 
 
 class Power(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(38)
-    
+
 
 
 class Clear(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(39)
-    
+
 
 
 class Top(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(40)
-    
+
 
 
 class Bottom(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(41)
-    
+
 
 
 class First(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(42)
-    
+
 
 
 class Last(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(43)
-    
+
 
 
 class Home(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(44)
-    
+
 
 
 class Focus(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(45)
-    
+
 
 
 class GotoMusic(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(46)
-    
+
 
 
 class GotoPhotos(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(47)
-    
+
 
 
 class GotoDVD(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(48)
-    
+
 
 
 class GotoTV(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(49)
-    
+
 
 
 class GotoVideo(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(50)
-    
+
 
 
 class Show(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(51)
-    
+
 
 
 class Teletext(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(52)
-    
+
 
 
 class Red(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(53)
-    
+
 
 
 class Green(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(54)
-    
+
 
 
 class Yellow(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(55)
-    
+
 
 
 class Blue(eg.ActionClass):
 
   def __call__(self):
     controlMeedio(56)
-    
+

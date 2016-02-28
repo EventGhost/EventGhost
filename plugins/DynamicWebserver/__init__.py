@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     ),
     version = "1.0.503",
     guid = "{2FC713FF-0093-4271-A520-F0F6BB05A0E8}",
-    description = u'''<rst>Implements a small webserver, 
+    description = u'''<rst>Implements a small webserver,
 that you can use to generate events through HTML-pages.
 
 ========================
@@ -80,11 +80,11 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
     def webvars(self, match ):
-	try:
-		value=getattr(eg.globals,match.group()[13:-2])
-		return value
-	except:
-		return ""
+    try:
+        value=getattr(eg.globals,match.group()[13:-2])
+        return value
+    except:
+        return ""
 
     def do_GET(self):
         """Serve a GET request."""
@@ -101,7 +101,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if not authenticated:
                 self.send_response(401)
                 self.send_header(
-                    'WWW-Authenticate', 
+                    'WWW-Authenticate',
                     'Basic realm="%s"' % self.server.authRealm
                 )
                 self.end_headers()
@@ -115,10 +115,10 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             f = self.send_head()
             if not f:
                 return
-	    tempwpage=f.read()
-	    tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
-    	    self.wfile.write(tempwpage)
-	    # self.copyfile(f, self.wfile)
+        tempwpage=f.read()
+        tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
+            self.wfile.write(tempwpage)
+        # self.copyfile(f, self.wfile)
             f.close()
             f = None
             if len(p) < 2:
@@ -254,12 +254,12 @@ class DynamicWebserver(eg.PluginClass):
 
 
     def __start__(
-        self, 
-        prefix=None, 
-        port=80, 
-        basepath=None, 
-        authRealm="Eventghost", 
-        authUsername="", 
+        self,
+        prefix=None,
+        port=80,
+        basepath=None,
+        authRealm="Eventghost",
+        authUsername="",
         authPassword=""
     ):
         self.info.eventPrefix = prefix
@@ -305,12 +305,12 @@ class DynamicWebserver(eg.PluginClass):
 
 
     def Configure(
-        self, 
-        prefix="HTTP", 
-        port=80, 
-        basepath="", 
-        authRealm="EventGhost", 
-        authUsername="", 
+        self,
+        prefix="HTTP",
+        port=80,
+        basepath="",
+        authRealm="EventGhost",
+        authUsername="",
         authPassword=""
     ):
         text = self.text
@@ -345,7 +345,7 @@ class DynamicWebserver(eg.PluginClass):
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
         sizer.Add(labels[3], 0, ACV)
         sizer.Add(authRealmCtrl)

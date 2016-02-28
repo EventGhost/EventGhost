@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # plugins/OSM/__init__.py
 #
@@ -53,7 +53,7 @@ eg.RegisterPlugin(
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
 Allows you to create custom On Screen Menu.
-        
+
 Plugin OSM has built-in a function **"Stop processing this event"**,
 if the menu is shown on the screen. This facilitates
 the use of OSM in your configuration. You can use to control
@@ -165,7 +165,7 @@ In this case, the first items of nested lists apply as a label in the menu and
 the seconds items are applied as **"Back part(s) of event string"** (see the edit box
 **"Back part(s) of event string:"** in configuration dialog of action **"Show menu"**).
 
-3) Both the previous form can be freely combined. Tuple (list) can look as follows: 
+3) Both the previous form can be freely combined. Tuple (list) can look as follows:
 **(("Item1","event1"), ("Item2"), ("Item3","event3"))**
 
 Please see the description of the action **"Show menu"**. There are examples,
@@ -683,7 +683,7 @@ class ShowMenu(eg.ActionBase):
                     backColourButton.GetValue(),
                     foreSelColourButton.GetValue(),
                     backSelColourButton.GetValue(),
-                    fontButton.GetValue(), 
+                    fontButton.GetValue(),
                     True,
                     self.plugin,
                     prefixCtrl.GetValue(),
@@ -1003,7 +1003,7 @@ class CreateMenuFromList(eg.ActionBase):
                             backColourButton.GetValue(),
                             foreSelColourButton.GetValue(),
                             backSelColourButton.GetValue(),
-                            fontButton.GetValue(), 
+                            fontButton.GetValue(),
                             True,
                             self.plugin,
                             prefixCtrl.GetValue(),
@@ -1265,7 +1265,7 @@ class Menu(wx.Frame):
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
 
-        self.plugin.menuDlg = self 
+        self.plugin.menuDlg = self
         if focus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1" 
+version="0.1"
 
 # plugins/OnkyoISCP/__init__.py
 #
@@ -36,7 +36,7 @@ eg.RegisterPlugin(
 FindMCE = eg.WindowMatcher(u'ehshell.exe', u'Windows Media Center', None, None, None, 1, False, 0.0, 0)
 
 class hotKeys(eg.ActionClass):
-    
+
     def __call__(self):
         hwnds = FindMCE()
         if len(hwnds) != 0:
@@ -122,7 +122,7 @@ predefinedCustomActions = {
 }
 
 class MCE(eg.PluginClass):
-    
+
     def __init__(self):
         self.windowMatch = FindMCE
         self.AddActionsFromList(ACTIONS)

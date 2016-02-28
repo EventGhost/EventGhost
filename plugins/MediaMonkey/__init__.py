@@ -32,7 +32,7 @@
 # 0.3.4 by Pako 2012-08-17 07:51 UTC+1
 #     - added MediaMonkey.IsRunning event
 #     - added GetPlaylists action
-#     - improved routine for periodic testing "is running ?" 
+#     - improved routine for periodic testing "is running ?"
 # 0.3.3 by Pako 2012-01-06 15:30 UTC+1
 #     - CoverArt support added
 # 0.3.2 by Pako 2012-01-06 15:30 UTC+1
@@ -95,7 +95,7 @@ This plugin requires MediaMonkey_ version 4.0 or later.
 
 | **Plugin's events:**
 | If you select one (or more) of these options, some actions will trigger
-  an event upon completion and a payload is used to indicate the results of the action. 
+  an event upon completion and a payload is used to indicate the results of the action.
 
 | The event triggered will be constructed as follows:
 | *Prefix:* MediaMonkey
@@ -539,7 +539,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         self.MM = Dispatch("SongsDB.SDBApplication")
         self.MM.ShutdownAfterDisconnect = False
 
-        if self.mainThread:        
+        if self.mainThread:
             class SubEventHandler(EventHandler):
                 MM = self.MM
                 plugin = self.plugin
@@ -559,14 +559,14 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         else:
             self.plugin.workerThread2 = None
         del self.MM
-        
+
     def isRunning(self):
         try:
             if self.MM.IsRunning:
                 return True
         except:
             return False
-        
+
     def DoCommand(self, command):
         if self.isRunning():
             getattr(self.MM.Player, command)()
@@ -574,18 +574,18 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
     def SetValue(self, command, value):
         if self.isRunning():
             setattr(self.MM.Player,command, value)
-        
+
     def GetValue(self,command):
         if self.isRunning():
             return getattr(self.MM.Player, command)
-        
+
     def Previous(self):
         if self.isRunning():
             if self.MM.Player.CurrentSongIndex !=0:
                 self.MM.Player.Previous()
             elif self.MM.Player.isRepeat:
                 self.MM.Player.CurrentSongIndex = self.MM.Player.PlaylistCount-1
-       
+
     def GetSongData(self,index):
         if self.isRunning():
             repeat = self.MM.Player.isRepeat
@@ -599,10 +599,10 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 if index == 1 and curIndx == count-1:
                     curIndx = -1
                 elif index == -1 and curIndx == 0:
-                    curIndx = count    
+                    curIndx = count
             index += curIndx
             tmpObject = self.MM.Player.PlaylistItems(index)
-            
+
             for item in SongDataDict.iterkeys():
                 itm = getattr(tmpObject,item)
                 if isinstance(itm, unicode):
@@ -620,7 +620,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             self.MM.Player.CurrentSong.UpdateDB()
             if flag:
                 self.MM.Player.CurrentSong.WriteTags()
-       
+
     def LoadPlaylistByTitle(self, plString,repeat,shuffle,crossfade,clear):
         if self.isRunning():
             plItems = self.MM.PlaylistByTitle(plString).Tracks
@@ -642,7 +642,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     self.MM.Player.Play()
             if self.plugin.eg_events[0]:
                 self.plugin.TriggerEvent(Text.playlistEvt, (plString, str(Total)))
-                    
+
     def GetNotAccessibleTracks(self, filePath):
         if self.isRunning():
             count = 0
@@ -670,7 +670,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             sql = ' FROM Songs WHERE ID="%s"' % ID
             self.MM.Database.ExecSQL('DELETE'+sql)
             return self.MM.Database.OpenSQL('SELECT COUNT(*)'+sql).ValueByIndex(0)
-            
+
     def AddSongToPlaylist(self, plString, skip):
         if self.isRunning():
             idSong=self.MM.Player.CurrentSong.ID
@@ -767,7 +767,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 self.MM.Player.PlaylistAddTracks(tmpSongList)
                 self.MM.Player.Play()
         else:
-            self.MM.Player.PlaylistAddTracks(tmpSongList)            
+            self.MM.Player.PlaylistAddTracks(tmpSongList)
         if self.plugin.eg_events[0]:
             self.plugin.TriggerEvent(Text.playlistEvt, (plName, str(Total)))
 
@@ -840,7 +840,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                         sql+='%s%s<>' % substValues3 + emptVal
             sql=(sql[5:] if mode==0 else sql[4:])
             if random:
-                sql += " ORDER BY RANDOM()"        
+                sql += " ORDER BY RANDOM()"
             elif order:
                 sql+=" order by "+propertiesList[crit][0]+" "+trendList[trend]
             if limit:
@@ -864,8 +864,8 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
             n=0
             if int(Total) > 0:
-                self.LoadPlaylist(sql,repeat,crossfade,shuffle,clear,Total,plName)        
-        
+                self.LoadPlaylist(sql,repeat,crossfade,shuffle,clear,Total,plName)
+
     def GetStatistics(self):
         if self.isRunning():
             tracks = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs").ValueByIndex(0)
@@ -873,7 +873,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             #artists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Artists").ValueByIndex(0)
             #playlists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Playlists").ValueByIndex(0)
             return tracks,albums #,artists,playlists
-        
+
     def Jubox(self,ID,clear,repeat,shuffle,crossfade,stop):
         if self.isRunning():
             sql = 'IDAlbum="%s"' % ID
@@ -909,7 +909,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     self.MM.Player.Play()
                 if self.plugin.eg_events[4]:
                     self.plugin.TriggerEvent(Text.albumEvt, res)
-            
+
     def SongJubox(self,ID,clear,stop):
         if self.isRunning():
             sql = 'ID="%s"' % ID
@@ -933,7 +933,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         if self.isRunning():
             count = 0
             try:
-                albums=self.MM.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")   
+                albums=self.MM.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
                 while not albums.EOF: #Structure = ID, Artist, Album
                     count += 1
@@ -953,12 +953,12 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 pass
             if self.plugin.eg_events[6]:
                 self.plugin.TriggerEvent(self.plugin.text.jukeboxEvt, str(count))
-               
+
     def ExportSongList(self,filePath):
         if self.isRunning():
             count = 0
             try:
-                songs=self.MM.Database.QuerySongs("")   
+                songs=self.MM.Database.QuerySongs("")
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
                 while not songs.EOF:
                     count += 1
@@ -976,7 +976,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 pass
             if self.plugin.eg_events[6]:
                 self.plugin.TriggerEvent(self.plugin.text.jukeboxEvt, str(count))
-               
+
     def GetPlaylists(self,flag1 = True, flag2 = True):
         if self.isRunning():
             sql = 'SELECT PlaylistName FROM Playlists'
@@ -990,7 +990,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     sql += 'NOT IDFilter IS NULL'
             playlists = []
             try:
-                dbPlaylists = self.MM.Database.OpenSQL(sql)  
+                dbPlaylists = self.MM.Database.OpenSQL(sql)
                 while not dbPlaylists.EOF:
                     playlists.append(dbPlaylists.ValueByIndex(0))
                     dbPlaylists.Next()
@@ -1042,7 +1042,7 @@ Please install latest version of MediaMonkey and then restart EventGhost !'''
         'ID     ',
         'Song title',
         'Artist',
-    )    
+    )
     labelsU = (
         'ID     ',
         'Song title',
@@ -1206,7 +1206,7 @@ class MediaMonkey(eg.PluginBase):
     checkTask = None
     checkOpened = None
     text = Text
-    
+
     def __init__(self):
         group = self.AddGroup(
             self.text.mainGrpName,
@@ -1310,7 +1310,7 @@ class MediaMonkey(eg.PluginBase):
             mmIco = self.info.icon.key
             stream = open(icoFile, "wb")
             stream.write(mmIco.decode('base64'))
-            stream.close()  
+            stream.close()
 
 
     def DummyStart(self):
@@ -1339,7 +1339,7 @@ class MediaMonkey(eg.PluginBase):
 
     def GetPathAndVersion(self):
         """
-        Get the path of LAN Chat's installation directory through querying 
+        Get the path of LAN Chat's installation directory through querying
         the Windows registry.
         """
         MMpath = ""
@@ -1367,7 +1367,7 @@ class MediaMonkey(eg.PluginBase):
             self.checkOpened = None
         else:
             self.checkOpened = eg.scheduler.AddTask(1, self.checkWinOpened)
-        
+
 
     def isRunning(self):
         try:
@@ -1441,15 +1441,15 @@ class MediaMonkey(eg.PluginBase):
         while panel.Affirmed():
             tmpList = []
             for i in range(len(events)):
-                tmpList.append(eventsCtrl.IsChecked(i))        
+                tmpList.append(eventsCtrl.IsChecked(i))
             tmpList2 = []
             for i in range(len(events2)):
-                tmpList2.append(events2Ctrl.IsChecked(i))        
+                tmpList2.append(events2Ctrl.IsChecked(i))
             panel.SetResult(
                 tmpList,
                 tmpList2
             )
-        
+
 
     def SendCommand(self, command):
         if self.workerThread:
@@ -1461,22 +1461,22 @@ class MediaMonkey(eg.PluginBase):
     def SetValue(self, command, value):
         if self.workerThread:
             self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
-            
+
 
     def GetValue(self, command):
         if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
-        
+
 
     def GetIsRunning(self):
         if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.isRunning),1000)
-        
 
-    def GetSongData(self,index):    
+
+    def GetSongData(self,index):
         if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
-        
+
 
     def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2,stop = True):
         if self.workerThread:
@@ -1539,7 +1539,7 @@ class Start(eg.ActionBase):
                 self.plugin.checkOpened = eg.scheduler.AddTask(
                     1,
                     self.plugin.checkWinOpened
-                )           
+                )
 
     def Configure(self, choice=True):
         panel = eg.ConfigPanel(self)
@@ -1549,7 +1549,7 @@ class Start(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(choiceCtrl.GetValue())
-            
+
     class text:
         choice_label = "Start minimized"
 #===============================================================================
@@ -1557,7 +1557,7 @@ class Start(eg.ActionBase):
 class Exit(eg.ActionBase):
     name = "Quit (close) MediaMonkey"
     description = "Quits (closes) MediaMonkey."
-    
+
     def __call__(self, choice = None):
         hwnds = MM_WindowMatcher()
         if hwnds:
@@ -1656,7 +1656,7 @@ class ToggleMute(eg.ActionBase):
 class SetVolume(eg.ActionBase):
     name = "Set Volume Level"
     description = "Sets the volume to a percentage (%) from 0 to 100."
-        
+
     def __call__(self, volume=50.00):
         self.plugin.SetValue('Volume',volume/100)
         if volume!=0:
@@ -1851,7 +1851,7 @@ class SetRepeat(eg.ActionBase):
 class SetAutoDJ(eg.ActionBase):
     name = "Set AutoDJ"
     description = "Turn the AutoDJ on or off."
-    
+
     def __call__(self, switch=0):
         self.plugin.SetValue('isAutoDJ', switch == 0)
 
@@ -1872,7 +1872,7 @@ class SetAutoDJ(eg.ActionBase):
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection(),)
-            
+
     class text:
         radiobox = "Set AutoDJ to state ..."
         AutoDJON = "ON"
@@ -2063,9 +2063,9 @@ class GetPlaylists(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(
                 autoCtrl.GetValue(),
-                importedCtrl.GetValue(),                
+                importedCtrl.GetValue(),
             )
-            
+
     class text:
         auto = "Ignore auto-playlists"
         imported = "Ignore imported playlists"
@@ -2081,10 +2081,10 @@ class GetBasicStatistics(eg.ActionBase):
                 sep = '\n'
             tracks, albums = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.GetStatistics),60)
             return self.text.tracks % tracks+sep+self.text.albums % albums
-        
+
     def GetLabel(self,sep=''):
         return self.name
-        
+
     def Configure(self, sep='', res = True):
         panel = eg.ConfigPanel(self)
         sepLbl = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
@@ -2094,7 +2094,7 @@ class GetBasicStatistics(eg.ActionBase):
         resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
         resCtrl.SetValue(res)
 
-        
+
         def onResCtrl(evt = None):
             enable = resCtrl.GetValue()
             sepCtrl.Enable(enable)
@@ -2127,7 +2127,7 @@ class GetNotAccessibleTracks(eg.ActionBase):
 
 ATTENTION !!! This operation may take several minutes !!!
 List of found tracks is exported to selected file.
-For each track is recorded song ID, song title and file path. 
+For each track is recorded song ID, song title and file path.
 You can this file import for example to MS Excel or OOo Calc'''
 
     frameIsOpen = False
@@ -2142,7 +2142,7 @@ You can this file import for example to MS Excel or OOo Calc'''
                 path,
             )
             self.frameIsOpen = True
-        
+
     def Configure(self, path=''):
         txt = self.text
         panel = eg.ConfigPanel(self)
@@ -2152,7 +2152,7 @@ You can this file import for example to MS Excel or OOo Calc'''
         self.path = path
         startFolder = path_split(path)[1]
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.plugin.text.toolTipFolder,
             dialogTitle = self.plugin.text.browseTitle,
@@ -2161,14 +2161,14 @@ You can this file import for example to MS Excel or OOo Calc'''
                 "Text file (*.txt)|*.txt|"\
                 "All files (*.*)|*.*",
         )
-        filepathCtrl.SetValue(path)        
+        filepathCtrl.SetValue(path)
         openButton = wx.Button(panel, -1, txt.openButton)
         openButton.SetToolTip(wx.ToolTip(txt.baloonBttn % path))
         sizerAdd = panel.sizer.Add
         sizerAdd(label1Text, 0, wx.TOP,15)
         sizerAdd(filepathCtrl,0,wx.TOP,3)
         sizerAdd(openButton,0,wx.TOP,30)
-        
+
         def onOpenBtnClick(event):
             if not self.frameIsOpen:
                 self.unaccessibleTracksFrame = UnaccessibleTracksFrame(parent = self)
@@ -2181,10 +2181,10 @@ You can this file import for example to MS Excel or OOo Calc'''
             event.Skip()
 
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
-        
+
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue()
-            )    
+            )
 
     class text():
         label1 = "Target file for export:"
@@ -2212,7 +2212,7 @@ class GetShuffle(eg.ActionBase):
 class GetStatus(eg.ActionBase):
     name = "Get Status"
     description = "Get Player Status (returns string: Playing, Paused or Stopped)."
-    
+
     def __call__(self):
         playing=self.plugin.GetValue('isPlaying')
         paused=self.plugin.GetValue('isPaused')
@@ -2222,7 +2222,7 @@ class GetStatus(eg.ActionBase):
             return self.text.playing
         elif playing and paused:
             return self.text.paused
-            
+
     class text():
         playing = "Playing"
         paused = "Paused"
@@ -2277,7 +2277,7 @@ class GetSongInfo(eg.ActionBase):
                 return result
         else:
             return self.text.shuffleON
-            
+
 
     def GetLabel(self, arrayInfo,sep=''):
         result=""
@@ -2333,7 +2333,7 @@ class GetSongInfo(eg.ActionBase):
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepLabel = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepLabel.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
-        
+
         def onResCtrl(evt = None):
             enable = resCtrl.GetValue()
             sepCtrl.Enable(enable)
@@ -2349,7 +2349,7 @@ class GetSongInfo(eg.ActionBase):
         mainSizer=wx.FlexGridSizer(2,2)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
-        
+
         bottomSizer.Add(sepLabel,0,wx.TOP,4)
         bottomSizer.Add((10,1))
         bottomSizer.Add(sepCtrl,0)
@@ -2482,7 +2482,7 @@ class GetDetailSongInfo(eg.ActionBase):
         resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
         resCtrl.SetValue(res)
 
-        
+
         def onResCtrl(evt = None):
             enable = resCtrl.GetValue()
             sepCtrl.Enable(enable)
@@ -2499,7 +2499,7 @@ class GetDetailSongInfo(eg.ActionBase):
         mainSizer=wx.FlexGridSizer(2,2)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
-        
+
         bottomSizer.Add(sepLabel,0,wx.TOP,4)
         bottomSizer.Add((10,1))
         bottomSizer.Add(sepCtrl,0)
@@ -2566,7 +2566,7 @@ class GetClassificationInfo(eg.ActionBase):
         for propert,cond in zip(listPropert,arrayInfo):
             result+=SongData[propert]+sep if cond else ""
         return result[:-len(sep)]
-        
+
     def GetLabel(self, arrayInfo, sep=''):
         result=""
         for condition in arrayInfo:
@@ -2606,7 +2606,7 @@ class GetClassificationInfo(eg.ActionBase):
         resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
         resCtrl.SetValue(res)
 
-        
+
         def onResCtrl(evt = None):
             enable = resCtrl.GetValue()
             sepCtrl.Enable(enable)
@@ -2622,7 +2622,7 @@ class GetClassificationInfo(eg.ActionBase):
         mainSizer=wx.FlexGridSizer(2,2)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
-        
+
         bottomSizer.Add(sepLabel,0,wx.TOP,4)
         bottomSizer.Add((10,1))
         bottomSizer.Add(sepCtrl,0)
@@ -2727,7 +2727,7 @@ class GetTechnicalSongInfo(eg.ActionBase):
         resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
         resCtrl.SetValue(res)
 
-        
+
         def onResCtrl(evt = None):
             enable = resCtrl.GetValue()
             sepCtrl.Enable(enable)
@@ -2820,7 +2820,7 @@ class GetUniversal(eg.ActionBase):
 
     def GetLabel(self, field):
         return self.text.get % Text.SongTableFields[field]
-    
+
     def Configure(self, field=-1):
         choices = filter(lambda i: i[0]!="",zip(
             [tpl[2] for tpl in SONG_TABLE_FIELDS],
@@ -2837,7 +2837,7 @@ class GetUniversal(eg.ActionBase):
         if field > -1:
             infoCtrl.SetStringSelection(Text.SongTableFields[field])
         panel.AddCtrl(infoCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(Text.SongTableFields.index(infoCtrl.GetStringSelection()))
 
@@ -2873,7 +2873,7 @@ class WritingToMM(eg.ActionBase):
             ("Genre",0,True),
             ("Rating",1,True),
         )
-        
+
     def __call__(self, i, arrayValue0, arrayValue1):
         ndx = [itm[0] for itm in self.propertiesList].index([it[0] for it in SONG_TABLE_FIELDS][i])
         tmpList=[]
@@ -2973,7 +2973,7 @@ class WritingToMM(eg.ActionBase):
             arrayVal0[ndx] = dynSizer.GetChildren()[1].GetWindow().GetValue()
             if self.propertiesList[ndx][2]:
                 arrayVal1[ndx] = dynSizer.GetChildren()[3].GetWindow().GetValue()
-                 
+
             panel.SetResult(ix, arrayVal0, arrayVal1 )
 
     class text:
@@ -3024,7 +3024,7 @@ class LoadPlaylist(eg.ActionBase):
         leftSizer.Add(shuffleChkBoxCtrl,0,wx.TOP,15)
         leftSizer.Add(crossfadeChkBoxCtrl,0,wx.TOP,15)
         leftSizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,15)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 textCtrl.GetValue(),
@@ -3126,7 +3126,7 @@ class RemoveCurrentSongFromNowPlaying(eg.ActionBase):
                     self.plugin.workerThread.RemoveSongFromNowPlaying,
                     skip
                 ))
-            
+
     def Configure(self, skip=False):
         panel = eg.ConfigPanel(self)
         text = self.text
@@ -3275,7 +3275,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         choices = list(Text.SongTableFields)
         choicesS=choices[:]
         choicesS.sort()
-        
+
         listRules2 = [] #working copy (after Cancel flush it)
         for i in range(0,len(listRules)):
             listRules2.append(listRules[i][:])
@@ -3330,7 +3330,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         rightSizer = wx.StaticBoxSizer(statBox_2, wx.VERTICAL)
         rightSizer.SetMinSize((120,69))
         orderSizer=wx.BoxSizer(wx.HORIZONTAL)
-        limitSizer=wx.BoxSizer(wx.HORIZONTAL)        
+        limitSizer=wx.BoxSizer(wx.HORIZONTAL)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         lrSizer =wx.BoxSizer(wx.HORIZONTAL)
         bottmSizer = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=40)
@@ -3648,7 +3648,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
                     updateRow(x)
             CheckEnable=True #validityCheck "ON"
             validityCheck()
-            
+
         def OnRandom(evt=None):
             rnd = randomChkBoxCtrl.GetValue()
             if rnd:
@@ -3767,20 +3767,20 @@ class LoadPlaylistByFilter(eg.ActionBase):
 
 class LoadPlaylistBySql(eg.ActionBase):
     name = "Load Playlist by SQL query"
-    description = ur'''<rst>**Loads a MediaMonkey playlist defined by SQL query.** 
+    description = ur'''<rst>**Loads a MediaMonkey playlist defined by SQL query.**
 
 This action is for advanced users only. Here you can write your own SQL
-query and use it to select specific songs from **MediaMonkey**'s 
-database . You need only enter the *WHERE* clause into the text field, 
-but you can also add an *ORDER BY* clause and *LIMIT* clause 
+query and use it to select specific songs from **MediaMonkey**'s
+database . You need only enter the *WHERE* clause into the text field,
+but you can also add an *ORDER BY* clause and *LIMIT* clause
 (I tried the OFFSET clause too, but without success).
 
-The simplest query might look like this: **Artist = "Beatles"**. 
+The simplest query might look like this: **Artist = "Beatles"**.
 
-**MediaMonkey**'s database is based on **SQLite**. 
-Its documentation can be found at http://www.sqlite.org/docs.html . 
-If you are new to SQL, you might get some help from a SQL tutorial. 
-A good example can be found at http://www.firstsql.com/tutor2.htm . 
+**MediaMonkey**'s database is based on **SQLite**.
+Its documentation can be found at http://www.sqlite.org/docs.html .
+If you are new to SQL, you might get some help from a SQL tutorial.
+A good example can be found at http://www.firstsql.com/tutor2.htm .
 Pay particular attention to the `WHERE Clause`_ .
 
 .. _`WHERE Clause`: http://www.firstsql.com/tutor2.htm#where'''
@@ -3874,7 +3874,7 @@ Pay particular attention to the `WHERE Clause`_ .
                 col = tmpDict[field]
                 sqlTextCtrl.WriteText(col)
         colCtrl.Bind(wx.EVT_CHOICE,onColCtrl)
-        
+
         def onSqlTextCtrl(evt):
             colCtrl.SetSelection(0)
             evt.Skip()
@@ -3889,7 +3889,7 @@ Pay particular attention to the `WHERE Clause`_ .
             crossfadeChkBoxCtrl.Get3StateValue(),
             clearPlaylistChkBoxCtrl.GetValue(),
             )
-            
+
     class text:
         filterName = "Filter name:"
         found = "%s/%s songs found"
@@ -3908,14 +3908,14 @@ class Jukebox(eg.ActionBase):
     name = "Album jukebox"
     description = u'''<rst>**Album jukebox**.
 
-Thanks to this action, your PC can function like a jukebox. In order to work 
-properly, the event which triggers this action, must be carrying a payload. 
-If this payload is a valid ID of an album, MediaMonkey will immediately start 
-playing this album. 
+Thanks to this action, your PC can function like a jukebox. In order to work
+properly, the event which triggers this action, must be carrying a payload.
+If this payload is a valid ID of an album, MediaMonkey will immediately start
+playing this album.
 
-One way to trigger an event with a payload is to use the plugin **Multitap** 
+One way to trigger an event with a payload is to use the plugin **Multitap**
 (Numpad mode).'''
-        
+
     def Configure(self,repeat=2,shuffle=2,crossfade=2,clear = True, filePath='', stop = True):
         txt = self.text
         self.filePath = filePath
@@ -3926,7 +3926,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         else:
             startFolder = eg.folderPath.Documents
         filePathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.plugin.text.toolTipFolder,
             dialogTitle = self.plugin.text.browseTitle,
@@ -3937,13 +3937,13 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 "All files (*.*)|*.*",
         )
         if filePath:
-            filePathCtrl.SetValue(filePath)        
+            filePathCtrl.SetValue(filePath)
 
         Sizer = panel.sizer
         sizes = []
         sizes.append(panel.GetTextExtent(txt.saveButton)[0])
         sizes.append(panel.GetTextExtent(txt.openButton)[0])
-        w=max(sizes)+24        
+        w=max(sizes)+24
         exportButton = wx.Button(panel, -1, txt.saveButton, size = ((w,-1)))
         exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn[0]))
         openButton = wx.Button(panel, -1, txt.openButton, size = ((w,-1)))
@@ -3967,7 +3967,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         Sizer.Add(filePathCtrl,0,wx.TOP,3)
         Sizer.Add(exportButton,0,wx.TOP,10)
         Sizer.Add(openButton,0,wx.TOP,10)
-            
+
         def onBtnClick(event):
             self.filePath=filePathCtrl.GetValue()
             self.jukeboxFrame = JukeboxFrame(parent=self)
@@ -3985,7 +3985,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             openButton.Enable(True)
             event.Skip()
         exportButton.Bind(wx.EVT_BUTTON, onBtnClick)
-        
+
         def onOpenBtnClick(event):
             if isfile(self.filePath):
                 flag = False
@@ -4006,7 +4006,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             )
             event.Skip()
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 repeatChkBoxCtrl.Get3StateValue(),
@@ -4018,7 +4018,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             )
 
     def GetLabel(self,repeat,shuffle,crossfade,clear,filePath,stop):
-        return self.name       
+        return self.name
 
     def __call__(self,repeat=2,shuffle=2,crossfade=2,clear=True,filePath='',stop=True):
         ID = eg.event.payload
@@ -4030,7 +4030,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             crossfade,
             stop,
         )
-            
+
     class text():
         label1 = "Target file to export albums:"
         saveButton = "Export album list to file"
@@ -4046,14 +4046,14 @@ class SongJukebox(eg.ActionBase):
     name = "Song jukebox"
     description = u'''<rst>**Song jukebox**.
 
-Thanks to this action, your PC can function like a jukebox. In order to work 
-properly, the event which triggers this action, must be carrying a payload. 
-If this payload is a valid ID of a song, MediaMonkey will immediately start 
-playing the song. 
+Thanks to this action, your PC can function like a jukebox. In order to work
+properly, the event which triggers this action, must be carrying a payload.
+If this payload is a valid ID of a song, MediaMonkey will immediately start
+playing the song.
 
-One way to trigger an event with a payload is to use the plugin **Multitap** 
+One way to trigger an event with a payload is to use the plugin **Multitap**
 (Numpad mode).'''
-        
+
     def Configure(self,clear=False,filePath='',stop = True):
         self.filePath = filePath
         txt = self.text
@@ -4064,7 +4064,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         else:
             startFolder = eg.folderPath.Documents
         filePathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.plugin.text.toolTipFolder,
             dialogTitle = self.plugin.text.browseTitle,
@@ -4075,12 +4075,12 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 "All files (*.*)|*.*",
         )
         if filePath:
-            filePathCtrl.SetValue(filePath)        
+            filePathCtrl.SetValue(filePath)
         Sizer = panel.sizer
         sizes = []
         sizes.append(panel.GetTextExtent(txt.saveButton)[0])
         sizes.append(panel.GetTextExtent(txt.openButton)[0])
-        w=max(sizes)+24        
+        w=max(sizes)+24
         exportButton = wx.Button(panel, -1, txt.saveButton, size=((w,-1)))
         exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn[0]))
         openButton = wx.Button(panel, -1, txt.openButton, size=((w,-1)))
@@ -4095,7 +4095,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         Sizer.Add(filePathCtrl,0,wx.TOP,3)
         Sizer.Add(exportButton,0,wx.TOP,20)
         Sizer.Add(openButton,0,wx.TOP,20)
-            
+
         def onBtnClick(event):
             self.filePath=filePathCtrl.GetValue()
             self.jukeboxFrame = JukeboxFrame(parent = self)
@@ -4128,7 +4128,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             )
             event.Skip()
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 clearPlaylistChkBoxCtrl.GetValue(),
@@ -4137,7 +4137,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             )
 
     def GetLabel(self,clear,filePath, stop):
-        return self.name       
+        return self.name
 
     def __call__(self,clear=True,filePath='', stop = True):
         ID = eg.event.payload
@@ -4146,7 +4146,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             clear,
             stop
         )
-            
+
     class text():
         label1 = "Target file to export songs:"
         saveButton = "Export song list to file"
@@ -4162,13 +4162,13 @@ class SendKeys(eg.ActionBase):
     name = "Send keys"
     description = '''<rst>**Sends keys to MediaMonkey Window**.
 
-Some features of MediaMonkey (for example executing a script) can be controlled 
-from another program only using the hotkeys . On the menu 
-*Tools - Options - General - Hotkeys*, set an appropriate hotkeys 
-(you don't need to set the hotkeys as global !) and then in the text box *"Keystroke to send"* 
-type the same (for example *Shift+Alt+E*). In the text box *"Name of hotkey"* 
+Some features of MediaMonkey (for example executing a script) can be controlled
+from another program only using the hotkeys . On the menu
+*Tools - Options - General - Hotkeys*, set an appropriate hotkeys
+(you don't need to set the hotkeys as global !) and then in the text box *"Keystroke to send"*
+type the same (for example *Shift+Alt+E*). In the text box *"Name of hotkey"*
 you can label the keystrokes with your own description.'''
-    
+
     def __call__(self, descr = "",keys = ""):
         hwnds = MM_WindowMatcher()
         if hwnds:
@@ -4197,15 +4197,15 @@ you can label the keystrokes with your own description.'''
             return descr
         else:
             return keys
-        
+
     class Text():
         nameLabel = "Name of hotkey:"
         keysLabel = "Keystroke to send (e.g. Shift+Alt+E):"
-       
+
 #===============================================================================
 
 class JukeboxFrame(wx.Frame):
-    
+
     def __init__(self, parent):
         self.plugin = parent.plugin
         wx.Frame.__init__(
@@ -4263,7 +4263,7 @@ class JukeboxFrame(wx.Frame):
         centralSizer.Add(self.playButton,(1,0), flag = wx.ALIGN_LEFT)
         self.closeButton = wx.Button(self, -1, self.text.close)
         centralSizer.Add(self.closeButton,(1,2), flag = wx.ALIGN_RIGHT)
-        
+
         self.itemListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ListSelection)
@@ -4299,11 +4299,11 @@ class JukeboxFrame(wx.Frame):
         self.MakeModal(True)
         self.Show(True)
         self.RefreshList()
-        
+
     def RefreshList(self):
         self.patientFrame = None
         if not self.create:
-            self.CompleteForm()                  
+            self.CompleteForm()
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
@@ -4376,7 +4376,7 @@ class JukeboxFrame(wx.Frame):
 #===============================================================================
 
 class UnaccessibleTracksFrame(wx.Frame):
-    
+
     def __init__(self, parent):
         self.parent=parent
         self.plugin = parent.plugin
@@ -4421,7 +4421,7 @@ class UnaccessibleTracksFrame(wx.Frame):
         centralSizer.Add(self.refreshButton,(1,2), flag = wx.ALIGN_CENTER)
         self.closeButton = wx.Button(self, -1, self.text.close)
         centralSizer.Add(self.closeButton,(1,4), flag = wx.ALIGN_RIGHT)
-        
+
         self.itemListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ListSelection)
@@ -4459,7 +4459,7 @@ class UnaccessibleTracksFrame(wx.Frame):
         self.MakeModal(True)
         self.Show(True)
         self.onRefreshButton()
-        
+
     def onCloseButton(self, evt):
         self.Close(True)
 
@@ -4494,13 +4494,13 @@ class UnaccessibleTracksFrame(wx.Frame):
                 file.write('\n')
             file.close()
         elif isfile(self.filePath):
-            remove_file(self.filePath)            
+            remove_file(self.filePath)
         evt.Skip()
-        
+
     def onRefreshButton(self,evt=None):
         self.patientFrame = None
         if not evt and not self.mode and isfile(self.filePath):
-            self.CompleteForm()                  
+            self.CompleteForm()
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
@@ -4510,7 +4510,7 @@ class UnaccessibleTracksFrame(wx.Frame):
                 self.Enable(False)
         if evt:
             evt.Skip()
-            
+
     def CompleteForm(self,evt=None):
 #        self.MakeModal(True)
         if isfile(self.filePath):

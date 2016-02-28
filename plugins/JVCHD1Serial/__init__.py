@@ -83,7 +83,7 @@ ACTIONS = (
 )
 
 class ActionBase(eg.ActionClass):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, self.cmd, self.data)
@@ -106,12 +106,12 @@ class ActionBase(eg.ActionClass):
         answer = serial.Read(7, 1.0)
         if len(answer) < 7:
             raise self.Exceptions.DeviceNotFound("Not enough bytes received!")
-    
 
-          
-        
+
+
+
 class JVCHD1Serial(eg.PluginClass):
-    
+
     def __init__(self):
         self.info.eventPrefix = "JVC-HD1"
         for evalName, tmpDescription, tmpCmd, tmpData in ACTIONS:
@@ -122,8 +122,8 @@ class JVCHD1Serial(eg.PluginClass):
                 data = tmpData
             TmpAction.__name__ = evalName
             self.AddAction(TmpAction)
-    
-    
+
+
     @eg.LogIt
     def __start__(self, port=0):
         self.port = port
@@ -132,12 +132,12 @@ class JVCHD1Serial(eg.PluginClass):
         self.serialThread.Open(port, 19200)
         self.serialThread.SetRts()
         self.serialThread.Start()
-        
-        
+
+
     def __stop__(self):
         self.serialThread.Close()
-        
-        
+
+
     def OnReceive(self, serial):
         data = serial.Read(1)
         if data != RESP:
@@ -175,18 +175,18 @@ class JVCHD1Serial(eg.PluginClass):
             self.TriggerEvent("Input." + sid)
         else:
             raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(c1), ord(c2)))
-            
-    
-    
+
+
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         panel.AddLine("Serial port:", portCtrl)
         while panel.Affirmed():
             panel.SetResult(
-                portCtrl.GetValue(), 
+                portCtrl.GetValue(),
             )
-            
-    
-    
-        
+
+
+
+

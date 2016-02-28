@@ -52,7 +52,7 @@ eg.RegisterPlugin(
         "SUVORK5CYII="
     ),
 )
-    
+
 # Changelog:
 # ----------
 # 2006-08-14 Milbrot
@@ -81,11 +81,11 @@ class ExeAction(eg.ActionClass):
     def __call__(self):
         try:
             ShellExecute(
-                0, 
-                None, 
-                "MTStart.exe", 
-                self.value, 
-                self.plugin.myTheatrePath, 
+                0,
+                None,
+                "MTStart.exe",
+                self.value,
+                self.plugin.myTheatrePath,
                 0
             )
             return True
@@ -275,5 +275,5 @@ class MyTheatre(eg.PluginClass):
             self.myTheatrePath, dummy = _winreg.QueryValueEx(key, "InstallLocation")
         except WindowsError:
             self.PrintError("MyTheatre installation path not found!")
-            self.myTheatrePath = "" 
-            
+            self.myTheatrePath = ""
+

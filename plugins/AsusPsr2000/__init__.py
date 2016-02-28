@@ -73,7 +73,7 @@ BUTTONS = {
     (64, 0, 32, 15): "GoUp",
     (64, 0, 33, 15): "Num0",
     (64, 0, 35, 15): "Teletext",
-    (64, 0, 36, 15): "GoTo",    
+    (64, 0, 36, 15): "GoTo",
 }
 
 
@@ -109,7 +109,7 @@ class AsusPsr2000(eg.PluginBase):
                     mouse_event(0x0002, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0004, 0, 0, 0, 0)
-                    
+
             rightDown = buttonType & 0x02
             if rightDown != self.rightDown:
                 self.rightDown = rightDown
@@ -117,7 +117,7 @@ class AsusPsr2000(eg.PluginBase):
                     mouse_event(0x0008, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0010, 0, 0, 0, 0)
-                    
+
             if x == 0 and y == 0:
                 degree = -2
             else:

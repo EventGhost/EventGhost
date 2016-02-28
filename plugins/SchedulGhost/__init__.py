@@ -52,7 +52,7 @@ version="0.1.15"
 # 0.1.4 by Pako 2011-08-24 09:15 UTC+1
 #     - bugfix - wrong stored last position of scheduler frame
 # 0.1.3 by Pako 2011-06-05 18:53 UTC+1
-#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER 
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 # 0.1.2 by Pako 2011-02-12 10:03 GMT+1
 #     - FixedTimeCtrl replaced by eg.TimeCtrl
 # 0.1.1 by Pako 2010-12-07 10:32 GMT+1
@@ -86,10 +86,10 @@ eg.RegisterPlugin(
     version = version,
     kind = "other",
     guid = "{39EFE2FF-6CA9-4450-B0E3-1AA125420B37}",
-    description = u'''<rst>This plugin is designed to easily schedule events ... 
+    description = u'''<rst>This plugin is designed to easily schedule events ...
 
 ... to be triggered at any time of the day or night.
-Events can be scheduled to be triggered periodically, 
+Events can be scheduled to be triggered periodically,
 once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
@@ -535,7 +535,7 @@ class CalendarPopup(wx.PopupWindow):
             style = (wxCal.CAL_MONDAY_FIRST, wxCal.CAL_SUNDAY_FIRST)[first_day]
                 | wxCal.CAL_SHOW_HOLIDAYS
                 | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
-                | wxCal.CAL_SHOW_SURROUNDING_WEEKS 
+                | wxCal.CAL_SHOW_SURROUNDING_WEEKS
         )
         self.cal.EnableYearChange(yearChange)
         sz = self.cal.GetBestSize()
@@ -1023,7 +1023,7 @@ class schedulerDialog(wx.Dialog):
                     )
                     dp.SetValue(wxDttm)
             elif type == 6: # timer
-                stEvLbl = None        
+                stEvLbl = None
             #elif type == 1: # daily
             #    pass
             if flag:
@@ -1050,7 +1050,7 @@ class schedulerDialog(wx.Dialog):
                 initTime.AddTS(wx.TimeSpan.Minute())
                 val = data[0] if data and data[0] else initTime
                 timeCtrl = eg.TimeCtrl(
-                    self, 
+                    self,
                     self.ctrls[0],
                     val,
                     fmt24hr = True,
@@ -1588,7 +1588,7 @@ class schedulerDialog(wx.Dialog):
         eventSizer.Add(stopLabel, 0, wx.ALIGN_RIGHT | wx.TOP, 4)
         eventSizer.Add(stopCtrl, 0)
         eventSizer.Add(payloadLabel, 0, wx.ALIGN_RIGHT | wx.TOP, 4)
-        eventSizer.Add(payloadCtrl, 1, wx.EXPAND)        
+        eventSizer.Add(payloadCtrl, 1, wx.EXPAND)
         sizer.Add(eventSizer, 0, wx.ALL | wx.EXPAND, 5)
         rows = len(self.tmpData)
         if rows > 0:
@@ -1945,7 +1945,7 @@ class SchedulGhost(eg.PluginBase):
             evt.Skip()
 
         logCheckBox.Bind(wx.EVT_CHECKBOX, onLogCheckBox)
-        Validation()       
+        Validation()
         while panel.Affirmed():
             panel.SetResult(
                 xmlPathCtrl.GetValue(),
@@ -2346,7 +2346,7 @@ class SchedulGhost(eg.PluginBase):
         ix = [item[1] for item in data].index(schedule)
         next = self.Execute(data[ix], stopEvent, ticks)
         if stopEvent:
-            self.updateLogFile(self.text.execStop % data[ix][1])            
+            self.updateLogFile(self.text.execStop % data[ix][1])
         else:
             last = str(dt.now())[:19]
             self.data[ix][4] = last
@@ -2356,7 +2356,7 @@ class SchedulGhost(eg.PluginBase):
                     ixTmp = tmpList.index(schedule)
                     self.tmpData[ixTmp][4] = last
                 self.dialog.RefreshGrid(ixTmp, last, next)
-            nxt = next[:19] if next else self.text.none        
+            nxt = next[:19] if next else self.text.none
             self.updateLogFile(self.text.execut % (data[ix][1], nxt))
 
 
@@ -2389,7 +2389,7 @@ class SchedulGhost(eg.PluginBase):
                     eg.scheduler.CancelTask(sched)
                     eg.scheduler.AddShortTaskAbsolute(
                         startTicks,
-                        self.SchedulGhostScheduleRun, 
+                        self.SchedulGhostScheduleRun,
                         schedule[1],
                         False,
                         startTicks
@@ -2828,7 +2828,7 @@ class RunScheduleImmediately(eg.ActionBase):
                         sched[7],
                         sched[8],
                         sched[5]
-                    )                 
+                    )
                 #for sch in eg.scheduler.__dict__['heap']:
                 #    if sch[1] == self.plugin.SchedulGhostScheduleRun:
                 #        if sch[2][0] == sched[1]:
@@ -2877,7 +2877,7 @@ class AddSchedule(eg.ActionBase):
 
 | An added schedule will not be saved automatically in SchedulGhost.xml. To save the added schedule use the
   SchedulGhost manager or the action "DataToXML".
-      
+
 This is the syntax of the python expression::
 
  [enabled?, u'scheduleTitle', scheduleType, [expressionScheduleType], u'dateLastRun timeLastRun',
@@ -2979,13 +2979,13 @@ class PopupText(wx.Frame):
         self.SetPosition(self.args[4])
         self.Show(True)
         BringWindowToTop(self.GetHandle())
-        self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)      
+        self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         label.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         label.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.Bind(wx.EVT_MOTION, self.OnMouseMove)        
-        label.Bind(wx.EVT_MOTION, self.OnMouseMove)        
+        self.Bind(wx.EVT_MOTION, self.OnMouseMove)
+        label.Bind(wx.EVT_MOTION, self.OnMouseMove)
 
 
     def OnCloseWindow(self, event):
@@ -3118,7 +3118,7 @@ class EggTimerFrame(wx.Frame):
         self.plugin.AddEggTimer(self.val, self.args)
         self.Close()
         evt.Skip()
- 
+
 
     def onClose(self, evt):
         #self.MakeModal(False)
@@ -3483,7 +3483,7 @@ class SetEggTimer(eg.ActionBase):
                 panel.dialog.buttonRow.testButton.Enable(False)
             evt.Skip()
         wavCheckBox.Bind(wx.EVT_CHECKBOX, onWavCheckBox)
-        
+
 
         def OnWavFile(evt):
             val = evt.GetString() != ""
@@ -3543,7 +3543,7 @@ class SetEggTimer(eg.ActionBase):
                 self.panel.popupFrame = None
             evt.Skip()
         panel.dialog.Bind(wx.EVT_CLOSE, OnCloseBox)
-        
+
 
         while panel.Affirmed():
             if self.panel.popupFrame:
@@ -3610,7 +3610,7 @@ class ReloadXML(eg.ActionBase):
                 schedulerDialog,
                 self.plugin.text.ShowSchedulGhost,
                 self.plugin
-            )            
+            )
 #===============================================================================
 
 class AbortEggTimer(eg.ActionBase):
@@ -3631,7 +3631,7 @@ class AbortEggTimer(eg.ActionBase):
         mainSizer.Add(lbl,0,wx.ALIGN_CENTER_VERTICAL)
         mainSizer.Add(eggCtrl,1,wx.EXPAND|wx.LEFT, 8)
         panel.sizer.Add(mainSizer,0,wx.EXPAND|wx.ALL, 10)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 eggCtrl.GetValue(),

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007 Ralph Eisenbach
-# 
+#
 # This plugin is based on the plugin for ZoomPlayer
 # by Lars-Peter Voss <bitmonster@eventghost.org>
 #
@@ -20,7 +20,7 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-    
+
 eg.RegisterPlugin(
     name = "TheaterTek",
     author = "SurFan",
@@ -170,7 +170,7 @@ Auto Killer Commands
 #define IP_EJECTDISK		8040 	// AP->AK	Changer#, Slot#
 #define IP_GETSLOTDATA		8050 	// AP->AK	Changer#, Slot#
 #define IP_GETDRIVEDATA		8060 	// AP->AK	Changer#  ->DriveData
-#define IP_CHECKCHANGED		8070 	// AP->AK		
+#define IP_CHECKCHANGED		8070 	// AP->AK
 #define IP_REBUILDDATA		8080 	// AP->AK
 #define IP_DATACHANGED		8100 	// AK->AP	Notification of data change
 #define IP_COUNTCHANGERS	8110 	// AP->AK
@@ -365,7 +365,7 @@ ttRequests = (
 ('IP_GETLISTCOUNT', '3050', 'Request Current list count'),
 ('IP_GETLIST', '3060', 'Request  playlist'),
 ('IP_GETPRIVATE', '4010', 'Request Private app string'),
-('IP_COUNTCHANGERS', '8110', 'CountChangers'), 
+('IP_COUNTCHANGERS', '8110', 'CountChangers'),
 )
 
 ttCommands = (
@@ -537,7 +537,7 @@ ttCommands = (
 )
 
 ttAutoKillerAndChangerCommands = (
-('IP_LAUNCH', '8000', 'Launch AutoKiller'), 
+('IP_LAUNCH', '8000', 'Launch AutoKiller'),
 ('IP_QUIT', '8010', 'Quit Autokiller'),
 ('IP_MOUNTDISK', '8020', 'Mount Disk', 'Changer/Slot (comma delimited)'),
 ('IP_UNMOUNTDISK', '8030', 'Unmount Disk', 'Changer/Slot (comma delimited)'),
@@ -547,13 +547,13 @@ ttAutoKillerAndChangerCommands = (
 ('IP_CHECKCHANGED', '8070', 'CHECKCHANGED'),
 ('IP_REBUILDDATA',  '8080',  'REBUILDDATA'),
 ('IP_DATACHANGED', '8100', 'Notification of data change'),
-) 
+)
 
 class TheaterTekSession(asynchat.async_chat):
     """
     Handles a Theatertek TCP/IP session.
     """
-    
+
     def __init__ (self, plugin, address):
         self.plugin = plugin
 
@@ -565,7 +565,7 @@ class TheaterTekSession(asynchat.async_chat):
 
         # Initialize input data buffer
         self.buffer = ''
-        
+
         # create and connect a socket
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         eg.RestartAsyncore()
@@ -577,11 +577,11 @@ class TheaterTekSession(asynchat.async_chat):
 
     def handle_connect(self):
         """
-        Called when the active opener's socket actually makes a connection. 
+        Called when the active opener's socket actually makes a connection.
         """
         self.plugin.TriggerEvent("Connected")
-         
-       
+
+
     def handle_expt(self):
         # connection failed
         self.plugin.isSessionRunning = False
@@ -607,32 +607,32 @@ class TheaterTekSession(asynchat.async_chat):
 
     def found_terminator(self):
         """
-        Called when the incoming data stream matches the termination 
+        Called when the incoming data stream matches the termination
         condition set by set_terminator.
         """
         # call the plugins handler method
         self.plugin.ValueUpdate(self.buffer)
-        
+
         # reset the buffer
         self.buffer = ''
-         
+
 class stdAction(eg.ActionClass):
-    
+
     def __call__(self):
         self.plugin.DoCommand(self.value)
-         
+
 class stdActionWithStringParameter(eg.ActionWithStringParameter):
-    
+
     def __call__(self, Param):
         self.plugin.DoCommand(self.value + " " + Param)
-         
+
 class wmAction(eg.ActionClass):
-    
+
     def __call__(self):
         self.plugin.DoCommand("5000 " + self.value)
-      
+
 class TheaterTek(eg.PluginClass):
-   
+
     def __init__(self):
         self.host = "localhost"
         self.port = 2663
@@ -645,13 +645,13 @@ class TheaterTek(eg.PluginClass):
         self.lastSubtitleNum = 0
         self.lastSubtitlesEnabled = False
         self.lastAudioTrackNum = 0
-       
+
         group = self.AddGroup('Requests')
         for className, scancode, descr in ttRequests:
             clsAttributes = dict(name=descr, value=scancode)
             cls = new.classobj(className, (stdAction,), clsAttributes)
             group.AddAction(cls)
-       
+
         group = self.AddGroup('Commands')
         for className, scancode, descr, ParamDescr in ttCommands:
             clsAttributes = dict(name=descr, value=scancode)
@@ -667,7 +667,7 @@ class TheaterTek(eg.PluginClass):
 
     def __start__(
         self,
-        host="localhost", 
+        host="localhost",
         port=2663,
         dummy1=None,
         dummy2=None,
@@ -676,7 +676,7 @@ class TheaterTek(eg.PluginClass):
         self.host = host
         self.port = port
         self.events = self.ttEvents
-        
+
     ttEvents = {
         "0000": "ApplicationName",
         "0001": "Version",
@@ -742,7 +742,7 @@ class TheaterTek(eg.PluginClass):
         "4010": "PrivateAppString",
         "8110": "CountChangers",
     }
-    
+
     def ValueUpdate(self, text):
         if text == self.waitStr:
             self.waitStr = None
@@ -804,20 +804,20 @@ class TheaterTek(eg.PluginClass):
         dummy2=None
     ):
         panel = eg.ConfigPanel(self)
-        hostEdit = panel.TextCtrl(host)       
+        hostEdit = panel.TextCtrl(host)
         portEdit = panel.SpinIntCtrl(port, max=65535)
         panel.AddLine("TCP/IP host:", hostEdit)
         panel.AddLine("TCP/IP port:", portEdit)
         while panel.Affirmed():
             panel.SetResult(
-                hostEdit.GetValue(), 
-                portEdit.GetValue(), 
+                hostEdit.GetValue(),
+                portEdit.GetValue(),
                 None,
                 None
             )
-    
+
     class MyCommand(eg.ActionWithStringParameter):
         name = "Raw Command"
-        
+
         def __call__(self, cmd):
             self.plugin.DoCommand(cmd)

@@ -15,8 +15,8 @@ Commands are taken straight out of the RS232_H79.pdf document
 available from the Optoma website. Please note that, at least
 with the documented command set, the serial input is pretty much
 just a remote replacement, i.e. most of the serial commands
-refer to remote functions, and you need to fiddle with 
-Up, Down, Left, Right and Enter to actually change values. 
+refer to remote functions, and you need to fiddle with
+Up, Down, Left, Right and Enter to actually change values.
 Yes, this sucks.
 
 Projector replies are returned to EventGhost as events."""
@@ -63,49 +63,49 @@ cmdList = (
 ('Zoom', 'Zoom', '* 0 IR 005', None ),
 ('Freeze', 'Freeze', '* 0 IR 007', None ),
 ('Menu', 'Menu',  '* 0 IR 008', None ),
-('Up', 'Up', '* 0 IR 009', None ), 
+('Up', 'Up', '* 0 IR 009', None ),
 ('Down', 'Down', '* 0 IR 010', None ),
 ('Right', 'Right', '* 0 IR 011', None ),
 ('Left', 'Left', '* 0 IR 012', None ),
-('Enter', 'Enter', '* 0 IR 013', None ), 
-('ReSync', 'Re-Sync', '* 0 IR 014', None ), 
-('SourceSVideo', 'Source S-Video', '* 0 IR 018', None ), 
-('SourceCompositeVideo', 'Source Composite Video', '* 0 IR 019', None ), 
-('Aspectratio169', 'Aspect ratio 16:9', '* 0 IR 021', None ), 
-('HKeyStone', 'H. KeyStone', '* 0 IR 023', None ), 
-('VideoMute', 'Video Mute(Hide)', '* 0 IR 024', None ), 
-('Brightness', 'Brightness', '* 0 IR 025', None ), 
-('Contrast', 'Contrast', '* 0 IR 026', None ), 
-('ColorTemperature', 'Color Temperature', '* 0 IR 027', None ), 
-('RedContrast', 'Advanced adjustment: Red contrast', '* 0 IR 028', None ), 
-('GreenContrast', 'Advanced adjustment: Green contrast', '* 0 IR 029', None ), 
-('BlueContrast', 'Advanced adjustment: Blue contrast', '* 0 IR 030', None ), 
-('RedBrightness', 'Advanced adjustment: Red Brightness', '* 0 IR 031', None ), 
-('GreenBrightness', 'Advanced adjustment: Green Brightness', '* 0 IR 032', None ), 
-('BlueBrightness', 'Advanced adjustment: Blue Brightness', '* 0 IR 033', None ), 
-('FormatMode', 'Format Mode', '* 0 IR 034', None ), 
-('Mode', 'Mode', '* 0 IR 035', None ), 
-('SignalHorizontal', 'Signal: Horizontal', '* 0 IR 036', None ), 
-('SignalVertical', 'Signal: Vertical', '* 0 IR 037', None ), 
-('SignalFrequency', 'Signal: Frequency', '* 0 IR 038', None ), 
-('SignalPhase', 'Signal: Phase', '* 0 IR 039', None ), 
+('Enter', 'Enter', '* 0 IR 013', None ),
+('ReSync', 'Re-Sync', '* 0 IR 014', None ),
+('SourceSVideo', 'Source S-Video', '* 0 IR 018', None ),
+('SourceCompositeVideo', 'Source Composite Video', '* 0 IR 019', None ),
+('Aspectratio169', 'Aspect ratio 16:9', '* 0 IR 021', None ),
+('HKeyStone', 'H. KeyStone', '* 0 IR 023', None ),
+('VideoMute', 'Video Mute(Hide)', '* 0 IR 024', None ),
+('Brightness', 'Brightness', '* 0 IR 025', None ),
+('Contrast', 'Contrast', '* 0 IR 026', None ),
+('ColorTemperature', 'Color Temperature', '* 0 IR 027', None ),
+('RedContrast', 'Advanced adjustment: Red contrast', '* 0 IR 028', None ),
+('GreenContrast', 'Advanced adjustment: Green contrast', '* 0 IR 029', None ),
+('BlueContrast', 'Advanced adjustment: Blue contrast', '* 0 IR 030', None ),
+('RedBrightness', 'Advanced adjustment: Red Brightness', '* 0 IR 031', None ),
+('GreenBrightness', 'Advanced adjustment: Green Brightness', '* 0 IR 032', None ),
+('BlueBrightness', 'Advanced adjustment: Blue Brightness', '* 0 IR 033', None ),
+('FormatMode', 'Format Mode', '* 0 IR 034', None ),
+('Mode', 'Mode', '* 0 IR 035', None ),
+('SignalHorizontal', 'Signal: Horizontal', '* 0 IR 036', None ),
+('SignalVertical', 'Signal: Vertical', '* 0 IR 037', None ),
+('SignalFrequency', 'Signal: Frequency', '* 0 IR 038', None ),
+('SignalPhase', 'Signal: Phase', '* 0 IR 039', None ),
 ('AspectNative', 'Aspect Ratio: Native', '* 0 IR 040', None ),
-('AspectWindow', 'Aspect Ratio: Window', '* 0 IR 041', None ), 
-('AspectLetterBox', 'Aspect Ration : Letter Box', '* 0 IR 042', None ), 
-('Language', 'Language', '* 0 IR 043', None ), 
-('Bulb', 'Bulb (Lamp information)', '* 0 IR 044', None ), 
-('AutoImageOn', 'Auto Image: On', '* 0 IR 045', None ), 
-('AutoImageOff', 'Auto Image: Off', '* 0 IR 047', None ), 
-('AutoShutdownOn', 'Auto Shutdown: On', '* 0 IR 047', None ), 
-('AutoShutdownOff', 'Auto Shutdown: Off', '* 0 IR 048', None ), 
-('SourceBNC', 'Source: BNC terminal', '* 0 IR 049', None ), 
-('Sharpness', 'Sharpness', '* 0 IR 050', None ), 
-('SourceDVI', 'Source: DVI terminal', '* 0 IR 051', None ), 
-('SourceRCA', 'Source: RCA terminal', '* 0 IR 052', None ), 
-('Color', 'Color', '* 0 IR 053', None ), 
-('TINT', 'TINT', '* 0 IR 054', None ), 
-('ImageMode', 'Image mode', '* 0 IR 055', None ), 
-('WhitePeaking', 'White peaking', '* 0 IR 056', None ), 
+('AspectWindow', 'Aspect Ratio: Window', '* 0 IR 041', None ),
+('AspectLetterBox', 'Aspect Ration : Letter Box', '* 0 IR 042', None ),
+('Language', 'Language', '* 0 IR 043', None ),
+('Bulb', 'Bulb (Lamp information)', '* 0 IR 044', None ),
+('AutoImageOn', 'Auto Image: On', '* 0 IR 045', None ),
+('AutoImageOff', 'Auto Image: Off', '* 0 IR 047', None ),
+('AutoShutdownOn', 'Auto Shutdown: On', '* 0 IR 047', None ),
+('AutoShutdownOff', 'Auto Shutdown: Off', '* 0 IR 048', None ),
+('SourceBNC', 'Source: BNC terminal', '* 0 IR 049', None ),
+('Sharpness', 'Sharpness', '* 0 IR 050', None ),
+('SourceDVI', 'Source: DVI terminal', '* 0 IR 051', None ),
+('SourceRCA', 'Source: RCA terminal', '* 0 IR 052', None ),
+('Color', 'Color', '* 0 IR 053', None ),
+('TINT', 'TINT', '* 0 IR 054', None ),
+('ImageMode', 'Image mode', '* 0 IR 055', None ),
+('WhitePeaking', 'White peaking', '* 0 IR 056', None ),
 
 ('Raw', 'Send Raw command', '', '*'),
 )
@@ -121,7 +121,7 @@ class H79Serial(eg.PluginClass):
                 self.plugin.serial.write(cmd)
                 self.plugin.serial.write(chr(13))
             return write
-            
+
         for cmd_name, cmd_text, cmd_cmd, cmd_rangespec in cmdList:
             if cmd_text is None:
                 # New subgroup, or back up
@@ -147,7 +147,7 @@ class H79Serial(eg.PluginClass):
                     __call__ = createWriter(cmd_cmd)
                 Handler.__name__ = cmd_name
                 group.AddAction(Handler)
-               
+
 
     # Serial port reader
     def reader(self):
@@ -175,19 +175,19 @@ class H79Serial(eg.PluginClass):
         self.serial.setRTS(1)
         self.readerkiller = False
         thread.start_new_thread(self.reader,());
-        
-        
+
+
     def __stop__(self):
         self.readerkiller = True
         if self.serial is not None:
             self.serial.close()
             self.serial = None
-            
-            
+
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         panel.AddLine("Port:", portCtrl)
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue())
-                    
+

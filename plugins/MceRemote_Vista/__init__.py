@@ -69,10 +69,10 @@ MCE_SERVICE_NAME = "AlternateMceIrService"
 
 class GetIR(eg.ActionBase):
     name = "Get IR code"
-    
+
     class text:
         correctness = "Learn Counter:"
-    
+
     def __call__(self, correctnessCount=1):
         if self.plugin.client is None:
             return
@@ -80,54 +80,54 @@ class GetIR(eg.ActionBase):
         if not code is None:
             return code
         else:
-            return False 
-        
+            return False
+
     def Configure(self, correctnessCount=1):
         text = self.text
-        panel = eg.ConfigPanel()        
-        
+        panel = eg.ConfigPanel()
+
         correctnessCtrl = panel.SpinIntCtrl(correctnessCount, min=1, max=65535)
         correctnessLabel = panel.StaticText(text.correctness)
         panel.AddLine(correctnessLabel,correctnessCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(correctnessCtrl.GetValue())
 
 class TransmitIR(eg.ActionBase):
     name = "Transmit IR"
-    
+
     def __call__(self, code="", repeatCount=0, correctnessCount=0):
         if self.plugin.client is None:
             return
         #Send pronto code:
         freq, transmitValues = Pronto2MceTimings(code,repeatCount)
-        transmitCode = RoundAndPackTimings(transmitValues)                        
+        transmitCode = RoundAndPackTimings(transmitValues)
         n = len(transmitCode)
         #Port is set to zero, it is populated automatically
         header = pack(7*ptr_fmt,2,int(1000000./freq),0,0,0,1,len(transmitCode))
         transmitData = header + transmitCode
         self.plugin.client.Transmit(transmitData)
-        
+
     def Configure(self, code='', repeatCount=0, correctnessCount=1):
         text = self.text
-        panel = eg.ConfigPanel()        
+        panel = eg.ConfigPanel()
         editCtrl = panel.TextCtrl(code, style=wx.TE_MULTILINE)
         font = editCtrl.GetFont()
         font.SetFaceName("Courier New")
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
-        
+
         repeatCtrl = eg.SpinIntCtrl(panel, -1, value=repeatCount, min=0, max=127)
         repeatCtrl.SetInitialSize((50, -1))
-        
+
         correctnessCtrl = eg.SpinIntCtrl(panel, -1, value=correctnessCount, min=1, max=127)
         correctnessCtrl.SetInitialSize((50, -1))
-        
-        learnButton = panel.Button("Learn an IR Code...")  
+
+        learnButton = panel.Button("Learn an IR Code...")
         result = self.plugin.client.GetDeviceInfo()
         if result is None or result[2] != 2:
-            learnButton.Enable(False)    
-            
+            learnButton.Enable(False)
+
         panel.sizer.Add(panel.StaticText("Pronto Code"),0,wx.EXPAND)
         panel.sizer.Add((5, 5))
         panel.sizer.Add(editCtrl,0,wx.EXPAND)
@@ -139,7 +139,7 @@ class TransmitIR(eg.ActionBase):
             if not code is None:
                 editCtrl.SetValue(code)
         learnButton.Bind(wx.EVT_BUTTON, LearnIR)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 editCtrl.GetValue(),
@@ -148,7 +148,7 @@ class TransmitIR(eg.ActionBase):
             )
 
 class IRLearnDialog(wx.Dialog):
-    
+
     def __init__(self, correctnessCount, dialog):
         self.maxTryes = correctnessCount
         self.tryes = 0
@@ -157,8 +157,8 @@ class IRLearnDialog(wx.Dialog):
         self.code1 = []
         if dialog:
             wx.Dialog.__init__(
-                self, 
-                None, 
+                self,
+                None,
                 -1,
                 "Learn IR Code",
                 style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
@@ -173,32 +173,32 @@ class IRLearnDialog(wx.Dialog):
                     "4. The dialog will close automatically when\n"\
                     "all codes are received."
             staticText = wx.StaticText(self, -1, helpText)
-            
+
             sb = wx.StaticBox(self, -1, "Frequency")
             carrierFreqSizer = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
             self.carrierFreqCtrl = wx.StaticText(self, -1, "-", style=wx.ALIGN_CENTER)
             carrierFreqSizer.Add(self.carrierFreqCtrl, 1, wx.EXPAND|wx.ALL, 5)
-            
+
             cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
             cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
-    
+
             leftSizer = wx.BoxSizer(wx.VERTICAL)
             leftSizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 5)
-            
+
             rightSizer = wx.BoxSizer(wx.VERTICAL)
             rightSizer.Add(cancelButton, 0, wx.EXPAND|wx.ALIGN_RIGHT)
             rightSizer.Add((0, 0), 1)
             rightSizer.Add(carrierFreqSizer, 0, wx.EXPAND)
-            rightSizer.Add((0, 0), 1)        
-            
+            rightSizer.Add((0, 0), 1)
+
             upperRowSizer = wx.BoxSizer(wx.HORIZONTAL)
             upperRowSizer.Add(leftSizer, 1, wx.EXPAND)
             upperRowSizer.Add((5, 5))
             upperRowSizer.Add(rightSizer, 0, wx.EXPAND)
-            
+
             sizer = wx.BoxSizer(wx.VERTICAL)
             sizer.Add(upperRowSizer, 1, wx.EXPAND|wx.ALL, 5)
-            
+
             self.SetSizer(sizer)
             self.SetAutoLayout(True)
             sizer.Fit(self)
@@ -208,7 +208,7 @@ class IRLearnDialog(wx.Dialog):
 
     def OnClose(self, event):
         event.Skip()
-        
+
     def OnCancel(self, event):
         self.Close()
 
@@ -279,10 +279,10 @@ class IRLearnDialog(wx.Dialog):
                     finalList2.append(format(int(finalList1[i]/self.maxTryes), '04X'))
                 self.code = " ".join(finalList2)
                 self.exit = 1
-            
+
 class GetDeviceInfo(eg.ActionBase):
     name = "Get Mce IR device capability"
-    
+
     def __call__(self):
         if self.plugin.client is None:
             return False
@@ -301,14 +301,14 @@ class GetDeviceInfo(eg.ActionBase):
             if result[5] & (1 << i):
                 nAttached = nAttached + 1
             i = i + 1
-        eg.PrintNotice("%d Transmitters (%d attached), %s have learn capability" % 
+        eg.PrintNotice("%d Transmitters (%d attached), %s have learn capability" %
                         (result[1],nAttached,"does" if result[2] == 2 else "does not"))
         #eg.PrintNotice("Blaster Data: %d"%result)
         return True
 
 class TestIR(eg.ActionBase):
     name = "Test IR Transmit capability"
-    
+
     def __call__(self):
         if self.plugin.client is None:
             return False
@@ -327,7 +327,7 @@ class TestIR(eg.ActionBase):
             if result[5] & (1 << i):
                 nAttached = nAttached + 1
             i = i + 1
-        eg.PrintNotice("%d Transmitters (%d attached), %s have learn capability" % 
+        eg.PrintNotice("%d Transmitters (%d attached), %s have learn capability" %
                         (result[1],nAttached,"does" if result[2] == 2 else "does not"))
         if self.plugin.client.TestIR()==True:
             return True
@@ -337,22 +337,22 @@ class TestIR(eg.ActionBase):
 
 class SetLearnMode(eg.ActionBase):
     name = "Switch IR Receiver to learn port"
-    
+
     def __call__(self):
         if self.plugin.client is None:
             return
         mode = "l".encode("ascii")
         self.plugin.client.ChangeReceiveMode(mode)
-        
+
 class SetNormalMode(eg.ActionBase):
     name = "Switch IR Receiver to normal port"
-    
+
     def __call__(self):
         if self.plugin.client is None:
             return
         mode = "n".encode("ascii")
         self.plugin.client.ChangeReceiveMode(mode)
-        
+
 def CheckForMceDriver():
     """
     Checks the HID registry values.
@@ -370,7 +370,7 @@ def CheckForMceDriver():
     if noKeyCount == len(ValuesToCheck):
         return False
     return True
-    
+
 def CheckForAlternateService():
     """
     Checks if the AlternateMceIrService is installed
@@ -381,7 +381,7 @@ def CheckForAlternateService():
     except:
         return False
     return True
-            
+
 def RoundAndPackTimings(timingData):
     out = ""
     for v in timingData:
@@ -392,7 +392,7 @@ def RoundAndPackTimings(timingData):
 def IsServiceStopped(service):
  	  status = win32service.QueryServiceStatus(service)[1]
  	  return status == win32service.SERVICE_STOPPED
-	
+
 def StartService(service):
  	  try:
  	      win32service.StartService(service, None)
@@ -403,13 +403,13 @@ def StartService(service):
  	      return status == win32service.SERVICE_RUNNING
  	  except:
  	      return False
-    
-    
+
+
 class MceMessageReceiver(object):
     """
     Connect to AlternateMceIrService in a new threading.Thread.  This class is callable, so can be assigned to a thread.
     """
-    
+
     def __init__(self,plugin):
         """
         This initializes the class, and saves the plugin reference for use in the new thread.
@@ -423,7 +423,7 @@ class MceMessageReceiver(object):
             win32service.CloseServiceHandle(scmanager)
         except:
             self.service = None
-        
+
     @eg.LogIt
     def __call__(self):
         """
@@ -437,7 +437,7 @@ class MceMessageReceiver(object):
             self.Connect()
             if self.keepRunning:
                 self.HandleData()
-                
+
     @eg.LogIt
     def Stop(self):
         """
@@ -445,18 +445,18 @@ class MceMessageReceiver(object):
         """
         if self.file:
             writeOvlap = win32file.OVERLAPPED()
-            writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)   
+            writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
             msg = "q".encode("ascii")
             win32file.WriteFile(self.file, msg, writeOvlap)
             win32file.CloseHandle(self.file)
             self.file = None
         self.keepRunning = False
-        
+
         if self.service:
             win32service.CloseServiceHandle(self.service)
-        
+
         #eg.PrintNotice("MCE_Vista: stopping thread")
-        
+
     def Transmit(self, transmitData):
         """
         This will be called to detect available IR Blasters.
@@ -464,11 +464,11 @@ class MceMessageReceiver(object):
         if not self.file:
             return False
         writeOvlap = win32file.OVERLAPPED()
-        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)   
+        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
         win32file.WriteFile(self.file, transmitData, writeOvlap)
         win32event.WaitForSingleObject(writeOvlap.hEvent, win32event.INFINITE)
         return True
-    
+
     def LearnIR(self, correctnessCount, dialog):
         if not self.learnDialog is None: #already have dialog open
             return None
@@ -495,7 +495,7 @@ class MceMessageReceiver(object):
         self.freqs = [0]
         self.result = []
         return code
-        
+
     def GetDeviceInfo(self):
         """
         This will be called to detect IR device info.
@@ -503,7 +503,7 @@ class MceMessageReceiver(object):
         if not self.file:
             return None
         writeOvlap = win32file.OVERLAPPED()
-        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)   
+        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
         self.deviceInfoEvent = win32event.CreateEvent(None, 0, 0, None)
         win32file.WriteFile(self.file, "b".encode("ascii"), writeOvlap)
         if win32event.WaitForSingleObject(self.deviceInfoEvent, 250) == win32event.WAIT_OBJECT_0:
@@ -517,13 +517,13 @@ class MceMessageReceiver(object):
         if not self.file:
             return None
         writeOvlap = win32file.OVERLAPPED()
-        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)   
+        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
         self.deviceTestEvent = win32event.CreateEvent(None, 0, 0, None)
         win32file.WriteFile(self.file, "t".encode("ascii"), writeOvlap)
         if win32event.WaitForSingleObject(self.deviceTestEvent, 250) == win32event.WAIT_OBJECT_0:
             return True
         return None
-        
+
     def ChangeReceiveMode(self, mode):
         """
         This will be called to detect available IR Blasters.
@@ -533,11 +533,11 @@ class MceMessageReceiver(object):
         if not self.file:
             return False
         writeOvlap = win32file.OVERLAPPED()
-        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)   
+        writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
         win32file.WriteFile(self.file, mode, writeOvlap)
         win32event.WaitForSingleObject(writeOvlap.hEvent, win32event.INFINITE)
         return True
-        
+
     def Connect(self):
         """
         This function tries to connect to the named pipe from AlternateMceIrService.  If it can't connect, it will periodically
@@ -558,11 +558,11 @@ class MceMessageReceiver(object):
                     eg.PrintNotice("    Message = %s"%win32api.FormatMessage(win32api.GetLastError()))
                     self.plugin.TriggerEvent("Disconnected")
                     self.sentMessageOnce = True
-                    
+
                 if self.service and IsServiceStopped(self.service):
                     eg.PrintNotice("MCE_Vista: MceIr service is stopped, trying to start it...")
                     StartService(self.service)
-                    
+
                 time.sleep(1)
         return
 
@@ -626,7 +626,7 @@ class MceMessageReceiver(object):
                     data = data[100 + 3*ptr_len:]
                     for i,v in enumerate(vals):
                         a = abs(v)
-                        self.result.append(a)                   
+                        self.result.append(a)
                         if self.learnDialog is None: #normal mode
                             if a > 6500: #button held?
                                 if self.CodeValid(self.result):
@@ -639,7 +639,7 @@ class MceMessageReceiver(object):
             except:
                 pass
         #eg.PrintNotice("MCE_Vista: Handle Data finished")
-    
+
     def CodeValid(self,code):
         """
         Used to sanity check a code so we don't waste cycles testing it in all the decoders.
@@ -648,13 +648,13 @@ class MceMessageReceiver(object):
         if len(code) < 5:
             return False
         return True
-                
+
 class MCE_Vista(eg.IrDecoderPlugin):
     """
     MCE plugin designed to work with Vista/Win7 and UAC.  It starts a new thread to connect with the AlternateMceIrService
     and receive IR events for AlternateMceIrService's namedpipe.
     """
-    
+
     def __init__(self):
         eg.IrDecoderPlugin.__init__(self,1.0)
         self.AddAction(GetDeviceInfo)
@@ -664,10 +664,10 @@ class MCE_Vista(eg.IrDecoderPlugin):
         self.AddAction(SetNormalMode, hidden = True)
         self.AddAction(GetIR)
         self.client = None
-        
+
     def __close__(self):
-        self.irDecoder.Close()          
-        
+        self.irDecoder.Close()
+
     @eg.LogIt
     def __start__(self):
         global ptr_fmt
@@ -687,7 +687,7 @@ class MCE_Vista(eg.IrDecoderPlugin):
         self.client = MceMessageReceiver(self)
         self.msgThread = Thread(target=self.client)
         self.msgThread.start()
-              
+
     def __stop__(self):
         eg.PrintNotice("MCE_Vista: Stopping Mce Vista plugin")
         win32event.SetEvent(self.hFinishedEvent)
@@ -714,4 +714,4 @@ class MCE_Vista(eg.IrDecoderPlugin):
         panel.sizer.Add((10, 10))
         panel.sizer.Add(uninstallButton)
         while panel.Affirmed():
-            panel.SetResult()        
+            panel.SetResult()

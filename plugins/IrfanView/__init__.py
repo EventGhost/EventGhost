@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.2.5" 
+version="0.2.5"
 
 # plugins/IrfanView/__init__.py
 #
@@ -38,8 +38,8 @@ eg.RegisterPlugin(
         'Adds actions to control <a href="http://www.irfanview.com/">'
         'IrfanView</a>.'
     ),
-    createMacrosOnAdd = True,  
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=579",  
+    createMacrosOnAdd = True,
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=579",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBISChIQCBMTCxPwCBPz+/AAAAAAAAHoDFR0AAAAAAAAAAAAEFQ"
         "AAABUAAAAAAA0CDQAAAAAAAAAAAAAADQIAAAAAAAAAAAAABAEADwAAEAAABygArukABBIA"
@@ -84,8 +84,8 @@ class Text:
     class RunDefault:
         text2="Couldn't find file i_view32.exe !"
 
-        
-        
+
+
 import wx
 import os
 from ConfigParser import SafeConfigParser
@@ -237,22 +237,22 @@ FindIrfanView = eg.WindowMatcher(
 class IrfanView(eg.PluginClass):
     text=Text
     IrfanViewPath = None
-    
+
     def OpenHelpPage(self,html_page):
         try:
             head, tail = os.path.split(self.IrfanViewPath)
             return win32api.ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 "hh.exe",
                 ('mk:@MSITStore:'+head+'\i_view32.chm::/'\
-                +html_page).encode(myEncoding), 
-                os.environ['SYSTEMROOT'], 
+                +html_page).encode(myEncoding),
+                os.environ['SYSTEMROOT'],
                 1
             )
         except:
             self.PrintError(self.text.err)
-    
+
     def __init__(self):
         self.AddAction(RunDefault)
         self.AddAction(RunCommandLine)
@@ -260,7 +260,7 @@ class IrfanView(eg.PluginClass):
         self.AddAction(RunWithOptions)
         self.AddAction(Exit)
         IrfanViewPath = ""
-        
+
         i=0
         for grpTuple in Actions:
             if i>0:
@@ -288,22 +288,22 @@ class IrfanView(eg.PluginClass):
             i+=1
 
     def __start__(self, IrfanViewPath=None):
-        self.IrfanViewPath = IrfanViewPath                 
+        self.IrfanViewPath = IrfanViewPath
 
     def Configure(self, IrfanViewPath=None):
         if IrfanViewPath is None:
             IrfanViewPath = self.GetIrfanViewPath()
             if IrfanViewPath is None:
                 IrfanViewPath = os.path.join(
-                    eg.folderPath.ProgramFiles, 
-                    "IrfanView", 
+                    eg.folderPath.ProgramFiles,
+                    "IrfanView",
                     "i_view32.exe"
                 )
         panel = eg.ConfigPanel(self)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(320,-1),
-            initialValue=IrfanViewPath, 
+            initialValue=IrfanViewPath,
             startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse
@@ -311,14 +311,14 @@ class IrfanView(eg.PluginClass):
         panel.sizer.Add((5, 20))
         panel.AddLabel(self.text.label)
         panel.AddCtrl(filepathCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue())
 
     def GetIrfanViewPath(self):
         """
-        Get the path of IrfanView's install-dir through querying the 
-        Windows registry.        
+        Get the path of IrfanView's install-dir through querying the
+        Windows registry.
         """
         try:
             iv_reg = _winreg.OpenKey(
@@ -337,16 +337,16 @@ class IrfanView(eg.PluginClass):
 class RunDefault(eg.ActionClass):
     name = "Run default"
     description = "Run IrfanView with its default settings."
-    
+
     def __call__(self):
         try:
             head, tail = os.path.split(self.plugin.IrfanViewPath)
             return win32api.ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 tail,
-                None, 
-                head, 
+                None,
+                head,
                 1
             )
         except:
@@ -364,11 +364,11 @@ class RunCommandLine(eg.ActionClass):
         try:
             head, tail = os.path.split(self.plugin.IrfanViewPath)
             return win32api.ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 tail,
-                cmdline.encode(myEncoding), 
-                head, 
+                cmdline.encode(myEncoding),
+                head,
                 1
             )
         except:
@@ -376,7 +376,7 @@ class RunCommandLine(eg.ActionClass):
 
     def GetLabel(self,label,cmdline):
         return "Run command line "+label
-        
+
     def Configure(self,label="",cmdline=""):
         panel = eg.ConfigPanel(self)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
@@ -385,16 +385,16 @@ class RunCommandLine(eg.ActionClass):
         cmdlineCtrl.SetMinSize((400,20))
         hlpbtnCtrl = wx.Button(panel, -1, self.text.help)
         def onBtnClick(event):
-            self.plugin.OpenHelpPage('hlp_command_line.htm') 
+            self.plugin.OpenHelpPage('hlp_command_line.htm')
             event.Skip()
-        hlpbtnCtrl.Bind(wx.EVT_BUTTON, onBtnClick, hlpbtnCtrl)            
+        hlpbtnCtrl.Bind(wx.EVT_BUTTON, onBtnClick, hlpbtnCtrl)
         labelLbl=wx.StaticText(panel, -1, self.text.label)
         labelCtrl=wx.TextCtrl(panel,-1,label)
         mainSizer.Add(cmdlineLbl,0,wx.TOP,20)
         mainSizer.Add(cmdlineCtrl,0,wx.EXPAND)
         mainSizer.Add(hlpbtnCtrl,0,wx.ALIGN_RIGHT|wx.TOP,8)
         mainSizer.Add(labelLbl,0,wx.ALIGN_RIGHT|wx.TOP,50)
-        mainSizer.Add(labelCtrl,0,wx.ALIGN_RIGHT)        
+        mainSizer.Add(labelCtrl,0,wx.ALIGN_RIGHT)
         panel.sizer.Add(mainSizer)
         while panel.Affirmed():
             panel.SetResult(labelCtrl.GetValue(),cmdlineCtrl.GetValue())
@@ -426,7 +426,7 @@ class RunSlideshow(eg.ActionClass):
         "mon_": 1,
         "mask_": u"$D$F $X",
     }
-    
+
     class text:
         err ="Couldn't find file i_view32.exe !"
         runslideshow = "Run slideshow "
@@ -464,7 +464,7 @@ class RunSlideshow(eg.ActionClass):
         filemask = (
             "Text files (*.txt)|*.txt|List files (*.lst)|*.lst"
             "|All-Files (*.*)|*.*"
-        ) 
+        )
         dirpath = "Path to folder:"
         toolTipFile = 'Type filename or click browse to choose file'
         browseTitle = "Selected folder:"
@@ -473,15 +473,15 @@ class RunSlideshow(eg.ActionClass):
         lineOpt="Command line option:"
         help = "Help"
         mask = 'Mask for "Show text":'
-    
+
     def __call__(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
-        head, tail = os.path.split(self.plugin.IrfanViewPath)            
+        head, tail = os.path.split(self.plugin.IrfanViewPath)
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
         cp.read(head+"\\i_view32.ini")
-        if cp.has_option('Others','INI_Folder'): 
+        if cp.has_option('Others','INI_Folder'):
             INI_Folder = cp.get('Others','INI_Folder',True)
             if INI_Folder == '%APPDATA%\\IrfanView':
                 INI_Folder = eg.folderPath.RoamingAppData+"\\IrfanView\\"
@@ -510,10 +510,10 @@ class RunSlideshow(eg.ActionClass):
         cp.set(sec, "ShowFullScreen", str(options["fit_"]))
         cp.set(sec, "FSResample", str(int(options["resample_"])))
         cp.set(sec, "FSAlpha", str(int(options["alpha_"])))
-        if cp.has_option('Others','INI_Folder'): 
+        if cp.has_option('Others','INI_Folder'):
             cp.remove_option('Others','INI_Folder')
-        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
-        cp.write(fp) 
+        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb')
+        cp.write(fp)
         fp.close()
         params='/slideshow="'+(options["filepath_"] if options["source_"] \
             else options["dirpath_"])
@@ -521,67 +521,67 @@ class RunSlideshow(eg.ActionClass):
             +str(options["mon_"])
         try:
             return win32api.ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 tail,
                 params.encode(myEncoding),
-                head, 
+                head,
                 1
             )
         except:
             self.PrintError(self.text.err)
-            
+
     def GetLabel(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
         return self.text.runslideshow+":"+options["label_"]
-        
+
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
         options.update(kwargs)
         panel = eg.ConfigPanel(self)
         radioBoxMode = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxmode, 
-            choices=[self.text.modeFull, self.text.modeWin], 
+            panel,
+            -1,
+            self.text.radioboxmode,
+            choices=[self.text.modeFull, self.text.modeWin],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxMode.SetSelection(options["mode_"])
         radioBoxMode.SetMinSize((197,65))
         radioBoxSource = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxsource, 
-            choices=[self.text.folder, self.text.txtFile], 
+            panel,
+            -1,
+            self.text.radioboxsource,
+            choices=[self.text.folder, self.text.txtFile],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxSource.SetSelection(options["source_"])
         radioBoxSource.SetMinSize((197,65))
         radioBoxFit = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxfit, 
+            panel,
+            -1,
+            self.text.radioboxfit,
             choices=[
                 self.text.mode1_1,
                 self.text.onlyBig,
                 self.text.fitAll,
                 self.text.scratchAll
-            ], 
+            ],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxFit.SetSelection(options["fit_"])
         radioBoxFit.SetMinSize((197,100))
         radioBoxProgress = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxprogress, 
+            panel,
+            -1,
+            self.text.radioboxprogress,
             choices=[
                 self.text.autoDelay,
                 self.text.autoKeyb,
                 self.text.randomDelay,
                 self.text.randomKeyb
-            ], 
+            ],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxProgress.SetSelection(options["progress_"])
@@ -654,7 +654,7 @@ class RunSlideshow(eg.ActionClass):
         maskLbl=wx.StaticText(panel, -1, self.text.mask)
         maskCtrl=wx.TextCtrl(panel,-1,options["mask_"])
         hlpbtnPatternCtrl = wx.Button(panel, -1, self.text.help)
-        
+
         #Sizers
         monSizer=wx.BoxSizer(wx.VERTICAL)
         monSizer.Add(monLbl,0,wx.TOP,5)
@@ -692,7 +692,7 @@ class RunSlideshow(eg.ActionClass):
         delaySizer.Add(delayLbl, 0,wx.LEFT,30)
         delaySizer.Add(delayCtrl, 0,wx.LEFT,30)
         #
-        windowSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=30, vgap=2) 
+        windowSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=30, vgap=2)
         windowSizer.Add(widthLbl, 0,wx.LEFT,10)
         windowSizer.Add(highLbl, 0)
         windowSizer.Add(widthCtrl, 0,wx.LEFT,10)
@@ -723,7 +723,7 @@ class RunSlideshow(eg.ActionClass):
         #
         dynSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(radioSizer, 0,wx.EXPAND)        
+        mainSizer.Add(radioSizer, 0,wx.EXPAND)
         mainSizer.Add(checkBoxSizer,0,wx.TOP,10)
         mainSizer.Add(maskMonLblSizer,0,wx.EXPAND|wx.TOP,8)
         #mainSizer.Add(lineOptSizer,0,wx.TOP,8)
@@ -735,9 +735,9 @@ class RunSlideshow(eg.ActionClass):
             if radioBoxSource.GetSelection():
                 filepathLbl=wx.StaticText(panel, -1, self.text.filepath)
                 filepathCtrl = eg.FileBrowseButton(
-                    panel, 
+                    panel,
                     size=(370,-1),
-                    initialValue=options["filepath_"], 
+                    initialValue=options["filepath_"],
                     startDirectory=eg.folderPath.ProgramFiles,
                     fileMask = self.text.filemask,
                     buttonText=eg.text.General.browse,
@@ -749,8 +749,8 @@ class RunSlideshow(eg.ActionClass):
             else:
                 dirpathLbl=wx.StaticText(panel, -1, self.text.dirpath)
                 dirpathCtrl = eg.DirBrowseButton(
-                    panel, 
-                    -1, 
+                    panel,
+                    -1,
                     size=(370,-1),
                     startDirectory=options["dirpath_"],
                     labelText="",
@@ -768,7 +768,7 @@ class RunSlideshow(eg.ActionClass):
         onSourceChange()
 
         #def onBtnCommandClick(event):
-        #    self.plugin.OpenHelpPage('hlp_command_line.htm') 
+        #    self.plugin.OpenHelpPage('hlp_command_line.htm')
         #    event.Skip()
         #hlpbtnCommandCtrl.Bind(wx.EVT_BUTTON, onBtnCommandClick, hlpbtnCommandCtrl)
 
@@ -778,7 +778,7 @@ class RunSlideshow(eg.ActionClass):
             delayLbl.Enable((radioBoxProgress.GetSelection()+1)%2)
             if event:
                 event.Skip()
-            
+
         radioBoxProgress.Bind(wx.EVT_RADIOBOX, onProgressChange)
         onProgressChange()
 
@@ -789,7 +789,7 @@ class RunSlideshow(eg.ActionClass):
             highLbl.Enable(radioBoxMode.GetSelection())
             if event:
                 event.Skip()
-            
+
         radioBoxMode.Bind(wx.EVT_RADIOBOX, onModeChange)
         onModeChange()
 
@@ -797,27 +797,27 @@ class RunSlideshow(eg.ActionClass):
             loopCtrl.Enable(not closeCtrl.GetValue())
             if event:
                 event.Skip()
-            
+
         closeCtrl.Bind(wx.EVT_CHECKBOX, onCloseChange)
         onCloseChange()
 
         def onBtnPatternClick(event):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
             event.Skip()
-            
+
         hlpbtnPatternCtrl.Bind(
             wx.EVT_BUTTON,
             onBtnPatternClick,
             hlpbtnPatternCtrl
         )
-        
+
         def onShowTextChange(event=None):
             maskLbl.Enable(displTextCtrl.GetValue())
             maskCtrl.Enable(displTextCtrl.GetValue())
             hlpbtnPatternCtrl.Enable(displTextCtrl.GetValue())
             if event:
                 event.Skip()
-            
+
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
         while panel.Affirmed():
@@ -878,7 +878,7 @@ class RunWithOptions(eg.ActionClass):
         "lineOpt_": "",
         "mask_": u"$D$F $X"
     }
-    
+
     class text:
         err ="Couldn't find file i_view32.exe !"
         runwithoption = "Run with option "
@@ -930,15 +930,15 @@ class RunWithOptions(eg.ActionClass):
         lineOpt="Another options enter like command line:"
         mask = 'Mask for "Show text":'
         help = "Help"
-    
+
     def __call__(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
-        head, tail = os.path.split(self.plugin.IrfanViewPath)            
+        head, tail = os.path.split(self.plugin.IrfanViewPath)
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
-        cp.read(head+"\\i_view32.ini")        
-        if cp.has_option('Others','INI_Folder'): 
+        cp.read(head+"\\i_view32.ini")
+        if cp.has_option('Others','INI_Folder'):
             INI_Folder = cp.get('Others','INI_Folder',True)
             if INI_Folder == '%APPDATA%\\IrfanView':
                 INI_Folder = eg.folderPath.RoamingAppData+"\\IrfanView\\"
@@ -948,8 +948,8 @@ class RunWithOptions(eg.ActionClass):
             cp.add_section(sec)
         cp.set(sec, "Width", str(options["width_"]))
         cp.set(sec, "Height", str(options["high_"]))
-        fp = open(head+"\\i_view32.ini",'wb') 
-        cp.write(fp) 
+        fp = open(head+"\\i_view32.ini",'wb')
+        cp.write(fp)
         fp.close()
         sec="Viewing"
         if not cp.has_section(sec):
@@ -965,10 +965,10 @@ class RunWithOptions(eg.ActionClass):
         cp.set(sec, "ShowFullScreen", str(options["fullMode_"]))
         if len(options["mask_"])>0:
             cp.set(sec, "FullText", options["mask_"])
-        if cp.has_option('Others','INI_Folder'): 
+        if cp.has_option('Others','INI_Folder'):
             cp.remove_option('Others','INI_Folder')
-        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
-        cp.write(fp) 
+        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb')
+        cp.write(fp)
         fp.close()
         params=options["filepath_"]+' /hide='+str(8*options["caption_"]\
             +4*options["menuBar_"]+2*options["statusBar_"]+options["toolBar_"])
@@ -979,37 +979,37 @@ class RunWithOptions(eg.ActionClass):
         #params+=' /monitor='+str(options["mon_"])
         try:
             return win32api.ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 tail,
                 params.encode(myEncoding),
-                head, 
+                head,
                 1
             )
         except:
             self.PrintError(self.text.err)
-            
+
     def GetLabel(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
         return self.text.runwithoption+":"+options["label_"]
-        
+
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
         options.update(kwargs)
         panel = eg.ConfigPanel(self)
         radioBoxfullOrWin = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxmode, 
-            choices=[self.text.modeWin, self.text.modeFull], 
+            panel,
+            -1,
+            self.text.radioboxmode,
+            choices=[self.text.modeWin, self.text.modeFull],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxfullOrWin.SetSelection(options["fullOrWin_"])
         radioBoxWinMode = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxwinmode, 
+            panel,
+            -1,
+            self.text.radioboxwinmode,
             choices=[
                 self.text.winMode1,
                 self.text.winMode2,
@@ -1019,20 +1019,20 @@ class RunWithOptions(eg.ActionClass):
                 self.text.winMode6,
                 self.text.winMode7,
                 self.text.winMode8
-            ], 
+            ],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxWinMode.SetSelection(options["winMode_"])
         radioBoxFullMode = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiofullmode, 
+            panel,
+            -1,
+            self.text.radiofullmode,
             choices=[
                 self.text.mode1_1,
                 self.text.onlyBig,
                 self.text.fitAll,
                 self.text.scratchAll
-            ], 
+            ],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxFullMode.SetSelection(options["fullMode_"])
@@ -1104,9 +1104,9 @@ class RunWithOptions(eg.ActionClass):
         hlpbtnCommandCtrl = wx.Button(panel, -1, self.text.help)
         filepathLbl=wx.StaticText(panel, -1, self.text.filepath)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(370,-1),
-            initialValue=options["filepath_"], 
+            initialValue=options["filepath_"],
             startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse,
@@ -1148,7 +1148,7 @@ class RunWithOptions(eg.ActionClass):
         boxSizer1.Add(hideCursorCtrl, 0,wx.ALL,2)
         boxSizer1.Add(displTextCtrl, 0,wx.ALL,2)
         #
-        box2 = wx.StaticBox(panel,-1,self.text.windowHide)        
+        box2 = wx.StaticBox(panel,-1,self.text.windowHide)
         boxSizer2 = wx.StaticBoxSizer(box2,wx.VERTICAL)
         boxSizer2.Add(captionCtrl, 0,wx.ALL,2)
         boxSizer2.Add(menuBarCtrl, 0,wx.ALL,2)
@@ -1208,7 +1208,7 @@ class RunWithOptions(eg.ActionClass):
             hlpbtnPatternCtrl
         )
         def onBtnCommandClick(event):
-            self.plugin.OpenHelpPage('hlp_command_line.htm') 
+            self.plugin.OpenHelpPage('hlp_command_line.htm')
             event.Skip()
         hlpbtnCommandCtrl.Bind(
             wx.EVT_BUTTON,
@@ -1236,7 +1236,7 @@ class RunWithOptions(eg.ActionClass):
                 event.Skip()
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
-        
+
         while panel.Affirmed():
             #kwargs = {}
             kwargs["label_"]=labelCtrl.GetValue()
@@ -1276,4 +1276,4 @@ class Exit(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
         return
-         
+

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/ProcessWatcher/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
 # Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
@@ -62,15 +62,15 @@ class Process(eg.PluginClass):
         self.startException = None
         startupEvent = threading.Event()
         self.thread = threading.Thread(
-            target=self.ThreadLoop, 
-            name="ProcessWatcherThread", 
+            target=self.ThreadLoop,
+            name="ProcessWatcherThread",
             args=(startupEvent,)
         )
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:
             raise self.Exception(self.startException)
-              
+
     def __stop__(self):
         if self.thread is not None:
             PulseEvent(self.stopEvent)
@@ -79,7 +79,7 @@ class Process(eg.PluginClass):
     def ThreadLoop(self, stopThreadEvent):
         oldProcesses = GetProcessDict()
         oldPids = set(oldProcesses.iterkeys())
-   
+
         while True:
             newProcesses = GetProcessDict()
             newPids = set(newProcesses.iterkeys())

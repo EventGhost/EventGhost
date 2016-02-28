@@ -7,7 +7,7 @@
 # All the GPL info below applies to this plug-in too please leave this
 # info intact when making modification
 #
-# Written in Python a language solely dependent on a character 
+# Written in Python a language solely dependent on a character
 # you cant see in a basic text editor :)
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
@@ -58,76 +58,76 @@ eg.RegisterPlugin(
 IDM_CHANNELPLUS =           266     # Channel Up/Page Up
 IDM_CHANNELMINUS =          267     # Channel Down/Page Down
 IDM_CHANNEL_PREVIOUS =      813     # Channel Recall
-IDM_CHANNEL_LIST =          242     # Calls up the channel list window 
+IDM_CHANNEL_LIST =          242     # Calls up the channel list window
 IDM_CHANNEL_PREVIEW =       32958   # Channel Preview
-IDM_PREVIEW_PAGE_PREV =     32965   # Preview previous page 
+IDM_PREVIEW_PAGE_PREV =     32965   # Preview previous page
 IDM_PREVIEW_PAGE_NEXT =     32964   # Preview  next page
 
 
 # ######### Audio Stuff ##############################
-IDM_VOLUMEPLUS =            374     # Its a gimee 
+IDM_VOLUMEPLUS =            374     # Its a gimee
 IDM_VOLUMEMINUS =           375     #
-IDM_MUTE =                  402     # Mute    
-IDM_AUDIOSETTINGS =         264     # Audio Adj Window 
-IDM_AUDIO_MIXER =           400     # Mixer Window 
+IDM_MUTE =                  402     # Mute
+IDM_AUDIOSETTINGS =         264     # Audio Adj Window
+IDM_AUDIO_MIXER =           400     # Mixer Window
 IDM_AUDIO_0 =               1110    # Tuner for my card
-IDM_AUDIO_1 =               1111    # Radio 
-IDM_AUDIO_2 =               1112    # External 
-IDM_AUDIO_3 =               1113    # Internal 
+IDM_AUDIO_1 =               1111    # Radio
+IDM_AUDIO_2 =               1112    # External
+IDM_AUDIO_3 =               1113    # Internal
 IDM_AUDIO_4 =               1114    # Disabled
-IDM_AUDIO_5 =               1115    # Strereo 
+IDM_AUDIO_5 =               1115    # Strereo
 
 # ######### Guide Stuff  ############################
-IDM_DISPLAY_EPG =           32981   # EPG Info Same as G key 
-IDM_HIDE_EPG =              32990   # Hide Guide 
-IDM_DISPLAY_EPG_NOW =       32982   # Show EPG Now 
-IDM_DISPLAY_EPG_NEXT =      32985   # Next page 
-IDM_DISPLAY_EPG_NEXT_IN_PAGE = 32987 # Next item in page 
-IDM_DISPLAY_EPG_LATER =     32984   # Later time 
+IDM_DISPLAY_EPG =           32981   # EPG Info Same as G key
+IDM_HIDE_EPG =              32990   # Hide Guide
+IDM_DISPLAY_EPG_NOW =       32982   # Show EPG Now
+IDM_DISPLAY_EPG_NEXT =      32985   # Next page
+IDM_DISPLAY_EPG_NEXT_IN_PAGE = 32987 # Next item in page
+IDM_DISPLAY_EPG_LATER =     32984   # Later time
 IDM_DISPLAY_EPG_EARLIER =   32983   # Earlier time
 
 # #### On Screen Stuff  ########################
-IDM_HIDE_OSD =              592     # Hide On Screen Display 
+IDM_HIDE_OSD =              592     # Hide On Screen Display
 IDM_SHOW_OSD =              593     # Sho On Screen Display
 
 # ######### Video Stuff ##############################
 IDM_OVERLAY_STOP =          590     # Overlay Stop on Actions Menu
-IDM_OVERLAY_START =         591     # Overlay Start on Action Menu 
-IDM_TAKESTILL =             485     # Screen Shot same as L key 
-IDM_TAKESTREAMSNAP =        1899    # Take Stream Snapshot 
-IDM_TAKECYCLICSTILL =       32790   # Take Peridoic Still 
-IDM_TAKECONSECUTIVESTILL =  32840   # Take Consecutive Stills 
+IDM_OVERLAY_START =         591     # Overlay Start on Action Menu
+IDM_TAKESTILL =             485     # Screen Shot same as L key
+IDM_TAKESTREAMSNAP =        1899    # Take Stream Snapshot
+IDM_TAKECYCLICSTILL =       32790   # Take Peridoic Still
+IDM_TAKECONSECUTIVESTILL =  32840   # Take Consecutive Stills
 IDM_CAPTURE_PAUSE =         232     # Video Pause same as P key
 
 IDM_ASPECT_LETTERBOX =      702     # Aspect 16:9 Letterboxed
-IDM_ASPECT_FULLSCREEN =     701     # Aspect 4:3 Fullscreen 
+IDM_ASPECT_FULLSCREEN =     701     # Aspect 4:3 Fullscreen
 IDM_ASPECT_ANAMORPHIC =     703     # Aspect 16:9 Anamorphic
 
-IDM_COLOR_PLUS =            615     # More Saturation   
-IDM_COLOR_MINUS	=           616     # Less Saturation 
-IDM_COLOR_CURRENT =         617     # Show Current Saturation 
-IDM_BRIGHTNESS_PLUS =       600     # Brightness up     
-IDM_BRIGHTNESS_MINUS =      601     # Brightness down    
-IDM_BRIGHTNESS_CURRENT =    602     # Current Brightness 
+IDM_COLOR_PLUS =            615     # More Saturation
+IDM_COLOR_MINUS	=           616     # Less Saturation
+IDM_COLOR_CURRENT =         617     # Show Current Saturation
+IDM_BRIGHTNESS_PLUS =       600     # Brightness up
+IDM_BRIGHTNESS_MINUS =      601     # Brightness down
+IDM_BRIGHTNESS_CURRENT =    602     # Current Brightness
 
-IDM_SOURCE_INPUT1 =         1089    # Tuner for my card,   Ctrl+Alt+F1 
-IDM_SOURCE_INPUT2 =         1090    # Composite   Ctrl+Alt+F2 
-IDM_SOURCE_INPUT3 =         1091    # S-Video  Ctrl+Alt+F3 
-IDM_SOURCE_INPUT4 =         1092    # Composite over S-Video  Ctrl+Alt+F4 
-IDM_SOURCE_INPUT5 =         1093    # Input 5  Ctrl+Alt+F5 
-IDM_SOURCE_INPUT6 =         1094    # Input 6  Ctrl+Alt+F6 
-IDM_SOURCE_INPUT7 =         1095    # Input 7  Ctrl+Alt+F7 
-IDM_SOURCE_FIRST =          2086    # First video source 
+IDM_SOURCE_INPUT1 =         1089    # Tuner for my card,   Ctrl+Alt+F1
+IDM_SOURCE_INPUT2 =         1090    # Composite   Ctrl+Alt+F2
+IDM_SOURCE_INPUT3 =         1091    # S-Video  Ctrl+Alt+F3
+IDM_SOURCE_INPUT4 =         1092    # Composite over S-Video  Ctrl+Alt+F4
+IDM_SOURCE_INPUT5 =         1093    # Input 5  Ctrl+Alt+F5
+IDM_SOURCE_INPUT6 =         1094    # Input 6  Ctrl+Alt+F6
+IDM_SOURCE_INPUT7 =         1095    # Input 7  Ctrl+Alt+F7
+IDM_SOURCE_FIRST =          2086    # First video source
 IDM_SOURCE_INITIAL =        32772   # Initial video source
 
-IDM_SOURCE_INPUT8 =         1096    # Not setup. See notes 
+IDM_SOURCE_INPUT8 =         1096    # Not setup. See notes
 IDM_SOURCE_INPUT9 =         1097    # at the end of this file
 IDM_SOURCE_INPUT10 =        1098    #
 IDM_SOURCE_INPUT11 =        1099    #
 IDM_SOURCE_INPUT12 =        1100    #
 IDM_SOURCE_INPUT13 =        1101    #
 
-IDM_SETTINGS_PIXELWIDTH_768 =   760 # Self-explanatory 
+IDM_SETTINGS_PIXELWIDTH_768 =   760 # Self-explanatory
 IDM_SETTINGS_PIXELWIDTH_754 =   2012#
 IDM_SETTINGS_PIXELWIDTH_720 =   761 #
 IDM_SETTINGS_PIXELWIDTH_640 =   762 #
@@ -136,23 +136,23 @@ IDM_SETTINGS_PIXELWIDTH_384 =   764 #
 IDM_SETTINGS_PIXELWIDTH_320 =   763 #
 IDM_ZOOM_PLUS =                 2008#
 IDM_ZOOM_MINUS =                2007#
-IDM_ON_TOP =                    309 # Bring Window to Front 
+IDM_ON_TOP =                    309 # Bring Window to Front
 
 
-# # For recording I don't use them as Dscaler is not stable for 
+# # For recording I don't use them as Dscaler is not stable for
 #recording yet on my system
-# Other then the three labeled below you will need to test 
-#them to be sure what they control. 
+# Other then the three labeled below you will need to test
+#them to be sure what they control.
 
-IDM_TSRECORD =              2031    # Start Recording   
-IDM_TSSTOP =                2032    # Stop Recording 
+IDM_TSRECORD =              2031    # Start Recording
+IDM_TSSTOP =                2032    # Stop Recording
 IDM_TSRWND =                2036
 IDM_TSFFWD =                2035
 IDM_TSPLAY =                2033
 IDM_TSPREV =                2037
 IDM_TSNEXT =                2038
 IDM_TSPAUSE =               2034
-IDM_TSOPTIONS =             2030    # Brings up the Time-shift options window 
+IDM_TSOPTIONS =             2030    # Brings up the Time-shift options window
 # ###########################################
 
 # ##### Closed Caption Stuff  #######
@@ -172,8 +172,8 @@ def SendCommand(mesg, wParam, lParam=0):
     Find DScaler's message window
     """
     try:
-        hDScaler = FindWindow('DScaler', None) 
-        _, result = SendMessageTimeout(hDScaler, mesg, wParam, lParam, 
+        hDScaler = FindWindow('DScaler', None)
+        _, result = SendMessageTimeout(hDScaler, mesg, wParam, lParam,
                                        SMTO_BLOCK|SMTO_ABORTIFHUNG, 2000)
         return result
     except:
@@ -182,7 +182,7 @@ def SendCommand(mesg, wParam, lParam=0):
 
 
 class Dscaler(eg.PluginClass):
-    
+
     def __init__(self):
         self.AddAction(ChannelPlus)
         self.AddAction(ChannelMinus)
@@ -197,7 +197,7 @@ class Dscaler(eg.PluginClass):
         self.AddAction(Mute)
         self.AddAction(AudioSettings)
         self.AddAction(AudioMixer)
-        
+
         self.AddAction(EpgDisplay)
         self.AddAction(HideEPG)
         self.AddAction(ShowCurrentEPG)
@@ -208,7 +208,7 @@ class Dscaler(eg.PluginClass):
 
         self.AddAction(HideOSD)
         self.AddAction(ShowOSD)
-        
+
         self.AddAction(OverLayStop)
         self.AddAction(OverLayStart)
         self.AddAction(StillShot)
@@ -228,7 +228,7 @@ class Dscaler(eg.PluginClass):
         self.AddAction(ZoomIn)
         self.AddAction(ZoomOut)
         self.AddAction(WindowOnTop)
-        
+
         self.AddAction(TS_Record)
         self.AddAction(TS_StopRecording)
         self.AddAction(TS_Rewind)
@@ -238,7 +238,7 @@ class Dscaler(eg.PluginClass):
         self.AddAction(TS_Next)
         self.AddAction(TS_Pause)
         self.AddAction(TS_Options)
-        
+
         group = self.AddGroup("Video Input Sources")
         group.AddAction(SourceIn1)
         group.AddAction(SourceIn2)
@@ -249,7 +249,7 @@ class Dscaler(eg.PluginClass):
         group.AddAction(SourceIn7)
         group.AddAction(FirstSource)
         group.AddAction(InitialSource)
-        
+
         group = self.AddGroup("Audio Input Sources")
         group.AddAction(AudioSource0)
         group.AddAction(AudioSource1)
@@ -266,7 +266,7 @@ class Dscaler(eg.PluginClass):
         group.AddAction(PixelWidth_480)
         group.AddAction(PixelWidth_384)
         group.AddAction(PixelWidth_320)
-        
+
         group = self.AddGroup("Closed Caption")
         group.AddAction(CC_Off)
         group.AddAction(CC1)
@@ -748,7 +748,7 @@ class CC4(eg.ActionClass):
 
 
 """
-You can add your own Calls using the included txt 
+You can add your own Calls using the included txt
 file with other Dscaler Calls in it.
 
 class Your Class(eg.ActionClass):

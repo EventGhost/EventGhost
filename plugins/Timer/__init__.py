@@ -30,7 +30,7 @@ class Text:
         description = "Allows starting, stopping or resetting timers, which can trigger an event after a given time"
         timerName = "Timer name:"
         start = "Start new timer (currently running timer with the same name will be aborted)"
-       
+
         startTime = "Start:"
         startTimeTypes = (
             "immediately",
@@ -48,7 +48,7 @@ class Text:
             "Restart timer (when running only)",
             "Reset the loop counter",
             "Abort")
-       
+
         loop1 = "Loops: "
         loop2 = "(0 = unlimited)"
         showRemaingLoopsText = "loop counter shows remaining loops"
@@ -102,7 +102,7 @@ class TimerObject():
 
         #immediately
         if self.startTimeType == 0:
-            self.nextEventAt = self.startedAt 
+            self.nextEventAt = self.startedAt
             self.TriggerScheduledEvent(self.nextEventAt)
             return
 
@@ -119,7 +119,7 @@ class TimerObject():
             now = time.localtime(self.startedAt)
             self.nextEventAt = time.mktime((now[0], now[1], now[2], hours, minutes, seconds, now[6], now[7], -1))
             if (self.nextEventAt <= self.startedAt):
-                #have to start tomorrow 
+                #have to start tomorrow
                 self.nextEventAt = time.mktime((now[0], now[1], now[2] + 1, hours, minutes, seconds, now[6], now[7], -1))
         #after given duration (HH:MM:SS)
         elif self.startTimeType == 3:
@@ -134,9 +134,9 @@ class TimerObject():
             self.nextEventAt = time.mktime((now[0], now[1], now[2], now[3], minutes, 0, now[6], now[7], now[8]))
         else:
             raise ValueError("unknown startTimeType")
-        
+
         eg.scheduler.AddShortTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
-                    
+
     def TriggerScheduledEvent(self, scheduledTime):
         if not self.plugin.started or not self.active or self.nextEventAt != scheduledTime:
             #timer has changed in some way
@@ -150,31 +150,31 @@ class TimerObject():
         eventNameTmp = self.eventName
         if self.addCounterToName:
             eventNameTmp += str(loopDisplay)
-       
+
         self.plugin.TriggerEvent(eventNameTmp, (loopDisplay, time.strftime("%c")))
 
         self.loopCounter += 1
         self.ScheduleNext()
-    
+
     def ScheduleNext(self):
         if not self.IsActive():
             #no more event to schedule
             return
         self.nextEventAt += self.interval
         eg.scheduler.AddShortTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
-    
+
     def Restart(self):
         #just reschedule
         self.ScheduleFirst()
-        
+
     def Abort(self):
         self.active = False
 
     def ResetCounter(self):
         self.loopCounter = 0
-        
+
     def IsActive(self):
-        return self.plugin.started and self.active and not self.HasFinished() 
+        return self.plugin.started and self.active and not self.HasFinished()
 
     def HasFinished(self):
         return self.loops != 0 and self.loopCounter >= self.loops
@@ -182,10 +182,10 @@ class TimerObject():
 class Timer(eg.PluginClass):
     text = Text
     started = False
-    
+
     def __init__(self):
         self.AddAction(TimerAction)
-       
+
         #timer names are kept for usability reasons
         self.timerNames = []
         self.lastTimerName = ""
@@ -201,7 +201,7 @@ class Timer(eg.PluginClass):
 
     def __close__(self):
         self.AbortAllTimers()
-        
+
     def OnComputerSuspend(self, suspendType):
         self.AbortAllTimers()
 
@@ -277,9 +277,9 @@ class Timer(eg.PluginClass):
         mySizer.AddGrowableCol(1)
         mySizer.AddGrowableCol(2)
         mySizer.AddGrowableCol(3)
-       
+
         timerListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
-       
+
         for i, colLabel in enumerate(Text.colLabels):
             timerListCtrl.InsertColumn(i, colLabel)
 
@@ -292,29 +292,29 @@ class Timer(eg.PluginClass):
         for i in range(7):
             timerListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER) #wx.LIST_AUTOSIZE
             size += timerListCtrl.GetColumnWidth(i)
-       
+
         timerListCtrl.SetMinSize((size, -1))
-       
+
         mySizer.Add(timerListCtrl, (0,0), (1, 5), flag = wx.EXPAND)
 
         #buttons
         abortButton = wx.Button(panel, -1, "Abort")
         mySizer.Add(abortButton, (1,0))
-       
+
         abortAllButton = wx.Button(panel, -1, "Abort all")
         mySizer.Add(abortAllButton, (1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
-       
+
         restartButton = wx.Button(panel, -1, "Restart")
         mySizer.Add(restartButton, (1,2), flag = wx.ALIGN_CENTER_HORIZONTAL)
-       
+
         restartAllButton = wx.Button(panel, -1, "Restart All")
         mySizer.Add(restartAllButton, (1,3), flag = wx.ALIGN_CENTER_HORIZONTAL)
-       
+
         refreshButton = wx.Button(panel, -1, "Refresh")
         mySizer.Add(refreshButton, (1,4), flag = wx.ALIGN_RIGHT)
-       
+
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
-       
+
         def PopulateList (event):
             timerListCtrl.DeleteAllItems()
             row = 0
@@ -370,7 +370,7 @@ class Timer(eg.PluginClass):
             abortButton.Enable(flag)
             restartButton.Enable(flag)
             event.Skip()
-           
+
         def OnSize(event):
             timerListCtrl.SetColumnWidth(6, wx.LIST_AUTOSIZE_USEHEADER) #wx.LIST_AUTOSIZE
             event.Skip()
@@ -378,7 +378,7 @@ class Timer(eg.PluginClass):
         PopulateList(wx.CommandEvent())
         #timerListCtrl.SetMinSize(timerListCtrl.GetBestFittingSize())
 
-       
+
         abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
         abortAllButton.Bind(wx.EVT_BUTTON, OnAbortAllButton)
         restartButton.Bind(wx.EVT_BUTTON, OnRestartButton)
@@ -490,24 +490,24 @@ class TimerAction(eg.ActionClass):
 
         panel.sizer.Add(nameSizer)
         panel.sizer.Add(wx.Size(5,5))
-       
+
         #action and settings
         #sizer = wx.GridBagSizer(5, 5)
         #sizer.SetEmptyCellSize((0,0))
 
-       
+
         choices = len(Text.TimerAction.actions)
         rb = range(0, choices + 1)
-       
+
         rb[0] = wx.RadioButton(panel, -1, Text.TimerAction.start, style = wx.RB_GROUP)
         rb[0].SetValue(action == 0)
 
         panel.sizer.Add(wx.Size(5,5))
         panel.sizer.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
-       
+
         #space to indent the settings
         startSettingsSizer = wx.GridBagSizer(5, 5)
-       
+
         rowCount = 0 #used to find the correct row of the gridbagsizer
         startSettingsSizer.Add(wx.Size(rowCount,1), (1, 0))
 
@@ -527,7 +527,7 @@ class TimerAction(eg.ActionClass):
         showRemaingLoopsCtrl = wx.CheckBox(panel, -1, Text.TimerAction.showRemaingLoopsText)
         showRemaingLoopsCtrl.SetValue(showRemainingLoops)
         startSettingsSizer.Add(showRemaingLoopsCtrl, (rowCount, 1), (1, 3))
-       
+
         #intervall
         rowCount += 1
         startSettingsSizer.Add(
@@ -537,7 +537,7 @@ class TimerAction(eg.ActionClass):
             panel, -1, interval, size=(200,-1), integerWidth=7
         )
         startSettingsSizer.Add(intervalCtrl, (rowCount, 1), flag = wx.EXPAND)
-       
+
         startSettingsSizer.Add(
             wx.StaticText(panel, -1, Text.TimerAction.interval2),
             (rowCount, 2), (1, 2),
@@ -551,7 +551,7 @@ class TimerAction(eg.ActionClass):
         startTimeTypeCtrl = wx.Choice(panel, -1, choices = Text.TimerAction.startTimeTypes)
         startTimeTypeCtrl.SetSelection(startTimeType)
         startSettingsSizer.Add(startTimeTypeCtrl, (rowCount, 1), (1, 2), flag = wx.EXPAND)
-       
+
         startTimeCtrl = wx.lib.masked.timectrl.TimeCtrl(
             panel,
             format = "24HHMMSS"
@@ -566,7 +566,7 @@ class TimerAction(eg.ActionClass):
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         eventNameCtrl = wx.TextCtrl(panel, -1, eventName, size=(200,-1))
         startSettingsSizer.Add(eventNameCtrl, (rowCount, 1), (1, 3), flag = wx.EXPAND)
-       
+
         #addCounterToName
         rowCount += 1
         addCounterToNameCtrl = wx.CheckBox(panel, -1, Text.TimerAction.addCounterToName)
@@ -576,12 +576,12 @@ class TimerAction(eg.ActionClass):
         settingsSizer = wx.BoxSizer(wx.HORIZONTAL)
         settingsSizer.Add(wx.Size(20,20))
         settingsSizer.Add(startSettingsSizer)
-       
+
         panel.sizer.Add(wx.Size(5,5))
-       
+
         panel.sizer.Add(settingsSizer)
         #remaining radio buttons
-       
+
         for i in range(1, len(rb)):
             rowCount += 1
             rb[i] = wx.RadioButton(panel, -1, Text.TimerAction.actions[i - 1])
@@ -607,10 +607,10 @@ class TimerAction(eg.ActionClass):
             event.Skip()
 
         onRadioButton(wx.CommandEvent())
-       
+
         for i in range(len(rb)):
             rb[i].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-           
+
         startTimeTypeCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
 
         #panel.sizer.Add(sizer)
@@ -630,7 +630,7 @@ class TimerAction(eg.ActionClass):
             startTimeType = startTimeTypeCtrl.GetSelection()
             addCounterToName = addCounterToNameCtrl.GetValue()
             startTime = startTimeCtrl.GetValue()
-    
+
             panel.SetResult(
                 timerName,
                 action,

@@ -5,13 +5,13 @@ import _winreg as reg
 import shutil, os
 
 ServiceKey = "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application"
-    
+
 def Is64BitOS():
     from os import environ
     if environ.get("PROCESSOR_ARCHITECTURE") == "AMD64" or environ.get("PROCESSOR_ARCHITEW6432") == "AMD64":
         return True
     return False
-    
+
 def AddOrRemoveHIDKeys(isInstall):
     HID_SUB_KEY = "SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\745a17a0-74d3-11d0-b6fe-00a0c90f57d"
     ValuesToCheck = ['a','b']
@@ -27,7 +27,7 @@ def AddOrRemoveHIDKeys(isInstall):
                     reg.SetValueEx(key, valueName, 0, reg.REG_DWORD, i + 1)
         except WindowsError:
             continue
-            
+
 def Install():
     AddOrRemoveHIDKeys(True)
     osExtension = "x86"

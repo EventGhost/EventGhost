@@ -18,13 +18,13 @@
 
 help = """\
 Small trivial plugin to control Denon AVRs and AMPs via RS-232.
-Developed and tested with an AVR 3806 only, but might work with 
+Developed and tested with an AVR 3806 only, but might work with
 different devices. YMMV.
 
 Replies from the AVR are turned into events. Description of
 commands and their replies can be found in the document
 "AVR3806_PROTOCOL.PDF", which is available from the Denon
-websites. 
+websites.
 
 The events are slightly rewritten in order to be
 more useful within EventGhosts's event matching system:
@@ -40,7 +40,7 @@ more useful within EventGhosts's event matching system:
 
 The plugin keeps track of the current master volume in order to
 support the FadeTo command."""
- 
+
 eg.RegisterPlugin(
     name = "Denon AV Serial",
     author = "Oliver Wagner",
@@ -299,29 +299,29 @@ cmdList = (
 
 class CmdAction(eg.ActionClass):
     """Base class for all argumentless actions"""
-    
+
     def __call__(self):
         self.plugin.serial.write(self.cmd + chr(13))
 
 
-    
+
 class ValueAction(eg.ActionWithStringParameter):
     """Base class for all actions with adjustable argument"""
-    
+
     def __call__(self, data):
         self.plugin.serial.write(self.cmd + str(data) + chr(13))
-        
-        
-        
+
+
+
 class MasterFade(eg.ActionWithStringParameter):
     name = "Fade MasterVol To"
     description = "Fade MasterVol To (actual dB value)"
-    
+
     fadeLock = thread.allocate_lock()
 
     def __call__(self, data):
-        thread.start_new_thread(self.FadeFunc, (data,))        
-    
+        thread.start_new_thread(self.FadeFunc, (data,))
+
 
     def FadeFunc(self, data):
         destVol = float(data)
@@ -340,19 +340,19 @@ class MasterFade(eg.ActionWithStringParameter):
                 time.sleep(0.15)
                 steps -= 1
         self.fadeLock.release()
-        
-        
-        
+
+
+
 class Raw(eg.ActionWithStringParameter):
     name = 'Send Raw command'
-    
+
     def __call__(self, data):
         self.plugin.serial.write(str(data) + chr(13))
 
 
-    
-        
-        
+
+
+
 class DenonSerial(eg.PluginClass):
 
     def __init__(self):
@@ -375,7 +375,7 @@ class DenonSerial(eg.PluginClass):
                 actionName = actionName.strip()
                 paramDescr = paramDescr[:-1]
                 minValue, maxValue = cmd_rangespec.split("-")
-                
+
                 class Action(ValueAction):
                     name = actionName
                     cmd = cmd_cmd
@@ -389,7 +389,7 @@ class DenonSerial(eg.PluginClass):
                     cmd = cmd_cmd
                 Action.__name__ = cmd_name
                 group.AddAction(Action)
-                
+
         group.AddAction(Raw)
 
 
@@ -434,19 +434,19 @@ class DenonSerial(eg.PluginClass):
         thread.start_new_thread(self.reader, ());
         # Do an initial master volume query so we can track it
         self.serial.write("MV?\r")
-        
-        
+
+
     def __stop__(self):
         self.readerkiller = True
         if self.serial is not None:
             self.serial.close()
             self.serial = None
-            
-            
+
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         panel.AddLine("Port:", portCtrl)
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue())
-                    
+

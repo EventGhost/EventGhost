@@ -187,7 +187,7 @@ class SmallPcRemote(eg.PluginBase):
     def __stop__(self):
         self.timer.Stop()
         self.winUsb.Stop()
-        
+
 
     def Callback(self, data):
         buf = self.buf
@@ -222,27 +222,27 @@ class SmallPcRemote(eg.PluginBase):
                         self.lastDirection = degree
                     self.timer.Reset(75)
                 return
-            
+
             if self.bytesToIgnore:
                 self.bytesToIgnore -= len(buf)
                 if self.bytesToIgnore < 0:
                     self.bytesToIgnore = 0
                 return
-            
+
             if self.stopCodeLength:
                 self.stopCodeLength -= len(buf)
                 if self.stopCodeLength <= 0:
                     self.EndLastEvent()
                     self.stopCodeLength = 0
                 return
-            
+
             if buf == [1, 0, 0]:
                 self.TriggerEvent("NumLock")
                 return
-            
+
             if buf == [1, 3, 0]:
                 return
-            
+
             data = CODES.get(tuple(buf), None)
             if data:
                 self.bytesToIgnore, eventname, self.stopCodeLength = data

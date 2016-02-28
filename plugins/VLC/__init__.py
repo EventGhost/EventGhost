@@ -26,7 +26,7 @@ Enable the RC Interface or start VLC with:
 
 **vlc.exe --extraintf=rc --rc-host=localhost:1234 --rc-quiet --rc-show-pos**
 
-If you are using "MyCommand" remember that you can only execute commands that 
+If you are using "MyCommand" remember that you can only execute commands that
 are enabled in VLC!
 
 `Help and bugreports <http://www.eventghost.net/forum/viewtopic.php?t=693>`_
@@ -80,17 +80,17 @@ from datetime import timedelta
 
 def GetVlcPath():
     """
-    Tries to get the path of VLC's executable through querying the Windows 
+    Tries to get the path of VLC's executable through querying the Windows
     registry.
     """
     try:
         return _winreg.QueryValue(
-            _winreg.HKEY_LOCAL_MACHINE, 
+            _winreg.HKEY_LOCAL_MACHINE,
             "Software\\VideoLAN\\VLC"
         )
     except WindowsError:
         return os.path.join(
-            eg.folderPath.ProgramFiles, 
+            eg.folderPath.ProgramFiles,
             "VideoLAN\\VLC\\vlc.exe"
         )
 
@@ -181,18 +181,18 @@ class Start(eg.ActionBase):
     def __call__(self, cmdLineArgs=""):
         vlcPath = GetVlcPath()
         return ShellExecute(
-            0, 
-            None, 
-            vlcPath, 
-            self.GetCmdLineArgs(cmdLineArgs), 
-            None, #os.path.dirname(vlcPath), 
+            0,
+            None,
+            vlcPath,
+            self.GetCmdLineArgs(cmdLineArgs),
+            None, #os.path.dirname(vlcPath),
             1
         )
 
 
     def GetCmdLineArgs(self, cmdLineArgs):
         args = '--extraintf=rc --rc-host=%s:%d --rc-quiet --rc-show-pos' % (
-            self.plugin.host, 
+            self.plugin.host,
             self.plugin.port
         )
         if cmdLineArgs:
@@ -219,7 +219,7 @@ class Start(eg.ActionBase):
             if event:
                 event.Skip()
         OnTextChange()
-        cmdLineCtrl.Bind(wx.EVT_TEXT, OnTextChange) 
+        cmdLineCtrl.Bind(wx.EVT_TEXT, OnTextChange)
 
         panel.sizer.AddMany([
             (panel.StaticText(self.text.additionalArgs), 0, wx.BOTTOM, 3),
@@ -240,11 +240,11 @@ class GetSomeInfo(eg.ActionBase):
         choices = (
             'Show items currently in playlist',
             'Current playlist status',
-            'Title in current item', 
-            'Next title in current item', 
-            'Previous title in current item', 
-            'Chapter in current item', 
-            'Next chapter in current item', 
+            'Title in current item',
+            'Next title in current item',
+            'Previous title in current item',
+            'Chapter in current item',
+            'Next chapter in current item',
             'Previous chapter in current item',
             "Information about stream",
             "Statistical information",
@@ -252,15 +252,15 @@ class GetSomeInfo(eg.ActionBase):
             "Is playing status",
             "Title of the current stream",
             "Length of the current stream [s]",
-            'Volume', 
-            'Audio device', 
-            'Audio channels', 
-            'Audio track', 
-            'Video track', 
-            'Video aspect ratio', 
-            'Video crop', 
-            'Video zoom', 
-            'Subtitles track', 
+            'Volume',
+            'Audio device',
+            'Audio channels',
+            'Audio track',
+            'Video track',
+            'Video aspect ratio',
+            'Video crop',
+            'Video zoom',
+            'Subtitles track',
             'Help message',
             'Longer help message',
         )
@@ -309,8 +309,8 @@ class GetSomeInfo(eg.ActionBase):
 
     def GetLabel(self, index):
         return "%s: %s" % (self.name,self.text.choices[index])
- 
- 
+
+
     def Configure(self, index = 0):
         panel = eg.ConfigPanel()
         mySizer = panel.sizer
@@ -324,11 +324,11 @@ class GetSomeInfo(eg.ActionBase):
         mySizer.Add(choiceCtrl, 0, wx.TOP, 2)
         while panel.Affirmed():
             panel.SetResult(choiceCtrl.GetSelection())
- 
+
 
 
 class SimulateKey(eg.ActionBase):
-    
+
     class text:
         label = "Select hotkey:"
 
@@ -359,17 +359,17 @@ class SimulateKey(eg.ActionBase):
 
 
 class SimulKey(eg.ActionBase):
-    
+
     def __call__(self, index = 0):
         self.plugin.Push("key " + self.value + "\r\n")
 
 
 
 class GetHotkeys(eg.ActionBase):
-    
+
     def __call__(self):
         return GetChoices()
-        
+
 
 class GetTime(eg.ActionBase):
 
@@ -437,7 +437,7 @@ class SwitchTrack(eg.ActionBase):
                     ix = 0
                 elif ix == -1:
                     ix = len(menu)-1
-                self.plugin.Push(self.value[0]+" %s\r\n" % menu[ix][0][1:])    
+                self.plugin.Push(self.value[0]+" %s\r\n" % menu[ix][0][1:])
                 return " - ".join(menu[ix][1:])
         return None
 
@@ -518,29 +518,29 @@ class Seek(eg.ActionBase):
         staticText = panel.StaticText(text.label)
         textCtrl = panel.TextCtrl(value, size = (2*width+10,-1))
         unitSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.unit), 
+            wx.StaticBox(panel, -1, text.unit),
             wx.HORIZONTAL
         )
         rb1 = panel.RadioButton(not unit, text.unitChoice[0], style=wx.RB_GROUP, size = (width,-1))
-        rb2 = panel.RadioButton(unit, text.unitChoice[1])                            
+        rb2 = panel.RadioButton(unit, text.unitChoice[1])
         unitSizer.Add(rb1, 1)
         unitSizer.Add(rb2, 1)
 
         posSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.pos), 
+            wx.StaticBox(panel, -1, text.pos),
             wx.HORIZONTAL
         )
         rb3 = panel.RadioButton(not pos, text.posChoice[0], style=wx.RB_GROUP, size = (width,-1))
-        rb4 = panel.RadioButton(pos, text.posChoice[1])                            
+        rb4 = panel.RadioButton(pos, text.posChoice[1])
         posSizer.Add(rb3, 1)
         posSizer.Add(rb4, 1)
 
         dirSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.dir), 
+            wx.StaticBox(panel, -1, text.dir),
             wx.HORIZONTAL
         )
         rb5 = panel.RadioButton(not dir, text.dirChoice[0], style=wx.RB_GROUP, size = (width,-1))
-        rb6 = panel.RadioButton(dir, text.dirChoice[1])                            
+        rb6 = panel.RadioButton(dir, text.dirChoice[1])
         dirSizer.Add(rb5, 1)
         dirSizer.Add(rb6, 1)
 
@@ -587,7 +587,7 @@ class VLC(eg.PluginBase):
         self.waitFlag.set()
 
 
-    def __start__(self, host="localhost", port=1234, showFeedbackEvents=True): 
+    def __start__(self, host="localhost", port=1234, showFeedbackEvents=True):
         self.host = host
         self.port = port
         self.dispatcher = None
@@ -625,7 +625,7 @@ class VLC(eg.PluginBase):
             return False
 
 
-    def Configure(self, host="localhost", port=1234, showFeedbackEvents=True): 
+    def Configure(self, host="localhost", port=1234, showFeedbackEvents=True):
         text = self.text
         panel = eg.ConfigPanel()
         hostCtrl = panel.TextCtrl(host)
@@ -642,261 +642,261 @@ class VLC(eg.PluginBase):
         panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
         while panel.Affirmed():
             panel.SetResult(
-                hostCtrl.GetValue(), 
-                portCtrl.GetValue(), 
+                hostCtrl.GetValue(),
+                portCtrl.GetValue(),
                 checkBox.GetValue()
             )
- 
- 
- 
+
+
+
 ACTIONS = (
     (
         Start,
-        'Start', 
-        'Start', 
+        'Start',
+        'Start',
         'Starts VLC with the needed command line arguments.',
         None
     ),
     (
         ActionPrototype,
-        'Quit', 
-        'Quit', 
-        'Quit VLC', 
+        'Quit',
+        'Quit',
+        'Quit VLC',
         'quit'
     ),
     (
         ActionPrototype,
-        'Play', 
-        'Play', 
-        'Start playing', 
+        'Play',
+        'Play',
+        'Start playing',
         'pause'
     ),
     (
         ActionPrototype,
-        'Pause', 
-        'Pause', 
-        'Toggle play/pause', 
+        'Pause',
+        'Pause',
+        'Toggle play/pause',
         'pause'
     ),
     (
         ActionPrototype,
-        'Stop', 
-        'Stop', 
-        'Stop and close current item', 
+        'Stop',
+        'Stop',
+        'Stop and close current item',
         'stop'
     ),
     (
         ActionPrototype,
-        'FastForward', 
-        'Fast Forward', 
-        'Skip ~5 sec forward', 
+        'FastForward',
+        'Fast Forward',
+        'Skip ~5 sec forward',
         'fastforward'
     ),
     (
         ActionPrototype,
-        'FastRewind', 
-        'Fast Rewind', 
-        'Skip ~5 sec back', 
+        'FastRewind',
+        'Fast Rewind',
+        'Skip ~5 sec back',
         'rewind'
     ),
     (
         ActionPrototype,
-        'PlayFaster', 
-        'Play Faster', 
-        'Play faster', 
+        'PlayFaster',
+        'Play Faster',
+        'Play faster',
         'faster'
     ),
     (
         ActionPrototype,
-        'PlaySlower', 
-        'Play Slower', 
-        'Play slower', 
+        'PlaySlower',
+        'Play Slower',
+        'Play slower',
         'slower'
     ),
     (
         ActionPrototype,
-        'PlayNormal', 
-        'Play Normal', 
-        'Play normal', 
+        'PlayNormal',
+        'Play Normal',
+        'Play normal',
         'normal'
     ),
     (
         Seek,
-        'Seek', 
-        'Seek', 
-        'Seek.', 
+        'Seek',
+        'Seek',
+        'Seek.',
         None
     ),
     (
         ActionPrototype,
-        'Fullscreen', 
-        'Fullscreen', 
-        'Toggle fullscreen', 
+        'Fullscreen',
+        'Fullscreen',
+        'Toggle fullscreen',
         'f'
     ),
     (
         ActionPrototype,
-        'NextPlaylistItem', 
-        'Next Playlist Item', 
+        'NextPlaylistItem',
+        'Next Playlist Item',
         'Jump forward to the next item in playlist',
         'next'
     ),
     (
         ActionPrototype,
-        'PreviousPlaylistItem', 
-        'Previous Playlist Item', 
+        'PreviousPlaylistItem',
+        'Previous Playlist Item',
         'Jump backward to the previous playlist item',
         'prev'
     ),
     (
         ActionPrototype,
-        'NextTitle', 
-        'Next Title', 
+        'NextTitle',
+        'Next Title',
         'Next title in current item',
         'title_n'
     ),
     (
         ActionPrototype,
-        'PreviousTitle', 
-        'Previous Title', 
+        'PreviousTitle',
+        'Previous Title',
         'Previous title in current item',
         'title_p'
     ),
     (
         ActionPrototype,
-        'NextChapter', 
-        'Next Chapter', 
+        'NextChapter',
+        'Next Chapter',
         'Next chapter in current item',
         'chapter_n'
     ),
     (
         ActionPrototype,
-        'PreviousChapter', 
-        'Previous Chapter', 
+        'PreviousChapter',
+        'Previous Chapter',
         'Previous chapter in current item',
         'chapter_p'
     ),
     (
         ActionPrototype,
-        'CurrentPlaylistStatus', 
-        'Current Playlist Status', 
+        'CurrentPlaylistStatus',
+        'Current Playlist Status',
         'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current playlist status.', 
+            'information about the current playlist status.',
         'status'
     ),
     (
         ActionPrototype,
-        'StreamInfo', 
-        'Stream Info', 
+        'StreamInfo',
+        'Stream Info',
         'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current stream.', 
+            'information about the current stream.',
         'info'
     ),
     (
         ActionPrototype,
-        'ShowPlaylist', 
-        'Show Playlist', 
+        'ShowPlaylist',
+        'Show Playlist',
         'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current playlist.', 
+            'information about the current playlist.',
         'playlist'
     ),
     (
         ActionPrototype,
-        'ClearPlaylist', 
-        'Clear Playlist', 
-        'Clear the playlist and close current item', 
+        'ClearPlaylist',
+        'Clear Playlist',
+        'Clear the playlist and close current item',
         'clear'
     ),
     (
         ActionPrototype,
-        'VolumeUp', 
-        'Volume Up', 
-        'Volume up', 
+        'VolumeUp',
+        'Volume Up',
+        'Volume up',
         'volup'
     ),
     (
         ActionPrototype,
-        'VolumeDown', 
-        'Volume Down', 
-        'Volume down', 
+        'VolumeDown',
+        'Volume Down',
+        'Volume down',
         'voldown'
     ),
     (
         MyCommand,
-        'MyCommand', 
-        'My Command', 
+        'MyCommand',
+        'My Command',
         'Here you can enter your own command, ie. show a custom text message.',
         None
     ),
     (
         SimulateKey,
-        'SimulateKey', 
-        'Simulate hotkey press', 
+        'SimulateKey',
+        'Simulate hotkey press',
         'Simulates pressing hotkey.',
         None
     ),
     (
         GetHotkeys,
-        'GetHotkeys', 
-        'Get list of hotkeys', 
+        'GetHotkeys',
+        'Get list of hotkeys',
         'Get a list of hotkeys for menu create.',
         None
     ),
     (
         GetSomeInfo,
-        'GetSomeInfo', 
-        'Get some info', 
+        'GetSomeInfo',
+        'Get some info',
         'Returns information whose type is chosen by user.',
         None
     ),
     (
         GetTime,
-        'GetTime', 
-        'Get time', 
+        'GetTime',
+        'Get time',
         "Returns elapsed and remaining times.",
         'get_time'
     ),
     (
         GetLength,
-        'GetLength', 
-        'Get length', 
+        'GetLength',
+        'Get length',
         'Returns the length of the current stream.',
         'get_length'
     ),
     (
         SwitchTrack,
-        'NextAtrack', 
-        'Next audiotrack', 
+        'NextAtrack',
+        'Next audiotrack',
         'Switch to next audiotrack.',
         ('atrack',1)
     ),
     (
         SwitchTrack,
-        'PreviousAtrack', 
-        'Previous audiotrack', 
+        'PreviousAtrack',
+        'Previous audiotrack',
         'Switch to previous audiotrack.',
         ('atrack',-1)
     ),
     (
         SwitchTrack,
-        'NextStrack', 
-        'Next subtitles', 
+        'NextStrack',
+        'Next subtitles',
         'Switch to next subtitles.',
         ('strack',1)
     ),
     (
         SwitchTrack,
-        'PreviousStrack', 
-        'Previous subtitles', 
+        'PreviousStrack',
+        'Previous subtitles',
         'Switch to previous subtitles.',
         ('strack',-1)
     ),
     (
         ActionPrototype,
-        'Help', 
-        'Help', 
+        'Help',
+        'Help',
         'If VLC feedback is enabled in plugin settings, the logger shows all '
-            'available commands, use <i>"My Command"</i> to execute them.', 
+            'available commands, use <i>"My Command"</i> to execute them.',
         'H'
     ),
     (
@@ -927,7 +927,7 @@ ACTIONS = (
                 "key-nav-down"
             ),
             (
-                SimulKey, 
+                SimulKey,
                 'KeyNavLeft',
                 'Navigate left',
                 'Navigate left.',

@@ -81,13 +81,13 @@ from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 class ActionPrototype(eg.ActionClass):
     """
     Boilerplate for all actions of this plugin.
-    """ 
-    # The class attributes 'name', 'description' and 'value' will later be 
+    """
+    # The class attributes 'name', 'description' and 'value' will later be
     # setup by the AddActionsFromList method of the plugin.
 
     def __call__(self):
         """
-        Find WMPlayer's message window and send it a message with 
+        Find WMPlayer's message window and send it a message with
         SendMessageTimeout.
         """
         try:
@@ -100,8 +100,8 @@ class ActionPrototype(eg.ActionClass):
 # And now we define the actual plugin:
 
 class WMPlayer(eg.PluginClass):
-         
+
     def __init__(self):
         # Add all actions of our list
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-        
+

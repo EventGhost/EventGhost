@@ -409,29 +409,29 @@ class HIDThread(threading.Thread):
         self.abort = False
         self._overlappedRead = win32file.OVERLAPPED()
         self._overlappedRead.hEvent = win32event.CreateEvent(None, 1, 0, None)
-        
+
         self.xbcdrc_mapping = {
             '006d50a': 'DISPLAY', '0066a05': 'DISPLAY', '0066afd': 'DISPLAY',
             '006e20a': 'REVERSE', '00671f5': 'REVERSE', '006710d': 'REVERSE',
-            '006ea0a': 'PLAY', '00675f5': 'PLAY', '006750d': 'PLAY', 
-            '006e30a': 'FORWARD', '0067105': 'FORWARD', '00671fd': 'FORWARD', 
-            '006dd0a': 'SKIP-', '0066e05': 'SKIP-', '0066efd': 'SKIP-', 
-            '006e00a': 'STOP', '00670f5': 'STOP', '006700d': 'STOP', 
-            '006e60a': 'PAUSE', '00673f5': 'PAUSE', '006730d': 'PAUSE', 
-            '006df0a': 'SKIP+', '0066f05': 'SKIP+', '0066ffd': 'SKIP+', 
-            '006e50a': 'TITLE', '0067205': 'TITLE', '00672fd': 'TITLE', 
+            '006ea0a': 'PLAY', '00675f5': 'PLAY', '006750d': 'PLAY',
+            '006e30a': 'FORWARD', '0067105': 'FORWARD', '00671fd': 'FORWARD',
+            '006dd0a': 'SKIP-', '0066e05': 'SKIP-', '0066efd': 'SKIP-',
+            '006e00a': 'STOP', '00670f5': 'STOP', '006700d': 'STOP',
+            '006e60a': 'PAUSE', '00673f5': 'PAUSE', '006730d': 'PAUSE',
+            '006df0a': 'SKIP+', '0066f05': 'SKIP+', '0066ffd': 'SKIP+',
+            '006e50a': 'TITLE', '0067205': 'TITLE', '00672fd': 'TITLE',
             '006c30a': 'INFO', '0066105': 'INFO', '00661fd': 'INFO',
-            '006a60a': 'UP', '00653f5': 'UP', '006530d': 'UP', 
-            '006a70a': 'DOWN', '0065305': 'DOWN', '00653fd': 'DOWN', 
-            '006a90a': 'LEFT', '0065405': 'LEFT', '00654fd': 'LEFT', 
-            '006a80a': 'RIGHT', '00654f5': 'RIGHT', '006540d': 'RIGHT', 
-            '0060b0a': 'SELECT', '0060505': 'SELECT', '00605fd': 'SELECT', 
-            '006f70a': 'MENU', '0067b05': 'MENU', '0067bfd': 'MENU', 
-            '006d80a': 'BACK', '0066cf5': 'BACK', '0066c0d': 'BACK', 
-            '006ce0a': '1', '00667f5': '1', '006670d': '1', 
-            '006cd0a': '2', '0066605': '2', '00666fd': '2', 
-            '006cc0a': '3', '00666f5': '3', '006660d': '3', 
-            '006cb0a': '4', '0066505': '4', '00665fd': '4', 
+            '006a60a': 'UP', '00653f5': 'UP', '006530d': 'UP',
+            '006a70a': 'DOWN', '0065305': 'DOWN', '00653fd': 'DOWN',
+            '006a90a': 'LEFT', '0065405': 'LEFT', '00654fd': 'LEFT',
+            '006a80a': 'RIGHT', '00654f5': 'RIGHT', '006540d': 'RIGHT',
+            '0060b0a': 'SELECT', '0060505': 'SELECT', '00605fd': 'SELECT',
+            '006f70a': 'MENU', '0067b05': 'MENU', '0067bfd': 'MENU',
+            '006d80a': 'BACK', '0066cf5': 'BACK', '0066c0d': 'BACK',
+            '006ce0a': '1', '00667f5': '1', '006670d': '1',
+            '006cd0a': '2', '0066605': '2', '00666fd': '2',
+            '006cc0a': '3', '00666f5': '3', '006660d': '3',
+            '006cb0a': '4', '0066505': '4', '00665fd': '4',
             '006ca0a': '5', '00665f5': '5', '006650d': '5',
             '006c90a': '6', '0066405': '6', '00664fd': '6',
             '006c80a': '7', '00664f5': '7', '006640d': '7',
@@ -464,7 +464,7 @@ class HIDThread(threading.Thread):
             plugin.PrintError(self.text.errorFind)
             self.plugin.status = 2
             return
-			
+
         threading.Thread.__init__(self, name = self.devicePath)
 
         #setting members
@@ -514,7 +514,7 @@ class HIDThread(threading.Thread):
         if n == 0:
             self.abort = True
             self.plugin.PrintError(self.text.errorReportLength + self.deviceName)
-            
+
         rt = c_int(0)   #report type input
         rl = c_ulong(n)  #report length
         maxDataL = hidDLL.HidP_MaxDataListLength(rt, preparsedData)
@@ -581,7 +581,7 @@ class HIDThread(threading.Thread):
 
         #initiziling finished. setting status
         self.plugin.status = 1
-        
+
         # Some added variables -jinxdone
         btnup_count = 0
         old_event = ""
@@ -615,7 +615,7 @@ class HIDThread(threading.Thread):
                     except:
                         self.plugin.PrintError(self.plugin.text.unknownCode + mystr)
                         continue
-					#if mystr == old_event:
+                    #if mystr == old_event:
                     #    continue
                     #old_event = mystr
                     #button down event
@@ -669,15 +669,15 @@ class XBCDRC(eg.PluginClass):
         if self.status == 1:
             tmppath = event.payload[0].lower()
             if tmppath == self.devicePath:
-                self.status = 2			
+                self.status = 2
 
-    
+
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.status == 2:
             #updating devicelist
             self.helper.UpdateDeviceList()
-            
+
             #check if the right device was connected
             #getting devicePath
             self.devicePath = self.helper.GetDevicePath(
@@ -691,7 +691,7 @@ class XBCDRC(eg.PluginClass):
             if not self.devicePath:
                 #wrong device
                 return
-            
+
             #create thread
             self.thread = HIDThread(
                 self,
@@ -717,7 +717,7 @@ class XBCDRC(eg.PluginClass):
         enduringEvents
     ):
 
-	        #saving parameters so they cn be used to reconnect a device
+            #saving parameters so they cn be used to reconnect a device
         self.eventName = eventName
         self.enduringEvents = enduringEvents
 
@@ -758,20 +758,20 @@ class XBCDRC(eg.PluginClass):
             self.versionNumber,
             self.useFirstDevice
         )
-        #Bind plugin to RegisterDeviceNotification message 
+        #Bind plugin to RegisterDeviceNotification message
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
 
         # Added event -jinxdone
-        #Bind plugin to RegisterDeviceNotification message 
+        #Bind plugin to RegisterDeviceNotification message
         eg.Bind("System.DeviceRemoved", self.DeviceRemoved)
 
     def __stop__(self):
         self.thread.AbortThread()
-        
+
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
         self.status = 0
-        
+
 
 
     def Configure(self,
@@ -804,9 +804,9 @@ class XBCDRC(eg.PluginClass):
         enduringEventsCtrl = wx.CheckBox(panel, -1, self.text.enduringEvents)
         enduringEventsCtrl.SetValue(enduringEvents)
         optionsSizer.Add(enduringEventsCtrl, (1, 0), (1, 3))
-		
+
         panel.sizer.Add(optionsSizer, 0, wx.TOP, 10)
-		
+
         configurationText = wx.StaticText(panel, -1, self.text.configurationText, (0, 0), (350, 40))
         panel.sizer.Add(configurationText, 0, wx.TOP, 30)
 

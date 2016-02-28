@@ -6,14 +6,14 @@ setup(
     version='1.0',
     ext_modules=[
         Extension(
-            'cFunctions', 
+            'cFunctions',
             [
-                'registry_funcs.c', 
+                'registry_funcs.c',
                 'hooks.c',
-                'keyhook.c', 
+                'keyhook.c',
                 'mousehook.c',
-                'utils.c', 
-                'win_funcs.c', 
+                'utils.c',
+                'win_funcs.c',
                 'main.c'
             ],
             libraries=['user32', 'ole32', 'Advapi32'],

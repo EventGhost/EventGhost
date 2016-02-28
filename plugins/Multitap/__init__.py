@@ -685,16 +685,16 @@ class Multitap(eg.PluginClass):
                 self.oldKeys = keys[:]
                 self.indx = -1
             if keys != self.oldKeys: #ERROR or "Enter"?  -> now (2009-02-11) Enter
-                self.TriggerEvt()                        
+                self.TriggerEvt()
                 self.oldKeys = keys[:]
                 self.indx = -1
-                
+
             self.indx+=1
             if self.indx > len(keys)-1:
                 self.indx=0
             self.evtString = keys[self.indx]
             wx.CallAfter(self.showOsDialog)
-            
+
         if self.timeout > 0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()

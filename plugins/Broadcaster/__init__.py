@@ -71,7 +71,7 @@ class Server(asyncore.dispatcher):
         else:
             addrs = socket.gethostbyname_ex(socket.gethostname())[2]
             self.listenAddr = addrs[0]
-        
+
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         eg.RestartAsyncore()
@@ -96,11 +96,11 @@ class Server(asyncore.dispatcher):
             if commandSize==2:
                 self.plugin.TriggerEvent(bits[0],bits[1])
             if commandSize>2:
-                self.plugin.TriggerEvent(bits[0],bits[1:])  
+                self.plugin.TriggerEvent(bits[0],bits[1:])
 
     def writable(self):
         return False  # we don't have anything to send !
-        
+
 
 class BroadcastListener(eg.PluginBase):
 
@@ -116,10 +116,10 @@ class BroadcastListener(eg.PluginBase):
 
     text = Text
     canMultiLoad = True
-   
+
     def __init__(self):
         self.AddAction(Broadcast)
-  
+
     def __start__(self, prefix=None, zone="255.255.255.255", port=33333, selfBroadcast=False, payDelim="&&", listenAddr=""):
         self.info.eventPrefix = prefix
         self.port = port
@@ -152,7 +152,7 @@ class BroadcastListener(eg.PluginBase):
 
         editCtrl = panel.TextCtrl(prefix)
         zoneCtrl = panel.TextCtrl(zone)
-        portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)        
+        portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         listenAddrCtrl = panel.Choice(addr, addrs)
         selfBroadcastCtrl=panel.CheckBox(selfBroadcast)
         payDelimCtrl = panel.TextCtrl(payDelim)
@@ -192,9 +192,9 @@ class Broadcast(eg.ActionWithStringParameter):
     def bcastSend(self, eventString, payload="", port=0):
         if (port==None):
             sendToPort=self.plugin.port
-        else:                
+        else:
             sendToPort=int(port)
-        
+
         addr = (self.plugin.zone, sendToPort)
         UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -203,28 +203,28 @@ class Broadcast(eg.ActionWithStringParameter):
         else:
             UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
         UDPSock.close()
-    
-        
+
+
     def Configure(self, command="", payload="", port=""):
         text = self.text
         panel = eg.ConfigPanel(self)
-        
+
         commandCtrl = panel.TextCtrl(command)
         payloadCtrl = panel.TextCtrl(payload)
         portCtrl = panel.SpinIntCtrl(port, min=0, max=65535)
-        commandlabel = panel.StaticText(text.command) 
+        commandlabel = panel.StaticText(text.command)
         payloadlabel = panel.StaticText(text.payload)
         portlabel =panel.StaticText(text.sendport)
-        panel.sizer.Add(commandlabel,0,wx.EXPAND) 
+        panel.sizer.Add(commandlabel,0,wx.EXPAND)
         panel.sizer.Add(commandCtrl,0,wx.EXPAND)
         panel.sizer.Add((20, 20))
-        panel.sizer.Add(payloadlabel,0,wx.EXPAND) 
+        panel.sizer.Add(payloadlabel,0,wx.EXPAND)
         panel.sizer.Add(payloadCtrl,0,wx.EXPAND)
         panel.sizer.Add((20, 20))
-        panel.sizer.Add(portlabel,0) 
+        panel.sizer.Add(portlabel,0)
         panel.sizer.Add(portCtrl,0)
         panel.sizer.Add((20, 20))
 
-        
+
         while panel.Affirmed():
             panel.SetResult(commandCtrl.GetValue(), payloadCtrl.GetValue(), portCtrl.GetValue())

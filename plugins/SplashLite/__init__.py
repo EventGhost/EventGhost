@@ -35,13 +35,13 @@ Play all your High Definition MPEG-2 and AVC/H.264 camcorder clips and movies,
 incredibly fast, smooth and without problems.
 You don't need any additional codecs.
 Download, install, watch.
-It takes about one second to start application and High Definition video playback ! 
+It takes about one second to start application and High Definition video playback !
 
 `Splash Lite`_ is for home use free !
 
 .. _Splash Lite: http://www.mirillis.com/splash.html
 """,
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,
     #url = "http://www.eventghost.net/forum/viewtopic.php?t=XXXX",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAADAFBMVEX+/v6zs7OEhIRy"
@@ -138,11 +138,11 @@ class SplashLite(eg.PluginBase):
     def Execute(self, exe, path, param = None):
         try:
             ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 exe,
-                param, 
-                path, 
+                param,
+                path,
                 1
             )
         except:
@@ -162,7 +162,7 @@ class SplashLite(eg.PluginBase):
         panel = eg.ConfigPanel(self)
         labelText = wx.StaticText(panel, -1, self.text.label1)
         filepathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
@@ -253,7 +253,7 @@ class OpenFile(eg.ActionBase):
                 filePathCtrl.GetValue(),)
 #===============================================================================
 
-ACTIONS = (    
+ACTIONS = (
     (Run,"Run","Run","Run Splash Lite.", None),
     (Exit,"Exit","Exit","Exit Splash Lite.", None),
     (HotKeyAction,"PausePlay","Pause/Play","Pause/Play.",u'{Space}'),

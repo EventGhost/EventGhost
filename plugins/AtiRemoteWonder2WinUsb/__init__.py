@@ -43,7 +43,7 @@ eg.RegisterPlugin(
 
 from math import atan2, pi
 from eg.WinApi.Dynamic import mouse_event
-    
+
 
 CODES = {
     0: "Num0",

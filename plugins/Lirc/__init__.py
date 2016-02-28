@@ -14,7 +14,7 @@
 ### cmd.exe /C "start /realtime /min /B /D C:\winlirc\ C:\winlirc\winlirc.exe"
 ###
 ###
-### Any questions? comments? 
+### Any questions? comments?
 ### Ask on the forum or email jinxdone@earthling.net
 ###
 ###
@@ -43,7 +43,7 @@
 ###             - Fixed some bugs in the Send(eg.ActionClass)'s
 ###               configuration dialog
 ###             - Added handling for suspend states
-### 
+###
 ### v0.7.0      - Added support for sending lirc events along with a
 ### 2007-12-16    nice little dialog configuration screen
 ###             - The plugin now tries to get information about
@@ -74,50 +74,50 @@ kind = "remote"
 version = "0.7.5"
 author = "jinxdone"
 description = """<rst>
-Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events 
+Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events
 based on data received from the LIRC-server.
 
-For most setups only a slight adjustment of the "Timeout for enduring events" 
+For most setups only a slight adjustment of the "Timeout for enduring events"
 value is recommended.
 
 *The configurable options are:*
 
 - **Target Host**
-  Host and port of the LIRC server. For WinLirc running on localhost 
+  Host and port of the LIRC server. For WinLirc running on localhost
   the default settings should be fine (127.0.0.1:8765)
 
 - **Auto-retry settings**
   If the connection is lost or can not be established, try to (re)connect
-  a number of times with a set interval between retries. Set either 
+  a number of times with a set interval between retries. Set either
   value to 0 to disable.
 
 - **List remotes from the LIRC server**
-  Attempts to send a 'LIST' command to the server when connecting, 
-  which tries to fetch information about configured remotes. 
+  Attempts to send a 'LIST' command to the server when connecting,
+  which tries to fetch information about configured remotes.
   Uncheck if your server does not support this command.
 
 - **Only use the first event**
-  Only the first event from LIRC per keypress is processed, all subsequent events 
-  from the same keypress will be discarded. (Effectively also disables the enduring 
+  Only the first event from LIRC per keypress is processed, all subsequent events
+  from the same keypress will be discarded. (Effectively also disables the enduring
   event behaviour)
 
 - **Add remote-name**
-  Adds the remote-name into the eventstring, use it if you want to distinguish 
+  Adds the remote-name into the eventstring, use it if you want to distinguish
   between multiple remotes.
 
 - **Add repeat-tag**
   Adds "++" into the eventstring when the event in question is a repeating event.
 
 - **Ignoretime after first event**
-  You can specify a time during which after a first event any repeat-events are 
-  discarded. The value is in milliseconds, set to 0 to disable. Useful if you 
-  have problems with buttons you want only to trigger once and  not get multiple 
+  You can specify a time during which after a first event any repeat-events are
+  discarded. The value is in milliseconds, set to 0 to disable. Useful if you
+  have problems with buttons you want only to trigger once and  not get multiple
   events by accident.
 
 - **Timeout for enduring events**
-  Sets the timeout value for enduring events. If you increase it it will work 
-  more reliably, but it adds 'lag' to the end of each event. You will get best 
-  results when set as low as possible, however a value too low will tend to stop 
+  Sets the timeout value for enduring events. If you increase it it will work
+  more reliably, but it adds 'lag' to the end of each event. You will get best
+  results when set as low as possible, however a value too low will tend to stop
   your events abruptly and then immediately start a new one.
   (default = 200, recommended between 125-400, depending on your setup)
 """
@@ -126,10 +126,10 @@ value is recommended.
 
 
 eg.RegisterPlugin(
-    name=name, 
-    description=description, 
-    author=author, 
-    version=version, 
+    name=name,
+    description=description,
+    author=author,
+    version=version,
     kind=kind,
     canMultiLoad=True,
     guid="{17A77662-BB69-4C37-AA43-71213958C5C4}",
@@ -328,7 +328,7 @@ class Lirc_Reader(asyncore.dispatcher):
                               if self.checkmatch == 0:
                                  self.handler.Send.remotes.append(
                                      [
-                                         self.remote, 
+                                         self.remote,
                                          self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
                                      ]
                                  )
@@ -384,7 +384,7 @@ class Lirc(eg.RawReceiverPlugin):
         self.AddAction(self.Send)
 
     def __start__(
-        self, host, port, onlyfirst, addremote, 
+        self, host, port, onlyfirst, addremote,
         addrepeat, ignoretime, timeout,  attemptlist, maxretries, retryinterval
     ):
         text = self.text
@@ -502,7 +502,7 @@ class Lirc(eg.RawReceiverPlugin):
            self.currentattempt += 1
            self.InitConnection()
            if self.CheckConnection():
-              self.HandlePrint(self.text.reconnected % (self.currentattempt - 1))           
+              self.HandlePrint(self.text.reconnected % (self.currentattempt - 1))
            else:
               self.ReconnectTimer()
 
@@ -589,11 +589,11 @@ class Lirc(eg.RawReceiverPlugin):
 
         while panel.Affirmed():
             panel.SetResult(
-                HostCtrl.GetValue(), 
-                PortCtrl.GetValue(), 
-                OnlyFirstCtrl.GetValue(), 
-                AddRemoteCtrl.GetValue(), 
-                AddRepeatCtrl.GetValue(), 
+                HostCtrl.GetValue(),
+                PortCtrl.GetValue(),
+                OnlyFirstCtrl.GetValue(),
+                AddRemoteCtrl.GetValue(),
+                AddRepeatCtrl.GetValue(),
                 IgnoreTimeCtrl.GetValue(),
                 TimeoutCtrl.GetValue(),
                 AttemptListCtrl.GetValue(),
@@ -613,19 +613,19 @@ class Lirc(eg.RawReceiverPlugin):
         description = """<rst>
 Sends an eventstring to the LIRC-server for transmitting IR signals.
 
-The plugin can fetch information about the available remotes and actions 
-from the LIRC-server with the LIST command. If no information has been 
-available or some other problem occurred the Remote and Action fields will 
+The plugin can fetch information about the available remotes and actions
+from the LIRC-server with the LIST command. If no information has been
+available or some other problem occurred the Remote and Action fields will
 have "N/A" values in them.
 
 *The configurable options are:*
 
 - **Command**
   Available commands are SEND_ONCE, SEND_START and SEND_STOP.
-  
+
 - **Remote**
   A List of the available remotes.
-  
+
 - **Action**
   A List of the actions available with the selected remote.
 
@@ -634,8 +634,8 @@ have "N/A" values in them.
   Only valid for the SEND_ONCE command.
 
 - **Event String**
-  The actual string to send, you can use either the Command selection or just 
-  type in the string you want to send by hand. The actual string to send is 
+  The actual string to send, you can use either the Command selection or just
+  type in the string you want to send by hand. The actual string to send is
   always what is in this field regardless of what is selected in the fields above.
 
 More information at `the LIRC documentation`__
@@ -713,8 +713,8 @@ __ http://www.lirc.org/html/technical.html#applications
                 # Add an empty space at the end of the string to send, atleast
                 # WinLirc seems to require it in the case the repeat value is omitted
                 newstr = " ".join(
-                   [cmdlist[cmdCtrl.GetSelection()], 
-                   remotelist[remoteCtrl.GetSelection()], 
+                   [cmdlist[cmdCtrl.GetSelection()],
+                   remotelist[remoteCtrl.GetSelection()],
                    remotes[remoteCtrl.GetSelection()][1][actionCtrl.GetSelection()],
                    '']
                    )

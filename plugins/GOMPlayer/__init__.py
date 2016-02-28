@@ -59,7 +59,7 @@ eg.RegisterPlugin(
 # 1.1 by bitmonster
 #     - added None to all action tuples in the ACTIONS list, that didn't have
 #       an item for the 'description' attribute, because the use of
-#       AddActionFromList without an argument for the description is now 
+#       AddActionFromList without an argument for the description is now
 #       deprecated.
 
 ACTIONS = (

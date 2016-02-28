@@ -33,34 +33,34 @@ import wx
 
 
 class Test(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddAction(TestAction)
-        
-    
+
+
     def __start__(self, password=""):
         print "__start__", password
-        
-    
+
+
     def Configure(self, password=""):
         panel = eg.ConfigPanel()
         passwordCtrl = panel.PasswordCtrl(password)
         panel.sizer.Add(passwordCtrl)
         while panel.Affirmed():
             panel.SetResult(passwordCtrl.GetValue())
-            
-            
-            
+
+
+
 class TestAction(eg.ActionBase):
-    
+
     def __call__(self, password):
         print repr(unicode(password))
-        
-        
+
+
     def Configure(self, password=""):
         panel = eg.ConfigPanel()
         passwordCtrl = panel.PasswordCtrl(password)
         panel.sizer.Add(passwordCtrl)
         while panel.Affirmed():
             panel.SetResult(passwordCtrl.GetValue())
-            
+

@@ -4,7 +4,7 @@ Requires DScaler to be installed.
 
 Thanks also to the DScaler project's RegSpy.exe tool, which is the basis of
 regspy.dll, making it possible to read the remote in a minimally invasive
-fashion (no need for exclusive hardware access), and without requiring 
+fashion (no need for exclusive hardware access), and without requiring
 administrator rights.
 
 Some credit goes also to the BT8x8 plugins produced by the Girder community I
@@ -41,7 +41,7 @@ eg.RegisterPlugin(
     version = "0.0.0",
     kind = "remote",
     guid = "{D812BA67-8C9A-40F7-AC97-623837DBD9B4}",
-    description = ("AverTvStudio remote, may work for other bt8x8 cards. " 
+    description = ("AverTvStudio remote, may work for other bt8x8 cards. "
                    "Requires Dscaler to be installed."),
 )
 
@@ -91,7 +91,7 @@ class BtRemote(eg.PluginClass):
     # the down bit.
     #
     # In this way, when we lower the ack bit we can be sure we
-    # won't miss events if a key is pressed and released faster than we poll.  
+    # won't miss events if a key is pressed and released faster than we poll.
     _ACK_BIT = 0x00001000
 
     # We poll the GPIO for changes
@@ -102,7 +102,7 @@ class BtRemote(eg.PluginClass):
     # remote, not a gaming controller.
     _FAST_POLL = 0.015  # seconds.
     # We switch to slow polling approx 30 seconds after the last keyup event.
-    _IDLE_LIMIT = int(30 / _FAST_POLL)  # number of iterations 
+    _IDLE_LIMIT = int(30 / _FAST_POLL)  # number of iterations
     _SLOW_POLL = 0.1  # seconds.
 
     def _CloseHardware(self):
@@ -221,7 +221,7 @@ class BtRemote(eg.PluginClass):
 
             # Handle actual events:
             if key != last_key or down != last_down:
-                if down:           
+                if down:
                     RaiseAck()
                     TriggerEnduringEvent(key + down_suffix)
                 else:  # up

@@ -1,24 +1,24 @@
 #Simple place holder and classification for possible
 #weather conditions retrieved from Yahoo! Weather used
 #by SunTracker plugin to compensate lights for weather
-#impacts 
+#impacts
 
 def doLogToFile():
     return False
 
 def weather_conditions_dark():
     list = [
-        "Cloudy", 
-        "Haze", 
+        "Cloudy",
+        "Haze",
         "Fog",
         "Shallow Fog",
         "Partial Fog",
-        "Overcast", 
+        "Overcast",
         "Light Rain/Fog",
         "Light Rain",
-        "Heavy Rain", 
-        "Rain", 
-        "Heavy Rain Shower", 
+        "Heavy Rain",
+        "Rain",
+        "Heavy Rain Shower",
         "Rain Showers",
         "Rain Shower",
         "Light Rain with Thunder",
@@ -41,9 +41,9 @@ def weather_conditions_dark():
         "Thunderstorm",
         "Thunder in the Vicinity",
         "Thunder",
-        "Chance of Showers", 
-        "Chance of Snow", 
-        "Chance of Storm", 
+        "Chance of Showers",
+        "Chance of Snow",
+        "Chance of Storm",
         "Scattered Showers",
         "Mist",
         "Dust",
@@ -67,10 +67,10 @@ def weather_conditions_half_bright():
         "Snow Grains",
         "Wintry Mix",
         "Mostly Cloudy",
-        "Mostly Cloudy/Windy", 
+        "Mostly Cloudy/Windy",
         "Ice/Snow",
         "Ice Crystals",
-        "Haze", 
+        "Haze",
         "Partly Cloudy"
     ]
     return list
@@ -78,12 +78,12 @@ def weather_conditions_half_bright():
 
 def weather_conditions_bright():
     list = [
-        "Fair", 
-        "Fair/Windy", 
-        "Clear", 
+        "Fair",
+        "Fair/Windy",
+        "Clear",
         "Sunny",
         "Mostly Sunny",
-        "Partly Sunny" 
+        "Partly Sunny"
     ]
     return list
 

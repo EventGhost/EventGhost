@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/TechnoTrendIrBda/__init__.py
-# 
+#
 # Copyright (C) 2009 Mika Fischer <mika.fischer@zoopnet.de>
-# 
+#
 # This file is a plugin for EventGhost.
 # Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
@@ -92,7 +92,7 @@ DEVICE_TYPES = [
 IRCALLBACKFUNC = CFUNCTYPE(None, c_int, POINTER(c_uint))
 
 class TTIRBDA(eg.PluginBase):
-    
+
     def __init__(self):
         pass
 
@@ -127,8 +127,8 @@ class TTIRBDA(eg.PluginBase):
                 "or place the dll in %s." % (paths[0], paths[1])
             )
             raise self.Exceptions.DeviceNotFound
-                
-            
+
+
         self.dll = dll
         self.cCallback = IRCALLBACKFUNC(self.IrCallback)
         context = 0
@@ -139,7 +139,7 @@ class TTIRBDA(eg.PluginBase):
                     error = dll.bdaapiOpenIR(handle, self.cCallback, context)
                     context += 1
                     if (error == 0):
-                        #print "Listening to device %s(%d)" % (DEVICE_TYPES[type], index) 
+                        #print "Listening to device %s(%d)" % (DEVICE_TYPES[type], index)
                         self.handles.append(handle)
                 else:
                     self.dll.bdaapiClose(handle)
@@ -155,13 +155,13 @@ class TTIRBDA(eg.PluginBase):
                 self.dll.bdaapiCloseIR(handle)
                 self.dll.bdaapiClose(handle)
         self.timer.Stop()
-    
+
     def OnComputerSuspend(self, dummySuspendType):
         __stop__(self)
 
     def OnComputerResume(self, dummySuspendType):
         __start__(self)
-    
+
     def IrCallback(self, context, buffer):
         keystr = None
         try:
@@ -174,7 +174,7 @@ class TTIRBDA(eg.PluginBase):
             self.event = self.TriggerEnduringEvent(keystr)
             self.lastKey = keystr
         self.timer.Reset(125)
-    
+
     def OnTimeout(self):
         if self.event is not None:
             self.event.SetShouldEnd()

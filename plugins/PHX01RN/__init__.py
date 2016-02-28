@@ -129,7 +129,7 @@ class PHX01RN(eg.PluginBase):
         self.winUsb.Start()
         self.inCursorMode = 1
         self.buttonNotPressed = 1
-        
+
 
     def __stop__(self):
         self.winUsb.Stop()

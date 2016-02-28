@@ -62,7 +62,7 @@ CODES1 = {
     (3, 0, 16): "DVD",
     (3, 0, 29): "Aspect",
     (4, 0, 40): "Desktop",
-    (4, 0, 61): "PC",    
+    (4, 0, 61): "PC",
 }
 
 CODES2 =  {
@@ -101,8 +101,8 @@ class Speedlink(eg.PluginBase):
             "SPEEDLINK SL-6399 Media Remote", "USB\\VID_1241&PID_E000&MI_01"
         )
         self.winUsb.Start()
-        
-         
+
+
     def __stop__(self):
         self.winUsb.Stop()
 
@@ -126,4 +126,4 @@ class Speedlink(eg.PluginBase):
             self.TriggerEnduringEvent(CODES2[code])
         else:
             print "#2", data
-        
+
