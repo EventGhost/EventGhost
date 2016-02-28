@@ -89,7 +89,7 @@ class ModuleDependency(DependencyBase):
 
 class PyWin32Dependency(DependencyBase):
     name = "pywin32 (Mark Hammond's Win32All package)"
-    version = "212"
+    version = "220"
     url = "pywin32 (Mark Hammond's Win32All package)"
 
     def Check(self):
@@ -107,7 +107,7 @@ class PyWin32Dependency(DependencyBase):
 
 class StacklessDependency(DependencyBase):
     name = "Stackless Python"
-    version = "2.6.1"
+    version = "2.7.9"
     url = "http://www.stackless.com/"
 
     def Check(self):
@@ -122,7 +122,7 @@ class StacklessDependency(DependencyBase):
 
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
-    version = "5.2.3"
+    version = "5.5.8"
     url = "http://www.innosetup.com/isinfo.php"
 
     def Check(self):
@@ -186,7 +186,7 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "wxPython",
         module = "wx",
-        version = "2.8.9.1",
+        version = "2.8.12.1",
         url = "http://www.wxpython.org/",
     ),
     ModuleDependency(
@@ -198,13 +198,13 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "PIL (Python Image Library)",
         module = "Image",
-        version = "1.1.6",
+        version = "1.1.7",
         url = "http://www.pythonware.com/products/pil/",
     ),
     ModuleDependency(
         name = "comtypes package",
         module = "comtypes",
-        version = "0.6.0",
+        version = "1.1.2",
         url = "http://sourceforge.net/projects/comtypes/"
     ),
     ModuleDependency(
@@ -216,13 +216,13 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "PyCrypto (Python Cryptography Toolkit)",
         module = "Crypto",
-        version = "2.1.0",
+        version = "2.6.1",
         url = "http://www.dlitz.net/software/pycrypto/",
     ),
     ModuleDependency(
         name = "Sphinx (Python documentation generator)",
         module = "sphinx",
-        version = "0.6.1",
+        version = "1.3.5",
         url = "http://sphinx.pocoo.org/",
     ),
     PyWin32Dependency(),
