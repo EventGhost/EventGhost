@@ -32,7 +32,11 @@ Plugin to control Samsung TV RS-232."""
 
 eg.RegisterPlugin(
     name = "Samsung TV",
-    author = "prostetnic, Bartman and Fiasco",
+    author = (
+        "prostetnic",
+        "Bartman",
+        "Fiasco",
+    ),
     version = "0.2." + "$LastChangedRevision: 1181 $".split()[1],
     kind = "external",
     guid = "{ADA3F327-DA18-44E0-A712-8C1C90B52DEC}",

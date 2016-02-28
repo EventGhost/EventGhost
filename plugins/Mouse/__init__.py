@@ -36,7 +36,10 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 
 eg.RegisterPlugin(
     name = "Mouse",
-    author = "Bitmonster & Sem;colon",
+    author = (
+        "Bitmonster",
+        "Sem;colon",
+    ),
     version = "1.1.1",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "

@@ -20,7 +20,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Window",
-    author = "Bitmonster & blackwind",
+    author = (
+        "Bitmonster",
+        "blackwind",
+    ),
     version = "1.1.2",
     description = (
         "Actions that are related to the control of windows on the desktop, "

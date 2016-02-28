@@ -13,7 +13,10 @@ For this plugin to work you need the `XBCDRC drivers <http://www.redcl0ud.com/xb
 
 eg.RegisterPlugin(
     name = "Xbox remote control",
-    author = "jinxdone / Bartman",
+    author = (
+        "jinxdone",
+        "Bartman",
+    ),
     version = "0.1.3." + "$LastChangedRevision: 348 $".split()[1],
     kind = "remote",
     guid = "{00F14717-738A-40C0-8BEC-F56F5D9AAF7E}",

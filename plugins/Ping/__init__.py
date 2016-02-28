@@ -21,11 +21,14 @@
 import eg
 
 eg.RegisterPlugin(
-    name = "Ping",
-    author = "miljbee & Sem;colon",
-    version = "0.0.3",
-    kind = "other",
-    description = "This plugin generates events when an host become available or unavailable on your LAN. It uses the ping commands of windows. Please, have a look at the readme file !"
+  name = "Ping",
+  author = (
+    "miljbee",
+    "Sem;colon",
+  ),
+  version = "0.0.3",
+  kind = "other",
+  description = "This plugin generates events when an host become available or unavailable on your LAN. It uses the ping commands of windows. Please, have a look at the readme file !"
 )
 
 import os

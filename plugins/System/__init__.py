@@ -21,7 +21,10 @@ import traceback
 
 eg.RegisterPlugin(
     name = "System",
-    author = "Bitmonster & blackwind",
+    author = (
+        "Bitmonster",
+        "blackwind",
+    ),
     version = "1.1.10",
     description = (
         "Controls different aspects of your system, like sound card, "

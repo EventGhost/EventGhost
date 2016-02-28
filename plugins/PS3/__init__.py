@@ -45,7 +45,13 @@ Fix batteryLevel "out of range" error.
 
 eg.RegisterPlugin(
     name = "PlayStation 3 Bluetooth Remote",
-    author = "Thierry Couquillou, Tim Delaney, Chris Heitkamp, Peter Mathiasson, Eric Hodgerson",
+    author = (
+        "Thierry Couquillou",
+        "Tim Delaney",
+        "Chris Heitkamp",
+        "Peter Mathiasson",
+        "Eric Hodgerson",
+    ),
     version = "4.0.4",
     kind = "remote",
     guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",    

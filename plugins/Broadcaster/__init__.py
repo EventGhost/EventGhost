@@ -25,7 +25,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Broadcaster",
-    author = "Kingtd/Bitmonster",
+    author = (
+        "Kingtd",
+        "Bitmonster",
+    ),
     version = "2.2." + "$LastChangedRevision: 500 $".split()[1],
     description = (
         "Listens for and Transmits UDP Broadcasts"

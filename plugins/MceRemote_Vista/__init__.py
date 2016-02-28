@@ -20,7 +20,10 @@
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote - Vista/Win7",
-    author = "Brett Stottlemyer & Sem;colon",
+    author = (
+        "Brett Stottlemyer",
+        "Sem;colon",
+    ),
     version = "1.1.1",
     kind = "remote",
     guid = "{A7DB04BB-9F0A-486A-BCA1-CA87B9620D54}",

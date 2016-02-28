@@ -118,7 +118,10 @@ class PluginModuleInfo(object):
         self.name = self.englishName = unicode(name)
         self.description = self.englishDescription = unicode(description)
         self.kind = unicode(kind)
-        self.author = unicode(author)
+        self.author = (
+            unicode(", ".join(author)) if isinstance(author, tuple)
+            else unicode(author)
+        )
         self.version = unicode(version)
         self.canMultiLoad = canMultiLoad
         self.createMacrosOnAdd = createMacrosOnAdd

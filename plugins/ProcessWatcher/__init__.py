@@ -20,7 +20,10 @@
 
 eg.RegisterPlugin(
     name = "Process Watcher",
-    author = "Bitmonster & DranDane",
+    author = (
+        "Bitmonster",
+        "DranDane",
+    ),
     version = "1.0.",
     guid = "{82BADF9F-D809-4EBC-A540-CCBF7563F8DF}",
     description = (

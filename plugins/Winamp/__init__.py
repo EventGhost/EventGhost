@@ -19,7 +19,12 @@
 # expose some information about the plugin through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Winamp",
-    author = "Bitmonster & blackwind & Matthew Jacob Edwards & Sem;colon",
+    author = (
+        "Bitmonster",
+        "blackwind",
+        "Matthew Jacob Edwards",
+        "Sem;colon",
+    ),
     version = "1.4.2",
     kind = "program",
     guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",

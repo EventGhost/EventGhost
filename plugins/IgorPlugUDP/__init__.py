@@ -37,7 +37,10 @@ from locale import getdefaultlocale as localeEncoding
 
 eg.RegisterPlugin(
     name = "IgorPlug-UDP",
-    author = "Pako/Bitmonster",
+    author = (
+        "Pako",
+        "Bitmonster",
+    ),
     version = "0.1.1",
     kind = "remote",
     guid = "{F31FCA60-D7D2-4767-801D-D1B8566D57EA}",

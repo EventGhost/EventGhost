@@ -20,7 +20,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
-    author = "Bitmonster & blackwind",
+    author = (
+        "Bitmonster",
+        "blackwind",
+    ),
     version = "1.0.4",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (

@@ -23,7 +23,10 @@
 
 eg.RegisterPlugin(
     name = "ffdshow",
-    author = "Bitmonster & Bartman",
+    author = (
+        "Bitmonster",
+        "Bartman",
+    ),
     version = "1.0." + "$LastChangedRevision: 1454 $".split()[1],
     kind = "program",
     guid = "{4CBEB5C8-97E2-4F65-A355-E72FCED4951F}",

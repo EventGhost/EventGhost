@@ -83,7 +83,12 @@ HELP = GetHelp()
 
 eg.RegisterPlugin(
     name = "DVBViewer",
-    author = "Bitmonster & Stefan Gollmer & Nativityplay & Daniel Brugger",
+    author = (
+        "Bitmonster",
+        "Stefan Gollmer",
+        "Nativityplay",
+        "Daniel Brugger",
+    ),
     version = PLUGIN_VERSION,
     kind = "program",
     guid = "{747B54F6-59F6-4602-A777-984EA76D2D8C}",

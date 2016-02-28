@@ -27,7 +27,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
-    author = "Bitmonster & James Lee",
+    author = (
+        "Bitmonster",
+        "James Lee",
+    ),
     version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
     kind = "remote",
     guid = "{02181DB1-F29D-4CCB-BF91-7A86EFB0D22C}",

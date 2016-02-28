@@ -21,7 +21,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Y.A.R.D.",
-    author = u"André Weber & Bitmonster",
+    author = (
+        u"André Weber",
+        "Bitmonster",
+    ),
     version = "1.1.0",
     kind = "remote",
     guid = "{1119068D-44AD-40E0-BDB6-B00D9F88F5A0}",

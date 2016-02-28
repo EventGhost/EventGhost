@@ -35,7 +35,10 @@ import eg
 
 eg.RegisterPlugin(
     name = "Keyboard",
-    author = "Bitmonster & blackwind",
+    author = (
+        "Bitmonster",
+        "blackwind",
+    ),
     version = "1.1.1",
     kind = "remote",
     guid = "{59CBD10F-C1D8-4ADB-999B-9B76BA360F1F}",

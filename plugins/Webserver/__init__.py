@@ -93,7 +93,12 @@ import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
-    author = "Bitmonster & Pako & Sem;colon & krambriw",
+    author = (
+        "Bitmonster",
+        "Pako",
+        "Sem;colon",
+        "krambriw",
+    ),
     version = version,
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = ur'''<rst>
