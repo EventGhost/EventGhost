@@ -17,6 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+import re
 import wx
 import time
 import sys
@@ -43,7 +44,7 @@ def GetPluginAuthors():
     """
     pluginAuthors = {}
     for pluginInfo in eg.pluginManager.database.itervalues():
-        for part in pluginInfo.author.split("&"):
+        for part in re.split("\s*(?:&|,|\+|/|and)\s*", pluginInfo.author):
             author = part.strip()
             if author.lower() != "bitmonster":
                 break
