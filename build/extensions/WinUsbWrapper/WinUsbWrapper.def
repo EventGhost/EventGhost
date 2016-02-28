@@ -1,0 +1,9 @@
+; USB-PC-Remote.def : Declares the module parameters for the DLL.
+
+LIBRARY      "USB-PC-Remote"
+
+EXPORTS
+    ; Explicit exports can go here
+	Start
+	Stop
+	
