@@ -1,22 +1,24 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # plugins/OSM/__init__.py
 #
 # Copyright (C)  2009-2011 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
@@ -51,7 +53,7 @@ eg.RegisterPlugin(
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
 Allows you to create custom On Screen Menu.
-        
+
 Plugin OSM has built-in a function **"Stop processing this event"**,
 if the menu is shown on the screen. This facilitates
 the use of OSM in your configuration. You can use to control
@@ -163,7 +165,7 @@ In this case, the first items of nested lists apply as a label in the menu and
 the seconds items are applied as **"Back part(s) of event string"** (see the edit box
 **"Back part(s) of event string:"** in configuration dialog of action **"Show menu"**).
 
-3) Both the previous form can be freely combined. Tuple (list) can look as follows: 
+3) Both the previous form can be freely combined. Tuple (list) can look as follows:
 **(("Item1","event1"), ("Item2"), ("Item3","event3"))**
 
 Please see the description of the action **"Show menu"**. There are examples,
@@ -681,7 +683,7 @@ class ShowMenu(eg.ActionBase):
                     backColourButton.GetValue(),
                     foreSelColourButton.GetValue(),
                     backSelColourButton.GetValue(),
-                    fontButton.GetValue(), 
+                    fontButton.GetValue(),
                     True,
                     self.plugin,
                     prefixCtrl.GetValue(),
@@ -1001,7 +1003,7 @@ class CreateMenuFromList(eg.ActionBase):
                             backColourButton.GetValue(),
                             foreSelColourButton.GetValue(),
                             backSelColourButton.GetValue(),
-                            fontButton.GetValue(), 
+                            fontButton.GetValue(),
                             True,
                             self.plugin,
                             prefixCtrl.GetValue(),
@@ -1263,7 +1265,7 @@ class Menu(wx.Frame):
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
 
-        self.plugin.menuDlg = self 
+        self.plugin.menuDlg = self
         if focus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:

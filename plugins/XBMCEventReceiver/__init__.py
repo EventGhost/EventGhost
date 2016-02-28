@@ -3,21 +3,23 @@
 # plugins/XBMCEventReceiver/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-# 
-# This plugin is based on the Broadcaster plugin that was originally provided 
-# by the good work from Kingtd.  I have used it as a basis for true 2-way control 
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+#
+# This plugin is based on the Broadcaster plugin that was originally provided
+# by the good work from Kingtd.  I have used it as a basis for true 2-way control
 # too and from XBMC.  The following improvements have been made to v2.0:
 #
 #	- Enabled additional fields for configuration of HTTP.API destination in setup
@@ -26,23 +28,19 @@
 #	- Cleaned up some of the code.
 #	- Fixed error when trying to reconfigure plugin
 #
-# Future enhancements to make for future ver. as time permits such as: 
+# Future enhancements to make for future ver. as time permits such as:
 #
 #  - Extending response functionality as it applies to XBMC (once it is implemented @ the XBMC Host).
 #  - Additional parsing of input from XBMC host
-#  
-#  If you have any additional comments or suggestions feel free to contact me at vortexrotor@vortexbb.com
 #
-# $LastChangedDate: 2009-12-23 $
-# $LastChangedRevision: 2.0 $
-# $LastChangedBy: vortexrotor $
+#  If you have any additional comments or suggestions feel free to contact me at vortexrotor@vortexbb.com
 
 import eg
 
 eg.RegisterPlugin(
     name = "XBMC Event Receiver",
-    author = "vortexrotor <vortexrotor@vortexbb.com",
-    version = "2.0." + "$LastChangedRevision: 5 $".split()[1],
+    author = "vortexrotor",
+    version = "2.0.5",
     kind = "program",
     guid = "{9872BD49-2022-4F1B-B362-85F1ED203B7E}",
     description = (
@@ -130,13 +128,13 @@ class XbmceventbroadcastListener(eg.PluginClass):
     def __start__(self, prefix=None, xbmcip="None", xbmchttpport=8080, zone="255.255.255.255", port=8279, selfXbmceventbroadcast=False, payDelim="&&"):
         self.info.eventPrefix = prefix
         self.xbmcip = xbmcip
-	self.xbmchttpport = xbmchttpport
+        self.xbmchttpport = xbmchttpport
         self.port = port
         self.payDelim=payDelim
-	self.zone = zone
-	self.selfXbmceventbroadcast=selfXbmceventbroadcast
+        self.zone = zone
+        self.selfXbmceventbroadcast=selfXbmceventbroadcast
 
-	try:
+        try:
             self.server = Server(self.port, self.selfXbmceventbroadcast, self.payDelim, self)
         except socket.error, exc:
             raise self.Exception(exc[1])
@@ -173,15 +171,15 @@ class XbmceventbroadcastListener(eg.PluginClass):
 
             v_message = urllib.quote("This is the Message")
 
-	    host_xbmc = xbmcipCtrl.GetValue()
-	    port_xbmc = int(xbmchttpportCtrl.GetValue())
-	    udp_xbmc = int(portCtrl.GetValue())
-	    url_xbmc = "http://" + str(host_xbmc) + ":" + str(port_xbmc) + "/xbmcCmds/xbmcHttp?command=SetBroadcast&parameter=2;" + str(udp_xbmc) + "(Notification(" + v_header + "," + v_message + "))"
-            print "str(url_xbmc)"
-	    try:
-				urllib.urlopen(url_xbmc)
-	    except IOError:
-				print 'Connection error'
+        host_xbmc = xbmcipCtrl.GetValue()
+        port_xbmc = int(xbmchttpportCtrl.GetValue())
+        udp_xbmc = int(portCtrl.GetValue())
+        url_xbmc = "http://" + str(host_xbmc) + ":" + str(port_xbmc) + "/xbmcCmds/xbmcHttp?command=SetBroadcast&parameter=2;" + str(udp_xbmc) + "(Notification(" + v_header + "," + v_message + "))"
+        print "str(url_xbmc)"
+        try:
+            urllib.urlopen(url_xbmc)
+        except IOError:
+            print 'Connection error'
 
 
 
@@ -191,35 +189,34 @@ class XbmceventbroadcastListener(eg.PluginClass):
             res = self.bcastSend(mesg, payload)
             return res
 
-    	def bcastSend(self, eventString, payload=""):
-
+        def bcastSend(self, eventString, payload=""):
             addr = (self.plugin.zone, self.plugin.port)
-	    UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
-	    UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-	    if (payload==None):
-	            UDPSock.sendto(eg.ParseString(eventString),addr)
-	    else:
-	        UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
-	    UDPSock.close()
+            UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
+            UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            if (payload==None):
+                UDPSock.sendto(eg.ParseString(eventString),addr)
+            else:
+                UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
+            UDPSock.close()
 
-	def Configure(self, command="", payload=""):
-	    text = self.text
-	    panel = eg.ConfigPanel(self)
+    def Configure(self, command="", payload=""):
+        text = self.text
+        panel = eg.ConfigPanel(self)
 
-	    commandCtrl = panel.TextCtrl(command)
-	    payloadCtrl = panel.TextCtrl(payload)
+        commandCtrl = panel.TextCtrl(command)
+        payloadCtrl = panel.TextCtrl(payload)
 
-            commandlabel = panel.StaticText("Command:")
-	    payloadlabel = panel.StaticText("Payload:")
-	    panel.sizer.Add(commandlabel,0,wx.EXPAND)
-	    panel.sizer.Add(commandCtrl,0,wx.EXPAND)
-            panel.sizer.Add((20, 20))
-	    panel.sizer.Add(payloadlabel,0,wx.EXPAND)
-	    panel.sizer.Add(payloadCtrl,0,wx.EXPAND)
+        commandlabel = panel.StaticText("Command:")
+        payloadlabel = panel.StaticText("Payload:")
+        panel.sizer.Add(commandlabel,0,wx.EXPAND)
+        panel.sizer.Add(commandCtrl,0,wx.EXPAND)
+        panel.sizer.Add((20, 20))
+        panel.sizer.Add(payloadlabel,0,wx.EXPAND)
+        panel.sizer.Add(payloadCtrl,0,wx.EXPAND)
 
 
-	    while panel.Affirmed():
-	        panel.SetResult(
-		commandCtrl.GetValue(),
-	        payloadCtrl.GetValue()
-                )
+        while panel.Affirmed():
+            panel.SetResult(
+                commandCtrl.GetValue(),
+                payloadCtrl.GetValue()
+            )

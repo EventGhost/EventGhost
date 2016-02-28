@@ -7,7 +7,10 @@ from struct import pack, unpack
 
 eg.RegisterPlugin(
     name = "Onkyo ISCP",
-    author = "Alexander Hartmaier + Sem;colon",
+    author = (
+        "Alexander Hartmaier",
+        "Sem;colon",
+    ),
     version = "0.06",
     kind = "external",
     guid = "{5B3B8AEB-08D7-4FD0-8BEE-8FE50C231E09}",
@@ -41,8 +44,8 @@ class OnkyoISCP(eg.PluginBase):
         self.Connect()
 
     def __stop__(self):
-	if hasattr(self, 'stopThreadEvent'):
-	    self.stopThreadEvent.set()
+        if hasattr(self, 'stopThreadEvent'):
+            self.stopThreadEvent.set()
 
         self.socket.close()
 
@@ -55,9 +58,10 @@ class OnkyoISCP(eg.PluginBase):
                     # 1024 bytes should be enough for every received event
                     reply = self.socket.recv(1024)
                     # unpack ISCP header
-                    header, headersize, datasize, version = unpack('!4sIIBxxx',
-		            reply[0:self.headersize]
-			)
+                    header, headersize, datasize, version = unpack(
+                        '!4sIIBxxx',
+                        reply[0:self.headersize]
+                    )
 
                     if header != self.header:
                         self.PrintError("OnkyoISCP: Received packet not ISCP")
@@ -100,12 +104,12 @@ class OnkyoISCP(eg.PluginBase):
             self.PrintError("OnkyoISCP: Failed to connect to " + ip + ":" + str(port) + ": " + str(e))
         else:
             print "Connected to " + ip + ":" + str(port)
-	    self.stopThreadEvent = Event()
-	    thread = Thread(
-		target = self.Receive,
-	    )
-            thread.start()
-        
+        self.stopThreadEvent = Event()
+        thread = Thread(
+            target = self.Receive,
+        )
+        thread.start()
+
 
     def Configure(self, ip="", port="60128", timeout="1"):
         text = self.text
@@ -145,11 +149,11 @@ class SendCommand(eg.ActionBase):
         # both work when the headersize is included
         datasize = self.plugin.headersize + len(message)
         line = pack('!4sIIBxxx',
-                self.plugin.header,
-                self.plugin.headersize,
-	        datasize,
-                self.plugin.version
-	    ) + message
+            self.plugin.header,
+            self.plugin.headersize,
+            datasize,
+            self.plugin.version
+        ) + message
         try:
             self.plugin.socket.sendall(line)
             sleep(0.1)

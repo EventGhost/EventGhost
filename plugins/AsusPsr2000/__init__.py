@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 ur"""<rst>
 A plugin for the ASUS PSR-2000 remote.
@@ -71,7 +73,7 @@ BUTTONS = {
     (64, 0, 32, 15): "GoUp",
     (64, 0, 33, 15): "Num0",
     (64, 0, 35, 15): "Teletext",
-    (64, 0, 36, 15): "GoTo",    
+    (64, 0, 36, 15): "GoTo",
 }
 
 
@@ -107,7 +109,7 @@ class AsusPsr2000(eg.PluginBase):
                     mouse_event(0x0002, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0004, 0, 0, 0, 0)
-                    
+
             rightDown = buttonType & 0x02
             if rightDown != self.rightDown:
                 self.rightDown = rightDown
@@ -115,7 +117,7 @@ class AsusPsr2000(eg.PluginBase):
                     mouse_event(0x0008, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0010, 0, 0, 0, 0)
-                    
+
             if x == 0 and y == 0:
                 degree = -2
             else:

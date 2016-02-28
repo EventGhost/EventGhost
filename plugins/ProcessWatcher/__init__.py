@@ -1,24 +1,29 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/ProcessWatcher/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Process Watcher",
-    author = "Bitmonster & DranDane",
+    author = (
+        "Bitmonster",
+        "DranDane",
+    ),
     version = "1.0.",
     guid = "{82BADF9F-D809-4EBC-A540-CCBF7563F8DF}",
     description = (
@@ -57,15 +62,15 @@ class Process(eg.PluginClass):
         self.startException = None
         startupEvent = threading.Event()
         self.thread = threading.Thread(
-            target=self.ThreadLoop, 
-            name="ProcessWatcherThread", 
+            target=self.ThreadLoop,
+            name="ProcessWatcherThread",
             args=(startupEvent,)
         )
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:
             raise self.Exception(self.startException)
-              
+
     def __stop__(self):
         if self.thread is not None:
             PulseEvent(self.stopEvent)
@@ -74,7 +79,7 @@ class Process(eg.PluginClass):
     def ThreadLoop(self, stopThreadEvent):
         oldProcesses = GetProcessDict()
         oldPids = set(oldProcesses.iterkeys())
-   
+
         while True:
             newProcesses = GetProcessDict()
             newPids = set(newProcesses.iterkeys())

@@ -12,7 +12,7 @@ def ConvertIrCodeToProntoRaw(freq,data):
 
     prontoCarrier = int(1000000/(freq*prontoClock))
     carrier = prontoCarrier * prontoClock
-    
+
     prontoData = [0x0000, prontoCarrier, 0x0000, 0x0000]
     for val in data:
         duration = abs(val)
@@ -26,7 +26,7 @@ def ConvertIrCodeToProntoRaw(freq,data):
     for v in prontoData[1:]:
         out = out + ' %04X'%int(v)
     return out
-    
+
 def ConvertProntoRawToIrCode(prontoData,nRepeat): #nRepeat is ignored for Raw
     if len(prontoData) < 6 or not (prontoData[0] == 0x0000 or prontoData[0] == 0x0100): #Raw or Learned
         raise Exception("Invalid Raw data %s"%str(prontoData))
@@ -56,7 +56,7 @@ def ConvertProntoRawToIrCode(prontoData,nRepeat): #nRepeat is ignored for Raw
             timingData.append(-time)
         index = index + 1
         pulse = not pulse
-        
+
         if index == start + sequence:
             if repeatCount == 0:
                 if repeatSeq != 0:
@@ -75,7 +75,7 @@ def ConvertProntoRawToIrCode(prontoData,nRepeat): #nRepeat is ignored for Raw
                 repeatCount += 1
     freq = int(1000000/(prontoCarrier*prontoClock))
     return (freq,timingData)
-    
+
 def EncodeBits(data,start,stop,s_false,s_true):
     out = ""
     for i in range(start,stop-1,-1):
@@ -84,7 +84,7 @@ def EncodeBits(data,start,stop,s_false,s_true):
         else:
             out = out + s_false
     return out
-    
+
 def ZeroOneSequences(String, Delay):
     finalData = []
     ind = 0
@@ -108,7 +108,7 @@ def ZeroOneSequences(String, Delay):
     else:
         finalData[-1] -= 10000
     return finalData
-    
+
 def ConvertProntoRC5ToIrCode(prontoData, nRepeat = 0):
     if len(prontoData) != 6 or prontoData[0] != 0x5000: #CodeType RC5
         raise Exception("Invalid RC5 data %s"%str(prontoData))
@@ -118,7 +118,7 @@ def ConvertProntoRC5ToIrCode(prontoData, nRepeat = 0):
         prontoCarrier = int(1000000/(36000*prontoClock))
 
     RC5String = ''
-    
+
     for j in range(nRepeat+1):
         toggle = nRepeat % 2 == 0
         if prontoData[5] > 63:
@@ -136,7 +136,7 @@ def ConvertProntoRC5ToIrCode(prontoData, nRepeat = 0):
 
     freq = int(1000000/(prontoCarrier*prontoClock))
     return freq,finalData
-    
+
 def ConvertProntoRC5XToIrCode(prontoData,nRepeat):
     if not (len(prontoData) == 7 or (len(prontoData) == 8 and prontoData[7] == 0x0000)) or prontoData[0] != 0x5001: #CodeType RC5X
         raise Exception("Invalid RC5X data %s"%str(prontoData))
@@ -147,7 +147,7 @@ def ConvertProntoRC5XToIrCode(prontoData,nRepeat):
 
     if prontoData[2] + prontoData[3] != 2:
         raise Exception("Invalid RC5X data %s"%str(prontoData))
-    
+
     RC5XString = ''
 
     for j in range(nRepeat+1):
@@ -166,10 +166,10 @@ def ConvertProntoRC5XToIrCode(prontoData,nRepeat):
         RC5XString = RC5XString + EncodeBits(prontoData[6], 5, 0, '10', '01')
 
     finalData = ZeroOneSequences(RC5XString, 900)
-      
+
     freq = int(1000000/(prontoCarrier*prontoClock))
     return freq,finalData
-    
+
 def ConvertProntoRC6ToIrCode(prontoData, nRepeat):
     if len(prontoData) != 6 or prontoData[0] != 0x6000: # CodeType RC6
         raise Exception("Invalid RC6 data %s"%str(prontoData))
@@ -196,7 +196,7 @@ def ConvertProntoRC6ToIrCode(prontoData, nRepeat):
 
     freq = int(1000000/(prontoCarrier*prontoClock))
     return freq,finalData
-    
+
 def ConvertProntoRC6AToIrCode(prontoData, nRepeat):
     if len(prontoData) != 8 or prontoData[0] != 0x6001: # CodeType RC6A
         raise Exception("Invalid RC6A data %s"%str(prontoData))
@@ -229,7 +229,7 @@ def ConvertProntoRC6AToIrCode(prontoData, nRepeat):
 
     freq = int(1000000/(prontoCarrier*prontoClock))
     return freq,finalData
-    
+
 prontoHandlers = { "0000" : ConvertProntoRawToIrCode,
                    "0100" : ConvertProntoRawToIrCode,
                    "5000" : ConvertProntoRC5ToIrCode,

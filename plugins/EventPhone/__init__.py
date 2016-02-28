@@ -1,13 +1,13 @@
 # EventGhost receiver for iPhone/iPod Touch native application client
 # Copyright (C) 2008 Melloware <info@melloware.com>
 # http://www.melloware.com/products/eventphone
-# 
-# Description:  EventGhost iPhone client for controlling your home 
+#
+# Description:  EventGhost iPhone client for controlling your home
 #                        automation from the comfort of your iPhone or
 #                        iPod Touch using EventPhone native app.
 #
 # Instructions: 1. Simply purchase EventPhone native app from the Apple
-#                            Appstore to install it.   
+#                            Appstore to install it.
 #                        2. Install iPhone plugin for EventGhost found on Melloware
 #                             Website http://www.melloware.com
 #                        3. In EventGhost configure the Port and Password in the plugin.
@@ -17,14 +17,10 @@
 #                         5. Start EventPhone on the iPhone and it will connect to your
 #                              PC and you can map events to whatever you want!
 #
-# Based on the Network Receiver plugin but had to be modifed to work for the 
+# Based on the Network Receiver plugin but had to be modifed to work for the
 # iPhone.  Thanks to BitMonster for the excellent Network Receiver Plugin.
 # EventGhost
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-#
-# $LastChangedDate: 2009-02-07 20:13:27 +0100 (Sa, 07 Feb 2009) $
-# $LastChangedRevision: 831 $
-# $LastChangedBy: bitmonster $
 
 import eg
 
@@ -35,14 +31,14 @@ eg.RegisterPlugin(
         u'\n\n<p>'
         u'<center><img src="picture.jpg" /></a></center>'
     ),
-    version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
+    version = "1.0.1",
     kind = "remote",
     guid = "{BAD86ECC-5B21-4F47-9ADE-9CC8FFF8D191}",
     canMultiLoad = True,
     author = "Melloware Inc",
     url="http://www.melloware.com/products/eventphone",
     help = """
-        <b>Instructions:</b> <p>1. Simply purchase <a href="http://www.melloware.com/products/eventphone">EventPhone Native Application</a> from the Apple Appstore to install it.   
+        <b>Instructions:</b> <p>1. Simply purchase <a href="http://www.melloware.com/products/eventphone">EventPhone Native Application</a> from the Apple Appstore to install it.
         <p>2. Install EventPhone plugin for EventGhost found on <a href="http://www.melloware.com">Melloware Website</a>
         <p>3. In EventGhost configure the Port and Password in the plugin.
         <p>4. On the iPhone configure the Settings to have the same port and password, and enter the IP address of the PC running EventGhost.
@@ -82,23 +78,23 @@ class Text:
     tcpBox = "TCP/IP Settings"
     securityBox = "Security"
     eventGenerationBox = "Event generation"
-    
-    
+
+
 DEBUG = False
 if DEBUG:
     log = eg.Print
 else:
     def log(dummyMesg):
         pass
-    
+
 
 class ServerHandler(asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
-    
+
     def __init__(self, sock, addr, hex_md5, cookie, plugin, server):
         log("Server Handler inited")
         self.plugin = plugin
-        
+
         # Call constructor of the parent class
         asynchat.async_chat.__init__(self, sock)
 
@@ -112,13 +108,13 @@ class ServerHandler(asynchat.async_chat):
         self.payload = [self.ip]
         self.hex_md5 = hex_md5
         self.cookie = cookie
-                  
-                
+
+
     def handle_close(self):
         self.plugin.EndLastEvent()
         asynchat.async_chat.handle_close(self)
-    
-    
+
+
     def collect_incoming_data(self, data):
         """Put data read from socket to a buffer
         """
@@ -131,13 +127,13 @@ class ServerHandler(asynchat.async_chat):
         def push(self, data):
             log(">>", repr(data))
             asynchat.async_chat.push(self, data)
-    
-    
+
+
     def found_terminator(self):
         """
         This method is called by asynchronous engine when it finds
         command terminator in the input stream
-        """   
+        """
         # Take the complete line
         line = self.data
 
@@ -154,7 +150,7 @@ class ServerHandler(asynchat.async_chat):
         #asynchat.async_chat.handle_close(self)
         self.plugin.EndLastEvent()
         self.state = self.state1
- 
+
 
     def state1(self, line):
         """
@@ -166,8 +162,8 @@ class ServerHandler(asynchat.async_chat):
             self.push(self.cookie + "\n")
         else:
             self.initiate_close()
-                
-                
+
+
     def state2(self, line):
         """get md5 digest
         """
@@ -180,8 +176,8 @@ class ServerHandler(asynchat.async_chat):
         else:
             eg.PrintError("EventPhone Remote md5 error")
             self.initiate_close()
-            
-            
+
+
     def state3(self, line):
         line = line.decode(eg.systemEncoding)
         if line == "close":
@@ -197,11 +193,11 @@ class ServerHandler(asynchat.async_chat):
                 else:
                     self.plugin.TriggerEvent(line, self.payload)
             self.payload = [self.ip]
-            
-            
+
+
 
 class Server(asyncore.dispatcher):
-    
+
     def __init__ (self, port, password, handler):
         self.handler = handler
         self.cookie = hex(random.randrange(65536))
@@ -210,16 +206,16 @@ class Server(asyncore.dispatcher):
 
         # Call parent class constructor explicitly
         asyncore.dispatcher.__init__(self)
-        
+
         # Create socket of requested type
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         # restart the asyncore loop, so it notices the new socket
         eg.RestartAsyncore()
 
         # Set it to re-use address
         #self.set_reuse_addr()
-        
+
         # Bind to all interfaces of this host at specified port
         self.bind(('', port))
 
@@ -234,11 +230,11 @@ class Server(asyncore.dispatcher):
         log("handle_accept")
         (sock, addr) = self.accept()
         ServerHandler(
-            sock, 
-            addr, 
-            self.hex_md5, 
-            self.cookie, 
-            self.handler, 
+            sock,
+            addr,
+            self.hex_md5,
+            self.cookie,
+            self.handler,
             self
         )
 
@@ -246,10 +242,10 @@ class Server(asyncore.dispatcher):
 
 class EventPhone(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddEvents()
-    
+
     def __start__(self, port, password, prefix):
         self.port = port
         self.password = password
@@ -258,8 +254,8 @@ class EventPhone(eg.PluginBase):
             self.server = Server(self.port, self.password, self)
         except socket.error, exc:
             raise self.Exception(exc[1])
-        
-        
+
+
     def __stop__(self):
         if self.server:
             self.server.close()
@@ -269,7 +265,7 @@ class EventPhone(eg.PluginBase):
     def Configure(self, port=1025, password="", prefix="Apple"):
         text = self.text
         panel = eg.ConfigPanel()
-        
+
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
         eventPrefixCtrl = panel.TextCtrl(prefix)
@@ -287,11 +283,11 @@ class EventPhone(eg.PluginBase):
             (box2, 0, wx.EXPAND|wx.TOP, 10),
             (box3, 0, wx.EXPAND|wx.TOP, 10),
         ])
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                portCtrl.GetValue(), 
-                passwordCtrl.GetValue(), 
+                portCtrl.GetValue(),
+                passwordCtrl.GetValue(),
                 eventPrefixCtrl.GetValue()
             )
 

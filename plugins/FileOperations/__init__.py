@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.7" 
+version="0.1.7"
 
 # Copyright (C)  2008-2011 Pako  (lubos.ruckl@quick.cz)
-# 
+#
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
@@ -63,8 +65,8 @@ def String2Hex(strng, length = '2'):
     tmp = []
     s2h = "%0" + length + "X "
     for c in strng:
-        tmp.append( s2h % ord( c ) )    
-    return ''.join( tmp ).strip()  
+        tmp.append( s2h % ord( c ) )
+    return ''.join( tmp ).strip()
 #===============================================================================
 
 class ObservationThread(Thread):
@@ -77,7 +79,7 @@ class ObservationThread(Thread):
         self.lastCheck = 0
         self.threadFlag = Event()
         #self.firstRun = True
-        
+
         self.inCoding = stp[0]
         self.fileName = eg.ParseString(stp[1])
         self.mode = stp[2]
@@ -98,7 +100,7 @@ class ObservationThread(Thread):
             try:
                 input = codecs.open(self.fileName,'r',self.inPage, errorList[self.errDecMode])
             except:
-                raise  
+                raise
             else:
                 if self.lines > 0:
                     data = input.readlines()
@@ -123,7 +125,7 @@ class ObservationThread(Thread):
                             data = ''
                 else:                  #whole file
                     data = input.read()
-                try:    
+                try:
                     input.close()
                 except:
                     raise
@@ -154,7 +156,7 @@ class ObservationThread(Thread):
                 if flag:
                     eg.TriggerEvent(self.evtName, payload = data, prefix = 'File')
                 self.oldData = data
-  
+
             if self.abort:
                 break
             self.lastCheck = time.time()
@@ -219,9 +221,9 @@ class FileOperations(eg.PluginClass):
         mySizer = wx.GridBagSizer(5, 5)
         mySizer.AddGrowableRow(0)
         mySizer.AddGrowableCol(2)
-       
+
         observListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
-       
+
         for i, colLabel in enumerate(self.text.colLabels):
             observListCtrl.InsertColumn(i, colLabel)
 
@@ -234,23 +236,23 @@ class FileOperations(eg.PluginClass):
         for i in range(3):
             observListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             size += observListCtrl.GetColumnWidth(i)
-       
+
         observListCtrl.SetMinSize((size, -1))
-       
+
         mySizer.Add(observListCtrl, (0,0), (1, 4), flag = wx.EXPAND)
 
         #buttons
         abortButton = wx.Button(panel, -1, "Abort")
         mySizer.Add(abortButton, (1,0))
-       
+
         abortAllButton = wx.Button(panel, -1, "Abort all")
         mySizer.Add(abortAllButton, (1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
-              
+
         refreshButton = wx.Button(panel, -1, "Refresh")
         mySizer.Add(refreshButton, (1,3), flag = wx.ALIGN_RIGHT)
-       
+
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
-       
+
         def PopulateList (event=None):
             observListCtrl.DeleteAllItems()
             row = 0
@@ -285,13 +287,13 @@ class FileOperations(eg.PluginClass):
             flag = observListCtrl.GetFirstSelected() != -1
             abortButton.Enable(flag)
             event.Skip()
-           
+
         def OnSize(event):
             observListCtrl.SetColumnWidth(6, wx.LIST_AUTOSIZE_USEHEADER)
             event.Skip()
 
         PopulateList()
-       
+
         abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
         abortAllButton.Bind(wx.EVT_BUTTON, OnAbortAllButton)
         refreshButton.Bind(wx.EVT_BUTTON, PopulateList)
@@ -301,7 +303,7 @@ class FileOperations(eg.PluginClass):
 
         while panel.Affirmed():
             panel.SetResult(*args)
-            
+
     #function to fill the action's Comboboxes
     def GetObservData(self):
         self.observData.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
@@ -342,18 +344,18 @@ class FileOperations(eg.PluginClass):
             "always if not empty",
             "only at changes",
             "only at changes and if not empty"
-        )        
+        )
         header = "Currently active file observations:"
         colLabels = (
             "File",
             "Event name",
-            "Interval")            
+            "Interval")
 #===============================================================================
 
 class Read(eg.ActionClass):
     name = "Read text from file"
     description = "Reads text from selected file."
-    
+
     def __call__(
         self,
         inCoding = 0,
@@ -396,12 +398,12 @@ class Read(eg.ActionClass):
                     data = data[0]
                 else:
                     data = ''
-            try:    
+            try:
                 input.close()
             except:
-                raise                
+                raise
             return data
-            
+
     def GetLabel(
         self,
         inCoding,
@@ -430,14 +432,14 @@ class Read(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         text = self.plugin.text
         self.mode = mode
-    #Controls    
+    #Controls
         inPageText = wx.StaticText(panel, -1, text.inputPage)
         labelMode = wx.StaticText(panel, -1, text.txtMode)
         labelDecErrMode = wx.StaticText(panel, -1, text.txtDecErrMode)
         fileText = wx.StaticText(panel, -1, text.FilePath)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
-            -1, 
+            panel,
+            -1,
             initialValue=fileName,
             labelText="",
             fileMask="*.*",
@@ -465,7 +467,7 @@ class Read(eg.ActionClass):
             max = 999,
         )
         rb0 = panel.RadioButton(not direction, text.begin, style=wx.RB_GROUP)
-        rb1 = panel.RadioButton(direction, text.end)                            
+        rb1 = panel.RadioButton(direction, text.end)
         lblAhead = wx.StaticText(panel, -1, text.readAhead)
         lblBehind = wx.StaticText(panel, -1, text.readBehind)
         linesNumCtrl = eg.SpinIntCtrl(
@@ -503,12 +505,12 @@ class Read(eg.ActionClass):
         mainSizer.Add(fileText,0,wx.EXPAND)
         mainSizer.Add(filepathCtrl,0,wx.EXPAND)
         mainSizer.Add(topSizer,0,wx.TOP|wx.EXPAND,5)
-        mainSizer.Add(linesSizer,0,wx.TOP|wx.EXPAND,11)        
-        mainSizer.Add(fromSizer,0,wx.TOP|wx.EXPAND,11)        
+        mainSizer.Add(linesSizer,0,wx.TOP|wx.EXPAND,11)
+        mainSizer.Add(fromSizer,0,wx.TOP|wx.EXPAND,11)
         mainSizer.Add(labelMode,0,wx.TOP|wx.EXPAND,11)
         mainSizer.Add(choiceMode,0,wx.TOP,2)
         panel.sizer.Add(mainSizer,0,wx.EXPAND)
-        
+
         def onLinesNumCtrl(event=None):
             flag = False
             if event:
@@ -522,11 +524,11 @@ class Read(eg.ActionClass):
                 rb0.Enable(False)
                 rb1.Enable(False)
             else:
-                lineNumLbl.Enable(True)                
+                lineNumLbl.Enable(True)
                 fromLineNumCtrl.Enable(True)
                 rb0.Enable(True)
                 rb1.Enable(True)
-            
+
             if linesNumCtrl.GetValue() == 1:
                 choiceMode.Clear()
                 choiceMode.AppendItems(strings=(text.oneNotIncluding,text.oneIncluding))
@@ -535,7 +537,7 @@ class Read(eg.ActionClass):
                     choiceMode.Clear()
                     choiceMode.AppendItems(
                         strings=(text.listNotIncluding,text.listIncluding,text.oneString)
-                    )    
+                    )
                     if self.mode == 2:
                         flag = True
             if event:
@@ -546,7 +548,7 @@ class Read(eg.ActionClass):
             choiceMode.SetSelection(self.mode)
         linesNumCtrl.Bind(wx.EVT_SPIN, onLinesNumCtrl)
         onLinesNumCtrl()
-            
+
         while panel.Affirmed():
             inCoding = inPageCtrl.GetSelection()
             pgTpl = (eg.systemEncoding, 'utf8')
@@ -565,11 +567,11 @@ class Read(eg.ActionClass):
 class AbortPeriodicalRead(eg.ActionClass):
     name = "Abort periodical reading"
     description = "Aborts periodical reading of text from selected file."
-        
+
     def __call__(self, observName='', file = ''):
         observName = eg.ParseString(observName)
         self.plugin.AbortObservation(observName)
-    
+
     def GetLabel(self, observName, file):
         return '%s: %s -> %s' % (str(self.name), file, observName)
 
@@ -589,7 +591,7 @@ class AbortPeriodicalRead(eg.ActionClass):
         mainSizer.Add(nameCtrl,0,wx.EXPAND)
         panel.sizer.Add(mainSizer)
         panel.sizer.Layout()
-        
+
         def onComboBox(event = None):
             choices = [item[1] for item in self.plugin.GetObservData()]
             evtName = nameCtrl.GetValue()
@@ -604,14 +606,14 @@ class AbortPeriodicalRead(eg.ActionClass):
                 event.Skip()
         onComboBox()
         nameCtrl.Bind(wx.EVT_COMBOBOX,onComboBox)
-        
+
         # re-assign the test button
         def OnTestButton(event):
             self.plugin.AbortObservation(nameCtrl.GetValue())
         panel.dialog.buttonRow.testButton.SetLabel(text.abortNow)
         panel.dialog.buttonRow.testButton.SetToolTipString(text.tip)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
-        
+
         while panel.Affirmed():
             lbl = fileLbl.GetLabel()
             if lbl != '':
@@ -628,7 +630,7 @@ class AbortPeriodicalRead(eg.ActionClass):
         tip = 'Abort observation now'
         fileLabel = 'File to read: %s'
 #===============================================================================
-    
+
 class AbortAllPeriodicalRead(eg.ActionClass):
     name = "Abort all periodical reading"
     description = "Aborts all periodical reading of text from file."
@@ -640,12 +642,12 @@ class ReadPeriodically(eg.ActionClass):
     name = "Start periodical reading"
     description = ("Starts periodical reading of text from selected file. "
                    "Learning the line(s) return as payload of event.")
-    
+
     def startObserv(self, stp):
         self.plugin.StartObservation(stp)
-        
+
     def __call__(self, stp):
-        self.startObserv(stp)            
+        self.startObserv(stp)
 
     def GetLabel(
         self,
@@ -653,7 +655,7 @@ class ReadPeriodically(eg.ActionClass):
     ):
         self.plugin.AddObservData(stp)
         return '%s: %s -> %s' % (str(self.name), os.path.split(stp[1])[1], stp[9])
-        
+
     def Configure(
         self,
         stp = []
@@ -683,19 +685,19 @@ class ReadPeriodically(eg.ActionClass):
             period = stp[8]
             evtName = stp[9]
             trigger = stp[10]
-        
+
         from codecsList import codecsList
         panel = eg.ConfigPanel(self)
         text = self.plugin.text
         self.mode = mode
-    #Controls    
+    #Controls
         inPageText = wx.StaticText(panel, -1, text.inputPage)
         labelMode = wx.StaticText(panel, -1, text.txtMode)
         labelDecErrMode = wx.StaticText(panel, -1, text.txtDecErrMode)
         fileText = wx.StaticText(panel, -1, text.FilePath)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
-            -1, 
+            panel,
+            -1,
             initialValue=fileName,
             labelText="",
             fileMask="*.*",
@@ -721,9 +723,9 @@ class ReadPeriodically(eg.ActionClass):
             fromLine,
             min = 1,
             max = 999,
-        )        
+        )
         rb0 = panel.RadioButton(not direction, text.begin, style=wx.RB_GROUP)
-        rb1 = panel.RadioButton(direction, text.end)                            
+        rb1 = panel.RadioButton(direction, text.end)
         lblAhead = wx.StaticText(panel, -1, text.readAhead)
         lblBehind = wx.StaticText(panel, -1, text.readBehind)
         linesNumCtrl = eg.SpinIntCtrl(
@@ -776,14 +778,14 @@ class ReadPeriodically(eg.ActionClass):
         periodSizer = wx.BoxSizer(wx.HORIZONTAL)
         periodSizer.Add(intervalLbl,0, wx.TOP|wx.RIGHT, 4)
         periodSizer.Add(periodNumCtrl,0, wx.RIGHT)
-        
+
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(fileText,0,wx.EXPAND)
         mainSizer.Add(filepathCtrl,0,wx.EXPAND)
         mainSizer.Add(topSizer,0,wx.TOP|wx.EXPAND,5)
-        mainSizer.Add(linesSizer,0,wx.TOP|wx.EXPAND,11)        
+        mainSizer.Add(linesSizer,0,wx.TOP|wx.EXPAND,11)
         mainSizer.Add(fromSizer,0,wx.TOP|wx.EXPAND,11)
-        bottomSizer = wx.FlexGridSizer(4,0,2,25)       
+        bottomSizer = wx.FlexGridSizer(4,0,2,25)
         bottomSizer.AddGrowableCol(0,1)
         bottomSizer.AddGrowableCol(1,1)
         bottomSizer.Add(labelMode,0,wx.EXPAND)
@@ -796,7 +798,7 @@ class ReadPeriodically(eg.ActionClass):
         bottomSizer.Add(triggerCtrl,0,wx.EXPAND)
         mainSizer.Add(bottomSizer,0,wx.TOP|wx.EXPAND,11)
         panel.sizer.Add(mainSizer,0,wx.EXPAND)
-        
+
         def onLinesNumCtrl(event=None):
             flag = False
             if event:
@@ -810,11 +812,11 @@ class ReadPeriodically(eg.ActionClass):
                 rb0.Enable(False)
                 rb1.Enable(False)
             else:
-                lineNumLbl.Enable(True)                
+                lineNumLbl.Enable(True)
                 fromLineNumCtrl.Enable(True)
                 rb0.Enable(True)
                 rb1.Enable(True)
-            
+
             if linesNumCtrl.GetValue() == 1:
                 choiceMode.Clear()
                 choiceMode.AppendItems(strings=(text.oneNotIncluding,text.oneIncluding))
@@ -823,7 +825,7 @@ class ReadPeriodically(eg.ActionClass):
                     choiceMode.Clear()
                     choiceMode.AppendItems(
                         strings=(text.listNotIncluding,text.listIncluding,text.oneString)
-                    )    
+                    )
                     if self.mode == 2:
                         flag = True
             if event:
@@ -834,7 +836,7 @@ class ReadPeriodically(eg.ActionClass):
             choiceMode.SetSelection(self.mode)
         linesNumCtrl.Bind(wx.EVT_SPIN, onLinesNumCtrl)
         onLinesNumCtrl()
-            
+
         while panel.Affirmed():
             inCoding = inPageCtrl.GetSelection()
             pgTpl = (eg.systemEncoding, 'utf8')
@@ -854,7 +856,7 @@ class ReadPeriodically(eg.ActionClass):
             panel.SetResult(
                 setup
             )
-#===============================================================================            
+#===============================================================================
 
 class Write(eg.ActionClass):
     name = "Write text to file"
@@ -879,7 +881,7 @@ class Write(eg.ActionClass):
         ignore = "Ignore (skip bad chars)"
         replace = "Replace bad chars"
         internal = 'unicode internal'
-    
+
     def __call__(
         self,
         outCoding,
@@ -894,7 +896,7 @@ class Write(eg.ActionClass):
     ):
         modeStr = 'w' if mode==0 else 'a'
         stamp = time.strftime('%y-%m-%d %H:%M:%S')+'  ' if times else ''
-        cr = '\r\n' if mode == 2 else ''        
+        cr = '\r\n' if mode == 2 else ''
         errorList = ('strict','ignore','replace')
         string = eg.ParseString(string)
         fileName = eg.ParseString(fileName)
@@ -905,23 +907,23 @@ class Write(eg.ActionClass):
             else:
                 string = String2Hex(string,'4')
             outPage = 'ascii'
-            
+
         try:
-            file = codecs.open(fileName, modeStr, outPage, errorList[errEncMode]) 
+            file = codecs.open(fileName, modeStr, outPage, errorList[errEncMode])
         except:
             raise
         try:
             file.write('%s%s%s' % (stamp, string, cr))
         except:
             raise
-        try:    
+        try:
             file.close()
         except:
             raise
         if log:
             print string
         return string
-            
+
     def GetLabel(
         self,
         outCoding,
@@ -951,14 +953,14 @@ class Write(eg.ActionClass):
         from codecsList import codecsList
         panel = eg.ConfigPanel(self)
         text = self.text
-    #Controls    
+    #Controls
         stringText = wx.StaticText(panel, -1, text.inString)
         outPageText = wx.StaticText(panel, -1, text.outputPage)
         labelEncErrMode = wx.StaticText(panel, -1, text.txtEncErrMode)
         fileText = wx.StaticText(panel, -1, text.FilePath)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
-            -1, 
+            panel,
+            -1,
             initialValue=fileName,
             labelText="",
             fileMask="*.*",
@@ -974,8 +976,8 @@ class Write(eg.ActionClass):
         )
         stringCtrl = wx.TextCtrl(panel, -1, string, style=wx.TE_NOHIDESEL)
         radioBoxMode = wx.RadioBox(
-            panel, 
-            -1, 
+            panel,
+            -1,
             text.txtModeMulti,
             choices=[text.overwrite, text.append, text.newLine],
             style=wx.RA_SPECIFY_ROWS
@@ -1007,9 +1009,9 @@ class Write(eg.ActionClass):
         topSizer.Add(outPageCtrl,0,wx.EXPAND)
         topSizer.Add(choiceEncErrMode,0,wx.EXPAND)
         chkBoxSizer = wx.BoxSizer(wx.VERTICAL)
-        chkBoxSizer.Add(writeToLogCheckBox,0,wx.TOP|wx.LEFT,12)        
-        chkBoxSizer.Add(timesCheckBox,0,wx.TOP|wx.LEFT,12)     
-        chkBoxSizer.Add(hexCheckBox,0,wx.TOP|wx.LEFT,12)     
+        chkBoxSizer.Add(writeToLogCheckBox,0,wx.TOP|wx.LEFT,12)
+        chkBoxSizer.Add(timesCheckBox,0,wx.TOP|wx.LEFT,12)
+        chkBoxSizer.Add(hexCheckBox,0,wx.TOP|wx.LEFT,12)
         bottomSizer = wx.GridSizer(1,2,1,10)
         bottomSizer.Add(radioBoxMode,0,wx.TOP|wx.EXPAND,5)
         bottomSizer.Add(chkBoxSizer,1,wx.EXPAND)
@@ -1031,5 +1033,5 @@ class Write(eg.ActionClass):
                 timesCheckBox.IsChecked(),
                 hexCheckBox.IsChecked(),
                 outPageCtrl.GetStringSelection() if outCoding > 2 else pgTpl[outCoding],
-            )        
+            )
 #===============================================================================

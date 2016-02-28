@@ -4,7 +4,7 @@ import eg
 eg.RegisterPlugin(
     name = "Advanced IR-Transceiver",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.0.1093",
     kind = "remote",
     guid = "{9BE52B40-66A0-46D4-B88B-A8C1B6B42CAA}",
     description = 'Hardware plugin for the "Advanced IR-Transceiver".',
@@ -159,14 +159,14 @@ def hexstring2bin(str):
 
 
 class AIRT(eg.PluginClass):
-    
+
     def __init__(self):
         self.devicename = 'AIRT'
         self.thread = None
         self.AddEvents()
         self.AddAction(SendIR)
-        
-        
+
+
     @eg.LogIt
     def __start__(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
         self.remotes = remotes
@@ -178,11 +178,11 @@ class AIRT(eg.PluginClass):
         self.serialThread.Start()
         self.serialThread.Write("\x00\x00\x00")
 
-    
+
     def __stop__(self):
         self.serialThread.Close()
-        
-        
+
+
     def HandleReceive(self, serial):
         byte = ord(serial.Read(1))
         if byte == 6:
@@ -209,7 +209,7 @@ class AIRT(eg.PluginClass):
                 table = None
             else:
                 return
-            eventString = str(x10Id + 1) + "."            
+            eventString = str(x10Id + 1) + "."
             if (
                 (ord(data[5]) == 0x79 and ord(data[1]) == 1)
                 or (ord(data[5]) == 0x7D and ord(data[1]) == 1)
@@ -217,7 +217,7 @@ class AIRT(eg.PluginClass):
             ):
                 self.EndLastEvent()
                 return
-            else:    
+            else:
                 if table is not None and ord(data[5]) in table:
                     eventString += table[ord(data[5])]
                 else:
@@ -238,7 +238,7 @@ class AIRT(eg.PluginClass):
         panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         remoteCtrl = eg.RadioButtonGrid(
-            panel, 
+            panel,
             rows=["None", "Medion", "ATI", "X10"],
             columns=[str(i) for i in range(1, 17)]
         )
@@ -248,15 +248,15 @@ class AIRT(eg.PluginClass):
         panel.sizer.Add((10, 10))
         panel.sizer.Add(wx.StaticText(panel, -1, 'RF Remotes:'))
         panel.sizer.Add(remoteCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue(), remoteCtrl.GetValue())
-                    
+
 
 
 class SendIR(eg.ActionClass):
     name = "Send IR"
-    
+
     def __call__(self, data, repeats=1, block=True):
         if len(data) > 7:
             repeats = ord(data[7])
@@ -272,24 +272,24 @@ class SendIR(eg.ActionClass):
         if block and repeats != 0:
             event.wait(2.0)
             #print "block done"
-            
-            
+
+
     def GetLabel(self, data, repeats=1, block=True):
         return bin2hexstring(data)
-    
-    
+
+
     def Configure(
-        self, 
-        data='\x00\x00\x00\x00\x00\x00\x00\x00', 
-        repeats=1, 
+        self,
+        data='\x00\x00\x00\x00\x00\x00\x00\x00',
+        repeats=1,
         block=False
     ):
         panel = eg.ConfigPanel()
         dataCtrl = panel.TextCtrl(bin2hexstring(data))
         panel.sizer.Add(dataCtrl, 0, wx.EXPAND)
-        
+
         while panel.Affirmed():
             datastr = dataCtrl.GetValue()
             data = hexstring2bin(datastr)
             panel.SetResult(data, 1, True)
-    
+

@@ -5,29 +5,25 @@
 # Copyright (C) 2008 Stefan Gollmer
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
-# $LastChangedRevision: 1093 $
-# $LastChangedBy: Bitmonster $
-
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name        = "Hauppauge IR",
     author      = "Stefan Gollmer",
-    version     = "1.04." + "$LastChangedRevision: 1093 $".split()[1],
+    version     = "1.04.1093",
     kind        = "remote",
     guid        = "{B54E7F32-E117-4C24-A892-9D69BC290568}",
     description = (
@@ -35,7 +31,7 @@ eg.RegisterPlugin(
                     '<a href="http://www.hauppauge.com">'
                     'Hauppauge IR Control</a>, '
                     'delivered with several Hauppauge TV cards'
-        
+
                   ),
     help        = (
                     'This plugin is using the file "irremote.DLL" which is located in '
@@ -49,7 +45,7 @@ eg.RegisterPlugin(
         "DyIcHBwYDhw4AKdxqWfEphlmAAwgGYChB6cBxLoawwCYzQ8ePGBQUFCA00guwW9AQ0MD"
         "XDFyOIAAVI7GXqDYBRSHwTAKRGyAKBfg1g40gBgXUOoFQoZgqAcAnwlSETUFcqwAAAAA"
         "SUVORK5CYII="
-    )    
+    )
 )
 
 
@@ -298,7 +294,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
     """
     A thread with a hidden window to receive win32 messages from the driver
     """
-    
+
     @eg.LogIt
     def Setup(  self,
                 plugin,
@@ -322,30 +318,30 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.defaultPollTime = -1
 
         self.LastKeyCode = -1
-        
-        self.checkRepeatFlag = checkRepeatFlag        
 
-        self.repeatCode = c_int(0)        
+        self.checkRepeatFlag = checkRepeatFlag
+
+        self.repeatCode = c_int(0)
         self.systemCode = c_int(0)
         self.keyCode    = c_int(0)
-                
+
         self.lastEvent = eg.EventGhostEvent()
         self.keyStillPressed = False
         self.initTerminated = False
-        
+
         self.timerInit = None
         self.timerKey = None
-        
+
         self.hwnd = None
         self.dll  = None
 
         # load irremote.dll
-        
+
         try:
             regHandle = _winreg.OpenKey(
-                           _winreg.HKEY_LOCAL_MACHINE, 
-                           'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Hauppauge WinTV Infrared Remote', 
-                           0, 
+                           _winreg.HKEY_LOCAL_MACHINE,
+                           'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Hauppauge WinTV Infrared Remote',
+                           0,
                            _winreg.KEY_READ
                         )
 
@@ -371,11 +367,11 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.IR_Close            = WINFUNCTYPE( c_int, HWND, c_int )
         self.IR_GetSystemKeyCode = WINFUNCTYPE( c_int, POINTER( c_int), POINTER( c_int), POINTER( c_int) )
         self.TIMERPROC           = WINFUNCTYPE( None, HWND, c_uint, c_uint, DWORD )
-        
+
         self.IR_Open             = self.dll.IR_Open
         self.IR_Close            = self.dll.IR_Close
         self.IR_GetSystemKeyCode = self.dll.IR_GetSystemKeyCode
-        
+
         wc = WNDCLASS()
         wc.hInstance = GetDesktopWindow()
         wc.lpszClassName = "HaupPluginEventSinkWndClass"
@@ -386,20 +382,20 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
             wc.lpszClassName,
             "HaupaugePlugin Event Window",
             WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            0, 
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
             0,
-            wc.hInstance, 
+            0,
+            wc.hInstance,
             None
         )
         if not self.hwnd:
             raise WinError()
         self.wc = wc
         self.hinst = wc.hInstance
-        
+
         self.timerInit = Timer( initTime, self.PostInit)        # Init delayed init timer ( in case of standby problems)
         self.timerInit.start()
 
@@ -417,13 +413,13 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
 
         if self.dll:
             self.dll.IR_Close(self.hwnd, 0);
-        
+
         #print "Irremote is stopped"
 
         if self.timerInit :
             self.timerInit.cancel()
             #print "Init aborted"
-            
+
         if self.hwnd:
             windll.user32.KillTimer(self.hwnd, 1)
             DestroyWindow(self.hwnd)
@@ -433,12 +429,12 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         if self.defaultPollTime != -1 :
 
             regHandle = _winreg.OpenKey(
-                            _winreg.HKEY_LOCAL_MACHINE, 
-                            'SOFTWARE\hauppauge\IR', 
-                            0, 
+                            _winreg.HKEY_LOCAL_MACHINE,
+                            'SOFTWARE\hauppauge\IR',
+                            0,
                             _winreg.KEY_WRITE | _winreg.KEY_READ
             )
-            
+
             _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(self.defaultPollTime) )
 
             _winreg.CloseKey( regHandle )
@@ -458,19 +454,19 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
                 repeat = ( self.repeatCode.value == 0 )
                 if ( not repeat and self.checkRepeatFlag ) or not ( self.keyStillPressed and self.LastKeyCode == key ) :
                     self.LastKeyCode = key
-                    
+
                     if not self.systemCode.value in HauppaugeIRTable:
                         eventString = "%d" % key
                     elif key in HauppaugeIRTable[ self.systemCode.value ]:
                         eventString = HauppaugeIRTable[ self.systemCode.value ][key]
                     else:
                         eventString = "%d" % key
-                    
+
                     self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)
                     self.keyStillPressed = True
 
                     releaseTime = self.waitTime
-                else :                    
+                else :
                     releaseTime = self.repeatReleaseTime
 
                 self.timerKey = Timer(releaseTime, self.OnTimeOut)
@@ -488,7 +484,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
 
     @eg.LogIt
     def PostInit( self ) :
-    
+
         self.lock.acquire()
         if self.abort :
             self.lock.release()
@@ -501,9 +497,9 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         if ( not self.useDefaultPollTime ) :
 
             regHandle = _winreg.OpenKey(
-                            _winreg.HKEY_LOCAL_MACHINE, 
-                            'SOFTWARE\hauppauge\IR', 
-                            0, 
+                            _winreg.HKEY_LOCAL_MACHINE,
+                            'SOFTWARE\hauppauge\IR',
+                            0,
                             _winreg.KEY_WRITE | _winreg.KEY_READ
             )
 
@@ -533,9 +529,9 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
             else :
                 #print "Irremote is started"
                 pass
-                
+
         del self.timerInit
-        self.timerInit = None 
+        self.timerInit = None
         self.lock.release()
 
 
@@ -551,7 +547,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
 
 
 class HauppaugeIR(eg.PluginClass):
-    
+
     class text:
         buttonTimeout = "Button release timeout (seconds):"
         buttonTimeoutDescr = (
@@ -562,18 +558,18 @@ class HauppaugeIR(eg.PluginClass):
         pollTime        = "Poll time (seconds)"
         buttonPollTime  = "Use default poll time (0.2s)"
         checkRepeatFlag = "Use the repeat flag of the IR"
-        
+
     def __init__( self ) :
         self.AddAction(Restart)
         self.AddAction(OnComputerSuspend, hidden = True )   # For test only
         self.AddAction(OnComputerResume, hidden = True )    # For test only
-        
+
         self.waitTime = -1
         self.repeatReleaseTime = -1
         self.pollTime = -1
         self.initTime = -1
         self.useDefaultPollTime = True
-        
+
         self.started = False
         self.config = False
 
@@ -594,14 +590,14 @@ class HauppaugeIR(eg.PluginClass):
             self.initTime = initTime
             self.useDefaultPollTime = useDefaultPollTime
             self.checkRepeatFlag = checkRepeatFlag
-        
+
         if self.config :
             initTime = 1.0
             self.config = False
         else :
             initTime = self.initTime
-        self.msgThread = HauppaugeIRMessageReceiver( self, 
-                                self.waitTime, 
+        self.msgThread = HauppaugeIRMessageReceiver( self,
+                                self.waitTime,
                                 self.pollTime,
                                 self.useDefaultPollTime,
                                 initTime,
@@ -622,7 +618,7 @@ class HauppaugeIR(eg.PluginClass):
     @eg.LogIt
     def OnComputerResume(self, suspendType = None):
         if self.started :
-            self.__start__()     
+            self.__start__()
 
 
 
@@ -647,37 +643,37 @@ class HauppaugeIR(eg.PluginClass):
                     repeatReleaseTime = 200 ):
         panel = eg.ConfigPanel(self)
         text = self.text
-        
+
         def onCheckBox( event ) :
             enable = not useDefaultPollTimeCtrl.GetValue()
             pollTimeCtrl.Enable( enable )
             event.Skip()
-        
+
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, min=0, max=999, fractionWidth=0, integerWidth=3)
         repeatReleaseTimeCtrl = panel.SpinNumCtrl(repeatReleaseTime, min=0, max=999, fractionWidth=0, integerWidth=3)
 
         useDefaultPollTimeCtrl = wx.CheckBox(panel, -1, text.buttonPollTime)
         useDefaultPollTimeCtrl.SetValue( useDefaultPollTime )
         useDefaultPollTimeCtrl.Bind(wx.EVT_CHECKBOX, onCheckBox)
-        
+
         pollTimeCtrl = panel.SpinNumCtrl(pollTime, min=0, max=999, fractionWidth=0, integerWidth=3)
-        
+
         checkRepeatFlagCtrl = wx.CheckBox(panel, -1, text.checkRepeatFlag)
         checkRepeatFlagCtrl.SetValue( checkRepeatFlag )
-        
+
         sizer = wx.GridBagSizer( 5, 5 )
         sizer.Add( wx.StaticText( panel, -1, text.buttonTimeout ),
                                          ( 0, 0 ),(1,2), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
         sizer.Add( waitTimeCtrl, ( 0, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
-        
+
         sizer.Add( wx.StaticText( panel, -1, text.buttonTimeoutDescr ),
                                          ( 1, 0 ),(1,3), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
-                                         
+
 
         sizer.Add( wx.StaticText( panel, -1, text.repeatReleaseTime ),
                                          ( 3, 0 ),(1,2), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
         sizer.Add( repeatReleaseTimeCtrl, ( 3, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
-        
+
 
 
         sizer.Add( useDefaultPollTimeCtrl, ( 5, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
@@ -686,21 +682,21 @@ class HauppaugeIR(eg.PluginClass):
                                          ( 5, 1 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
         sizer.Add( pollTimeCtrl, ( 5, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
         sizer.Add( checkRepeatFlagCtrl, ( 7, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
-        
+
 
 
         panel.sizer.Add( sizer, 0 )
 
         onCheckBox(wx.CommandEvent())
-        
+
         while panel.Affirmed():
-        
+
             waitTime           = waitTimeCtrl.GetValue()
             repeatReleaseTime  = repeatReleaseTimeCtrl.GetValue()
             pollTime           = pollTimeCtrl.GetValue()
             useDefaultPollTime = useDefaultPollTimeCtrl.GetValue()
             checkRepeatFlag    = checkRepeatFlagCtrl.GetValue()
-            
+
             panel.SetResult( waitTime, pollTime, useDefaultPollTime, checkRepeatFlag, repeatReleaseTime )
             self.config = True
 

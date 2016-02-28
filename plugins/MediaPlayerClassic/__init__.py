@@ -5,19 +5,21 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2012 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-    
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+
 # Changelog (in reverse chronological order):
 # -------------------------------------------
 # 2.9 by Pako 2015-01-12 19:23 UTC+1
@@ -111,7 +113,7 @@ from win32api import EnumDisplayMonitors
 from eg.WinApi.Dynamic import PostMessage
 from eg.WinApi.Dynamic import CreateEvent, SetEvent, GetWindowLong
 from threading import Timer
-from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetWindowPlacement 
+from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetWindowPlacement
 from win32gui import GetClassName, GetWindowText, IsWindowVisible, GetWindowRect
 from win32gui import GetDlgItem, SendMessage, FindWindow, IsWindow, GetWindow
 from copy import deepcopy as cpy
@@ -155,7 +157,7 @@ def Find_MPC():
     return mpchc()
 #===============================================================================
 
-class MPC_OSDDATA(Structure): 
+class MPC_OSDDATA(Structure):
     _fields_ = [
         ("nMsgPos", c_int),       #// screen position constant (see OSD_MESSAGEPOS constants)
         ("nDurationMS", c_int),   #// duration in milliseconds
@@ -206,20 +208,20 @@ CMD_PLAYLIST           = 0x50000006 #   // List of files in the playlist
                                     #   // Par n : active file, -1 if no active file
 
 CMD_CURRENTPOSITION		= 0x50000007
-	 #Send current playback position in responce
-	 #of CMD_GETCURRENTPOSITION.
-	 #Par 1 : current position in seconds
-	
+     #Send current playback position in responce
+     #of CMD_GETCURRENTPOSITION.
+     #Par 1 : current position in seconds
+
 
 CMD_NOTIFYSEEK			= 0x50000008
-	 #Send the current playback position after a jump.
-	 #(Automatically sent after a seek event).
-	 #Par 1 : new playback position (in seconds).
+     #Send the current playback position after a jump.
+     #(Automatically sent after a seek event).
+     #Par 1 : new playback position (in seconds).
 
 CMD_NOTIFYENDOFSTREAM	= 0x50000009
-	 #Notify the end of current playback
-	 #(Automatically sent).
-	 #Par 1 : none.
+     #Notify the end of current playback
+     #(Automatically sent).
+     #Par 1 : none.
 
 # ==== Commands from host to MPC
 
@@ -330,7 +332,7 @@ class FixedWidth(wx.FontEnumerator):
         self.fontList = []
 
     def OnFacename(self, fontname):
-        if not fontname.startswith("@"): 
+        if not fontname.startswith("@"):
             self.fontList.append(fontname)
 #===============================================================================
 
@@ -487,7 +489,7 @@ class EventListCtrl(wx.ListCtrl):
 
     def __init__(self, parent, id, evtList, ix, plugin):
         width = 205
-        wx.ListCtrl.__init__(self, parent, id, style=wx.LC_REPORT | 
+        wx.ListCtrl.__init__(self, parent, id, style=wx.LC_REPORT |
             wx.LC_NO_HEADER | wx.LC_SINGLE_SEL, size = (width, -1))
         self.parent = parent
         self.id = id
@@ -501,9 +503,9 @@ class EventListCtrl(wx.ListCtrl):
         self.InsertColumn(0, '')
         self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSelect)
-        self.Bind(wx.EVT_SET_FOCUS, self.OnChange) 
-        self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange) 
-        self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange) 
+        self.Bind(wx.EVT_SET_FOCUS, self.OnChange)
+        self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange)
+        self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
         self.SetToolTipString(self.plugin.text.toolTip)
 
@@ -540,12 +542,12 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnDeleteButton(self, event=None):
         self.DeleteItem(self.sel)
-        self.evtList[self.ix].pop(self.sel)       
+        self.evtList[self.ix].pop(self.sel)
         evt = eg.ValueChangedEvent(self.id, value = self)
         wx.PostEvent(self, evt)
         if event:
             event.Skip()
-        
+
 
     def OnDeleteAllButton(self, event=None):
         self.DeleteAllItems()
@@ -566,7 +568,7 @@ class EventListCtrl(wx.ListCtrl):
 
     def SetItems(self, evtList):
         for i in range(len(evtList)):
-            self.InsertImageStringItem(i, evtList[i], 0) 
+            self.InsertImageStringItem(i, evtList[i], 0)
 #===============================================================================
 
 class GoToFrame(wx.Frame):
@@ -614,7 +616,7 @@ class GoToFrame(wx.Frame):
         if ix > max:
             ix = 0
         elif ix == -1:
-            ix = max    
+            ix = max
         self.pos = self.posList[ix]
         wx.CallAfter(self.UpdateOSD)
 
@@ -868,31 +870,31 @@ class MenuEventsDialog(wx.MiniFrame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.SetMinSize((450, 308))
         topSizer=wx.GridBagSizer(2, 20)
-        textLbl_0=wx.StaticText(self, -1, labels[0])        
+        textLbl_0=wx.StaticText(self, -1, labels[0])
         id = wx.NewId()
         eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.plugin)
         eventsCtrl_0.SetItems(self.evtList[0])
         dt0 = MyTextDropTarget(eventsCtrl_0)
         eventsCtrl_0.SetDropTarget(dt0)
-        textLbl_1=wx.StaticText(self, -1, labels[1])       
-        id = wx.NewId()        
+        textLbl_1=wx.StaticText(self, -1, labels[1])
+        id = wx.NewId()
         eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.plugin)
         eventsCtrl_1.SetItems(self.evtList[1])
         dt1 = MyTextDropTarget(eventsCtrl_1)
         eventsCtrl_1.SetDropTarget(dt1)
-        textLbl_2=wx.StaticText(self, -1, labels[2])        
+        textLbl_2=wx.StaticText(self, -1, labels[2])
         id = wx.NewId()
         eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.plugin)
         eventsCtrl_2.SetItems(self.evtList[2])
         dt2 = MyTextDropTarget(eventsCtrl_2)
         eventsCtrl_2.SetDropTarget(dt2)
-        textLbl_3=wx.StaticText(self, -1, labels[3])        
-        id = wx.NewId()        
+        textLbl_3=wx.StaticText(self, -1, labels[3])
+        id = wx.NewId()
         eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.plugin)
         eventsCtrl_3.SetItems(self.evtList[3])
         dt3 = MyTextDropTarget(eventsCtrl_3)
         eventsCtrl_3.SetDropTarget(dt3)
-        textLbl_4=wx.StaticText(self, -1, labels[4])        
+        textLbl_4=wx.StaticText(self, -1, labels[4])
         id = wx.NewId()
         eventsCtrl_4 = EventListCtrl(self, id, self.evtList, 4, self.plugin)
         eventsCtrl_4.SetItems(self.evtList[4])
@@ -905,7 +907,7 @@ class MenuEventsDialog(wx.MiniFrame):
         deleteSizer.Add(delOneBtn, 1, wx.EXPAND)
         deleteSizer.Add(delBoxBtn, 1, wx.EXPAND|wx.TOP,5)
         deleteSizer.Add(clearBtn, 1, wx.EXPAND|wx.TOP,5)
-        
+
         topSizer.Add(textLbl_0, (0,0))
         topSizer.Add(eventsCtrl_0, (1,0), flag = wx.EXPAND)
         topSizer.Add(textLbl_1, (0,1))
@@ -949,12 +951,12 @@ class MenuEventsDialog(wx.MiniFrame):
             delOneBtn.Enable(flag)
             delBoxBtn.Enable(flag)
             evt.Skip()
-        eventsCtrl_0.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
-        eventsCtrl_1.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
-        eventsCtrl_2.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
-        eventsCtrl_3.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
-        eventsCtrl_4.Bind(eg.EVT_VALUE_CHANGED, onFocus)      
-      
+        eventsCtrl_0.Bind(eg.EVT_VALUE_CHANGED, onFocus)
+        eventsCtrl_1.Bind(eg.EVT_VALUE_CHANGED, onFocus)
+        eventsCtrl_2.Bind(eg.EVT_VALUE_CHANGED, onFocus)
+        eventsCtrl_3.Bind(eg.EVT_VALUE_CHANGED, onFocus)
+        eventsCtrl_4.Bind(eg.EVT_VALUE_CHANGED, onFocus)
+
 
         def onDelOneBtn(evt):
             self.ctrl.OnDeleteButton()
@@ -962,7 +964,7 @@ class MenuEventsDialog(wx.MiniFrame):
             delBoxBtn.Enable(False)
             evt.Skip()
         delOneBtn.Bind(wx.EVT_BUTTON, onDelOneBtn)
-        
+
 
         def onDelBoxBtn(evt):
             self.ctrl.OnDeleteAllButton()
@@ -993,7 +995,7 @@ class MenuEventsDialog(wx.MiniFrame):
             self.Destroy()
             self.panel.setFocus()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
 
         def onCancel(evt):
             self.panel.Enable(True)
@@ -1001,13 +1003,13 @@ class MenuEventsDialog(wx.MiniFrame):
             self.panel.EnableButtons(True)
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
 
         def onOK(evt):
             self.panel.evtList = self.evtList
             self.Close()
         btn1.Bind(wx.EVT_BUTTON,onOK)
-        
+
         sizer.Layout()
         self.Raise()
         self.Show()
@@ -1038,7 +1040,7 @@ class Menu(wx.Frame):
             x,y,ws,hs = monDim[self.monitor]
         except IndexError:
             x,y,ws,hs = monDim[0]
-        # menu height calculation:                                
+        # menu height calculation:
         h=self.GetCharHeight()+4
         for i in range(len(self.choices)):
             self.menuGridCtrl.SetRowSize(i,h)
@@ -1142,7 +1144,7 @@ class Menu(wx.Frame):
         font = wx.FontFromNativeInfoString(fontInfo)
         self.menuGridCtrl.SetFont(font)
         arial = wx.FontFromNativeInfoString(arialInfoString)
-        self.SetFont(font)            
+        self.SetFont(font)
         hght = self.GetTextExtent('X')[1]
         for n in range(1,1000):
             arial.SetPointSize(n)
@@ -1151,7 +1153,7 @@ class Menu(wx.Frame):
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
-        self.SetFont(arial)            
+        self.SetFont(arial)
         self.w0 = 2 * self.GetTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
@@ -1164,13 +1166,13 @@ class Menu(wx.Frame):
             if h > hght:
                 break
         arial.SetPointSize(n/2)
-        self.SetFont(arial)            
+        self.SetFont(arial)
         self.w2 = 2 * self.GetTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
         self.menuGridCtrl.SetColAttr(2,attr)
-        self.SetFont(font)                        
+        self.SetFont(font)
         self.SetBackgroundColour((0, 0, 0))
         self.menuGridCtrl.SetBackgroundColour(self.back)
         self.menuGridCtrl.SetForegroundColour(self.fore)
@@ -1178,7 +1180,7 @@ class Menu(wx.Frame):
         self.menuGridCtrl.SetSelectionForeground(self.foreSel)
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
-        self.DrawMenu(ix)    
+        self.DrawMenu(ix)
         wx.Yield()
         SetEvent(event)
 
@@ -1191,7 +1193,7 @@ class Menu(wx.Frame):
             self.items = GetItemList(self.menu, self.hWnd)
         self.choices = [item[0] for item in self.items]
         self.menuGridCtrl.Set(self.items)
-        self.DrawMenu(ix)    
+        self.DrawMenu(ix)
 
 
     def MoveCursor(self, step):
@@ -1342,13 +1344,13 @@ class AfterPlaybackOnce(eg.ActionClass):
 
     def GetLabel(self, action):
         return "%s: %s" % (self.name, self.text.choices[action])
-            
+
 
     def Configure(self, action = -1):
         panel = eg.ConfigPanel()
         label = wx.StaticText(panel, -1, self.text.label)
         ctrl = wx.Choice(panel, -1, choices = self.text.choices)
-        eg.EqualizeWidths((label, ctrl))        
+        eg.EqualizeWidths((label, ctrl))
         ctrl.SetSelection(action)
         panel.sizer.Add(label, 0, wx.TOP, 20)
         panel.sizer.Add(ctrl, 0, wx.TOP, 3)
@@ -1379,7 +1381,7 @@ class AfterPlayback(eg.ActionClass):
                 )
             else:
                 raise self.Exceptions.ProgramNotRunning
-            
+
 
     def GetLabel(self, action):
         return "%s: %s" % (self.name, self.text.choices[action])
@@ -1389,7 +1391,7 @@ class AfterPlayback(eg.ActionClass):
         panel = eg.ConfigPanel()
         label = wx.StaticText(panel, -1, self.text.label)
         ctrl = wx.Choice(panel, -1, choices = self.text.choices)
-        eg.EqualizeWidths((label, ctrl))        
+        eg.EqualizeWidths((label, ctrl))
         ctrl.SetSelection(action)
         panel.sizer.Add(label, 0, wx.TOP, 20)
         panel.sizer.Add(ctrl, 0, wx.TOP, 3)
@@ -1439,14 +1441,14 @@ You can of course also use an expression such as **{eg.result}** or **{eg.event.
 #===============================================================================
 
 class ActionPrototype(eg.ActionBase):
-    
+
     def __call__(self):
         if self.plugin.runFlg and self.plugin.mpcHwnd:
             wx.CallAfter(SendMessage,self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
 #===============================================================================
 
 class GetWindowState(eg.ActionBase):
-    
+
     class text:
         rbLabel = "Result type choice"
         numVal = "Return a numeric value"
@@ -1544,7 +1546,7 @@ class GetWindowState(eg.ActionBase):
 #===============================================================================
 
 class GetNowPlaying(eg.ActionBase):
-    
+
     def __call__(self):
         hWnd = Find_MPC()
         if not hWnd:
@@ -1719,18 +1721,18 @@ class GoTo_OSD(eg.ActionBase):
         topSizer=wx.GridBagSizer(2, 30)
         mainSizer.Add(topSizer)
         topSizer.Add(previewLbl,(0, 0),flag = wx.TOP,border = 0)
-        topSizer.Add((160,-1),(1, 0),(3, 1),flag = wx.EXPAND)    
+        topSizer.Add((160,-1),(1, 0),(3, 1),flag = wx.EXPAND)
         topSizer.Add(foreLbl,(0, 1),flag = wx.TOP,border = 0)
         topSizer.Add(foreColourButton,(1, 1),flag = wx.TOP)
         topSizer.Add(backLbl,(2, 1),flag = wx.TOP,border = 8)
-        topSizer.Add(backColourButton,(3, 1),flag = wx.TOP)        
+        topSizer.Add(backColourButton,(3, 1),flag = wx.TOP)
         topSizer.Add(foreSelLbl,(4, 1), (1, 2), flag = wx.TOP,border = 8)
         topSizer.Add(foreSelColourButton, (5, 1), flag = wx.TOP)
         topSizer.Add(backSelLbl,(6, 1), (1, 2), flag = wx.TOP,border = 8)
         topSizer.Add(backSelColourButton, (7, 1), flag = wx.TOP)
         topSizer.Add(useInvertedCtrl, (8, 1))
         topSizer.Add(OSElbl,(0, 2), flag = wx.TOP)
-        topSizer.Add(displayChoice,(1, 2),flag = wx.TOP)        
+        topSizer.Add(displayChoice,(1, 2),flag = wx.TOP)
         topSizer.Add(dialogButton, (3, 2), flag = wx.TOP)
         #Font face
         fw = FixedWidth()
@@ -1751,10 +1753,10 @@ class GoTo_OSD(eg.ActionBase):
             return str(value)
 
         fontSizeCtrl = eg.Slider(
-            panel, 
-            value = sizeFont, 
-            min=20, 
-            max=120, 
+            panel,
+            value = sizeFont,
+            min=20,
+            max=120,
             style = wx.SL_TOP,
             size=(160,-1),
             levelCallback=LevelCallback
@@ -2026,7 +2028,7 @@ class ShowMenu(eg.ActionClass):
                 break
         listBoxCtrl.SetDefaultCellFont(font)
         arial = wx.FontFromNativeInfoString(arialInfoString)
-        fontButton.SetFont(font)            
+        fontButton.SetFont(font)
         for n in range(1,1000):
             arial.SetPointSize(n)
             fontButton.SetFont(arial)
@@ -2034,7 +2036,7 @@ class ShowMenu(eg.ActionClass):
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
-        fontButton.SetFont(arial)            
+        fontButton.SetFont(arial)
         w0 = 2 * fontButton.GetTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
@@ -2047,7 +2049,7 @@ class ShowMenu(eg.ActionClass):
             if h > hght:
                 break
         arial.SetPointSize(n/2)
-        fontButton.SetFont(arial)            
+        fontButton.SetFont(arial)
         w2 = 2 * fontButton.GetTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
@@ -2083,16 +2085,16 @@ class ShowMenu(eg.ActionClass):
         topSizer=wx.GridBagSizer(2, 30)
         mainSizer.Add(topSizer)
         topSizer.Add(previewLbl,(0, 0),flag = wx.TOP,border = 0)
-        topSizer.Add(listBoxCtrl,(1, 0),(4, 1))        
-        topSizer.Add(useInvertedCtrl,(6, 0),flag = wx.TOP, border = 8)        
+        topSizer.Add(listBoxCtrl,(1, 0),(4, 1))
+        topSizer.Add(useInvertedCtrl,(6, 0),flag = wx.TOP, border = 8)
         topSizer.Add(fontLbl,(0, 1),flag = wx.TOP)
-        topSizer.Add(fontButton,(1, 1),flag = wx.TOP)        
+        topSizer.Add(fontButton,(1, 1),flag = wx.TOP)
         topSizer.Add(foreLbl,(2, 1),flag = wx.TOP,border = 8)
         topSizer.Add(foreColourButton,(3, 1),flag = wx.TOP)
         topSizer.Add(backLbl,(4, 1),flag = wx.TOP,border = 8)
-        topSizer.Add(backColourButton,(5, 1),flag = wx.TOP)        
+        topSizer.Add(backColourButton,(5, 1),flag = wx.TOP)
         topSizer.Add(OSElbl,(0, 2), flag = wx.TOP)
-        topSizer.Add(displayChoice,(1, 2),flag = wx.TOP)        
+        topSizer.Add(displayChoice,(1, 2),flag = wx.TOP)
         topSizer.Add(foreSelLbl,(6, 1), (1, 2), flag = wx.TOP,border = 8)
         topSizer.Add(foreSelColourButton, (7, 1), flag = wx.TOP)
         topSizer.Add(backSelLbl,(8, 1), (1, 2), flag = wx.TOP,border = 8)
@@ -2207,7 +2209,7 @@ class ShowMenu(eg.ActionClass):
                         backColourButton.GetValue(),
                         foreSelColourButton.GetValue(),
                         backSelColourButton.GetValue(),
-                        self.fontInfo, 
+                        self.fontInfo,
                         True,
                         self.plugin,
                         self.event,
@@ -2241,7 +2243,7 @@ class Run(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.mpcPath:
-            self.plugin.ConnectMpcHc()        
+            self.plugin.ConnectMpcHc()
 #===============================================================================
 
 class MediaPlayerClassic(eg.PluginBase):
@@ -2375,10 +2377,10 @@ class MediaPlayerClassic(eg.PluginBase):
         elif not self.strtFlg:
             self.strtFlg = True
             self.myStart = eg.scheduler.AddTask(2, self.waitBeforeConnect)
-      
+
 
     def SendCopydata(self, cmd, txt):
-        if self.mpcHwnd is not None:        
+        if self.mpcHwnd is not None:
             cpyData = create_unicode_buffer(txt)
             cds = COPYDATASTRUCT()
             cds.dwData = cmd
@@ -2415,7 +2417,7 @@ class MediaPlayerClassic(eg.PluginBase):
         if hWnd:
             self.mpcHwnd = hWnd[0]
         eg.scheduler.AddTask(1, self.mpcIsRunning)
-    
+
 
     def __stop__(self):
         if self.mySched:
@@ -2429,27 +2431,27 @@ class MediaPlayerClassic(eg.PluginBase):
             except:
                 pass
 
-  
+
     def __close__(self):
         self.mr.RemoveHandler(WM_COPYDATA, self.Handler)
         self.mr.Stop()
         self.mr = None
-       
+
 
     def Configure(self, mpcPath=None):
         if mpcPath is None:
             mpcPath = self.GetMpcHcPath()
             if mpcPath is None:
                 mpcPath = join(
-                    eg.folderPath.ProgramFiles, 
-                    "MediaPlayerClassic", 
+                    eg.folderPath.ProgramFiles,
+                    "MediaPlayerClassic",
                     "mpc-hc.exe"
                 )
         panel = eg.ConfigPanel()
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(320,-1),
-            initialValue=mpcPath, 
+            initialValue=mpcPath,
             startDirectory=eg.folderPath.ProgramFiles,
             labelText="",
             fileMask = self.text.fileMask,
@@ -2463,16 +2465,16 @@ class MediaPlayerClassic(eg.PluginBase):
 
     def GetMpcHcPath(self):
         """
-        Get the path of MPC-HC's installation directory through querying 
+        Get the path of MPC-HC's installation directory through querying
         the Windows registry.
         """
         try:
             if "PROCESSOR_ARCHITEW6432" in environ:
-                args = [_winreg.HKEY_CURRENT_USER,            
+                args = [_winreg.HKEY_CURRENT_USER,
                     "Software\MPC-HC\MPC-HC"]
                 args.extend((0, _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY))
             else:
-                args = [_winreg.HKEY_CURRENT_USER,            
+                args = [_winreg.HKEY_CURRENT_USER,
                     "Software\Gabest\Media Player Classic"]
             mpc = _winreg.OpenKey(*args)
             mpcPath =_winreg.QueryValueEx(mpc, "ExePath")[0]
@@ -2536,7 +2538,7 @@ class OpenFile(eg.ActionBase):
 
 
     def Configure(self, filepath = ""):
-        panel = eg.ConfigPanel()    
+        panel = eg.ConfigPanel()
         folder = split(filepath)[0] if filepath else eg.folderPath.Videos
         filepathLabel = wx.StaticText(panel, -1, "%s:" % self.text.browseFile)
         filepathCtrl = eg.FileBrowseButton(
@@ -2706,7 +2708,7 @@ ACTIONS = (
     #    "Set the active file in the playlist",
     #    "Sets the active file in the playlist.",
     #    (CMD_SETINDEXPLAYLIST,4,-1,9)
-    #),    
+    #),
     ('OpenDVD', 'Open DVD', None, 801),
     ('OpenFileDialog', 'Show dialog "Open file"', None, 800),
     (OpenFile,"OpenFile","Open file","Opens file.",CMD_OPENFILE),
@@ -2865,8 +2867,8 @@ ACTIONS = (
     (GetPosition,"GetPosition","Get current position","Returns current position.",None),
     (GetInfo,"GetSubtitles","Get subtitles tracks","Asks for a list of the subtitles tracks of the file.",CMD_GETSUBTITLETRACKS),
     (GetInfo,"GetAdiotracks","Get audio tracks","Asks for a list of the audio tracks of the file.",CMD_GETAUDIOTRACKS),
-    (GetInfo,"GetPlaylist","Get playlist","Asks for the current playlist.",CMD_GETPLAYLIST),  
+    (GetInfo,"GetPlaylist","Get playlist","Asks for the current playlist.",CMD_GETPLAYLIST),
 )),
 )
 #===============================================================================
-        
+

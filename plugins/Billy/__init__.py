@@ -5,18 +5,20 @@ version="0.3.5"
 # Plugins/Billy/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Billy Player",
@@ -32,7 +34,7 @@ eg.RegisterPlugin(
         '<BR>The plugin will work with older versions of Billy only in limited '
         'mode!</p>'
     ),
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=537",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMz+tPz+/AAAABkEFSEAAAAAAAAAAGECDR4AAAAAAAAAAAAADQ"
@@ -105,39 +107,39 @@ class Billy(eg.PluginClass):
     play = True
     force = False
     fav_path = ""
-    
+
     def Execute(self, exe, path):
         try:
             ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 exe,
-                None, 
-                path, 
+                None,
+                path,
                 1
             )
         except:
             self.PrintError(self.text.text2 % exe)
-    
+
     def PlayFavFromMenu(self):
-        dir = self.BillyPath+'\\Favorites'        
+        dir = self.BillyPath+'\\Favorites'
         dirpath = self.fav_path
         template = dir+'\\%s'
-        
+
         files = os.listdir(dirpath)
         tmpList = []
         for item in files:
             if item[-4:].lower() in ('.txt', '.m3u', '.pls'):
                 tmpList.append(item)
         tmpList.sort()
-        
+
         if os.path.isfile(template % '!!!!!!!!') :
             os.remove(template % '!!!!!!!!')
 
         if self.menuDlg is not None:
             sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()
-        
+
         else:
             pass
         keys = u'{Ctrl+%s}' % chr(sel+49)
@@ -154,7 +156,7 @@ class Billy(eg.PluginClass):
 
             if self.force:
                 eg.SendKeys(hwnds[0], '{0}{0}', True)    #Stop current playing track
-        
+
             if sel < 9 and dirpath == dir:  # 0 ... 8
                 eg.SendKeys(hwnds[0], keys, False)
             else:
@@ -167,7 +169,7 @@ class Billy(eg.PluginClass):
                 eg.SendKeys(hwnds[0], u'{Space}', True)  #Play track from new playlist
         else:
             self.PrintError(self.text.text1)
-             
+
     def __init__(self):
         text=Text
         self.AddActionsFromList(ACTIONS)
@@ -175,19 +177,19 @@ class Billy(eg.PluginClass):
     def __start__(self, BillyPath=None, path2 = None):
         self.BillyPath = BillyPath
         self.path2 = path2
-                     
+
     def Configure(self, BillyPath=None, path2 = None):
         panel = eg.ConfigPanel(self)
         label1Text = wx.StaticText(panel, -1, self.text.label1)
         label2Text = wx.StaticText(panel, -1, self.text.label2)
         filepathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
         )
-        
+
         filepathCtrl.GetTextCtrl().SetEditable(False)
         checkBoxCtrl = wx.CheckBox(panel, label="  "+self.text.lbl_start_stop)
         if BillyPath is None:
@@ -203,7 +205,7 @@ class Billy(eg.PluginClass):
         #    checkBoxCtrl.SetValue(False)
             startDir = BillyPath
         startStopPathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
 
             toolTip = self.text.toolTipFolder,
@@ -216,7 +218,7 @@ class Billy(eg.PluginClass):
         sizerAdd = panel.sizer.Add
         sizerAdd(label1Text, 0, wx.TOP,15)
         sizerAdd(filepathCtrl,0,wx.TOP,3)
-        sizerAdd(checkBoxCtrl,0,wx.TOP,30)		
+        sizerAdd(checkBoxCtrl,0,wx.TOP,30)
         sizerAdd(label2Text,0,wx.TOP,15)
         sizerAdd(startStopPathCtrl,0,wx.TOP,3)
         def OnCheckBox(event = None):
@@ -227,7 +229,7 @@ class Billy(eg.PluginClass):
                     event.Skip()
             else:
                 if event:
-                    startStopPathCtrl.OnBrowse() 
+                    startStopPathCtrl.OnBrowse()
                     if startStopPathCtrl.GetValue() =="":
                         flag = False
             checkBoxCtrl.SetValue(flag)
@@ -235,7 +237,7 @@ class Billy(eg.PluginClass):
             startStopPathCtrl.Enable(flag)
         checkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         OnCheckBox()
-        
+
         def OnPathChange(event = None):
             path = filepathCtrl.GetValue()
             path2 = startStopPathCtrl.GetValue()
@@ -257,10 +259,10 @@ class Billy(eg.PluginClass):
                         0
                     )
             if path != "":
-                filepathCtrl.startDirectory = path            
+                filepathCtrl.startDirectory = path
         filepathCtrl.Bind(wx.EVT_TEXT,OnPathChange)
         OnPathChange()
-        
+
         def OnPath2Change(event = None):
             path = filepathCtrl.GetValue()
             path2 = startStopPathCtrl.GetValue()
@@ -279,7 +281,7 @@ class Billy(eg.PluginClass):
                         self.text.boxTitle % path2,
                         0
                     )
-                startStopPathCtrl.startDirectory = path2            
+                startStopPathCtrl.startDirectory = path2
             else:
                 flag = True
             flg = flag and flag0
@@ -288,7 +290,7 @@ class Billy(eg.PluginClass):
             panel.dialog.buttonRow.applyButton.Enable(flg)
         startStopPathCtrl.Bind(wx.EVT_TEXT,OnPath2Change)
         OnPath2Change()
-        
+
         while panel.Affirmed():
             if checkBoxCtrl.GetValue():
                 startStopPath = startStopPathCtrl.GetValue()
@@ -300,9 +302,9 @@ class Billy(eg.PluginClass):
 #===============================================================================
 
 class Run(eg.ActionClass):
-    
+
     def __call__(self, start = True, startPath = ""):
-        self.plugin.Execute('Billy.exe',self.plugin.BillyPath)                        
+        self.plugin.Execute('Billy.exe',self.plugin.BillyPath)
         if self.plugin.path2:
             self.plugin.Execute('Start_Billy_Events.exe',self.plugin.path2)
 #===============================================================================
@@ -330,20 +332,20 @@ class HotKeyAction(eg.ActionClass):
 
 # new since 0.3.3:
 class GetPlayingFile(eg.ActionClass):
-    
+
     def __call__(self):
         strBillyTitle = ""
         hwnds = FindBilly()
         if ( hwnds is not None ):
             strBillyTitle = GetWindowText(hwnds[0])
             strBillyTitle = strBillyTitle.replace(" - Billy", "")
-        return strBillyTitle        
+        return strBillyTitle
 #===============================================================================
 
 class ShowMenu(eg.ActionClass):
     panel = None
     testFlag = False
-    
+
     class text:
         menuPreview = 'On screen menu preview:'
         menuFont = 'Menu font:'
@@ -351,7 +353,7 @@ class ShowMenu(eg.ActionClass):
         background = 'Background colour'
         play_label = 'If Billy is stoped, after loading of playlist start play'
         force_label = 'If Billy is playing or paused, interrupt and immediately start new playlist'
-        radioPath = 'Folder with playlists/favorites' 
+        radioPath = 'Folder with playlists/favorites'
         standard = 'Standard (..\\Billy\\Favorites)'
         user = 'User defined'
         dir_err = "Couldn't find Favorites folder !"
@@ -361,14 +363,14 @@ class ShowMenu(eg.ActionClass):
     class MenuColourSelectButton(wx.BitmapButton):
 
         def __init__(
-            self, 
+            self,
             id = -1,
             value=(255, 255, 255),
             name="ColourSelectButton",
-            pos=wx.DefaultPosition, 
+            pos=wx.DefaultPosition,
             size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW, 
-            validator=wx.DefaultValidator, 
+            style=wx.BU_AUTODRAW,
+            validator=wx.DefaultValidator,
         ):
             self.id = id
             self.value = value
@@ -407,29 +409,29 @@ class ShowMenu(eg.ActionClass):
                 colourData.GetCustomColour(n).Get() for n in range(16)
             ]
             colourDlg.Destroy()
-            
+
         def GetValue(self):
             return self.value
-            
+
         def SetValue(self, value):
             self.value = value
             w, h = self.GetSize()
             image = wx.EmptyImage(w-10, h-10)
             image.SetRGBRect((1, 1, w-12, h-12), *value)
-            self.SetBitmapLabel(image.ConvertToBitmap())        
+            self.SetBitmapLabel(image.ConvertToBitmap())
 #===============================================================================
 
     class MenuFontButton(wx.BitmapButton):
 
         def __init__(
-            self, 
+            self,
             fontInfo = None,
             id=-1,
-            pos=wx.DefaultPosition, 
+            pos=wx.DefaultPosition,
             size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW, 
+            style=wx.BU_AUTODRAW,
             validator=wx.DefaultValidator,
-            name="MenuFontButton", 
+            name="MenuFontButton",
         ):
             self.window = panel
             self.fontInfo = fontInfo
@@ -437,7 +439,7 @@ class ShowMenu(eg.ActionClass):
                 self,
                 panel,
                 id,
-                wx.Bitmap("images/font.png"), 
+                wx.Bitmap("images/font.png"),
                 pos,
                 size,
                 style,
@@ -462,7 +464,7 @@ class ShowMenu(eg.ActionClass):
 
                 listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
                     GetChildren()[0].GetSizer().GetChildren()[0].GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()                
+                    GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()
                 for n in range(10,20):
                     font.SetPointSize(n)
                     listBoxCtrl.SetFont(font)
@@ -492,7 +494,7 @@ class ShowMenu(eg.ActionClass):
         dirpath = ""
 
     ):
-    
+
         if self.plugin.menuDlg is not None:
             return
         if dirpath == "":
@@ -517,21 +519,21 @@ class ShowMenu(eg.ActionClass):
         self.plugin.favList = choices #
 
         self.plugin.menuDlg = wx.Frame(
-                None, -1, 'OS_Menu', 
+                None, -1, 'OS_Menu',
                 style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
             )
         favChoiceCtrl=wx.ListBox(
             self.plugin.menuDlg,
             choices = choices,
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
-        
+
         if fontInfo is None:
             font = favChoiceCtrl.GetFont()
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)        
+            font = wx.FontFromNativeInfoString(fontInfo)
         favChoiceCtrl.SetFont(font)
         # menu height calculation:
         h=favChoiceCtrl.GetCharHeight()
@@ -561,13 +563,13 @@ class ShowMenu(eg.ActionClass):
             self.testFlag = False
             evt.Skip()
         self.plugin.menuDlg.Bind(wx.EVT_CLOSE, OnClose)
-               
+
         def On2Click(evt):
             if self.plugin.menuDlg is not None:
                 self.plugin.PlayFavFromMenu()
                 evt.StopPropagation()
         favChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, On2Click)
-        
+
         self.plugin.menuDlg.Centre()
         if self.testFlag:
             pass
@@ -581,15 +583,15 @@ class ShowMenu(eg.ActionClass):
         def __init__(self,dlg):
             Thread.__init__(self)
             self.dlg = dlg
-    
+
         def run(self):
             sleep(5)
             try:
                 self.dlg.Close() #
             except:
-                pass            
+                pass
 #===============================================================================
-        
+
     def GetLabel(
         self,
         fore,
@@ -601,7 +603,7 @@ class ShowMenu(eg.ActionClass):
         dirpath
     ):
         return self.name+" "+dirpath
-        
+
     def Configure(
         self,
         fore = (0, 0, 0),
@@ -631,7 +633,7 @@ class ShowMenu(eg.ActionClass):
                 choices.append(item[:-4])
         choices.sort()
         self.plugin.favList = choices #
-        
+
         self.fore = fore
         self.back = back
         self.oldSel=0
@@ -660,14 +662,14 @@ class ShowMenu(eg.ActionClass):
         w1 = panel.GetTextExtent(self.text.menuFont)[0]
         w2 = panel.GetTextExtent(self.text.txtColour+':')[0]
         w3 = panel.GetTextExtent(self.text.background+':')[0]
-        w = max(w1,w2,w3)        
+        w = max(w1,w2,w3)
         listBoxCtrl=wx.ListBox(
             panel,-1,
             size=wx.Size(400-w,130),
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
         listBoxCtrl.SetBackgroundColour(self.back)
-        listBoxCtrl.SetForegroundColour(self.fore)        
+        listBoxCtrl.SetForegroundColour(self.fore)
         if fontInfo is None:
             font = listBoxCtrl.GetFont()
             font.SetPointSize(36)
@@ -678,40 +680,40 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(n)
             listBoxCtrl.SetFont(font)
             if listBoxCtrl.GetTextExtent('X')[1]>20:
-                break                
+                break
         playCtrl = wx.CheckBox(panel, -1, '  '+self.text.play_label)
         playCtrl.SetValue(play)
         forceCtrl = wx.CheckBox(panel, -1, '  '+self.text.force_label)
         forceCtrl.SetValue(force)
         rb1 = panel.RadioButton(not folder, self.text.standard, style=wx.RB_GROUP)
-        rb2 = panel.RadioButton(folder, self.text.user)                            
+        rb2 = panel.RadioButton(folder, self.text.user)
         dirpathCtrl = MyDirBrowseButton(
-            panel, 
-            -1, 
+            panel,
+            -1,
             size=(410,-1),
             toolTip = self.plugin.text.toolTipFolder,
             dialogTitle = self.plugin.text.browseTitle,
             startDirectory=dirpath,
             labelText="",
             buttonText=eg.text.General.browse,
-        )        
+        )
         dirpathCtrl.GetTextCtrl().SetEditable(False)
         dirpathCtrl.SetValue(dirpath)
         box = wx.StaticBox(panel,-1,self.text.radioPath)
-        
+
     #Sizers
         mainSizer=wx.BoxSizer(wx.VERTICAL)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         rightSizer = wx.BoxSizer(wx.VERTICAL)
-        radioSizer = wx.BoxSizer(wx.HORIZONTAL) 
+        radioSizer = wx.BoxSizer(wx.HORIZONTAL)
         boxSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
 
         panel.sizer.Add(mainSizer)
         mainSizer.Add(topSizer)
         topSizer.Add(leftSizer)
         topSizer.Add(rightSizer,0,wx.LEFT,20)
-        leftSizer.Add(previewLbl)        
+        leftSizer.Add(previewLbl)
         leftSizer.Add(listBoxCtrl,0,wx.TOP,5)
         rightSizer.Add(fontLbl,0,wx.TOP,0)
         rightSizer.Add(fontButton,0,wx.TOP,3)
@@ -738,7 +740,7 @@ class ShowMenu(eg.ActionClass):
         rb1.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         rb2.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         OnRadioButton()
-        
+
         def OnPathChange(evt = None):
             dirpath = dirpathCtrl.GetValue()
             files = os.listdir(dirpath)
@@ -750,23 +752,23 @@ class ShowMenu(eg.ActionClass):
             self.plugin.favList = choices #
             self.plugin.fav_path = dirpath
             listBoxCtrl.Set(choices)
-            listBoxCtrl.SetSelection(-1)      
-            if evt:    
+            listBoxCtrl.SetSelection(-1)
+            if evt:
                 evt.Skip()
         dirpathCtrl.Bind(wx.EVT_TEXT, OnPathChange)
         OnPathChange()
-        
+
         def OnClick(evt):
             listBoxCtrl.SetSelection(-1)
             evt.StopPropagation()
         listBoxCtrl.Bind(wx.EVT_LISTBOX, OnClick)
-        
+
         # re-assign the test button
         def OnButton(event):
             self.testFlag = True
             event.Skip()
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
- 
+
     #On close panel
         while panel.Affirmed():
             panel.SetResult(
@@ -791,24 +793,24 @@ class MoveCursor(eg.ActionClass):
                 if sel == eval(self.value[0]):
                     sel = eval(self.value[1])
                 self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
-                    SetSelection(sel+self.value[2])                
+                    SetSelection(sel+self.value[2])
 #===============================================================================
 
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
         if self.plugin.menuDlg is not None:
-            self.plugin.PlayFavFromMenu()        
+            self.plugin.PlayFavFromMenu()
 #===============================================================================
 
 class Cancel_Btn(eg.ActionClass):
 
     def __call__(self):
         if self.plugin.menuDlg is not None:
-            self.plugin.menuDlg.Close() 
+            self.plugin.menuDlg.Close()
 #===============================================================================
 
-ACTIONS = (    
+ACTIONS = (
     (Run,"Run","Run or Restore","Run Billy with its default settings or restore window.", None),
     (Exit,"ExitBilly","Exit Billy","Exit Billy.",u'{Esc}'),
     ( eg.ActionGroup, 'Main', 'Main', 'Adds actions to main control Billy',(
@@ -829,12 +831,12 @@ ACTIONS = (
     ( eg.ActionGroup, 'Playlist', 'Playlist', 'Adds actions to control of playlist Billy',(
         (HotKeyAction,"TogglePlayMode","Toggle play mode","Toggle play mode.",u'{F9}'),
         (HotKeyAction,"ToggleViewMode","Toggle view mode","Toggle layout list all.",u'{F8}'),
-        (HotKeyAction,"OpenFolder","Open Folder","Open a dir with music files.",u'{F4}'), 
-        (HotKeyAction,"AddFolder","Add Folder","Add a dir with music files.",u'{F3}'), 
-        (HotKeyAction,"AddFile","Add File(s)","Add File(s).",u'{Ctrl+L}'), 
-        (HotKeyAction,"AddURL","Add Internet radio stream","Add Internet radio stream.",u'{Ctrl+R}'), 
-        (HotKeyAction,"OpenPlaylist","Open Playlist","Load Billy Playlist.",u'{Ctrl+O}'), 
-        (HotKeyAction,"SavePlaylist","Save Playlist","Save Playlist.",u'{Ctrl+S}'), 
+        (HotKeyAction,"OpenFolder","Open Folder","Open a dir with music files.",u'{F4}'),
+        (HotKeyAction,"AddFolder","Add Folder","Add a dir with music files.",u'{F3}'),
+        (HotKeyAction,"AddFile","Add File(s)","Add File(s).",u'{Ctrl+L}'),
+        (HotKeyAction,"AddURL","Add Internet radio stream","Add Internet radio stream.",u'{Ctrl+R}'),
+        (HotKeyAction,"OpenPlaylist","Open Playlist","Load Billy Playlist.",u'{Ctrl+O}'),
+        (HotKeyAction,"SavePlaylist","Save Playlist","Save Playlist.",u'{Ctrl+S}'),
         #(HotKeyAction,"MoveItemsUp","Move Items Up","Move Items Up.",u'{Ctrl+Up}'),
         #(HotKeyAction,"MoveItemsDown","Move Items Down","Move Items Down.",u'{Ctrl+Down}'),
         #(HotKeyAction,"SelectAll","Select All","Select All.",u'{Ctrl+A}'),
@@ -887,5 +889,5 @@ ACTIONS = (
             (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
         )),
     )),
-)    
+)
 #===============================================================================

@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Generic HID",
     author = "Bartman",
-    #version = "1.5." + "$LastChangedRevision: 1246 $".split()[1],
+    version = "1.5.1246",
     kind = "remote",
     guid = "{05A690D9-27C2-4AC5-B0DD-2F562619E922}",
     canMultiLoad = True,
@@ -39,7 +39,7 @@ class HID(eg.PluginClass):
 
     def RawCallback(self, data):
         self.TriggerEvent(binascii.hexlify(data).upper())
-   
+
     def ButtonCallback(self, data):
         if len(data):
             #one or more buttons pressed
@@ -58,18 +58,18 @@ class HID(eg.PluginClass):
             #trigger event so that releasing all buttons
             #can get noticed even w/o enduring events
             self.TriggerEvent("Button.None")
-    
+
     def ValueCallback(self, data):
         for key, value in data.items():
             if key in self.oldValues and value == self.oldValues[key]:
                 continue
             self.oldValues[key] = value
             self.TriggerEvent("Value." + str(key), payload = value)
-        
+
     def StopCallback(self):
         self.TriggerEvent("Stopped")
         self.thread = None
-    
+
     def GetMyDevicePath(self):
         path = GetDevicePath(
             self.devicePath,
@@ -80,7 +80,7 @@ class HID(eg.PluginClass):
             self.deviceIndex,
             self.noOtherPort)
         return path;
-    
+
     def SetupHidThread(self, newDevicePath):
         #create thread
         self.thread = HIDThread(self.vendorString + " " + self.productString, newDevicePath)
@@ -91,7 +91,7 @@ class HID(eg.PluginClass):
         else:
             self.thread.SetButtonCallback(self.ButtonCallback)
             self.thread.SetValueCallback(self.ValueCallback)
-    
+
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
@@ -104,7 +104,7 @@ class HID(eg.PluginClass):
             if not newDevicePath:
                 #wrong device
                 return
-            
+
             self.SetupHidThread(newDevicePath)
 
     def GetLabel(self,
@@ -167,9 +167,9 @@ class HID(eg.PluginClass):
         else:
             self.info.eventPrefix = "HID"
 
-        #Bind plug in to RegisterDeviceNotification message 
+        #Bind plug in to RegisterDeviceNotification message
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
-        
+
         newDevicePath = self.GetMyDevicePath()
         if not newDevicePath:
             #device not found
@@ -180,7 +180,7 @@ class HID(eg.PluginClass):
     def __stop__(self):
         if self.thread:
             self.thread.AbortThread()
-        
+
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
 
@@ -285,12 +285,12 @@ class HID(eg.PluginClass):
             wx.StaticText(panel, -1, Text.multipleDeviceOptions),
             (3, 0), (1, 3),
             flag = wx.ALIGN_CENTER_VERTICAL)
-        
+
         #checkbox for use first device
         useDeviceIndexCtrl = wx.CheckBox(panel, -1, Text.useDeviceIndex)
         useDeviceIndexCtrl.SetValue(useDeviceIndex)
         optionsSizer.Add(useDeviceIndexCtrl, (4, 0), (1, 2), flag = wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
-        
+
         #device index spin control
         deviceIndexCtrl = eg.SpinIntCtrl(panel, -1, deviceIndex, 0, 99, size=(100,-1))
         optionsSizer.Add(deviceIndexCtrl, (4, 2), (1, 1))

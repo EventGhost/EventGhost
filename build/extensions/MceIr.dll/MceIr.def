@@ -1,0 +1,17 @@
+; MCEIR.def : Declares the module parameters for the DLL.
+
+LIBRARY					"MCEIR"
+
+EXPORTS
+
+MceIrRegisterEvents		@1
+MceIrUnregisterEvents	@2
+MceIrSetRepeatTimes		@3
+MceIrRecordToFile		@4
+MceIrPlaybackFromFile	@5
+MceIrSuspend			@6
+MceIrResume				@7
+MceIrCheckFile			@8
+MceIrSelectBlaster		@9
+MceIrSetBlasterSpeed	@10
+MceIrSetBlasterType		@11

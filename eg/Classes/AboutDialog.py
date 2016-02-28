@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+import re
 import wx
 import time
 import sys
@@ -41,17 +44,15 @@ def GetPluginAuthors():
     """
     pluginAuthors = {}
     for pluginInfo in eg.pluginManager.database.itervalues():
-        for part in pluginInfo.author.split("&"):
+        pluginName = pluginInfo.name.replace(" ", "&nbsp;")
+        for part in re.split("\s*(?:&|,|\+|/|and)\s*", pluginInfo.author):
             author = part.strip()
-            if author.lower() != "bitmonster":
-                break
+            if author in pluginAuthors:
+                pluginAuthors[author].append(pluginName)
+            else:
+                pluginAuthors[author] = [pluginName]
         else:
             continue
-        pluginName = pluginInfo.name.replace(" ", "&nbsp;")
-        if author in pluginAuthors:
-            pluginAuthors[author].append(pluginName)
-        else:
-            pluginAuthors[author] = [pluginName]
     tmp = pluginAuthors.items()
     tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
     authorList = []

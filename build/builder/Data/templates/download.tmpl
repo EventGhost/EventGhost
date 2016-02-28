@@ -1,0 +1,33 @@
+{% extends "layout.tmpl" %}
+{% block title %}Download EventGhost{% endblock %}
+{% block extrahead %}
+    <meta http-equiv="expires" content="Sat, 15 Dec 2001 12:00:00 GMT">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="pragma" content="no-cache">
+{{ super() }}
+{%- endblock %}
+{% block content %}
+{% filter rst2html %}
+{% if files %}
+Latest release:
+~~~~~~~~~~~~~~~
+
+* `{{files[0].name}} <{{files[0].target}}>`_, {{files[0].size}}, {{files[0].time}}
+
+Previous releases:
+~~~~~~~~~~~~~~~~~~
+
+{% for file in files[1:11]%}
+* `{{file.name}} <{{file.target}}>`_, {{file.size}}, {{file.time}}
+{% endfor %}
+{% endif %}
+
+Other downloads:
+~~~~~~~~~~~~~~~~
+
+* `Driver for X10 remotes (32bit Windows) <x10drivers_x86.exe>`_
+* `Driver for X10 remotes (64bit Windows) <x10drivers_x64.exe>`_
+* `Example files for the Webserver plugin <Webserver_Demo.zip>`_
+
+{% endfilter %}
+{%- endblock %}

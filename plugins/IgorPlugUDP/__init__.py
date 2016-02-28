@@ -1,29 +1,28 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# Last change: 2009-10-15 10:11
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 u"""<rst>
 Plugin for `Igor \u010Ce\u0161ko's UDP IR`__ receiver.
 
-This device is connected directly to twisted pair 10/100 BASE TX network. 
-It receives signal from standard infrared remote control 
-(used for TV, DVD players, ... ) and send it to group of computers 
-on the network (UDP broadcast). 
+This device is connected directly to twisted pair 10/100 BASE TX network.
+It receives signal from standard infrared remote control
+(used for TV, DVD players, ... ) and send it to group of computers
+on the network (UDP broadcast).
 Therefore signal can be collected by more computers also.
 
 __ http://www.cesko.host.sk/IgorPlugUDP/IgorPlug-UDP%20%28AVR%29_eng.htm
@@ -38,7 +37,10 @@ from locale import getdefaultlocale as localeEncoding
 
 eg.RegisterPlugin(
     name = "IgorPlug-UDP",
-    author = "Pako/Bitmonster",
+    author = (
+        "Pako",
+        "Bitmonster",
+    ),
     version = "0.1.1",
     kind = "remote",
     guid = "{F31FCA60-D7D2-4767-801D-D1B8566D57EA}",
@@ -84,19 +86,19 @@ class udpReceiver(asyncore.dispatcher):
         self.create_socket(AF_INET, SOCK_DGRAM)
         eg.RestartAsyncore()
         self.bind(('', port))
-        
+
     def writable(self):
         return False  # we don't have anything to send !
 
     def handle_connect(self):
         pass
-        
+
     def handle_close(self):
         self.close()
- 
+
     def handle_expt(self):
         self.close()
-        
+
     def handle_read(self):
         payload, address = self.socket.recvfrom(128)
         if self.remAddress == address[0]:
@@ -131,7 +133,7 @@ class udpReceiver(asyncore.dispatcher):
 class IgorPlugUDP(eg.IrDecoderPlugin):
     canMultiLoad = True
     text = Text
-   
+
     def __init__(self):
         eg.IrDecoderPlugin.__init__(self, 51.2)
 
@@ -141,7 +143,7 @@ class IgorPlugUDP(eg.IrDecoderPlugin):
             self.receiver = udpReceiver(remAddress, locPort, self)
         except socket_error, exc:
             raise self.Exception(exc[1].decode(localeEncoding()[1]))
-        
+
     def __stop__(self):
         if self.receiver:
             self.receiver.close()
@@ -149,7 +151,7 @@ class IgorPlugUDP(eg.IrDecoderPlugin):
 
     def __close__(self):
         self.irDecoder.Close()
-        
+
     def Configure(self, prefix="IgorUDP", locPort=6668, remAddress="192.168.1.7"):
         panel = eg.ConfigPanel(self)
         prefixCtrl = panel.TextCtrl(prefix)
@@ -158,10 +160,10 @@ class IgorPlugUDP(eg.IrDecoderPlugin):
         panel.AddLine(self.text.eventPrefix, prefixCtrl)
         panel.AddLine(self.text.remIP, ipAddressCtrl)
         panel.AddLine(self.text.locPort, locPortCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                prefixCtrl.GetValue(), 
+                prefixCtrl.GetValue(),
                 int(locPortCtrl.GetValue()),
                 ipAddressCtrl.GetValue(),
             )

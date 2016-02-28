@@ -7,18 +7,20 @@ version="0.0.1"
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Splash Lite",
@@ -33,13 +35,13 @@ Play all your High Definition MPEG-2 and AVC/H.264 camcorder clips and movies,
 incredibly fast, smooth and without problems.
 You don't need any additional codecs.
 Download, install, watch.
-It takes about one second to start application and High Definition video playback ! 
+It takes about one second to start application and High Definition video playback !
 
 `Splash Lite`_ is for home use free !
 
 .. _Splash Lite: http://www.mirillis.com/splash.html
 """,
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,
     #url = "http://www.eventghost.net/forum/viewtopic.php?t=XXXX",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAADAFBMVEX+/v6zs7OEhIRy"
@@ -136,11 +138,11 @@ class SplashLite(eg.PluginBase):
     def Execute(self, exe, path, param = None):
         try:
             ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 exe,
-                param, 
-                path, 
+                param,
+                path,
                 1
             )
         except:
@@ -160,7 +162,7 @@ class SplashLite(eg.PluginBase):
         panel = eg.ConfigPanel(self)
         labelText = wx.StaticText(panel, -1, self.text.label1)
         filepathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
@@ -251,7 +253,7 @@ class OpenFile(eg.ActionBase):
                 filePathCtrl.GetValue(),)
 #===============================================================================
 
-ACTIONS = (    
+ACTIONS = (
     (Run,"Run","Run","Run Splash Lite.", None),
     (Exit,"Exit","Exit","Exit Splash Lite.", None),
     (HotKeyAction,"PausePlay","Pause/Play","Pause/Play.",u'{Space}'),

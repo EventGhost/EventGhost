@@ -17,11 +17,11 @@
 # 2009-12-19  0.4.0 compatible GUID added
 # 2009-12-02  Walter Kraembring: First version
 ##############################################################################
-    
+
 eg.RegisterPlugin(
     name = "RFXcom_xPL",
     guid = '{74895CCC-CCB4-4E23-B0AA-DC98385972BF}',
-    author = "Walter Kraembring", 
+    author = "Walter Kraembring",
     version = "0.0.3",
     canMultiLoad = False,
     kind = "external",
@@ -41,11 +41,11 @@ from threading import Event, Thread
 
 
 class Text:
-    xplDeviceName = "Enter the xpl-name of the RFXCOM device "    
+    xplDeviceName = "Enter the xpl-name of the RFXCOM device "
     portNumber = "Select the lowest port number to use "
     logToFile = "Log events to file: "
     debug = "Show all raw xPL messages: "
-        
+
     class sendRFXcom_x10_basic:
         textBoxName = "Enter a descriptive name for the action"
         textBoxSchema = "Select the xPL schema to be used"
@@ -69,7 +69,7 @@ class RFXcom(eg.PluginClass):
     text = Text
     # Define initial value for heartbeat monitoring
     xplsourceHB = 10
-    
+
 
     def __init__(self):
         self.LocalIP=gethostbyname(gethostname())
@@ -78,15 +78,15 @@ class RFXcom(eg.PluginClass):
         self.AddAction(sendRFXcom_homeeasy_basic)
         #self.AddAction(Restart)
 
-              
+
     def __start__(self, xplDeviceName, portNbr, bLogToFile, bDebug):
         self.UDPSock = socket(AF_INET, SOCK_DGRAM)
         # Initialise the socket
         self.xplDeviceName = xplDeviceName
         self.port = portNbr
         self.bLogToFile = bLogToFile
-        self.bDebug = bDebug 
-        
+        self.bDebug = bDebug
+
         bound = 0
         while bound == 0 :
             bound = 1
@@ -96,7 +96,7 @@ class RFXcom(eg.PluginClass):
             except :
                 bound = 0
                 self.port += 1
-                
+
         print "RFXcom_xPL plugin, bound to port " + str(self.port)
         print "RFXcom is started"
 
@@ -107,7 +107,7 @@ class RFXcom(eg.PluginClass):
             args=(self.hbThreadEvent,)
         )
         hbThread.start()
-        
+
         # start the heartbeat monitoring thread
         self.hbThreadMonitor = Event()
         hbMonitor = Thread(
@@ -152,7 +152,7 @@ class RFXcom(eg.PluginClass):
     def __close__(self):
         print "RFXcom_xPL is closed."
 
-  
+
     def Restart(self):
         self.__stop__()
         self.__start__(self.xplDeviceName, self.port, self.bLogToFile, self.bDebug)
@@ -190,7 +190,7 @@ class RFXcom(eg.PluginClass):
                 self.xplsourceHB = 10
                 self.Restart()
 
-            
+
     # Main Loop
     def main(self,mainThreadEvent):
         messageOld = ""
@@ -230,10 +230,10 @@ class RFXcom(eg.PluginClass):
                                 +msgbody2
                             )
                             messageOld = message
-                            
+
                             if self.xplsourceHB <10:
                                 self.xplsourceHB += 1
-                            
+
                             if self.bLogToFile:
                                 logStr = (
                                     str(xpltype)
@@ -255,7 +255,7 @@ class RFXcom(eg.PluginClass):
                         if self.xplsourceHB > 10:
                             self.xplsourceHB = 10
 
-     
+
     def LogToFile(self, s):
         timeStamp = str(
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -299,12 +299,12 @@ class RFXcom(eg.PluginClass):
         xplDeviceNameCtrl.SetInitialSize((250,-1))
         mySizer.Add(wx.StaticText(panel, -1, self.text.xplDeviceName), (1,0))
         mySizer.Add(xplDeviceNameCtrl, (1,1))
-    
+
         portCtrl = panel.SpinIntCtrl(portNbr, 50000, 50050)
         portCtrl.SetInitialSize((75,-1))
         mySizer.Add(wx.StaticText(panel, -1, self.text.portNumber), (2,0))
         mySizer.Add(portCtrl, (2,1))
-       
+
         bLogToFileCtrl = wx.CheckBox(panel, -1, "")
         bLogToFileCtrl.SetValue(bLogToFile)
         mySizer.Add(wx.StaticText(panel, -1, self.text.logToFile), (5,0))
@@ -322,7 +322,7 @@ class RFXcom(eg.PluginClass):
             portNbr = portCtrl.GetValue()
             bLogToFile = bLogToFileCtrl.GetValue()
             bDebug = bDebugCtrl.GetValue()
-            
+
             panel.SetResult(
                         xplDeviceName,
                         portNbr,
@@ -330,9 +330,9 @@ class RFXcom(eg.PluginClass):
                         bDebug,
                         *args
             )
-      
-      
-      
+
+
+
 class sendRFXcom_x10_basic(eg.ActionClass):
     name = "RFXCOM x10 basic"
     description = "Action to send RFXCOM messages using xPLRFX"
@@ -353,7 +353,7 @@ class sendRFXcom_x10_basic(eg.ActionClass):
                 +"\n"
                 +"protocol="
                 +protocol
-            ) 
+            )
 
         msg = (
             "xpl-cmnd"
@@ -376,7 +376,7 @@ class sendRFXcom_x10_basic(eg.ActionClass):
 #            self.plugin.UDPSock.sendto(msg,addr)
 #            time.sleep(1.0)
 
-       
+
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
         choice = event.GetSelection()
@@ -393,12 +393,12 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         pdevice="",
         command=""
         ):
-            
+
         text = self.text
         panel = eg.ConfigPanel(self)
         plugin = self.plugin
-       
-        # Create a textfield for action name 
+
+        # Create a textfield for action name
         nameCtrl = wx.TextCtrl(panel, -1, name)
 
         staticBox = wx.StaticBox(panel, -1, text.textBoxName)
@@ -409,9 +409,9 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for schema
-        schemaCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        schemaCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = ['x10.basic']
-        schemaCtrl.AppendItems(strings=list) 
+        schemaCtrl.AppendItems(strings=list)
         if list.count(schema)==0:
             schemaCtrl.Select(n=0)
         else:
@@ -424,16 +424,16 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         sizer2.Add(schemaCtrl, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer2, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
-        # Create a dropdown for protocol 
-        protocolCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+
+        # Create a dropdown for protocol
+        protocolCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             'Nexa',
             'Intertechno',
             'Proove',
             'HomeEasy'
         ]
-        protocolCtrl.AppendItems(strings=list) 
+        protocolCtrl.AppendItems(strings=list)
         if list.count(protocol)==0:
             protocolCtrl.Select(n=0)
         else:
@@ -448,12 +448,12 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for house code
-        houseCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        houseCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
             'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'
         ]
-        houseCtrl.AppendItems(strings=list) 
+        houseCtrl.AppendItems(strings=list)
         if list.count(house)==0:
             houseCtrl.Select(n=0)
         else:
@@ -466,14 +466,14 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         sizer3.Add(houseCtrl, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer3, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         # Create a dropdown for device code
-        deviceCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        deviceCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9',
             '10', '11', '12', '13', '14', '15', '16'
         ]
-        deviceCtrl.AppendItems(strings=list) 
+        deviceCtrl.AppendItems(strings=list)
         if list.count(pdevice)==0:
             deviceCtrl.Select(n=0)
         else:
@@ -486,14 +486,14 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         staticBoxSizer.Add(sizer3, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         deviceCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
-        
+
         # Create a dropdown for command
-        commandCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        commandCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             'on',
             'off'
         ]
-        commandCtrl.AppendItems(strings=list) 
+        commandCtrl.AppendItems(strings=list)
         if list.count(command)==0:
             commandCtrl.Select(n=0)
         else:
@@ -506,19 +506,19 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         staticBoxSizer.Add(sizer5, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         commandCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                nameCtrl.GetValue(), 
+                nameCtrl.GetValue(),
                 schemaCtrl.GetStringSelection(),
-                protocolCtrl.GetStringSelection(), 
+                protocolCtrl.GetStringSelection(),
                 houseCtrl.GetStringSelection(),
-                deviceCtrl.GetStringSelection(), 
-                commandCtrl.GetStringSelection() 
-            )      
+                deviceCtrl.GetStringSelection(),
+                commandCtrl.GetStringSelection()
+            )
 
-      
-      
+
+
 class sendRFXcom_homeeasy_basic(eg.ActionClass):
     name = "RFXCOM HOME easy basic"
     description = "Action to send RFXCOM messages using xPLRFX"
@@ -538,8 +538,8 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
                 +"\n"
                 +"unit="
                 +unit
-            ) 
-    
+            )
+
         if command == "preset":
             xPLMsg = (
                 "command="
@@ -553,7 +553,7 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
                 +"\n"
                 +"unit="
                 +unit
-            ) 
+            )
 
         msg = (
             "xpl-cmnd"
@@ -575,7 +575,7 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
 #        for i in range(0, 3):
 #            self.plugin.UDPSock.sendto(msg,addr)
 #            time.sleep(0.5)
-        
+
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
         choice = event.GetSelection()
@@ -591,12 +591,12 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         command="",
         level=""
         ):
-            
+
         text = self.text
         panel = eg.ConfigPanel(self)
         plugin = self.plugin
-       
-        # Create a textfield for action name 
+
+        # Create a textfield for action name
         nameCtrl = wx.TextCtrl(panel, -1, name)
 
         staticBox = wx.StaticBox(panel, -1, text.textBoxName)
@@ -607,9 +607,9 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for schema
-        schemaCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        schemaCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = ['homeeasy.basic']
-        schemaCtrl.AppendItems(strings=list) 
+        schemaCtrl.AppendItems(strings=list)
         if list.count(schema)==0:
             schemaCtrl.Select(n=0)
         else:
@@ -622,8 +622,8 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         sizer1.Add(schemaCtrl, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
-        # Create a textfield for address 
+
+        # Create a textfield for address
         addressCtrl = wx.TextCtrl(panel, -1, address)
 
         staticBox = wx.StaticBox(panel, -1, text.textBoxAddress)
@@ -632,14 +632,14 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         sizer2.Add(addressCtrl, 1, wx.EXPAND)
         staticBoxSizer.Add(sizer2, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         # Create a dropdown for device unit
-        deviceCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        deviceCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15', 'group'
         ]
-        deviceCtrl.AppendItems(strings=list) 
+        deviceCtrl.AppendItems(strings=list)
         if list.count(unit)==0:
             deviceCtrl.Select(n=0)
         else:
@@ -652,11 +652,11 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         staticBoxSizer.Add(sizer3, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         deviceCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
-        
+
         # Create a dropdown for command
-        commandCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        commandCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = ['on', 'off', 'preset']
-        commandCtrl.AppendItems(strings=list) 
+        commandCtrl.AppendItems(strings=list)
         if list.count(command)==0:
             commandCtrl.Select(n=0)
         else:
@@ -669,14 +669,14 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         staticBoxSizer.Add(sizer4, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         commandCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
-        
+
         # Create a dropdown for dim level
-        levelCtrl = wx.Choice(parent=panel, pos=(10,10)) 
+        levelCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15'
         ]
-        levelCtrl.AppendItems(strings=list) 
+        levelCtrl.AppendItems(strings=list)
         if list.count(level)==0:
             levelCtrl.Select(n=0)
         else:
@@ -689,21 +689,21 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         staticBoxSizer.Add(sizer5, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         levelCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                nameCtrl.GetValue(), 
+                nameCtrl.GetValue(),
                 schemaCtrl.GetStringSelection(),
-                addressCtrl.GetValue(), 
+                addressCtrl.GetValue(),
                 deviceCtrl.GetStringSelection(),
-                commandCtrl.GetStringSelection(), 
-                levelCtrl.GetStringSelection() 
-            )      
+                commandCtrl.GetStringSelection(),
+                levelCtrl.GetStringSelection()
+            )
 
 
-      
+
 class Restart(eg.ActionClass):
 
     def __call__(self):
         self.plugin.xplsourceHB = 0
- 
+

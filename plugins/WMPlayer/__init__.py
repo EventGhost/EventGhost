@@ -5,24 +5,25 @@
 # Copyright (C) 2007 Oystein Hansen
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Windows Media Player",
     author = "Oystein Hansen",
-    version = "0.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.1.1093",
     kind = "program",
     guid = "{87D26B8D-990C-457C-85C2-8D634868E1D2}",
     createMacrosOnAdd = True,
@@ -80,13 +81,13 @@ from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 class ActionPrototype(eg.ActionClass):
     """
     Boilerplate for all actions of this plugin.
-    """ 
-    # The class attributes 'name', 'description' and 'value' will later be 
+    """
+    # The class attributes 'name', 'description' and 'value' will later be
     # setup by the AddActionsFromList method of the plugin.
 
     def __call__(self):
         """
-        Find WMPlayer's message window and send it a message with 
+        Find WMPlayer's message window and send it a message with
         SendMessageTimeout.
         """
         try:
@@ -99,8 +100,8 @@ class ActionPrototype(eg.ActionClass):
 # And now we define the actual plugin:
 
 class WMPlayer(eg.PluginClass):
-         
+
     def __init__(self):
         # Add all actions of our list
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-        
+

@@ -3,30 +3,30 @@
 # plugins/MceRemote/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
-# $LastChangedRevision: 1093 $
-# $LastChangedBy: Bitmonster $
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
-    author = "Bitmonster & James Lee",
-    version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
+    author = (
+        "Bitmonster",
+        "James Lee",
+    ),
+    version = "1.1.1093",
     kind = "remote",
     guid = "{02181DB1-F29D-4CCB-BF91-7A86EFB0D22C}",
     description = 'Plugin for the Microsoft MCE remote.',
@@ -76,7 +76,7 @@ from eg.WinApi.Dynamic import (
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
 #------------------------------------------
-#To register the window that will receives messages on keystroke events (from 
+#To register the window that will receives messages on keystroke events (from
 #MceIr only)
 #(IR code analysis is automatically suspended during a learning phase)
 #
@@ -95,7 +95,7 @@ from eg.WinApi.Dynamic import (
 #BOOL WINAPI MceIrSetRepeatTimes(DWORD FirstRepeat, DWORD NextRepeats)
 #---------------------------------------------------------------------
 #To specify the repeat rate when a key remains pressed
-#FirstRepeat : Time (in ms) to wait before sending a second WM_USER message 
+#FirstRepeat : Time (in ms) to wait before sending a second WM_USER message
 #              (HIWORD(lParam) will be 1)
 #NextRepeats : Interval between next messages until the key is released
 #
@@ -103,12 +103,12 @@ from eg.WinApi.Dynamic import (
 #
 #BOOL WINAPI MceIrRecordToFile(HANDLE hFile, DWORD Timeout)
 #----------------------------------------------------------
-#To record raw IR code (learning function). This function waits for the IR 
-#receiver to become silent for 1 second, then enters the recording phase. 
+#To record raw IR code (learning function). This function waits for the IR
+#receiver to become silent for 1 second, then enters the recording phase.
 #
 #hFile  : handle to the file in which raw IR codes will be stored
 #        (must be opened previously then closed when function returns)
-#Timeout: applies to the recording phase and occurs is nothing is received from the MceIr (in ms) 
+#Timeout: applies to the recording phase and occurs is nothing is received from the MceIr (in ms)
 #
 #returns TRUE is successfull
 #
@@ -123,12 +123,12 @@ from eg.WinApi.Dynamic import (
 #
 #BOOL WINAPI MceIrSuspend()
 #-----------------------------------------------
-#Call this function before entering a suspend power state 
+#Call this function before entering a suspend power state
 #    (WM_POWERBROADCAST + PBT_APMSUSPEND event)
 #
 #BOOL WINAPI MceIrResume()
 #-----------------------------------------------
-#Call this function on resuming a suspend power state 
+#Call this function on resuming a suspend power state
 #    (WM_POWERBROADCAST + PBT_APMRESUMEAUTOMATIC event)
 #
 #BOOL WINAPI MceIrSelectBlaster()
@@ -180,7 +180,7 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.waitTime = waitTime
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEvent = None
-        
+
         wc = WNDCLASS()
         wc.hInstance = GetModuleHandle(None)
         wc.lpszClassName = "HiddenMceMessageReceiver"
@@ -192,64 +192,64 @@ class MceMessageReceiver(eg.ThreadWorker):
             wc.lpszClassName,
             "MCE Remote Message Receiver",
             WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            0, 
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
             0,
-            wc.hInstance, 
+            0,
+            wc.hInstance,
             None
         )
         if not self.hwnd:
             raise WinError()
         self.wc = wc
         self.hinst = wc.hInstance
-        
+
         self.dll = WinDLL(os.path.join(PLUGIN_DIR, "MceIr.dll"))
         if not self.dll.MceIrRegisterEvents(self.hwnd):
             raise self.plugin.Exceptions.DeviceNotFound
         self.dll.MceIrSetRepeatTimes(1,1)
-        
-        
+
+
     @eg.LogIt
     def Finish(self):
         """
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
-        """        
+        """
         self.dll.MceIrUnregisterEvents()
         DestroyWindow(self.hwnd)
         UnregisterClass(self.wc.lpszClassName, self.hinst)
         self.Stop() # is this needed?
-        
-        
+
+
     #@eg.LogIt
     def MyWndProc(self, dummyHwnd, mesg, dummyWParam, lParam):
         if mesg == WM_USER:
             self.timer.cancel()
             key = lParam & 0xFFFF
-            #repeatCounter = (lParam >> 16)     
+            #repeatCounter = (lParam >> 16)
             if key in KEY_MAP:
                 eventString = KEY_MAP[key]
             else:
                 eventString = "%X" % key
             if not self.lastEvent:
-                self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)                
+                self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)
             self.timer = Timer(self.waitTime, self.OnTimeOut)
             self.timer.start()
         return 1
-    
-    
+
+
     def OnTimeOut(self):
         if self.lastEvent:
             self.lastEvent.SetShouldEnd()
         self.lastEvent = None
-        
-        
+
+
 
 class MceRemote(eg.PluginBase):
-    
+
     class text:
         buttonTimeout = "Button release timeout (seconds):"
         buttonTimeoutDescr = (
@@ -271,8 +271,8 @@ class MceRemote(eg.PluginBase):
     def __init__(self):
         self.AddEvents()
         self.AddAction(TransmitIr)
-            
-            
+
+
     @eg.LogIt
     def __start__(self, waitTime=0.15, disableHid=True):
         self.CheckHidState(disableHid)
@@ -283,45 +283,45 @@ class MceRemote(eg.PluginBase):
     @eg.LogIt
     def OnComputerSuspend(self, dummySuspendType):
         self.msgThread.CallWait(self.msgThread.dll.MceIrSuspend)
-    
-    
+
+
     @eg.LogIt
     def OnComputerResume(self, dummySuspendType):
-        self.msgThread.CallWait(self.msgThread.dll.MceIrResume)       
-          
-                        
+        self.msgThread.CallWait(self.msgThread.dll.MceIrResume)
+
+
     def __stop__(self):
         self.msgThread.Stop()
-        
-        
+
+
     def ShowHidMessage(self, disableHid):
         """
-        Informs the user, that the system needs to restart the system to let 
+        Informs the user, that the system needs to restart the system to let
         the HID registry changes take effect.
         """
         try:
             self.SetHidState(disableHid)
         except WindowsError:
             dialog = wx.MessageDialog(
-                None, 
-                self.text.hidErrorMessage, 
-                self.text.hidDialogCaption, 
+                None,
+                self.text.hidErrorMessage,
+                self.text.hidDialogCaption,
                 wx.OK|wx.ICON_ERROR|wx.STAY_ON_TOP
             )
         else:
             dialog = wx.MessageDialog(
-                None, 
-                self.text.hidDialogMessage, 
-                self.text.hidDialogCaption, 
+                None,
+                self.text.hidDialogMessage,
+                self.text.hidDialogCaption,
                 wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP
             )
         dialog.ShowModal()
         dialog.Destroy()
-        
-    
+
+
     def SetHidState(self, disableHid):
         """
-        Sets the HID registry values. Will raise WindowsError if not 
+        Sets the HID registry values. Will raise WindowsError if not
         successful.
         """
         key = reg.OpenKey(
@@ -333,8 +333,8 @@ class MceRemote(eg.PluginBase):
                 reg.DeleteValue(key, valueName)
             else:
                 reg.SetValueEx(key, valueName, 0, reg.REG_DWORD, i + 1)
-            
-        
+
+
     def CheckHidState(self, disableHid):
         """
         Checks the HID registry values and calls self.ShowHidMessage
@@ -346,7 +346,7 @@ class MceRemote(eg.PluginBase):
             )
         except WindowsError:
             raise self.Exceptions.DeviceNotFound
-            
+
         needsChange = False
         for i in xrange(4):
             valueName = 'CodeSetNum%i' % i
@@ -361,8 +361,8 @@ class MceRemote(eg.PluginBase):
         reg.CloseKey(key)
         if needsChange:
             wx.CallAfter(self.ShowHidMessage, disableHid)
-            
-        
+
+
     def Configure(self, waitTime=0.15, disableHid=True):
         panel = eg.ConfigPanel()
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
@@ -371,18 +371,18 @@ class MceRemote(eg.PluginBase):
         panel.AddLine(self.text.buttonTimeoutDescr)
         panel.AddLine()
         panel.AddLine(disableHidCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 waitTimeCtrl.GetValue(),
                 disableHidCtrl.GetValue()
             )
-        
-        
-        
+
+
+
 class TransmitIr(eg.ActionBase):
     name = "Transmit IR"
-    
+
     def __call__(self, code=""):
         tmpFile = os.tmpfile()
         tmpFile.write(code)
@@ -390,22 +390,22 @@ class TransmitIr(eg.ActionBase):
         self.plugin.msgThread.dll.MceIrPlaybackFromFile(
             get_osfhandle(tmpFile.fileno())
         )
-        
-        
+
+
     def Configure(self, code=""):
         panel = eg.ConfigPanel()
         code = ' '.join([("%02X" % ord(c)) for c in code])
-            
+
         editCtrl = wx.TextCtrl(panel, -1, code, style=wx.TE_MULTILINE)
         font = editCtrl.GetFont()
         font.SetFaceName("Courier New")
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
-        
+
         def Learn(dummyEvent):
             tmpFile = os.tmpfile()
             self.plugin.msgThread.dll.MceIrRecordToFile(
-                get_osfhandle(tmpFile.fileno()), 
+                get_osfhandle(tmpFile.fileno()),
                 10000
             )
             tmpFile.seek(0)
@@ -414,11 +414,11 @@ class TransmitIr(eg.ActionBase):
             editCtrl.SetValue(' '.join([("%02X" % ord(c)) for c in code]))
         learnButton = wx.Button(panel, -1, "Learn IR Code")
         learnButton.Bind(wx.EVT_BUTTON, Learn)
-        
+
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         panel.sizer.Add((5, 5))
         panel.sizer.Add(learnButton, 0, wx.ALIGN_RIGHT)
         while panel.Affirmed():
             code = editCtrl.GetValue().replace(" ", "").decode("hex_codec")
             panel.SetResult(code)
-    
+

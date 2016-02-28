@@ -219,9 +219,9 @@ TestActions = ('', 'Test Command', '', (),
      ))
 
 ACTIONS = (PowerActions, InputActions, PatternsActions, GammaTableActions, GammaValueActions, RemoteActions, TestActions)
-            
+
 class ActionBase(eg.ActionClass):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, self.cmd, self.groupData, self.data)
@@ -239,7 +239,7 @@ class ActionBase(eg.ActionClass):
             raise self.Exceptions.DeviceNotFound("Got no ACK!")
 
 class JvcDlaSerial(eg.PluginClass):
-    
+
     def __init__(self):
         self.info.eventPrefix = "JVC-DLA"
         for groupId, groupExternalName, groupDescription, groupTmpData, actions in ACTIONS:
@@ -253,8 +253,8 @@ class JvcDlaSerial(eg.PluginClass):
                     data = tmpData
                 TmpAction.__name__ = groupId + evalName
                 group.AddAction(TmpAction)
-    
-    
+
+
     @eg.LogIt
     def __start__(self, port=0):
         self.port = port
@@ -263,12 +263,12 @@ class JvcDlaSerial(eg.PluginClass):
         self.serialThread.Open(port, 19200)
         self.serialThread.SetRts()
         self.serialThread.Start()
-        
-        
+
+
     def __stop__(self):
         self.serialThread.Close()
-        
-        
+
+
     def OnReceive(self, serial):
         buffer = serial.Read(7, 1.0)
         if len(buffer) == 7:
@@ -279,7 +279,7 @@ class JvcDlaSerial(eg.PluginClass):
                 raise self.Exceptions.DeviceNotReady("Unexpected response " + binascii.hexlify(buffer))
         else:
             raise self.Exceptions.DeviceNotReady("Unexpected response " + binascii.hexlify(buffer))
-        
+
         state = buffer[5:len(buffer) - 1]
         if code == "PW":
             if state == chr(0x30):
@@ -383,18 +383,18 @@ class JvcDlaSerial(eg.PluginClass):
             self.TriggerEvent("Model." + state[11:len(state)])
         else:
             raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(code[0]), ord(code[1])))
-        
-    
-    
+
+
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         panel.AddLine("Serial port:", portCtrl)
         while panel.Affirmed():
             panel.SetResult(
-                portCtrl.GetValue(), 
+                portCtrl.GetValue(),
             )
-            
-    
-    
-        
+
+
+
+

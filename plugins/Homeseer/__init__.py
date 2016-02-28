@@ -1,25 +1,30 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/Homeseer/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Homeseer",
     guid = '{3B51BC0D-A030-4BF1-9E54-EBC3C236F582}',
-    author = "Me. made original, modified by krambriw",
+    author = (
+        "Smart Living",
+        "krambriw",
+    ),
     version = "0.0.4",
     kind = "external",
     description = "Homeseer plugin. More info on http://smart-living.geoblog.be/",
@@ -31,14 +36,14 @@ from win32com.client import Dispatch
 
 
 class HomeseerPlugin(eg.PluginClass):
-    
+
     def __init__(self):
         self.AddAction(OnOffCommand)
         self.AddAction(OffCommand)
         self.AddAction(OnCommand)
         self.AddAction(Speak)
 
-        
+
     def __start__(self, hostname, username, password):
         self.hsi = Dispatch("HomeSeer2.application")
         self.connected = False
@@ -71,7 +76,7 @@ class HomeseerPlugin(eg.PluginClass):
     def __close__(self):
         print "Homeseer plugin is now closed."
 
-  
+
     def doSpeak(self, speech):
         if self.connected:
             print "Speaking " + speech
@@ -87,11 +92,11 @@ class HomeseerPlugin(eg.PluginClass):
                     command = "Off"
                 else:
                     command = "On"
-    		
+
                 print "Sending command " + command + " to " + deviceCode
                 self.hs.ExecX10(deviceCode, command, 0, 0, False)
             else:
-                print deviceCode + " does not exist in Homeseer configuration."			
+                print deviceCode + " does not exist in Homeseer configuration."
         else:
             print "Not connected to Homeseer."
 
@@ -103,7 +108,7 @@ class HomeseerPlugin(eg.PluginClass):
                 print "Sending command " + command + " to " + deviceCode
                 self.hs.ExecX10(deviceCode, command, 0, 0, False)
             else:
-                print deviceCode + " does not exist in Homeseer configuration."			
+                print deviceCode + " does not exist in Homeseer configuration."
         else:
             print "Not connected to Homeseer."
 
@@ -115,111 +120,111 @@ class HomeseerPlugin(eg.PluginClass):
                 print "Sending command " + command + " to " + deviceCode
                 self.hs.ExecX10(deviceCode, command, 0, 0, False)
             else:
-                print deviceCode + " does not exist in Homeseer configuration."			
+                print deviceCode + " does not exist in Homeseer configuration."
         else:
             print "Not connected to Homeseer."
 
-		
+
     def Configure(self, hostname="localhost", username="default", password="default"):
         panel = eg.ConfigPanel()
-		
+
         hostnameTextControl = panel.TextCtrl(hostname)
         usernameTextControl = panel.TextCtrl(username)
         passwordTextControl = wx.TextCtrl(panel, -1, password, size=(175, -1), style=wx.TE_PASSWORD)
 
         sizer = wx.FlexGridSizer(rows=3, cols=2, hgap=10, vgap=5)
         sizer.Add(panel.StaticText("Homeseer Host: "))
-        sizer.Add(hostnameTextControl)  
+        sizer.Add(hostnameTextControl)
         sizer.Add(panel.StaticText("Homeseer Username: "))
         sizer.Add(usernameTextControl)
         sizer.Add(panel.StaticText("Homeseer Password: "))    # row2, col1
         sizer.Add(passwordTextControl)
-        
+
         border = wx.BoxSizer()
         border.Add(sizer, 0, wx.ALL, 10)
         panel.SetSizerAndFit(border)
-		
+
         while panel.Affirmed():
             panel.SetResult(
                 hostnameTextControl.GetValue(),
                 usernameTextControl.GetValue(),
                 passwordTextControl.GetValue()
             )
-			
-			
-			
+
+
+
 class OnOffCommand(eg.ActionClass):
-	
+
     def __call__(self, deviceCode):
         self.plugin.doOnOffCommand(deviceCode)
 
 
     def Configure(self, devicecode=""):
         panel = eg.ConfigPanel()
-		
+
         deviceCodeTextControl = panel.TextCtrl(devicecode)
-        
+
         sizer = wx.FlexGridSizer(rows=2, cols=2, hgap=10, vgap=5)
         sizer.Add(panel.StaticText("Device Code: "))
-        sizer.Add(deviceCodeTextControl)  
-        
+        sizer.Add(deviceCodeTextControl)
+
         border = wx.BoxSizer()
         border.Add(sizer, 0, wx.ALL, 10)
         panel.SetSizerAndFit(border)
-		
+
         while panel.Affirmed():
             panel.SetResult(deviceCodeTextControl.GetValue())
 
 
-		
+
 class OffCommand(eg.ActionClass):
-	
+
     def __call__(self, deviceCode):
         self.plugin.doOffCommand(deviceCode)
 
 
     def Configure(self, devicecode=""):
         panel = eg.ConfigPanel()
-		
+
         deviceCodeTextControl = panel.TextCtrl(devicecode)
-        
+
         sizer = wx.FlexGridSizer(rows=2, cols=2, hgap=10, vgap=5)
         sizer.Add(panel.StaticText("Device Code: "))
-        sizer.Add(deviceCodeTextControl)  
-        
+        sizer.Add(deviceCodeTextControl)
+
         border = wx.BoxSizer()
         border.Add(sizer, 0, wx.ALL, 10)
         panel.SetSizerAndFit(border)
-		
+
         while panel.Affirmed():
             panel.SetResult(deviceCodeTextControl.GetValue())
 
 
-		
+
 class OnCommand(eg.ActionClass):
-	
+
     def __call__(self, deviceCode):
         self.plugin.doOnCommand(deviceCode)
 
 
     def Configure(self, devicecode=""):
         panel = eg.ConfigPanel()
-		
+
         deviceCodeTextControl = panel.TextCtrl(devicecode)
-        
+
         sizer = wx.FlexGridSizer(rows=2, cols=2, hgap=10, vgap=5)
         sizer.Add(panel.StaticText("Device Code: "))
-        sizer.Add(deviceCodeTextControl)  
-        
+        sizer.Add(deviceCodeTextControl)
+
         border = wx.BoxSizer()
         border.Add(sizer, 0, wx.ALL, 10)
         panel.SetSizerAndFit(border)
-		
+
         while panel.Affirmed():
             panel.SetResult(deviceCodeTextControl.GetValue())
-		
-		
-		
+
+
+
 class Speak(eg.ActionClass):
 
     def __call__(self, speech):
@@ -228,16 +233,16 @@ class Speak(eg.ActionClass):
 
     def Configure(self, speech="Hello Homeseer World."):
         panel = eg.ConfigPanel()
-		
+
         speechTextControl = panel.TextCtrl(speech)
-        
+
         sizer = wx.FlexGridSizer(rows=1, cols=2, hgap=10, vgap=5)
         sizer.Add(panel.StaticText("Speech: "))
-        sizer.Add(speechTextControl)  
-        
+        sizer.Add(speechTextControl)
+
         border = wx.BoxSizer()
         border.Add(sizer, 0, wx.ALL, 10)
         panel.SetSizerAndFit(border)
-		
+
         while panel.Affirmed():
             panel.SetResult(speechTextControl.GetValue())

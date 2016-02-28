@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-11-30 17:36:52 +0100 (po, 30 11 2009) $
-# $LastChangedRevision: 1246 $
-# $LastChangedBy: Bitmonster $
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -26,7 +23,7 @@ eg.RegisterPlugin(
     kind="external",
     author="Bitmonster",
     guid="{463CB248-A4CB-4EF0-B1FE-F35895A2D4F2}",
-    version = "1.0." + "$LastChangedRevision: 1246 $".split()[1],    
+    version = "1.0.1246",
 )
 
 import wx
@@ -34,7 +31,7 @@ import time
 import os
 import wx.lib.masked as masked
 from eg.WinApi.Dynamic import (
-    byref, 
+    byref,
     windll,
     DWORD,
     GENERIC_READ,
@@ -50,7 +47,7 @@ FT_OPEN_BY_DESCRIPTION = 2
 
 
 class Fhz1000Pc(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddAction(Off)
         self.AddAction(On)
@@ -61,12 +58,12 @@ class Fhz1000Pc(eg.PluginBase):
         self.AddAction(Toggle)
         self.AddAction(StartProgramTimer)
         self.AddAction(ResetToFactoryDefaults)
-        
-        
+
+
     def __start__(self):
         self.timeTask = None
         self.readBuffer = ""
-        
+
         global d2xx
         try:
             d2xx = windll.LoadLibrary("ftd2xx.dll")
@@ -91,13 +88,13 @@ class Fhz1000Pc(eg.PluginBase):
         self.receiveThread._ReadFile = d2xx.FT_W32_ReadFile
         self.receiveThread._ClearCommError = d2xx.FT_W32_ClearCommError
         self.receiveThread._CloseHandle = d2xx.FT_W32_CloseHandle
-        
+
         d2xx.FT_SetLatencyTimer(self.ftHandle, 2)
         d2xx.FT_SetBaudRate(self.ftHandle, 9600)
         d2xx.FT_SetDataCharacteristics(self.ftHandle, 8, 0, 0)
         d2xx.FT_SetFlowControl(self.ftHandle, 0, 17, 19)
         d2xx.FT_SetTimeouts(self.ftHandle, 1000, 1000)
-        
+
         self.receiveThread.Start()
         # Say hello
         self.WriteFhz(0xC9, 0x02, 0x01, 0x1f, 0x42)
@@ -109,10 +106,10 @@ class Fhz1000Pc(eg.PluginBase):
 
         # HMS Init (if required)
         self.WriteFhz(0x04, 0xc9, 0x01, 0x86)
-        
+
         # FS20 Init (if required)
         self.WriteFhz(0x04, 0xc9, 0x01, 0x96)
-        
+
         # calculate the time of the current minute
         t = list(time.localtime())
         t[5] = 0
@@ -120,34 +117,34 @@ class Fhz1000Pc(eg.PluginBase):
         self.WriteFhz(*self.GetTimeData())
         self.nextTaskTime += 60.0
         self.timeTask = eg.scheduler.AddTaskAbsolute(
-            self.nextTaskTime, 
+            self.nextTaskTime,
             self.TimeScheduleTask
         )
         self.receiveThread.SetReadEventCallback(self.HandleReceive)
-        
-        
+
+
     def __stop__(self):
         if self.timeTask is not None:
             eg.scheduler.CancelTask(self.timeTask)
         self.WriteFhz(0x04, 0xc9, 0x01, 0x97)
         if self.receiveThread:
             self.receiveThread.Close()
-        
-        
+
+
     def OnComputerSuspend(self, _suspendType):
         self.__stop__()
-        
-        
+
+
     def OnComputerResume(self, _suspendType):
         self.__start__()
-    
-    
+
+
     def HandleReceive(self, serial):
         data = serial.Read(512)
         if eg.debugLevel:
             print "HR: " + " ".join(["%02X" % ord(c) for c in data])
-        
-        
+
+
     def WriteFhzNoWait(self, telegramType, *args):
         crc = 0xff & sum(args)
         dataStr = "".join([chr(x) for x in args])
@@ -157,7 +154,7 @@ class Fhz1000Pc(eg.PluginBase):
         self.receiveThread.Write(data)
         time.sleep(0.01)
 
-        
+
     def WriteFhz(self, telegramType, *args):
         maxTime = time.clock() + 1.0
         dwStatus = DWORD()
@@ -171,8 +168,8 @@ class Fhz1000Pc(eg.PluginBase):
             time.sleep(0.01)
             #print "write sleep"
         self.WriteFhzNoWait(telegramType, *args)
-        
-        
+
+
     def ReadFhz(self):
         startByte = self.Read(1)
         if startByte != "\x81":
@@ -188,26 +185,26 @@ class Fhz1000Pc(eg.PluginBase):
             dataStr = " ".join(["%02X" % x for x in data])
             print ("-> %02X %02X " % (ord(startByte), length)) + dataStr
         return telegramType, data[2:]
-    
-    
+
+
     def Read(self, numBytes):
         data = self.receiveThread.Read(numBytes, 1.0)
         if len(data) < numBytes:
             self.PrintError("FHZ read timeout error!")
         return data
-        
-    
-        
+
+
+
     def GetTimeData(self):
         t_struct = time.localtime(self.nextTaskTime)
-        year = t_struct.tm_year % 100 
+        year = t_struct.tm_year % 100
         return(
-            0xc9, 0x02, 0x01, 0x61, 
-            year, t_struct.tm_mon, t_struct.tm_mday, 
+            0xc9, 0x02, 0x01, 0x61,
+            year, t_struct.tm_mon, t_struct.tm_mday,
             t_struct.tm_hour, t_struct.tm_min
         )
-        
-        
+
+
     def TimeScheduleTask(self, repeats=1):
         """
         Send the current time 50 times and schedule the next execution at the
@@ -218,16 +215,16 @@ class Fhz1000Pc(eg.PluginBase):
             eg.actionThread.Func(self.WriteFhzNoWait)(*data)
         self.nextTaskTime += 60.0
         self.timeTask = eg.scheduler.AddTaskAbsolute(
-            self.nextTaskTime, 
+            self.nextTaskTime,
             self.TimeScheduleTask
         )
 
-        
-    
+
+
 class ActionBase(eg.ActionBase):
     defaultAddress = 0x094001
     funccode = None # must be assigned by subclass
-    
+
     def __call__(self, address):
         x, a0 = divmod(address, 256)
         a2, a1 = divmod(x, 256)
@@ -236,30 +233,30 @@ class ActionBase(eg.ActionBase):
 
     def GetLabel(self, _address):
         return self.name
-    
-    
+
+
     def GetStringFromAddress(self, address):
         valueStr = ""
         for i in range(11, -1, -1):
             x = (address >> i*2) & 0x03
             valueStr += str(x + 1)
         return valueStr
-        
-        
+
+
     def GetAddressFromString(self, addressString):
         address = 0
         for i in range(12):
             address <<= 2
             address += int(addressString[i]) - 1
         return address
-        
-    
-    def Configure(self, address=None):       
+
+
+    def Configure(self, address=None):
         if address is None:
             address = self.defaultAddress
-            
+
         panel = eg.ConfigPanel()
-            
+
         maskedCtrl = masked.TextCtrl(
             parent=panel,
             mask="#### #### - ####",
@@ -271,32 +268,32 @@ class ActionBase(eg.ActionBase):
         maskedCtrl.SetValue(self.GetStringFromAddress(address))
 
         panel.AddLine("Address:", maskedCtrl)
-        
+
         while panel.Affirmed():
             address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(address)
-            
+
 
 
 class Dim(ActionBase):
     name = "Set dim-level"
-    
+
     def __call__(self, address, level):
         x, a0 = divmod(address, 256)
         a2, a1 = divmod(x, 256)
         self.plugin.WriteFhz(0x04, 0x02, 0x01, 0x01, a2, a1, a0, level)
-    
-    
+
+
     def GetLabel(self, address, level):
         return "Set dim-level to %.02f %%" % (level * 100.00 / 16)
-    
-    
-    def Configure(self, address=None, level=1):       
+
+
+    def Configure(self, address=None, level=1):
         if address is None:
             address = self.defaultAddress
         panel = eg.ConfigPanel()
-            
+
         maskedCtrl = masked.TextCtrl(
             parent=panel,
             mask="#### #### - ####",
@@ -306,15 +303,15 @@ class Dim(ActionBase):
             validRequired=False,
         )
         maskedCtrl.SetValue(self.GetStringFromAddress(address))
-        
+
         def LevelCallback(value):
             return "%.02f %%" % (value * 100.00 / 16)
-        
+
         levelCtrl = eg.Slider(
-            panel, 
-            value=level, 
-            min=1, 
-            max=16, 
+            panel,
+            value=level,
+            min=1,
+            max=16,
             minLabel="6.25 %",
             maxLabel="100.00 %",
             style = wx.SL_AUTOTICKS|wx.SL_TOP,
@@ -322,58 +319,58 @@ class Dim(ActionBase):
             levelCallback=LevelCallback
         )
         levelCtrl.SetMinSize((300, -1))
-        
+
         panel.AddLine("Address:", maskedCtrl)
         panel.AddLine("Level:", levelCtrl)
-        
+
         while panel.Affirmed():
             address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(
-                address, 
+                address,
                 levelCtrl.GetValue(),
             )
-            
-            
-            
+
+
+
 class Off(ActionBase):
     funccode = 0x00
-    
-    
-    
+
+
+
 class On(ActionBase):
     funccode = 0x11
-        
-        
-        
+
+
+
 class ToggleDim(ActionBase):
     name = "Toggle dimming"
     funccode = 0x12
-    
-    
+
+
 
 class DimUp(ActionBase):
     name = "Dim up"
     funccode = 0x13
-    
+
 
 
 class DimDown(ActionBase):
     name = "Dim down"
     funccode = 0x14
-    
-    
+
+
 
 class Toggle(ActionBase):
     funccode = 0x15
-    
-    
+
+
 
 class StartProgramTimer(ActionBase):
     name = "Start/stop programming timer"
     funccode = 0x16
-    
-    
+
+
 
 class ResetToFactoryDefaults(ActionBase):
     name = "Reset to factory defaults"

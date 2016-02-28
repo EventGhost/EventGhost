@@ -1,0 +1,93 @@
+[Tasks]
+Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: checkedonce 
+
+[Languages]
+Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: Deutsch; MessagesFile: "compiler:Languages\German.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+
+[Setup]
+ShowLanguageDialog=auto
+AppName=EventGhost
+AppId=EventGhost
+AppPublisher=EventGhost Project
+AppPublisherURL=http://www.eventghost.net/
+AppSupportURL=http://www.eventghost.net/
+AppUpdatesURL=http://www.eventghost.net/
+AppCopyright=© 2005-2016 EventGhost Project
+AppVerName=EventGhost %(appVersion)s
+AppVersion=%(appVersion)s
+VersionInfoVersion=%(appVersion)s
+VersionInfoDescription=EventGhost Installer
+VersionInfoProductVersion=%(appVersion)s
+DefaultDirName={pf}\EventGhost
+DefaultGroupName=EventGhost
+Compression=lzma/ultra
+SolidCompression=yes
+InternalCompressLevel=ultra
+OutputDir=%(sourceDir)s\build\output
+OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
+InfoBeforeFile=%(dataDir)s\LICENSE.RTF
+DisableReadyPage=yes
+AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
+ChangesAssociations=yes
+
+[Code]
+
+function InitializeSetup: Boolean;
+var
+  MS, LS: Cardinal;
+begin
+  if GetVersionNumbers(ExpandConstant('{sys}\gdiplus.dll'), MS, LS) then
+    Result := true
+  else
+    begin
+      Result := false;
+      MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK);
+    end
+end;
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\eg"
+
+[Files]
+Source: "%(libraryDir)s\*.*"; DestDir: "{app}\%(libraryName)s"; Flags: ignoreversion recursesubdirs
+Source: "%(sourceDir)s\EventGhost.chm"; DestDir: "{app}"
+
+[Dirs]
+Name: "{app}\%(libraryName)s\site-packages"
+
+[Run]
+Filename: "{app}\EventGhost.exe"; Parameters: "-install"
+
+[UninstallRun]
+Filename: "{app}\EventGhost.exe"; Parameters: "-uninstall"
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{userappdata}\EventGhost"
+Type: filesandordirs; Name: "{commonappdata}\EventGhost"
+Type: filesandordirs; Name: "{app}\drivers"
+Type: dirifempty; Name: "{app}"
+Type: files; Name: "{userstartup}\EventGhost.lnk"
+
+[Run] 
+Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
+
+[Icons]
+Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
+Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
+Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
+Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists 
+
+[Registry]
+Root: HKCR; Subkey: ".egtree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "EventGhost Tree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "EventGhost Tree\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
+Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 
+
+Root: HKCR; Subkey: ".egplugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "EventGhost Plugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
+Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 

@@ -1,4 +1,4 @@
-﻿# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 class General:
     apply = u"Toepassen"
     autostartItem = u"Automatisch Starten"

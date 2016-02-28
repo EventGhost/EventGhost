@@ -6,21 +6,23 @@
 #
 # This file is a plugin for EventGhost.
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "DVB Dream",
     author = "townkat",
-    version = "4.1" + "$LastChangedRevision: 1093 $".split()[1],
+    version = "4.1.1093",
     kind = "program",
     guid = "{9D8E0000-E1BE-4767-A4E5-8EC4687CECE1}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=612",
@@ -36,10 +38,10 @@ eg.RegisterPlugin(
 )
 
 # changelog
-# 4.1 by bitmonster 
+# 4.1 by bitmonster
 #     - changed code to use PluginClass.AddActionsFromList
 
-    
+
 ACTIONS = (
     ('Power', 'Power', None, 1),
     ('Mute', 'Mute', None, 2),
@@ -95,20 +97,20 @@ from eg.WinApi import SendMessageTimeout
 
 MyWindowMatcher = eg.WindowMatcher(
     u'dvbdream.exe', None, u'Tfmain', None, None, None, True, 0.0, 0
-) 
+)
 
 class MyActionTemplate(eg.ActionClass):
-    
+
     def __call__(self):
         hwnds = MyWindowMatcher()
         if len(hwnds) == 0:
             raise self.Exceptions.ProgramNotRunning
         try:
-    	    for hwnd in hwnds:           
-            	SendMessageTimeout(hwnd, 1347, 0, self.value)	
+            for hwnd in hwnds:
+                SendMessageTimeout(hwnd, 1347, 0, self.value)
         except:
             raise self.Exceptions.ProgramNotRunning
-    
+
 
 
 class DVBDream(eg.PluginClass):

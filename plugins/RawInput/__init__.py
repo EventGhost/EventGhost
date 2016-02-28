@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Raw Input",
+    author = "Bitmonster",
 )
 
 import time
@@ -95,13 +97,13 @@ class HEVENT(Structure):
         ("nCode", c_int),
         ("dwHookType", DWORD),
         ("wParam", WPARAM),
-        ("lParam", LPARAM),        
+        ("lParam", LPARAM),
     ]
-    
-    
+
+
 
 class RawKeyboardData(object):
-    
+
     def __init__(self, vKey, device, state, tick):
         self.vKey = vKey
         self.device = device
@@ -111,7 +113,7 @@ class RawKeyboardData(object):
 
 
 class RawInput(eg.PluginBase):
-    
+
     def __start__(self):
         self.buf = collections.deque()
         self.ScanDevices()
@@ -127,7 +129,7 @@ class RawInput(eg.PluginBase):
         rid[0].usUsage = 0x06
         rid[0].dwFlags = RIDEV_INPUTSINK
         rid[0].hwndTarget = self.messageReceiver.hwnd
-        RegisterRawInputDevices(rid, 1, sizeof(rid[0]))        
+        RegisterRawInputDevices(rid, 1, sizeof(rid[0]))
         self.hookDll.Start(self.messageReceiver.hwnd)
 
 
@@ -139,19 +141,19 @@ class RawInput(eg.PluginBase):
     def ScanDevices(self):
         nDevices = UINT(0)
         if -1 == GetRawInputDeviceList(
-            None, 
-            byref(nDevices), 
+            None,
+            byref(nDevices),
             sizeof(RAWINPUTDEVICELIST)
         ):
             raise WinError()
         rawInputDeviceList = (RAWINPUTDEVICELIST * nDevices.value)()
         if -1 == GetRawInputDeviceList(
-            cast(rawInputDeviceList, PRAWINPUTDEVICELIST), 
-            byref(nDevices), 
+            cast(rawInputDeviceList, PRAWINPUTDEVICELIST),
+            byref(nDevices),
             sizeof(RAWINPUTDEVICELIST)
         ):
             raise WinError()
-        
+
         cbSize = UINT()
         for i in range(nDevices.value):
             GetRawInputDeviceInfo(
@@ -202,7 +204,7 @@ class RawInput(eg.PluginBase):
                 print "dwSampleRate:", mouse.dwSampleRate
                 print "fHasHorizontalWheel:", mouse.fHasHorizontalWheel
             print
-        
+
 
     def OnRawInput(self, hwnd, mesg, wParam, lParam):
         pcbSize = UINT()
@@ -216,7 +218,7 @@ class RawInput(eg.PluginBase):
         pRawInput = cast(buf, POINTER(RAWINPUT))
         keyboard = pRawInput.contents.data.keyboard
         if keyboard.VKey == 0xFF:
-            eg.eventThread.Call(eg.Print, "0xFF") 
+            eg.eventThread.Call(eg.Print, "0xFF")
             return 0
          #print "Scan code:", keyboard.MakeCode
         info = ""
@@ -229,8 +231,8 @@ class RawInput(eg.PluginBase):
             transition = " %d" % keyboard.Message
         info = "%f " % mTime
         info += "RawI %s: %s(%d), " % (
-            transition, 
-            VK_KEYS[keyboard.VKey], 
+            transition,
+            VK_KEYS[keyboard.VKey],
             keyboard.VKey
         )
         if GetAsyncKeyState(162): #LCtrl
@@ -248,11 +250,11 @@ class RawInput(eg.PluginBase):
             time.clock()
         )
         self.buf.append(rawKeyboardData)
-        eg.eventThread.Call(eg.Print, info) 
+        eg.eventThread.Call(eg.Print, info)
         if GET_RAWINPUT_CODE_WPARAM(wParam) == RIM_INPUT:
             return DefWindowProc(hwnd, mesg, wParam, lParam)
         return 0
-    
+
 
     def OnCopyData(self, hwnd, mesg, wParam, lParam):
         copyData = cast(lParam, PCOPYDATASTRUCT)
@@ -262,7 +264,7 @@ class RawInput(eg.PluginBase):
             and copyData.contents.cbData == sizeof(HEVENT)
             and hEvent.contents.dwHookType == WH_KEYBOARD
         ):
-            eg.eventThread.Call(eg.Print, "return") 
+            eg.eventThread.Call(eg.Print, "return")
             return
         mTime = time.clock()
         msg = MSG()
@@ -303,11 +305,11 @@ class RawInput(eg.PluginBase):
             ):
                 del self.buf[i]
 #                if rawKeyboardData.device != 65603:
-#                    eg.eventThread.Call(eg.Print, "blocked") 
+#                    eg.eventThread.Call(eg.Print, "blocked")
 #                    return 1
-                eg.eventThread.Call(eg.Print, info) 
+                eg.eventThread.Call(eg.Print, info)
                 return 0
             i += 1
-        eg.eventThread.Call(eg.Print, "not found") 
+        eg.eventThread.Call(eg.Print, "not found")
 
-        
+

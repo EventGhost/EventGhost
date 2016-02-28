@@ -5,20 +5,20 @@
 # Copyright (C)  2009 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#Last change: 2009-12-19 09:41 GMT+1
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 import _winreg
@@ -130,8 +130,8 @@ CALL_STATE =	(
 )
 
 DIRECTION = (
-		'Incoming',
-		'Outgoing'
+        'Incoming',
+        'Outgoing'
 )
 #===============================================================================
 
@@ -140,23 +140,23 @@ class EventHandler:
         self.memo = {}
         self.lastIdle = None
         self.lastTime = timtim()
-   
+
     def OnChangeState(self, call_id=None):
         """Statusnderung"""
-        e = self.thread.phoner.GetState(call_id)        
+        e = self.thread.phoner.GetState(call_id)
         if e !="":
             if call_id not in self.memo or (call_id in self.memo and self.memo[call_id]!=e):
                 if e == 'Idle':
                     if self.lastIdle != call_id:
                         self.TriggerEvent(e,call_id)
                         self.lastIdle = call_id
-                        if call_id in self.memo: 
+                        if call_id in self.memo:
                             del self.memo[call_id]
                 else:
                     self.TriggerEvent(e, call_id)
                     self.memo[call_id] = e
                     self.lastIdle = None
-        
+
     def OnFilePlayed(self):
         """Wave-Datei fertig abgespielt"""
         self.TriggerEvent("EndOfPlayedFile")
@@ -171,7 +171,7 @@ class EventHandler:
 
 class PhonerWorkerThread(eg.ThreadWorker):
     """Handles the COM interface in a thread of its own."""
-        
+
     def Setup(self, plugin):
         """This will be called inside the thread at the beginning."""
         self.plugin = plugin
@@ -194,9 +194,9 @@ class PhonerWorkerThread(eg.ThreadWorker):
         del self.events
         del self.phoner
         self.plugin.workerThread = None
-        
+
     def isRunning(self):
-        flag = False        
+        flag = False
         if self.phoner:
             try:
                 dummy = self.phoner.NumberOfCalls
@@ -208,55 +208,55 @@ class PhonerWorkerThread(eg.ThreadWorker):
     def GetInfo(self, attrib, call_id):
         if self.isRunning():
             return eval("self.phoner.%s(call_id)" % attrib)
-        
+
     def CallFunction(self, attrib, call_id):
         if self.isRunning():
             exec('self.phoner.%s(call_id)' % attrib)
-        
+
     def SetValue(self, attrib, value):
         if self.isRunning():
             exec('self.phoner.%s=%s' % (attrib, str(value)))
-        
+
     def GetValue(self, attrib):
         if self.isRunning():
             return getattr(self.phoner, attrib)
-   
+
     def DisconnectReason(self, call_id):
         if self.isRunning():
             return self.phoner.DisconnectReason(call_id)
-   
+
     def MakeCall(self, number):
         if self.isRunning():
             self.phoner.MakeCall(number)
-            
+
     def MakeCallOver(self, number, msn):
         if self.isRunning():
             self.phoner.MakeCallOver(number, msn)
-            
+
     def Transfer(self):
         if self.isRunning():
             self.phoner.Transfer()
-            
+
     def Conference(self):
         if self.isRunning():
             self.phoner.Conference()
-            
+
     def SendDTMF(self, call_id, number):
         if self.isRunning():
             self.phoner.SendDTMF(call_id, number)
-            
+
     def SendWAVE(self, call_id, file):
         if self.isRunning():
             self.phoner.SendWAVE(call_id, file)
-            
+
     def SendTTS(self, call_id, msg):
         if self.isRunning():
             self.phoner.SendTTS(call_id, msg)
-            
+
     def SendSMS(self, number, msg):
         if self.isRunning():
             self.phoner.SendSMS(number, msg)
-            
+
     def SendSMSService(self, number, msg, service):
         if self.isRunning():
             self.phoner.SendSMSService(number, msg, service)
@@ -273,7 +273,7 @@ class Text:
     boxMessage1 = 'Missing file %s !'
     call_id_label = 'CallID (if payload is None):'
     exitDescription = """<rst>Exit Phoner.
-    
+
 Beware of setting **X-Button: minimize** (Window menu) !"""
     enable = ("Disabled","Enabled","Stop","Start")
 #===============================================================================
@@ -284,7 +284,7 @@ class Phoner(eg.PluginBase):
     EventHandler = None
 
     def __init__(self):
-        self.AddActionsFromList(ACTIONS)        
+        self.AddActionsFromList(ACTIONS)
 
     def __start__(self, path = None):
         self.PhonerPath = path
@@ -317,21 +317,21 @@ class Phoner(eg.PluginBase):
             return self.workerThread.CallWait(
                 partial(self.workerThread.SetValue, attrib, value),1000
             )
-            
+
     def Configure(self, path = None):
         path = None
         panel = eg.ConfigPanel(self)
         label1Text = wx.StaticText(panel, -1, self.text.label1)
         phPathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
-        )        
+        )
         phPathCtrlText = phPathCtrl.GetTextCtrl()
         phPathCtrlText.SetEditable(False)
-    
+
         if path is None:
             try:
                 ph_reg = _winreg.OpenKey(
@@ -351,13 +351,13 @@ class Phoner(eg.PluginBase):
         sizerAdd = panel.sizer.Add
         sizerAdd(label1Text, 0, wx.TOP,15)
         sizerAdd(phPathCtrl,0,wx.TOP,3)
-        
+
         def Validation():
             flag = exists(phPathCtrl.GetValue()+"\\phoner.exe")
             panel.dialog.buttonRow.okButton.Enable(flag)
             panel.isDirty = True
             panel.dialog.buttonRow.applyButton.Enable(flag)
-       
+
         def OnPathChange(event = None):
             path = phPathCtrl.GetValue()
             flag = exists(path+"\\phoner.exe")
@@ -375,11 +375,11 @@ class Phoner(eg.PluginBase):
                 Validation()
         phPathCtrl.Bind(wx.EVT_TEXT,OnPathChange)
         OnPathChange()
-  
+
         while panel.Affirmed():
             panel.SetResult(
                 phPathCtrl.GetValue(),
-           )           
+           )
 #===============================================================================
 
 class Start(eg.ActionBase):
@@ -389,7 +389,7 @@ class Start(eg.ActionBase):
         hwnd = PhonerWin()
         if not hwnd:
             ph = self.plugin.PhonerPath+'\\phoner.exe'
-            if isfile(ph):        
+            if isfile(ph):
                 #wx.CallAfter(Popen,[ph])
                 Popen([ph])
                 flag = False
@@ -423,7 +423,7 @@ class WindowControl(eg.ActionClass):
                 ShowWindowAsync(hwnd, SW_MINIMIZE)
         else:
             self.PrintError(self.plugin.text.text1)
-            return self.plugin.text.text1         
+            return self.plugin.text.text1
 #===============================================================================
 
 class Exit(eg.ActionBase):
@@ -472,10 +472,10 @@ class MakeCallOver(eg.ActionBase):
                 )
         else:
             self.PrintError(self.plugin.text.text1)
-    
+
     def GetLabel(self, number,msn):
         return self.text.treeLabel % (number,msn)
-        
+
     def Configure(self, number="",msn=""):
         panel = eg.ConfigPanel()
         labelNumber = wx.StaticText(panel, -1, self.text.labelNumber)
@@ -518,7 +518,7 @@ class Conference(eg.ActionBase):
         else:
             self.PrintError(self.plugin.text.text1)
 #===============================================================================
-        
+
 class SendDTMF(eg.ActionBase):
     def __call__(self, call_id='', string=""):
         if eg.event.payload:
@@ -534,7 +534,7 @@ class SendDTMF(eg.ActionBase):
                     sleep(0.2)
         else:
             self.PrintError(self.plugin.text.text1)
-            
+
     def GetLabel(self, call_id, msg):
         return self.name + ": " + msg
 
@@ -552,7 +552,7 @@ class SendDTMF(eg.ActionBase):
         panel.sizer.Add(textControl,0,wx.TOP,3)
         panel.sizer.Add(labelDtmf,0,wx.TOP,10)
         panel.sizer.Add(textControl2,0,wx.TOP,3)
-        
+
         def onStringChange(evt):
             val = textControl2.GetValue()
             cur = textControl2.GetInsertionPoint()
@@ -575,7 +575,7 @@ class SendDTMF(eg.ActionBase):
         dtmfLabel = "DTMF string to send:"
         toolTip = "Allowed characters: 0,1,2,3,4,5,6,7,8,9,A,B,C,D,*,#"
 #===============================================================================
-        
+
 class SendWAVE(eg.ActionBase):
     def __call__(self, call_id='', file=""):
         if eg.event.payload:
@@ -589,7 +589,7 @@ class SendWAVE(eg.ActionBase):
                 ),1000)
         else:
             self.PrintError(self.plugin.text.text1)
-            
+
     def GetLabel(self, call_id, file):
         return self.name + ": " + file
 
@@ -601,7 +601,7 @@ class SendWAVE(eg.ActionBase):
         textControl.SetMinSize((w,-1))
         label2Text = wx.StaticText(panel, -1, self.text.label2)
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFile,
             dialogTitle = self.text.browseTitle,
@@ -621,7 +621,7 @@ class SendWAVE(eg.ActionBase):
         browseTitle = "Selected file:"
         toolTipFile = "Press button and browse to select file ..."
 #===============================================================================
-        
+
 class SendTTS(eg.ActionBase):
     def __call__(self, call_id='', msg=""):
         if eg.event.payload:
@@ -635,7 +635,7 @@ class SendTTS(eg.ActionBase):
                 ),1000)
         else:
             self.PrintError(self.plugin.text.text1)
-            
+
     def GetLabel(self, call_id, msg):
         sms = msg[:32]+"..." if len(msg) > 32 else msg
         return self.name + ": " + sms
@@ -657,7 +657,7 @@ class SendTTS(eg.ActionBase):
     class text:
         label2 = "Message to send:"
 #===============================================================================
-        
+
 class SendSMS(eg.ActionBase):
     def __call__(self, number="", msg=""):
         if PhonerWin():
@@ -693,7 +693,7 @@ class SendSMS(eg.ActionBase):
         label1 = "Recipient number:"
         label2 = "Message to send:"
 #===============================================================================
-        
+
 class SendSMSService(eg.ActionBase):
     def __call__(self, number="", msg="",service=""):
         if PhonerWin():
@@ -706,7 +706,7 @@ class SendSMSService(eg.ActionBase):
                 ),1000)
         else:
             self.PrintError(self.plugin.text.text1)
-            
+
     def GetLabel(self, number, msg, service):
         sms = msg[:32]+"..." if len(msg) > 32 else msg
         return self.name + ": " + sms
@@ -738,7 +738,7 @@ class SendSMSService(eg.ActionBase):
         label2 = "Message to send:"
         label3 = "SMS service number:"
 #===============================================================================
-        
+
 class DisconnectReason(eg.ActionBase):
     def __call__(self,call_id=""):
         if eg.event.payload:
@@ -751,7 +751,7 @@ class DisconnectReason(eg.ActionBase):
                 ),1000)
         else:
             self.PrintError(self.plugin.text.text1)
-        
+
     def Configure(self, call_id=""):
         panel = eg.ConfigPanel()
         labelText = wx.StaticText(panel, -1, self.plugin.text.call_id_label)
@@ -763,7 +763,7 @@ class DisconnectReason(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(textControl.GetValue())
 #===============================================================================
-        
+
 class CallFunction(eg.ActionBase):
     def __call__(self,call_id=""):
         if eg.event.payload:
@@ -777,7 +777,7 @@ class CallFunction(eg.ActionBase):
                 ),1000)
         else:
             self.PrintError(self.plugin.text.text1)
-        
+
     def Configure(self, call_id=""):
         panel = eg.ConfigPanel()
         labelText = wx.StaticText(panel, -1, self.plugin.text.call_id_label)
@@ -789,7 +789,7 @@ class CallFunction(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(textControl.GetValue())
 #===============================================================================
-        
+
 class NumberOfCalls(eg.ActionBase):
     def __call__(self):
         if PhonerWin():
@@ -806,7 +806,7 @@ class GetInfo2(eg.ActionBase):
         else:
             self.PrintError(self.plugin.text.text1)
 #===============================================================================
-        
+
 class SetState(eg.ActionBase):
     def __call__(self, enabled=True):
         if PhonerWin():
@@ -814,17 +814,17 @@ class SetState(eg.ActionBase):
             return self.plugin.SetValue(attrib,enabled)
         else:
             self.PrintError(self.plugin.text.text1)
-    
+
     def GetLabel(self, enabled):
         return self.name + ": " + self.plugin.text.enable[int(enabled)+self.value]
-        
+
     def Configure(self, enabled=True):
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.name, 
-            choices = self.plugin.text.enable[self.value:self.value+2], 
+            panel,
+            -1,
+            self.name,
+            choices = self.plugin.text.enable[self.value:self.value+2],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(enabled)
@@ -843,7 +843,7 @@ class ToggleRecording(eg.ActionBase):
         else:
             self.PrintError(self.plugin.text.text1)
 #===============================================================================
-        
+
 class GetInfo(eg.ActionBase):
     def __call__(self,call_id=""):
         attrib = self.__class__.__name__
@@ -862,7 +862,7 @@ class GetInfo(eg.ActionBase):
                     return CALL_STATE[res[1]], DIRECTION[res[2]], res[3], res[4]
         else:
             self.PrintError(self.plugin.text.text1)
-        
+
     def Configure(self, call_id=""):
         panel = eg.ConfigPanel()
         labelText = wx.StaticText(panel, -1, self.plugin.text.call_id_label)
@@ -880,12 +880,12 @@ ACTIONS = (
     (Exit,"Exit","Exit Phoner ",Text.exitDescription ,None),
     (eg.ActionGroup, 'Phonercontrols', 'Phoner GUI controls', 'Phoner GUI controls.',(
         (WindowControl,"Minimize","Minimize window","Minimize window.",None),
-        (WindowControl,"Restore","Restore window","Restore window.",SW_RESTORE),    
-        (SetState,"SetAutoRecordEnabled","Set autorecord","Set Autorecord.",0),    
-        (SetState,"SetRecordingEnabled","Start/stop recording","Start/stop recording.",2),    
-        (SetState,"SetAnsweringMachineEnabled","Set answering machine","Set answering machine.",0),    
-        (SetState,"SetWindowEnabled","Set incoming call window","Set incoming call window.",0),    
-        (ToggleRecording,"ToggleRecording","Toggle recording of current call","Toggle recording of current call.",None),    
+        (WindowControl,"Restore","Restore window","Restore window.",SW_RESTORE),
+        (SetState,"SetAutoRecordEnabled","Set autorecord","Set Autorecord.",0),
+        (SetState,"SetRecordingEnabled","Start/stop recording","Start/stop recording.",2),
+        (SetState,"SetAnsweringMachineEnabled","Set answering machine","Set answering machine.",0),
+        (SetState,"SetWindowEnabled","Set incoming call window","Set incoming call window.",0),
+        (ToggleRecording,"ToggleRecording","Toggle recording of current call","Toggle recording of current call.",None),
 #        (GetVolume,"GetVolume","Get volume","Get volume.", None),
 #        (SetVolume,"SetVolume","Set volume","Set volume.", 0),
 #        (SetVolume,"VolumeUp","Volume up","Volume up.", 1),

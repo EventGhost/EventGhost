@@ -1,4 +1,4 @@
-﻿# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 class General:
     apply = u"Použít"
     autostartItem = u"Automatický start"

@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Sound Mixer Ex",
     author = "Dexter",
-    version = "1.1." + "$LastChangedRevision: 1204 $".split()[1],
+    version = "1.1.1204",
     description = (
         "This plugin allows you to set virtually any control available on "
         "your soundcard.\n\n<p>"
@@ -13,7 +13,7 @@ eg.RegisterPlugin(
 )
 
 # changelog
-# 1.1.x bitmonster 
+# 1.1.x bitmonster
 #     - removed mbcs decoding everywhere, because eg.WinApi.Dynamic now uses the
 #       unicode versions of all functions as default.
 #     - root node of tree now starts expanded.
@@ -21,22 +21,22 @@ eg.RegisterPlugin(
 
 from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
-    HMIXER, 
+    HMIXER,
     MIXERCAPS,
-    MIXERCONTROL, 
-    MIXERLINECONTROLS, 
-    MIXERLINE, 
-    MIXERCONTROL, 
+    MIXERCONTROL,
     MIXERLINECONTROLS,
-    MIXERCONTROLDETAILS, 
-    MIXERCONTROLDETAILS_UNSIGNED, 
-    mixerOpen, 
+    MIXERLINE,
+    MIXERCONTROL,
+    MIXERLINECONTROLS,
+    MIXERCONTROLDETAILS,
+    MIXERCONTROLDETAILS_UNSIGNED,
+    mixerOpen,
     mixerGetNumDevs,
     mixerGetDevCaps,
-    mixerGetControlDetails, 
-    mixerGetLineInfo, 
+    mixerGetControlDetails,
+    mixerGetLineInfo,
     mixerGetLineControls,
-    mixerSetControlDetails, 
+    mixerSetControlDetails,
     MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
     MIXERCONTROL_CONTROLTYPE_MUTE,
     MIXERCONTROL_CONTROLTYPE_VOLUME,
@@ -48,7 +48,7 @@ from eg.WinApi.Dynamic.Mmsystem import (
     MIXER_GETLINEINFOF_SOURCE,
     MMSYSERR_NOERROR,
 
-    MIXERCONTROL_CT_CLASS_MASK,   
+    MIXERCONTROL_CT_CLASS_MASK,
     MIXERCONTROL_CT_CLASS_FADER,
     MIXERCONTROL_CONTROLTYPE_VOLUME,
     MIXERCONTROL_CONTROLTYPE_BASS,
@@ -86,7 +86,7 @@ from eg.WinApi.Dynamic.Mmsystem import (
     MIXERCONTROL_CONTROLTYPE_MICROTIME,
     MIXERCONTROL_CONTROLTYPE_MILLITIME,
     MIXERCONTROL_CT_CLASS_CUSTOM,
-    
+
     MIXERCONTROL_CONTROLF_DISABLED,
     MIXERCONTROL_CONTROLF_MULTIPLE,
     MIXERCONTROL_CONTROLF_UNIFORM,
@@ -257,8 +257,8 @@ class SoundMixerWin32():
         min = control.Bounds.lMinimum
         value = 100.0 * (value - min) / (max - min)
         return value
-        
-        
+
+
     def SetFaderValue(self, deviceId, controlId, value):
         mixer = self.GetMixer(deviceId)
         control = self.GetControl(mixer, controlId)
@@ -280,8 +280,8 @@ class SoundMixerWin32():
                 continue
             result.append((i, mixcaps.szPname))
         return result
-        
-        
+
+
     def GetDeviceLines(self, deviceId=0):
         mixercaps = MIXERCAPS()
         mixerline = MIXERLINE()
@@ -290,7 +290,7 @@ class SoundMixerWin32():
         hmixer = self.GetMixer(deviceId)
         if mixerGetDevCaps(hmixer, byref(mixercaps), sizeof(MIXERCAPS)):
             raise SoundMixerException()
-        
+
         for i in range(mixercaps.cDestinations):
             mixerline.cbStruct = sizeof(MIXERLINE)
             mixerline.dwDestination = i
@@ -312,7 +312,7 @@ class SoundMixerWin32():
 
                 for control in self.GetControls(hmixer, mixerline):
                     result.append((control[0], destination, source, control[1], control[2], control[3]))
-           
+
         return result
 
 
@@ -347,8 +347,8 @@ class SoundMixerWin32():
             result.append(
                 (
                     mixerControl.dwControlID,
-                    mixerControl.szName, 
-                    controlClass["name"], 
+                    mixerControl.szName,
+                    controlClass["name"],
                     controlClassTypeName,
                     ", ".join(flagNames)
                 )
@@ -446,7 +446,7 @@ class SoundMixerEx(eg.PluginClass):
 class SetSoundSwitch(eg.ActionClass):
     name = "Change sound switch"
     description = "Changes a selectable sound switch control"
-    
+
     def __call__(self, deviceId=-1, controlId=-1, name="", value=0):
         if deviceId == -1 or controlId == -1:
             self.printError("No device/control selected")
@@ -482,7 +482,7 @@ class SetSoundSwitch(eg.ActionClass):
 
         panel.sizer.Add(treeTxt)
         panel.sizer.Add(treeCtrl, 1, wx.EXPAND)
-        panel.sizer.Add((5,5))      
+        panel.sizer.Add((5,5))
         panel.sizer.Add(actionTxt)
         panel.sizer.Add(actionCtrl)
 
@@ -498,7 +498,7 @@ class SetSoundSwitch(eg.ActionClass):
 class SetSoundFader(eg.ActionClass):
     name = "Change sound fader/slider"
     description = "Changes a selectable sound fader/slider control"
-    
+
     def __call__(self, deviceId=-1, controlId=-1, name="", value=0, relative=1):
         if deviceId == -1 or controlId == -1:
             self.printError("No device/control selected")

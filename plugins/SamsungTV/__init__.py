@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/SamsungTV/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Samsung Serial
 # ================
 # Public Domain
-#
 #
 # Revision history:
 # -----------------
@@ -31,8 +32,12 @@ Plugin to control Samsung TV RS-232."""
 
 eg.RegisterPlugin(
     name = "Samsung TV",
-    author = "prostetnic, Bartman and Fiasco",
-    version = "0.2." + "$LastChangedRevision: 1181 $".split()[1],
+    author = (
+        "prostetnic",
+        "Bartman",
+        "Fiasco",
+    ),
+    version = "0.2.1181",
     kind = "external",
     guid = "{ADA3F327-DA18-44E0-A712-8C1C90B52DEC}",
     description = "Control Samsung TV via RS232",
@@ -81,8 +86,8 @@ import binascii
 cmdList = (
     ('Power / Sleep', None, None, None),
         ('PowerOff',               'Power Standby',                                              '00000001',             None),
-        ('PowerOn',                'Power On',                                                   '00000002',             None),  
-        ('PowerStatus',            'Get Power Status',                                           '00000000',             None),                  
+        ('PowerOn',                'Power On',                                                   '00000002',             None),
+        ('PowerStatus',            'Get Power Status',                                           '00000000',             None),
     ('Master Volume', None, None, None),
         ('MuteToggle',             'Mute Toggle',                                                '02000000',             None),
         ('VolumeUp',               'Master Volume Up',                                           '01000100',             None),
@@ -93,7 +98,7 @@ cmdList = (
         ('ChannelUp',              'Channel Up',                                                 '03000100',             None),
         ('ChannelDn',              'Channel Down',                                               '03000201',             None),
     ('Input', None, None, None),
-        ('TV',                     'TV',                                                         '0a000000',           None),               
+        ('TV',                     'TV',                                                         '0a000000',           None),
         ('AV1',                    'AV 1',                                                       '0a000100',           None),
         ('AV2',                    'AV 2',                                                       '0a000101',           None),
         ('AV3',                    'AV 3',                                                       '0a000102',           None),
@@ -110,9 +115,9 @@ cmdList = (
         ('HDMI2',                  'HDMI 2',                                                     '0a000501',           None),
         ('HDMI3',                  'HDMI 3',                                                     '0a000502',           None),
         ('HDMI4',                  'HDMI 4',                                                     '0a000503',           None),
-        ('DVI1',                   'DVI 1',                                                      '0a000600',           None),        
-        ('DVI2',                   'DVI 2',                                                      '0a000601',           None),        
-        ('DVI3',                   'DVI 3',                                                      '0a000602',           None),  
+        ('DVI1',                   'DVI 1',                                                      '0a000600',           None),
+        ('DVI2',                   'DVI 2',                                                      '0a000601',           None),
+        ('DVI3',                   'DVI 3',                                                      '0a000602',           None),
     ('Picture', None, None, None),
         ('Dynamic',                'Dynamic',                                                    '0b000000',           None),
         ('Standard',               'Standard',                                                   '0b000001',           None),
@@ -129,7 +134,7 @@ cmdList = (
         ('DynamicContrastOff',     'Dynamic Contrast Off',                                       '0b090100',           None),
         ('DynamicContrastLow',     'Dynamic Contrast Low',                                       '0b090101',           None),
         ('DynamicContrastMed',     'Dynamic Contrast Medium',                                    '0b090102',           None),
-        ('DynamicContrastHigh',    'Dynamic Contrast High',                                      '0b090103',           None),              
+        ('DynamicContrastHigh',    'Dynamic Contrast High',                                      '0b090103',           None),
         ('ColorSpaceAuto',         'Color Space Auto',                                           '0b090300',           None),
         ('ColorSpaceWide',         'Color Space Wide',                                           '0b090301',           None),
     ('Sound', None, None, None),
@@ -148,10 +153,10 @@ cmdList = (
         ('MultiTrackMono',         'Multi-Track Mono',                                           '0c040000',           None),
         ('MultiTrackStereo',       'Multi-Track Stereo',                                         '0c040001',           None),
         ('MultiTrackSAP',          'Multi-Track SAP',                                            '0c040002',           None),
-    (None, None, None, None),       
+    (None, None, None, None),
 )
-         
-        
+
+
 def generatechecksum(value):
     print value
     data = value.decode("hex")
@@ -166,7 +171,7 @@ def generatechecksum(value):
     print "Two's complement:", hex((~sum + 1) & 0xFF)
     data = hex((~sum + 1) & 0xFF)
     data = str(data)[2:]
-    if ( len(data) < 2 ):    
+    if ( len(data) < 2 ):
        data = '0' + data
     print "checksum " + data
     return data
@@ -201,10 +206,10 @@ class Raw(eg.ActionWithStringParameter):
         value = generatechecksum(data)
         value = binascii.a2b_hex(data + value)
         self.plugin.serialThread.SuspendReadEvents()
-        self.plugin.serialThread.Write(value)       
+        self.plugin.serialThread.Write(value)
         self.plugin.serialThread.ResumeReadEvents()
 
-class SamsungSerial(eg.PluginClass):     
+class SamsungSerial(eg.PluginClass):
     def __init__(self):
         self.serial = None
         group = self
@@ -238,7 +243,7 @@ class SamsungSerial(eg.PluginClass):
                 group.AddAction(Action)
 
         group.AddAction(Raw)
-          
+
 
     def __start__(self, port):
         self.port = port
@@ -246,11 +251,11 @@ class SamsungSerial(eg.PluginClass):
         self.serialThread.SetReadEventCallback(self.OnReceive)
         self.serialThread.Open(port, 9600, '8N1')
         self.serialThread.SetRts()
-        self.serialThread.Start()        
+        self.serialThread.Start()
 
     def __stop__(self):
         self.serialThread.Close()
-        
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
@@ -275,6 +280,6 @@ class SamsungSerial(eg.PluginClass):
                return
             if buffer == '030cf1':
                self.TriggerEvent("Command", "Success")
-               return                           
+               return
             buffer += b
 

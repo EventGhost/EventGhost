@@ -191,7 +191,7 @@ def SendCfg(
     topSizer.AddGrowableCol(2)
     topSizer.AddGrowableRow(4)
     topSizer.Add(subjectLbl,(0, 0),flag = wx.ALIGN_RIGHT)
-    topSizer.Add(subjectCtrl, (0, 1), (1, 2), flag = wx.EXPAND)    
+    topSizer.Add(subjectCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
     topSizer.Add(fromLbl,(1, 0),flag = wx.ALIGN_RIGHT)
     topSizer.Add(fromCtrl, (1, 1), (1, 2), flag = wx.EXPAND)
     topSizer.Add(toLbl,(2, 0),flag = wx.ALIGN_RIGHT)
@@ -203,7 +203,7 @@ def SendCfg(
     topSizer.Add(outTextCtrl, (4, 1), (1, 2), flag = wx.EXPAND)
     topSizer.Add(textsLbl,(5, 0),flag = wx.ALIGN_RIGHT)
     topSizer.Add(textsCtrl, (5, 1), (1, 2), flag = wx.EXPAND)
-    
+
     return (subjectCtrl,
         fromCtrl,
         toCtrl,
@@ -239,7 +239,7 @@ def DecodeSection(section, coding=None):
             pass
         else:
             return section.strip(' "')
-        
+
     for charset in List:
         try:
             section = section.decode(charset,'replace')
@@ -248,8 +248,8 @@ def DecodeSection(section, coding=None):
             pass
         else:
             return section.strip(' "')
-    return u''        
-  
+    return u''
+
 
 def ParseItem(item):
     x = decode_header(item)[0]
@@ -315,7 +315,7 @@ def GetParts(msg, ext = False):
                 body = unicode(message.get_payload(decode=True),
                                'us-ascii',
                                "replace")
-            return body.strip()+u"\n"        
+            return body.strip()+u"\n"
 
     if not ext:
         return [ParseItem(msg['Subject']),msg['From'], get_body(msg)]
@@ -394,13 +394,13 @@ class MessageFrame(wx.MiniFrame):
         self.plugin = parent.plugin
         self.SetBackgroundColour(wx.NullColour)
         self.id = self.plugin.tempData[self.message[3]][2][int(self.message[4][0])-1][0]
-        
+
     def ShowMessageFrame(
         self, position, size
     ):
-    
+
         text = self.plugin.text
-        self.setTitle()        
+        self.setTitle()
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         centralSizer = wx.GridBagSizer(10, 10)
         centralSizer.AddGrowableRow(0)
@@ -413,14 +413,14 @@ class MessageFrame(wx.MiniFrame):
             '', #wx.TE_AUTO_URL not works
             style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_AUTO_URL|wx.TE_RICH2
         )
-        self.messageCtrl.SetValue(self.message[2]) #wx.TE_AUTO_URL activation 
+        self.messageCtrl.SetValue(self.message[2]) #wx.TE_AUTO_URL activation
         #Buttons
         sizes = []
         sizes.append(self.GetTextExtent(text.delete)[0])
         sizes.append(self.GetTextExtent(text.client)[0])
         sizes.append(self.GetTextExtent(text.reply)[0])
         sizes.append(self.GetTextExtent(text.close)[0])
-        w=max(sizes)+12        
+        w=max(sizes)+12
         self.deleteButton = wx.Button(self, -1, text.delete, size=((w,-1)))
         self.clientButton = wx.Button(self, -1, text.client, size=((w,-1)))
         self.replyButton = wx.Button(self, -1, text.reply, size=((w,-1)))
@@ -434,7 +434,7 @@ class MessageFrame(wx.MiniFrame):
         self.SetSizer(mainSizer)
         mainSizer.Fit(self)
         mainSizer.Layout()
-        
+
         def onURLclick(event):
             if event.MouseEvent.LeftDown():
                 url = event.GetEventObject().GetValue()[event.GetURLStart(): event.GetURLEnd()]
@@ -442,7 +442,7 @@ class MessageFrame(wx.MiniFrame):
             else:
                 event.Skip()
         self.messageCtrl.Bind(wx.EVT_TEXT_URL,onURLclick)
-       
+
         def OnCloseWindow(event):
             self.parent.messFramSize = self.GetSize()
             self.parent.messFramPosition = self.GetPosition()
@@ -453,7 +453,7 @@ class MessageFrame(wx.MiniFrame):
         def onCloseButton(evt):
             self.Close(True)
         self.closeButton.Bind(wx.EVT_BUTTON, onCloseButton)
-        
+
         def onClientButton(evt):
             RunEmailClient(text)
         self.clientButton.Bind(wx.EVT_BUTTON, onClientButton)
@@ -513,7 +513,7 @@ class MessageFrame(wx.MiniFrame):
         self.SetSize(size)
         self.SetPosition(position)
         self.Show(True)
-    
+
     def getEmailNum(self):
         return self.message[4][0]
 
@@ -527,7 +527,7 @@ class MessageFrame(wx.MiniFrame):
         if len(title) > 68:
             title = title[:65]+'...'
         self.SetTitle(title)
-    
+
     def Unblock(self, unblock):
         if unblock:
             data = self.plugin.tempData[self.message[3]][2]
@@ -552,7 +552,7 @@ class DetailsFrame(wx.MiniFrame):
     messageFrame = None
     messFramSize = (-1, -1)
     messFramPosition = (-1, -1)
-    
+
     def __init__(self, parent):
         self.parent = parent
         self.plugin = parent.plugin
@@ -570,7 +570,7 @@ class DetailsFrame(wx.MiniFrame):
         self.menuFlagD = False
         self.delFlag = False
 
-    
+
     def ShowDetailsFrame(
         self,
         position,
@@ -677,7 +677,7 @@ class DetailsFrame(wx.MiniFrame):
 
     def onCloseButton(self, evt):
         self.Close(True)
-        
+
     def deleteEmails(self, indx, sel, close = False):
         self.delFlag = True
         if close:
@@ -694,7 +694,7 @@ class DetailsFrame(wx.MiniFrame):
         wt = self.plugin.tempData[indx][3]
         wt.DeleteAction((indx, sel, 0,self))
 
-    def onDeleteButton(self, evt):        
+    def onDeleteButton(self, evt):
         item = self.messagesListCtrl.GetFirstSelected()
         sel = []
         while item != -1:
@@ -717,16 +717,16 @@ class DetailsFrame(wx.MiniFrame):
         self.deleteButton.Enable(self.menuFlagD)
         if event:
             event.Skip()
-            
+
     def Disappear(self):
         if self.delFlag:
             self.Show(False)
         else:
             self.Close()
-            
+
     def resDelFlag(self):
         self.delFlag = False
-            
+
     def isCloseReq(self):
         return self.delFlag and not self.IsShown()
 
@@ -741,7 +741,7 @@ class DetailsFrame(wx.MiniFrame):
             self.messagesListCtrl.SetStringItem(row, 2, item[1])
             self.messagesListCtrl.SetStringItem(row, 3, item[2])
             row += 1
-        self.SetTitle(self.plugin.text.detTitle % (self.setup[0],str(row)))        
+        self.SetTitle(self.plugin.text.detTitle % (self.setup[0],str(row)))
         label = self.parent.GetNum()
         if label != row:
             self.parent.SetNum(row)
@@ -827,7 +827,7 @@ class DetailsFrame(wx.MiniFrame):
                                 resultMessage[4] = sel
                             else: #mode = 0 ~ delete
                                 mailbox.dele(id)
-                                
+
                 else:               #IMAP
                     typ, txt = mailbox.select('INBOX') #Folder selection
                     if txt[0]:
@@ -857,7 +857,7 @@ class DetailsFrame(wx.MiniFrame):
                     ix = [i[4] for i in obsData].index(item)
                     iac = [cfg[0] for cfg in self.plugin.configs].index(obsData[ix][3])
                     account =  self.plugin.configs[iac]
-                    
+
             if oldAccount != '':
                 if account[1] == 0: #POP
                     mailbox.quit()
@@ -893,7 +893,7 @@ class DetailsFrame(wx.MiniFrame):
                             eg.PrintError(self.text.error0+' '+str(errmsg))
                             Error = True
                             mailbox.quit()
-                
+
                 else:               #IMAP
                     try:
                         if USE_SSL:
@@ -910,13 +910,13 @@ class DetailsFrame(wx.MiniFrame):
                             eg.PrintError(self.text.error2+' '+self.text.error4 % (USER, SERVER, PORT))
                             Error = True
                             mailbox.logout()
-                if Error:            
+                if Error:
                     while oldAccount == account:
                         m -= 1
                         if m == -1:
                             Error = False
                             break
-                        else:                            
+                        else:
                             item = sel[m]
                             ix = [i[4] for i in obsData].index(item)
                             iac = [cfg[0] for cfg in self.plugin.configs].index(obsData[ix][3])
@@ -929,7 +929,7 @@ class NotifFrame(wx.MiniFrame):
     detailsFrame = None
     detFramePosition = (-1,-1)
     detFrameSize = (-1,-1)
-    
+
     def __init__(self, parent):
         wx.MiniFrame.__init__(
             self,
@@ -939,7 +939,7 @@ class NotifFrame(wx.MiniFrame):
             size = (120, 60),
             style = wx.STAY_ON_TOP|wx.CAPTION
         )
-        
+
     def ShowNotifFrame(
         self,
         plugin,
@@ -963,14 +963,14 @@ class NotifFrame(wx.MiniFrame):
         label2.SetPosition((w,4))
         self.label.SetToolTipString(tip)
         label2.SetToolTipString(tip)
-        self.Refresh()        
-        
+        self.Refresh()
+
         def OnCloseWindow(event):
             if self.detailsFrame:
                 self.detailsFrame.Disappear()
             self.Destroy()
             event.Skip()
-        self.Bind(wx.EVT_CLOSE, OnCloseWindow)      
+        self.Bind(wx.EVT_CLOSE, OnCloseWindow)
 
         def OnDoubleClick(evt):
             if evt.ControlDown(): #with CTRL
@@ -996,7 +996,7 @@ class NotifFrame(wx.MiniFrame):
             self.Show(False)
         self.Bind(wx.EVT_RIGHT_UP, OnRightClick)
         self.label.Bind(wx.EVT_RIGHT_UP, OnRightClick)
-        label2.Bind(wx.EVT_RIGHT_UP, OnRightClick)        
+        label2.Bind(wx.EVT_RIGHT_UP, OnRightClick)
         BringWindowToTop(self.GetHandle())
         wx.Yield()
         SetEvent(event)
@@ -1008,7 +1008,7 @@ class NotifFrame(wx.MiniFrame):
             self.Show(False)
         else:
             self.Close()
-        
+
     def GetNum(self):
         return int(self.label.GetLabel())
 
@@ -1045,7 +1045,7 @@ class outServerDialog(wx.MiniFrame):
         self.plugin = plugin
         self.servers = cpy(self.panel.servers)
         self.cfgs = cpy(self.panel.cfgs)
-        self.val = self.panel.outServerCtrl.GetStringSelection()        
+        self.val = self.panel.outServerCtrl.GetStringSelection()
         self.SetBackgroundColour(wx.NullColour)
 #===============================================================================
 
@@ -1086,7 +1086,7 @@ class outServerDialog(wx.MiniFrame):
             if outPortCtrl.GetValue() < 0:
                 flag = False
             if useSecureCtrl.GetValue():
-                if userCtrl.GetValue() == '' or passwCtrl.GetValue() == '': 
+                if userCtrl.GetValue() == '' or passwCtrl.GetValue() == '':
                     flag = False
             btn1.Enable(flag)
             btnApp.Enable(flag)
@@ -1201,11 +1201,11 @@ class outServerDialog(wx.MiniFrame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
         def onOK(evt):
             self.panel.servers = self.servers
             self.panel.cfgs = self.cfgs
@@ -1216,7 +1216,7 @@ class outServerDialog(wx.MiniFrame):
             self.panel.validation()
             self.Close()
         btn1.Bind(wx.EVT_BUTTON,onOK)
-        
+
         def OnLabelAndPassword(evt):
             if self.servers <> []:
                 srvrs = [item[8] for item in self.cfgs]
@@ -1225,7 +1225,7 @@ class outServerDialog(wx.MiniFrame):
                 label = labelCtrl.GetValue().strip()
                 val = passwCtrl.GetValue()
                 if val != '':
-                    self.passSMTP[label] = val                    
+                    self.passSMTP[label] = val
                 self.servers[sel][0]=label
                 if listBoxCtrl.GetStrings().count(oldLbl)==1:
                     if oldLbl in srvrs:
@@ -1311,7 +1311,7 @@ class outServerDialog(wx.MiniFrame):
             userCtrl.Enable(val)
             userLbl.Enable(val)
             passwCtrl.Enable(val)
-            passwLbl.Enable(val)            
+            passwLbl.Enable(val)
             validation()
             evt.Skip()
         listBoxCtrl.Bind(wx.EVT_LISTBOX, onClick)
@@ -1332,15 +1332,15 @@ class outServerDialog(wx.MiniFrame):
             evt.Skip()
         btnDOWN.Bind(wx.EVT_BUTTON, onButtonDown)
 
-        def onButtonDelete(evt):        
+        def onButtonDelete(evt):
             srvrs = [item[8] for item in self.cfgs]
             val = listBoxCtrl.GetStringSelection()
             if val in srvrs:
                 answer = wx.MessageBox(
                     text.deleteServer % val,
-                    eg.APP_NAME, 
+                    eg.APP_NAME,
                     wx.NO_DEFAULT|wx.OK|wx.ICON_EXCLAMATION
-                )                
+                )
                 return
             sel = listBoxCtrl.GetSelection()
             lngth = len(self.servers)
@@ -1370,7 +1370,7 @@ class outServerDialog(wx.MiniFrame):
             listBoxCtrl.SetSelection(sel)
             item = self.servers[sel]
             setValue(item)
-            onCheckbox()            
+            onCheckbox()
             evt.Skip()
         btnDEL.Bind(wx.EVT_BUTTON, onButtonDelete)
 
@@ -1390,7 +1390,7 @@ class outServerDialog(wx.MiniFrame):
             btnApp.Enable(False)
             btnDEL.Enable(True)
             onCheckbox()
-            evt.Skip()            
+            evt.Skip()
 
         if len(self.servers) > 0:
             listBoxCtrl.Set([n[0] for n in self.servers])
@@ -1400,7 +1400,7 @@ class outServerDialog(wx.MiniFrame):
             btnUP.Enable(True)
             btnDOWN.Enable(True)
             btnDEL.Enable(True)
-            onCheckbox()            
+            onCheckbox()
         else:
             boxEnable(False)
             btn1.Enable(False)
@@ -1409,7 +1409,7 @@ class outServerDialog(wx.MiniFrame):
             userLbl.Enable(False)
             passwCtrl.Enable(False)
             passwLbl.Enable(False)
-            
+
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
         sizer.Layout()
         self.MakeModal(True)
@@ -1512,11 +1512,11 @@ class outTextsDialog(wx.MiniFrame):
             outTextCtrl.Enable(enable)
             labelLbl.Enable(enable)
             outTextLbl.Enable(enable)
-            
+
         def setValue(item):
             labelCtrl.ChangeValue (item[0])
             outTextCtrl.ChangeValue(item[1])
-            
+
         if len(self.texts) > 0:
             listBoxCtrl.Set([n[0] for n in self.texts])
             listBoxCtrl.SetSelection(0)
@@ -1528,7 +1528,7 @@ class outTextsDialog(wx.MiniFrame):
         else:
             boxEnable(False)
             btn1.Enable(False)
-            
+
         sizer.Layout()
         self.MakeModal(True)
         self.SetFocus()
@@ -1540,16 +1540,16 @@ class outTextsDialog(wx.MiniFrame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
         def onOK(evt):
             self.panel.txts = self.texts
             self.Close()
         btn1.Bind(wx.EVT_BUTTON,onOK)
-        
+
         def validation():
             flag = True
             label = labelCtrl.GetValue()
@@ -1673,7 +1673,7 @@ class groupsDialog(wx.MiniFrame):
         self.SetBackgroundColour(wx.NullColour)
         self.panel = parent
         self.plugin = plugin
-        self.groups = cpy(self.panel.grps)        
+        self.groups = cpy(self.panel.grps)
 #===============================================================================
 
     def ShowGroupsDlg(self):
@@ -1757,7 +1757,7 @@ class groupsDialog(wx.MiniFrame):
         mainSizer = wx.GridBagSizer(0, 0)
         mainSizer.AddGrowableCol(1)
         mainSizer.Add(leftSizer,(0,0),flag = wx.ALIGN_LEFT)
-        mainSizer.Add(rightSizer,(0,2),flag = wx.ALIGN_RIGHT)        
+        mainSizer.Add(rightSizer,(0,2),flag = wx.ALIGN_RIGHT)
         sizer.Add(mainSizer,0,wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND,20)
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
@@ -1814,7 +1814,7 @@ class groupsDialog(wx.MiniFrame):
             labelCtrl.Enable(False)
             btn1.Enable(False)
             boxDisable()
-            
+
         sizer.Layout()
         self.MakeModal(True)
         self.SetFocus()
@@ -1826,16 +1826,16 @@ class groupsDialog(wx.MiniFrame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
         def onOK(evt):
             self.panel.grps = self.groups
             self.Close()
         btn1.Bind(wx.EVT_BUTTON,onOK)
-        
+
         def validation():
             while True:
                 flag = True
@@ -1854,7 +1854,7 @@ class groupsDialog(wx.MiniFrame):
                     break
                 sel = self.oldSel
                 address = labelCtrl2.GetValue()
-                if len(self.groups[sel][1]) > 0: 
+                if len(self.groups[sel][1]) > 0:
                     if address == '':
                         flag2 = False
                         break
@@ -1973,7 +1973,7 @@ class groupsDialog(wx.MiniFrame):
             btnDEL.Enable(True)
             evt.Skip()
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
-        
+
         def OnLabelChange(evt):
             sel = self.oldSel
             if self.groups[sel][1]<>[]:
@@ -2070,14 +2070,14 @@ class groupsDialog(wx.MiniFrame):
 class observViewerDialog(wx.MiniFrame):
     def __init__(self, parent, plugin, observThreads):
         wx.MiniFrame.__init__(
-        self, parent, -1, 
+        self, parent, -1,
         style=wx.CAPTION|wx.RESIZE_BORDER, name="Observations viewer/manager"
     )
         self.SetBackgroundColour(wx.NullColour)
         self.observThreads = observThreads
         self.plugin = plugin
-        
-    def ShowObservViewerDialog(self):    
+
+    def ShowObservViewerDialog(self):
         text = self.plugin.text
         self.SetTitle(text.viewerTitle)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -2307,7 +2307,7 @@ class SendMailThread(Thread):
                 eg.PrintError(text.error6+' '+text.error8)
             else:
                 From = formataddr((account[2], account[3]))
-                eg.TriggerEvent('Sent', payload = '%s: %s' % (From, sbjct), prefix = 'E-mail')                
+                eg.TriggerEvent('Sent', payload = '%s: %s' % (From, sbjct), prefix = 'E-mail')
             smtp.quit()
 #===============================================================================
 
@@ -2324,7 +2324,7 @@ class deleteEmail(Thread):
         self.mode = mode
         self.parent = parent
         Thread.__init__(self, name = 'DeleteEmail')
-        
+
     def run(self):
         self.parent.RealizeAction(self.indx, self.sel, self.mode)
 #===============================================================================
@@ -2349,10 +2349,10 @@ class WorkThread(Thread):
         self.delArgs = None
         self.text = self.plugin.text
         print self.text.observStarts % self.setup[0]
-        
+
     def isRunning(self):
         return self.runFlag
-        
+
     def DeleteAction(self, args):
         self.delArgs = args
         if not self.runFlag:
@@ -2362,12 +2362,12 @@ class WorkThread(Thread):
         self.refresh = refresh or self.refresh
         if not self.runFlag:
             self.threadFlag.set()
-        
+
     def AbortObservation(self, close = False):
         self.abort = True
         self.close = close
         self.threadFlag.set()
-        
+
     def run(self):
         while 1:
             if self.abort:
@@ -2409,8 +2409,8 @@ class WorkThread(Thread):
             self.runFlag = False
             if self.abort:
                 break
-            if self.delArgs is None: 
-                self.threadFlag.clear()            
+            if self.delArgs is None:
+                self.threadFlag.clear()
                 self.threadFlag.wait()
         self.notifFrame.Disappear(self.close)
         self.observName = self.setup[0]
@@ -2467,7 +2467,7 @@ class WorkThread(Thread):
                         if USE_SSL:
                             mailbox = poplib.POP3_SSL(SERVER,PORT)
                         else:
-                            mailbox = poplib.POP3(SERVER,PORT)                        
+                            mailbox = poplib.POP3(SERVER,PORT)
                     except:
                         eg.PrintError(self.text.error0+' '+self.text.error1 % (SERVER,PORT))
                     else:
@@ -2525,7 +2525,7 @@ class WorkThread(Thread):
                         mailbox.logout()
 
 #-------------------------
-        else: #filter mode                
+        else: #filter mode
             def processEmail(mailbox, data, idList, account, count, id, tmpData):
                 conds = ["%s.find(%s)>-1",
                     "not %s.find(%s)>-1",
@@ -2557,33 +2557,33 @@ class WorkThread(Thread):
                     if msg.has_key('Message-Id'):
                         messId =  msg['Message-Id']
                     else:
-                        messId = parts[1]                                        
+                        messId = parts[1]
                     if self.setup[11]: #trigger event for each email ?
                         if not messId in idList:
                             itms = self.plugin.text.field_1[1:]
                             suff = self.setup[12]
                             if suff in itms:
                                 suff = itms.index(suff)
-                                suff = u"%s.%s" % (self.setup[12],parts[suff])                                                                
+                                suff = u"%s.%s" % (self.setup[12],parts[suff])
                             if self.setup[13] > 0:
                                 eg.TriggerEvent(suff, payload = parts[self.setup[13]-1], prefix = 'E-mail')
                             else:
                                 eg.TriggerEvent(suff, prefix = 'E-mail')
                         if self.setup[14]: #~ delete
-                            if account[1] == 0: #POP 
+                            if account[1] == 0: #POP
                                 resp = mailbox.dele(id)
                                 #if resp[:3]=='+OK':
                                 #    print "deleted !!!"
                                 #    notDeleted = False
-                            else:                    
+                            else:
                                 resp = mailbox.store(id, "+FLAGS", '(\Deleted)')
                                 #if resp[0] =='OK':
                                 #    resp = mailbox.expunge()
                                 #    if resp[0] =='OK':
                                 #        print "deleted !!!"
-                    count += 1                                    
-                    #show notification window?                    
-                    if not self.setup[14]:                                     
+                    count += 1
+                    #show notification window?
+                    if not self.setup[14]:
                         tmpRec = [messId]           #0 ID
                         tmpRec.append(parts[0])     #1 Subject
                         tmpRec.append(parts[1])     #2 From
@@ -2623,7 +2623,7 @@ class WorkThread(Thread):
                         except poplib.error_proto, errmsg:
                             eg.PrintError(self.text.error0+' '+str(errmsg))
                         mailbox.quit()
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 else:               #IMAP
                     try:
                         if USE_SSL:
@@ -2643,7 +2643,7 @@ class WorkThread(Thread):
                             if data[0]:
                                 lst = data[0].split()
                                 for id in lst:
-                                    typ, data = mailbox.fetch(id, '(RFC822)')                        
+                                    typ, data = mailbox.fetch(id, '(RFC822)')
                                     mailbox.store(id, "-FLAGS", '(\Seen)') #Reset UNSEEN flag
                                     data = data[0][1]
                                     count, tmpData = processEmail(mailbox, data,idList, account, count, id, tmpData)
@@ -2730,19 +2730,19 @@ class AbortObservation(eg.ActionClass):
         mainSizer.Add(nameCtrl,0,wx.EXPAND)
         panel.sizer.Add(mainSizer)
         panel.sizer.Layout()
-        
+
         # re-assign the test button
         def OnTestButton(event):
             self.plugin.AbortObservation(nameCtrl.GetValue())
         panel.dialog.buttonRow.testButton.SetLabel(text.abortNow)
         panel.dialog.buttonRow.testButton.SetToolTipString(text.tip)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 nameCtrl.GetValue(),
             )
-            
+
     class text:
         nameObs = 'Observation name:'
         abortNow = 'Abort now !'
@@ -2750,7 +2750,7 @@ class AbortObservation(eg.ActionClass):
 #===============================================================================
 
 class StartObservation(eg.ActionClass):
-        
+
     def startObserv(self, stp):
         observName = stp[0]
         data = [item[0] for item in self.plugin.tempData]
@@ -2780,7 +2780,7 @@ class StartObservation(eg.ActionClass):
             self.startObserv(stp)
         else:
             eg.PrintError(self.text.warning % stp[2])
-        
+
     def GetLabel(self, stp):
         res1 = stp[0]
         return res1
@@ -2806,18 +2806,18 @@ class StartObservation(eg.ActionClass):
                     indx += 1
                 if indx == lng: # No one checkbox is checked ?
                     break
-                    
+
                 if not eventCtrl.GetValue() and not event2Ctrl.GetValue() and not messageCtrl.GetValue():
                     break
-                    
+
                 if eventCtrl.GetValue():
                     if evtNameCtrl.GetValue() == '':
                         break
-                        
+
                 if event2Ctrl.GetValue():
                     if evtName2Ctrl.GetValue() == '':
                         break
-                        
+
                 if not rb0.GetValue():
                     indx = 0
                     sum = 0
@@ -2913,7 +2913,7 @@ class StartObservation(eg.ActionClass):
         messageCtrl.SetValue(self.stp[6])
         messageCtrl.Enable(not self.stp[14])
         messageCtrl.SetToolTipString(text.tip0)
-        eventCtrl = wx.CheckBox(panel, label = text.totalEvent)     
+        eventCtrl = wx.CheckBox(panel, label = text.totalEvent)
         eventCtrl.SetToolTipString(text.tip4)
         event2Ctrl = wx.CheckBox(panel, label = text.emailEvent)
         event2Ctrl.SetToolTipString(text.tip3)
@@ -3009,7 +3009,7 @@ class StartObservation(eg.ActionClass):
         def OnBackgroundColourButton(event):
             self.stp[9] = event.GetColour()
         backgroundColourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, OnBackgroundColourButton)
-        
+
         def OnForegroundColourButton(event):
             self.stp[10] = event.GetColour()
         foregroundColourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, OnForegroundColourButton)
@@ -3023,7 +3023,7 @@ class StartObservation(eg.ActionClass):
                 payloadCtrl.Enable(False)
                 evtNameCtrl.ChangeValue('')
                 payloadCtrl.SetSelection(0)
-        
+
         def EnableEvent2Ctrl():
             if rb0.GetValue():
                 event2Ctrl.SetValue(False)
@@ -3055,7 +3055,7 @@ class StartObservation(eg.ActionClass):
                         ctrl_1.SetSelection(0)
                         ctrl_1.Enable(True)
                 if rb1.GetValue():
-                    mode = 1                        
+                    mode = 1
                 else:
                     mode = 2
             self.stp[4] = mode
@@ -3074,7 +3074,7 @@ class StartObservation(eg.ActionClass):
             deleteCtrl.Enable(flag)
             if not flag:
                 payload2Ctrl.SetSelection(0)
-                deleteCtrl.SetValue(False)            
+                deleteCtrl.SetValue(False)
                 #evtName2Ctrl.ChangeValue('')
                 evtName2Ctrl.SetValue('')
                 self.stp[12] = ''
@@ -3083,7 +3083,7 @@ class StartObservation(eg.ActionClass):
                 evt.Skip()
             validation()
         event2Ctrl.Bind(wx.EVT_CHECKBOX, onEvent2Ctrl)
-        
+
         def onDeleteCtrl(evt = None):
             flag = deleteCtrl.GetValue()
             messageCtrl.Enable(not flag)
@@ -3128,7 +3128,7 @@ class StartObservation(eg.ActionClass):
         def onMessageCtrl(evt=None):
             self.stp[6] = messageCtrl.GetValue()
             flag = self.stp[6]
-            
+
             labelBck.Enable(flag)
             labelFore.Enable(flag)
             backgroundColourButton.Enable(flag)
@@ -3294,7 +3294,7 @@ class SendEmail(eg.ActionClass):
         panel.dialog.buttonRow.testButton.SetLabel(text.sendNow)
         panel.dialog.buttonRow.testButton.SetToolTipString(text.tip3)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
-        
+
         def validation(event=None):
             flag = True
             if not validateEmailAddr(toCtrl.GetValue()):
@@ -3303,12 +3303,12 @@ class SendEmail(eg.ActionClass):
                 flag = False
             panel.dialog.buttonRow.applyButton.Enable(flag)
             panel.dialog.buttonRow.okButton.Enable(flag)
-    
+
         subjectCtrl.Bind(wx.EVT_TEXT, validation)
         toCtrl.Bind(wx.EVT_TEXT, validation)
         validation()
         panel.sizer.Layout()
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 subjectCtrl.GetValue(),
@@ -3319,7 +3319,7 @@ class SendEmail(eg.ActionClass):
                 textsCtrl.GetValue(),
                 toNameCtrl.GetValue()
             )
-            
+
     class text:
         fromLabel = 'From:'
         toLabel = 'To:'
@@ -3402,9 +3402,9 @@ class SendMailDlg(wx.MiniFrame):
             if not validateEmailAddr(toCtrl.GetValue()):
                 flag = False
             if subjectCtrl.GetValue()=='':
-                flag = False        
+                flag = False
             if outTextCtrl.GetValue()=='':
-                flag = False        
+                flag = False
             btn1.Enable(flag)
 
         toCtrl.Bind(wx.EVT_TEXT,onSomeChange)
@@ -3415,11 +3415,11 @@ class SendMailDlg(wx.MiniFrame):
             self.MakeModal(False)
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-        
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON,onCancel)
-        
+
         def onSend(evt):
             t = SendMailThread(
                 self.plugin,
@@ -3436,7 +3436,7 @@ class SendMailDlg(wx.MiniFrame):
             t.start()
             self.Close()
 
-        btn1.Bind(wx.EVT_BUTTON,onSend)        
+        btn1.Bind(wx.EVT_BUTTON,onSend)
         sizer.Layout()
         sizer.Fit(self)
         size = self.GetSize()
@@ -3489,7 +3489,7 @@ class E_mail(eg.PluginClass):
         self.passSMTP = passSMTP
         self.servers=servers
         self.configs=configs
-        del passINC        
+        del passINC
         del passSMTP
         self.texts = texts
         self.groups = groups
@@ -3593,7 +3593,7 @@ class E_mail(eg.PluginClass):
                 userPasswordCtrl.ChangeValue(panel.passINC[item[0]])
             else:
                 userPasswordCtrl.ChangeValue('')
-    
+
         def validation():
             flag = True
             label = labelCtrl.GetValue()
@@ -3633,10 +3633,10 @@ class E_mail(eg.PluginClass):
             style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
         labelLbl=wx.StaticText(panel, -1, text.label)
-        labelCtrl=wx.TextCtrl(panel,-1,'')        
+        labelCtrl=wx.TextCtrl(panel,-1,'')
         choiceType = wx.RadioBox(
-            panel, 
-            -1, 
+            panel,
+            -1,
             text.accType,
             choices=(text.eBoxCase),
             style=wx.RA_SPECIFY_ROWS
@@ -3776,7 +3776,7 @@ class E_mail(eg.PluginClass):
             evt.Skip()
         labelCtrl.Bind(wx.EVT_TEXT, OnLabelAndPassword)
         userPasswordCtrl.Bind(wx.EVT_TEXT, OnLabelAndPassword)
-        
+
         def setPort():
             ports=((110,-1,-1,995),(143,-1,-1,993))
             secure = choiceSecureCtrl.GetSelection()
@@ -4000,7 +4000,7 @@ class E_mail(eg.PluginClass):
             evt.Skip()
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
 
-        while panel.Affirmed():        
+        while panel.Affirmed():
             passINC.data=panel.passINC
             passSMTP.data=panel.passSMTP
             panel.SetResult(
@@ -4107,7 +4107,7 @@ class E_mail(eg.PluginClass):
         tip0 = (
             "Right-click to hide the window\n"
             "Double-click to open/refresh details\n"
-            "CTRL+Double-click to open default e-mail client" 
+            "CTRL+Double-click to open default e-mail client"
         )
         notifLabel = 'waiting\ne-mail(s)'
         cancel = 'Cancel'
@@ -4126,5 +4126,5 @@ class E_mail(eg.PluginClass):
             'Subject',
             'From',
             'Body',
-        )        
+        )
 #===============================================================================

@@ -3,25 +3,27 @@
 # plugins/MyTheatre/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "MyTheatre",
     author = "Milbrot",
-    version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.1.1093",
     kind = "program",
     guid = "{2347B12C-FB95-4F9E-A89E-61DD72669DB8}",
     createMacrosOnAdd = True,
@@ -50,7 +52,7 @@ eg.RegisterPlugin(
         "SUVORK5CYII="
     ),
 )
-    
+
 # Changelog:
 # ----------
 # 2006-08-14 Milbrot
@@ -79,11 +81,11 @@ class ExeAction(eg.ActionClass):
     def __call__(self):
         try:
             ShellExecute(
-                0, 
-                None, 
-                "MTStart.exe", 
-                self.value, 
-                self.plugin.myTheatrePath, 
+                0,
+                None,
+                "MTStart.exe",
+                self.value,
+                self.plugin.myTheatrePath,
                 0
             )
             return True
@@ -273,5 +275,5 @@ class MyTheatre(eg.PluginClass):
             self.myTheatrePath, dummy = _winreg.QueryValueEx(key, "InstallLocation")
         except WindowsError:
             self.PrintError("MyTheatre installation path not found!")
-            self.myTheatrePath = "" 
-            
+            self.myTheatrePath = ""
+

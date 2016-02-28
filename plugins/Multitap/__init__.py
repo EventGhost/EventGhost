@@ -5,22 +5,20 @@ version = "0.1.14"
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# Last change: 2010-02-04 09:03 GMT+1
-
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Multitap",
@@ -687,16 +685,16 @@ class Multitap(eg.PluginClass):
                 self.oldKeys = keys[:]
                 self.indx = -1
             if keys != self.oldKeys: #ERROR or "Enter"?  -> now (2009-02-11) Enter
-                self.TriggerEvt()                        
+                self.TriggerEvt()
                 self.oldKeys = keys[:]
                 self.indx = -1
-                
+
             self.indx+=1
             if self.indx > len(keys)-1:
                 self.indx=0
             self.evtString = keys[self.indx]
             wx.CallAfter(self.showOsDialog)
-            
+
         if self.timeout > 0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()

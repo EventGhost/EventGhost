@@ -6,7 +6,7 @@ eg.RegisterPlugin(
     guid = "{695FA442-24CE-4D82-B38B-8A772BBEA8FD}",
     canMultiLoad = True,
     description = '''\
-        Hardware plugin for the 
+        Hardware plugin for the
         <a href="http://www.keene.co.uk/iranywhere">
             Keene Electronics IR Anywhere
         </a>
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
             The plugin supports one event:
             <ul>
                 <li>
-                    <b>KIRA.XXXXXX.DDDDDDDD</b> - 
+                    <b>KIRA.XXXXXX.DDDDDDDD</b> -
                     (assuming "KIRA" is your event prefix).
                     Happens when we receive an IR stream, this event name
                     is the decoded IR that can be used to pick up on
@@ -38,7 +38,7 @@ eg.RegisterPlugin(
                 </li>
             </ul>
             <p>
-                If you switch on "Log incoming raw IR streams", the IR 
+                If you switch on "Log incoming raw IR streams", the IR
                 streams will be printed in the log window in the format:
             </p>
             <p>
@@ -47,7 +47,7 @@ eg.RegisterPlugin(
                 </div>
             </p>
             <p>
-                When a unit sends an "ACK" response to an action, 
+                When a unit sends an "ACK" response to an action,
                 then this will appear in the log window:
             </p>
             <p>
@@ -75,16 +75,16 @@ class Text:
         </p>
 
         <p>
-            Remove the leading "KIRA.Raw." from the logged 
-            incoming raw IR streams before using them 
+            Remove the leading "KIRA.Raw." from the logged
+            incoming raw IR streams before using them
             (where "KIRA" is your event prefix)
         </p>
         <p>
-            Remove the leading "K " from IR streams that 
+            Remove the leading "K " from IR streams that
             you have learned with the Keene software
         </p>
         <p>
-            A valid code looks like this: 
+            A valid code looks like this:
         </p>
         <p>
             <div align="center">
@@ -92,8 +92,8 @@ class Text:
             </div>
         </p>
         <p>
-            where "XX" is the frequency, "YY" is the number of 
-            following pairs, "DDDD" is the data (there will be an 
+            where "XX" is the frequency, "YY" is the number of
+            following pairs, "DDDD" is the data (there will be an
             odd number of these chunks), and "2000" is hard-coded
         </p>
         <p>
@@ -150,10 +150,10 @@ class KIRA(eg.PluginClass):
         self.server = None
 
     def Configure(
-        self, 
-        host = 'standalone', 
-        port = 65432, 
-        svr = True, 
+        self,
+        host = 'standalone',
+        port = 65432,
+        svr = True,
         prefix = 'KIRA',
         logRaw = True
     ):
@@ -177,8 +177,8 @@ class KIRA(eg.PluginClass):
         )
 
         eventBox = panel.BoxedGroup(
-            text.eventBox, 
-            (st3, eventPrefixCtrl, logRawCtrl) 
+            text.eventBox,
+            (st3, eventPrefixCtrl, logRawCtrl)
         )
 
         panel.sizer.Add(ipBox, 0, wx.EXPAND)
@@ -191,15 +191,15 @@ class KIRA(eg.PluginClass):
             eventPrefixCtrl.Enable(svrCtrl.IsChecked())
             logRawCtrl.Enable(svrCtrl.IsChecked())
             event.Skip()
-            
+
         svrCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
 
         while panel.Affirmed():
             panel.SetResult(
-                hostCtrl.GetValue(), 
-                portCtrl.GetValue(), 
-                svrCtrl.GetValue(), 
-                eventPrefixCtrl.GetValue(), 
+                hostCtrl.GetValue(),
+                portCtrl.GetValue(),
+                svrCtrl.GetValue(),
+                eventPrefixCtrl.GetValue(),
                 logRawCtrl.GetValue()
             )
 
@@ -239,9 +239,9 @@ class Transmit(eg.ActionClass):
     def Configure(self, mesg = ''):
         panel = eg.ConfigPanel(self)
         textControl = wx.TextCtrl(
-            panel, 
-            -1, 
-            mesg, 
+            panel,
+            -1,
+            mesg,
             style = wx.TE_MULTILINE
         )
         panel.sizer.Add(textControl, 1, wx.EXPAND)
@@ -299,7 +299,7 @@ class Server(asyncore.dispatcher):
 
                 if (self.handler.logRaw):
                     print(
-                        self.handler.info.eventPrefix + 
+                        self.handler.info.eventPrefix +
                         '.Raw.' + rawCode
                     )
 
@@ -314,7 +314,7 @@ class Server(asyncore.dispatcher):
                         codes[len(codes) - 1] == '2000'
                     ):
                         self.socket.sendto(
-                            'ACK', 
+                            'ACK',
                             (client_addr[0], client_addr[1])
                         )
                         self.handler.irDecoder.Decode(data, len(data))
@@ -327,10 +327,10 @@ class Server(asyncore.dispatcher):
 
             elif (codes[0] == 'ACK'):
                 print(
-                    self.handler.info.eventPrefix + 
+                    self.handler.info.eventPrefix +
                     '.Acknowledgement'
                 )
-                
+
         except socket.timeout:
             pass
 

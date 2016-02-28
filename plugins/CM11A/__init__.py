@@ -5,26 +5,26 @@
 # Written by Silviu Marghescu
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Revision history:
 # -----------------
 # 0.1 - first revision (basic commands and events)
 # 0.2 - added the device reset command and the EEPROM event
 # 0.3 - added support for multi-part events (unit and function received in separate messages)
-#
 
 help="""\
 The plugin provides basic control of a CM11A device, over the serial interface.
@@ -38,7 +38,7 @@ Event generation can be disabled altogether.
 eg.RegisterPlugin(
     name = "CM11A",
     author = "Silviu Marghescu",
-    version = "0.3." + "$LastChangedRevision: 2 $".split()[1],
+    version = "0.3.2",
     kind = "external",
     guid = "{7D5FF697-3094-4209-AEF6-E3DA575FB657}",
     description = "Control a CM11A device via the serial interface",
@@ -61,7 +61,7 @@ import time
 class Text:
     serialPort = "Serial Port:"
     eventGeneration = "Event Generation:"
-    
+
     class StatusCommand:
         name = "Status Request Command"
         description = (
@@ -70,13 +70,13 @@ class Text:
             "No events are generated as a result of the status request."
         )
         weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    
+
     class ResetCommand:
         name = "Device Reset Command"
         description = (
             "Reset the CM11A device, by clearing any timers and/or macros from its internal memory."
         )
-    
+
     class X10Command:
         name = "X10 Command"
         description = (
@@ -166,12 +166,12 @@ class CM11A(eg.PluginClass):
         self.serialThread.Open(port, 4800, "8N1")
         self.serialThread.SetRts()
         self.serialThread.Start()
-        
-        
+
+
     def __stop__(self):
         self.serialThread.Close()
-            
-            
+
+
     def Configure(self, port=0, eventGeneration=0):
         text = self.text
         panel = eg.ConfigPanel(self)
@@ -290,11 +290,11 @@ class ResetCommand(eg.ActionClass):
         self.plugin.serialThread.Write("\x00")
         self.plugin.serialThread.Read(1, 5) # read the 00 ACK
         self.plugin.serialThread.ResumeReadEvents()
-    
+
     def GetLabel(self):
         return "Reset Device"
 
-        
+
 class StatusCommand(eg.ActionClass):
     def __call__(self):
         text = self.text
@@ -316,13 +316,13 @@ class StatusCommand(eg.ActionClass):
         print "CM11A status: day of year=", ord(buffer[5])+2*(ord(buffer[6])&0x80)
         print "CM11A status: day of week=", text.weekdays[ord(buffer[6])&0x7F]
         self.plugin.serialThread.ResumeReadEvents()
-    
+
     def GetLabel(self):
         return "Status Request"
 
-        
+
 class X10Command(eg.ActionClass):
-    
+
     def __call__(self, houseIndex=0, deviceIndex=0, functionIndex=3, dimbrightIndex=0):
         text = self.text
         houseCode = text.houseCodes[houseIndex]
@@ -346,14 +346,14 @@ class X10Command(eg.ActionClass):
             self.SendReceive(chr(0), chr(0x55))
         time.sleep(0.5)
         self.plugin.serialThread.ResumeReadEvents()
-    
+
     def GetLabel(self, houseIndex, deviceIndex, functionIndex, dimbrightIndex):
         text = self.text
         houseCode = text.houseCodes[houseIndex]
         deviceCode = text.deviceCodes[deviceIndex]
         function = text.functions[functionIndex]
         return houseCode+deviceCode+" : "+function
-    
+
     def SendReceive(self, buffer, result):
         ###print("Sending: "+binascii.b2a_hex(buffer).upper(), len(buffer))
         ###print("Expecting back: "+binascii.b2a_hex(result).upper(), len(result))
@@ -364,7 +364,7 @@ class X10Command(eg.ActionClass):
             r = self.plugin.serialThread.Read(1, 5)
             ###print("Response buffer: "+binascii.b2a_hex(r).upper(), len(r))
             tries = tries + 1
-        
+
     def Configure(self, houseIndex=0, deviceIndex=0, functionIndex=3, dimbrightIndex=0):
         text = self.text
         panel = eg.ConfigPanel(self)
@@ -372,18 +372,18 @@ class X10Command(eg.ActionClass):
         deviceCodeCtrl = panel.Choice(deviceIndex, text.deviceCodes)
         functionCtrl = panel.Choice(functionIndex, text.functions)
         dimbrightCtrl = panel.Choice(dimbrightIndex, text.dimbrights)
-        
+
         def OnStateChoice(event):
             dimbrightCtrl.Enable(functionCtrl.GetValue() in (5,6))
             event.Skip()
         functionCtrl.Bind(wx.EVT_CHOICE, OnStateChoice)
         OnStateChoice(wx.CommandEvent())
-        
+
         panel.AddLine(self.text.houseCode, houseCodeCtrl)
         panel.AddLine(self.text.deviceCode, deviceCodeCtrl)
         panel.AddLine(self.text.function, functionCtrl)
         panel.AddLine(self.text.dimbright, dimbrightCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 houseCodeCtrl.GetValue(),
@@ -391,4 +391,4 @@ class X10Command(eg.ActionClass):
                 functionCtrl.GetValue(),
                 dimbrightCtrl.GetValue()
             )
-        
+

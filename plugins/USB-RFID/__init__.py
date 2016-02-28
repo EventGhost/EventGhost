@@ -8,13 +8,13 @@ Receives events from ELV USB/RFID-Interface.
 `Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=28049>`__
 
 .. |productImage| image:: picture.jpg
-.. _productImage: http://www.elv.de/ 
+.. _productImage: http://www.elv.de/
 """
 
 eg.RegisterPlugin(
     name = "USB/RFID-Interface",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 1455 $".split()[1],
+    version = "0.1.1455",
     kind = "other",
     canMultiLoad = False,
     description = __doc__,
@@ -37,11 +37,11 @@ PRODUCT_ID = 57368
 
 class USB_RFID(eg.PluginClass):
     text = Text
-    
+
     def __init__(self):
         self.version = None
         self.thread = None
-        
+
         self.AddNewAction("GreenLED", 0xf2, "Green LED", "Turn on green LED", "Turn on green LED for {0}0 ms")
         self.AddNewAction("RedLED", 0xf1, "Red LED", "Turn on red LED", "Turn on red LED for {0}0 ms")
         self.AddNewAction("Buzzer", 0xf3, "Buzzer", "Turn on buzzer", "Turn on buzzer for {0}0 ms")
@@ -56,7 +56,7 @@ class USB_RFID(eg.PluginClass):
             funcCode = classFuncCode
         tmpAction.__name__ = internalName
         self.AddAction(tmpAction)
-        
+
     def RawCallback(self, data):
         if eg.debugLevel:
             print "USB_RFID RawCallBack", binascii.hexlify(data)
@@ -84,17 +84,17 @@ class USB_RFID(eg.PluginClass):
             self.TriggerEvent(eventstring)
             if not knownCode:
                 self.TriggerEvent("Unknown")
-                
+
         else:
             self.PrintError("Unknown Error")
-    
+
     def PrintVersion(self):
         #create the following python command to show version number
         #eg.plugins.USB-RFID.plugin.PrintVersion()
-		versionMajor = self.version / 16
-		versionMinor = self.version % 16
-		print "Firmware version %d.%d" % (versionMajor, versionMinor) 
-    
+        versionMajor = self.version / 16
+        versionMinor = self.version % 16
+        print "Firmware version %d.%d" % (versionMajor, versionMinor)
+
     def StopCallback(self):
         self.TriggerEvent("Stopped")
         self.thread = None
@@ -109,7 +109,7 @@ class USB_RFID(eg.PluginClass):
             True,
             0)
         return path;
-    
+
     def SetupHidThread(self, newDevicePath):
         #create thread
         self.thread = HIDThread(self.name, newDevicePath, self.name)
@@ -118,29 +118,29 @@ class USB_RFID(eg.PluginClass):
         self.thread.start()
         self.thread.WaitForInit()
         self.RequestVersion()
-        
+
     def RequestVersion(self):
         self.thread.Write('\x01\x01\xf0\x00\x00', 1000)
-    
+
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
             if not IsDeviceName(event.payload, VENDOR_ID, PRODUCT_ID):
                 return
-            
+
             #check if the right device was connected
             #getting devicePath
             newDevicePath = self.GetMyDevicePath()
             if not newDevicePath:
                 #wrong device
                 return
-            
+
             self.SetupHidThread(newDevicePath)
 
     def __start__(self):
-        #Bind plug in to RegisterDeviceNotification message 
+        #Bind plug in to RegisterDeviceNotification message
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
-        
+
         newDevicePath = self.GetMyDevicePath()
         if not newDevicePath:
             #device not found
@@ -151,18 +151,18 @@ class USB_RFID(eg.PluginClass):
     def __stop__(self):
         if self.thread:
             self.thread.AbortThread()
-        
+
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
-        
+
 class ActionBase(eg.ActionBase):
     funcCode = None
     name = None
     description = None
-    
+
     def __call__(self, duration):
         self.plugin.thread.Write("\x01\x02" + chr(self.funcCode) + chr(duration) + "\x00", 1000)
-        
+
     def GetLabel(self, duration):
         #print str(duration) + "0 ms"
         #pass
@@ -173,12 +173,12 @@ class ActionBase(eg.ActionBase):
 
         def LevelCallback(value):
             return str(value) + "0 ms"
-        
+
         durationCtrl = eg.Slider(
-            panel, 
-            value=duration, 
-            min=1, 
-            max=255, 
+            panel,
+            value=duration,
+            min=1,
+            max=255,
             minLabel="10 ms",
             maxLabel="2550 ms",
             style = wx.SL_TOP,
@@ -188,7 +188,7 @@ class ActionBase(eg.ActionBase):
         durationCtrl.SetMinSize((300, -1))
 
         panel.AddLine(self.plugin.text.duration, durationCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(durationCtrl.GetValue())
 

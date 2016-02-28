@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 
-version="0.1" 
+version="0.1"
 
 # plugins/OnkyoISCP/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "MCE",
@@ -34,7 +36,7 @@ eg.RegisterPlugin(
 FindMCE = eg.WindowMatcher(u'ehshell.exe', u'Windows Media Center', None, None, None, 1, False, 0.0, 0)
 
 class hotKeys(eg.ActionClass):
-    
+
     def __call__(self):
         hwnds = FindMCE()
         if len(hwnds) != 0:
@@ -120,7 +122,7 @@ predefinedCustomActions = {
 }
 
 class MCE(eg.PluginClass):
-    
+
     def __init__(self):
         self.windowMatch = FindMCE
         self.AddActionsFromList(ACTIONS)

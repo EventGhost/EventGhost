@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.6" 
+version="0.1.6"
 
 # plugins/ScreamerRadio/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-
-# Every EventGhost plugin should start with the import of 'eg' and the 
-# definition of an eg.PluginInfo subclass.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Screamer Radio",
@@ -34,7 +32,7 @@ eg.RegisterPlugin(
         'Adds actions to control the <a href="http://www.screamer-radio.com/">'
         'Screamer radio</a>.'
     ),
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=840",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAACuEALHOgfL"
@@ -134,7 +132,7 @@ def FindWindowFunction(key,case,match):
                 0.0,
                 0
             )
-            
+
 def Handle():
     FindWindow = FindWindowFunction(None,None,1)
     hwnds = FindWindow()
@@ -165,14 +163,14 @@ class my_xml_handler1(ContentHandler):
     def characters( self, content):
         self._recent_text += content
 
-    
+
 #my xmlhandler2
 class my_xml_handler2(ContentHandler):
 
     def startDocument(self):
         self.favList = ScreamerRadio.favList = []
-    
-    def startElement(self, name, attrs):  
+
+    def startElement(self, name, attrs):
         if name == "Station":
             temp = attrs.get("title")
             self.favList.append(temp)
@@ -184,26 +182,26 @@ class ScreamerRadio(eg.PluginClass):
     path2 = None
     menuDlg = None
     fav_num = 0
-    
+
     def Execute(self, exe, path):
         try:
             res = ShellExecute(
-                0, 
-                None, 
+                0,
+                None,
                 exe,
-                None, 
-                path, 
+                None,
+                path,
                 1
             )
         except:
             res = None
             self.PrintError(self.text.text2 % exe)
         return res
-        
+
     def PlayFavFromMenu(self):
         if self.menuDlg is not None:
             sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
-                GetSelection()                
+                GetSelection()
 
         self.fav_num=sel
         self.menuDlg.Close()  #
@@ -213,7 +211,7 @@ class ScreamerRadio(eg.PluginClass):
                 PostMessage(hwnds[0], WM_COMMAND, 9217+sel, 0)
         else:
             self.PrintError(self.text.text1)
-        
+
 
 
     def __init__(self):
@@ -229,19 +227,19 @@ class ScreamerRadio(eg.PluginClass):
         sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh)
         xmltoparse = self.dh.document['LanguageFile']
         sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh)
-                   
+
     def Configure(self, ScreamerPath=None, path2 = None):
         panel = eg.ConfigPanel(self)
         label1Text = wx.StaticText(panel, -1, self.text.label1)
         label2Text = wx.StaticText(panel, -1, self.text.label2)
         filepathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
         )
-        
+
         filepathCtrl.GetTextCtrl().SetEditable(False)
         checkBoxCtrl = wx.CheckBox(panel, label="  "+self.text.lbl_start_stop)
         if ScreamerPath is None:
@@ -257,7 +255,7 @@ class ScreamerRadio(eg.PluginClass):
         #    checkBoxCtrl.SetValue(False)
             startDir = ScreamerPath
         startStopPathCtrl = MyDirBrowseButton(
-            panel, 
+            panel,
             size=(410,-1),
 
             toolTip = self.text.toolTipFolder,
@@ -270,7 +268,7 @@ class ScreamerRadio(eg.PluginClass):
         sizerAdd = panel.sizer.Add
         sizerAdd(label1Text, 0, wx.TOP,15)
         sizerAdd(filepathCtrl,0,wx.TOP,3)
-        sizerAdd(checkBoxCtrl,0,wx.TOP,30)		
+        sizerAdd(checkBoxCtrl,0,wx.TOP,30)
         sizerAdd(label2Text,0,wx.TOP,15)
         sizerAdd(startStopPathCtrl,0,wx.TOP,3)
         def OnCheckBox(event = None):
@@ -281,7 +279,7 @@ class ScreamerRadio(eg.PluginClass):
                     event.Skip()
             else:
                 if event:
-                    startStopPathCtrl.OnBrowse() 
+                    startStopPathCtrl.OnBrowse()
                     if startStopPathCtrl.GetValue() =="":
                         flag = False
             checkBoxCtrl.SetValue(flag)
@@ -289,7 +287,7 @@ class ScreamerRadio(eg.PluginClass):
             startStopPathCtrl.Enable(flag)
         checkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         OnCheckBox()
-        
+
         def OnPathChange(event = None):
             path = filepathCtrl.GetValue()
             path2 = startStopPathCtrl.GetValue()
@@ -311,10 +309,10 @@ class ScreamerRadio(eg.PluginClass):
                         0
                     )
             if path != "":
-                filepathCtrl.startDirectory = path            
+                filepathCtrl.startDirectory = path
         filepathCtrl.Bind(wx.EVT_TEXT,OnPathChange)
         OnPathChange()
-        
+
         def OnPath2Change(event = None):
             path = filepathCtrl.GetValue()
             path2 = startStopPathCtrl.GetValue()
@@ -333,7 +331,7 @@ class ScreamerRadio(eg.PluginClass):
                         self.text.boxTitle % path2,
                         0
                     )
-                startStopPathCtrl.startDirectory = path2            
+                startStopPathCtrl.startDirectory = path2
             else:
                 flag = True
             flg = flag and flag0
@@ -342,7 +340,7 @@ class ScreamerRadio(eg.PluginClass):
             panel.dialog.buttonRow.applyButton.Enable(flg)
         startStopPathCtrl.Bind(wx.EVT_TEXT,OnPath2Change)
         OnPath2Change()
-        
+
         while panel.Affirmed():
             if checkBoxCtrl.GetValue():
                 startStopPath = startStopPathCtrl.GetValue()
@@ -350,7 +348,7 @@ class ScreamerRadio(eg.PluginClass):
                 startStopPath =None
             panel.SetResult(filepathCtrl.GetValue(),
             startStopPath,
-            )           
+            )
 #===============================================================================
 #cls types for Actions list:
 #===============================================================================
@@ -362,7 +360,7 @@ class Run(eg.ActionClass):
         alt_ret = "No autostart"
 
     def __call__(self, play=False, fav = 1):
-        flag = self.plugin.Execute('screamer.exe',self.plugin.ScreamerPath)                        
+        flag = self.plugin.Execute('screamer.exe',self.plugin.ScreamerPath)
         if self.plugin.path2:
             self.plugin.Execute('Start_SR_Events.exe',self.plugin.path2)
 
@@ -370,7 +368,7 @@ class Run(eg.ActionClass):
                 if self.plugin.path2:
                     self.plugin.Execute('Start_SR_Events.exe',self.plugin.path2)
                 if play:
-                    for n in range(50):                
+                    for n in range(50):
                         sleep(.2)
                         hwnds = Handle()
                         if len(hwnds) > 0:
@@ -392,14 +390,14 @@ class Run(eg.ActionClass):
                     else:
                         return self.plugin.text.text1
                 else:
-                    return self.text.alt_ret                    
-            
-            
+                    return self.text.alt_ret
+
+
     def Configure(self, play=False, fav=1):
         panel=eg.ConfigPanel(self)
         sizerAdd=panel.sizer.Add
         playChkBoxCtrl = wx.CheckBox(panel, label=self.text.play)
-        sizerAdd(playChkBoxCtrl,0,wx.TOP,15)		
+        sizerAdd(playChkBoxCtrl,0,wx.TOP,15)
         playChkBoxCtrl.SetValue(play)
         favLbl=wx.StaticText(panel, -1, self.text.label)
         sizerAdd(favLbl,0,wx.TOP,25)
@@ -421,13 +419,13 @@ class Run(eg.ActionClass):
                 evt.Skip()
         playChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnAutostart)
         OnAutostart()
-                
+
         while panel.Affirmed():
             panel.SetResult(
                 playChkBoxCtrl.GetValue(),
                 favCtrl.GetValue()
             )
-                                
+
 #===============================================================================
 class WindowControl(eg.ActionClass):
     def __call__(self):
@@ -438,7 +436,7 @@ class WindowControl(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-            
+
 
 #===============================================================================
 class Close(eg.ActionClass):
@@ -452,10 +450,10 @@ class Close(eg.ActionClass):
             return self.plugin.text.text1
         if self.plugin.path2:
             self.plugin.Execute('Stop_SR_Events.exe',self.plugin.path2)
-            
+
 
 #===============================================================================
-class PlayStop(eg.ActionClass):        
+class PlayStop(eg.ActionClass):
     def __call__(self):
         key = self.plugin.dh.document['NotPlaying']
         FindWindow = FindWindowFunction(key,u'Static',1)
@@ -474,7 +472,7 @@ class PlayStop(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-    
+
 
 #===============================================================================
 class OtherActions(eg.ActionClass):
@@ -497,12 +495,12 @@ class OtherActions(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-            
+
 #===============================================================================
 class VolumeUpDown(eg.ActionClass):
-    def __call__(self):       
+    def __call__(self):
         FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
-        hwnds = FindWindow()        
+        hwnds = FindWindow()
         if len(hwnds) != 0:
             volume=SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
             if eval(self.value[0]):
@@ -519,10 +517,10 @@ class VolumeUpDown(eg.ActionClass):
 class SetVolume(eg.ActionClass):
     class text:
         label="Set volume (0-100%):"
-        
-    def __call__(self,volume):       
+
+    def __call__(self,volume):
         FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
-        hwnds = FindWindow()        
+        hwnds = FindWindow()
         if len(hwnds) != 0:
             vol=SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
             step = -20+vol+volume/5
@@ -533,7 +531,7 @@ class SetVolume(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-            
+
     def Configure(self, volume=100):
         panel=eg.ConfigPanel(self)
         panel.sizer.Add(wx.StaticText(panel, -1, self.text.label))
@@ -549,23 +547,23 @@ class SetVolume(eg.ActionClass):
         )
         volumeCtrl.SetValue(volume)
         panel.sizer.Add(volumeCtrl,0,wx.TOP,10)
-        
+
         while panel.Affirmed():
             panel.SetResult(volumeCtrl.GetValue())
 
-            
+
 #===============================================================================
 class GetVolume(eg.ActionClass):
-    def __call__(self):       
+    def __call__(self):
         FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
-        hwnds = FindWindow()        
+        hwnds = FindWindow()
         if len(hwnds) != 0:
             return 100-5*SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
 
-            
+
 #===============================================================================
 class SelectFav(eg.ActionClass):
     class text:
@@ -592,7 +590,7 @@ class SelectFav(eg.ActionClass):
 
     def GetLabel(self, fav):
         return self.name+' '+str(fav)
-            
+
     def Configure(self, fav=1):
         panel=eg.ConfigPanel(self)
         panel.sizer.Add(wx.StaticText(panel, -1, self.text.label))
@@ -606,7 +604,7 @@ class SelectFav(eg.ActionClass):
         )
         favCtrl.SetValue(fav)
         panel.sizer.Add(favCtrl,0,wx.TOP,10)
-        
+
         while panel.Affirmed():
             panel.SetResult(favCtrl.GetValue())
 
@@ -619,7 +617,7 @@ class NextPrevFav(eg.ActionClass):
             xmltoparse = ScreamerPath+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
             sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
-            if eval(self.value[2]):        
+            if eval(self.value[2]):
                 self.plugin.fav_num += self.value[0]
             else:
                 self.plugin.fav_num = eval(self.value[1])
@@ -629,9 +627,9 @@ class NextPrevFav(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-            
+
 #===============================================================================
-class GetPlayingTitle(eg.ActionClass):  
+class GetPlayingTitle(eg.ActionClass):
     def __call__(self):
         hwnds = Handle()
         if len(hwnds) > 0:
@@ -640,29 +638,29 @@ class GetPlayingTitle(eg.ActionClass):
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
 
-            
+
 #===============================================================================
 class ShowMenu(eg.ActionClass):
     panel = None
-    
+
     class text:
         menuPreview = 'On screen menu preview:'
         menuFont = 'Menu font:'
         txtColour = 'Text colour'
-        background = 'Background colour'        
-        
+        background = 'Background colour'
+
 #===============================================================================
     class MenuColourSelectButton(wx.BitmapButton):
 
         def __init__(
-            self, 
+            self,
             id = -1,
             value=(255, 255, 255),
             name="ColourSelectButton",
-            pos=wx.DefaultPosition, 
+            pos=wx.DefaultPosition,
             size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW, 
-            validator=wx.DefaultValidator, 
+            style=wx.BU_AUTODRAW,
+            validator=wx.DefaultValidator,
         ):
             self.id = id
             self.value = value
@@ -687,7 +685,7 @@ class ShowMenu(eg.ActionClass):
                 colour=colourData.GetColour().Get()
                 self.SetValue(colour)
                 listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
+                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()
                 btnId = event.GetId()
                 if btnId == 1:
                     listBoxCtrl.SetBackgroundColour(colour)
@@ -701,30 +699,30 @@ class ShowMenu(eg.ActionClass):
             ]
             colourDlg.Destroy()
 
-            
+
         def GetValue(self):
             return self.value
 
-            
+
         def SetValue(self, value):
             self.value = value
             w, h = self.GetSize()
             image = wx.EmptyImage(w-10, h-10)
             image.SetRGBRect((1, 1, w-12, h-12), *value)
             self.SetBitmapLabel(image.ConvertToBitmap())
-        
+
 #===============================================================================
     class MenuFontButton(wx.BitmapButton):
 
         def __init__(
-            self, 
+            self,
             fontInfo = None,
             id=-1,
-            pos=wx.DefaultPosition, 
+            pos=wx.DefaultPosition,
             size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW, 
+            style=wx.BU_AUTODRAW,
             validator=wx.DefaultValidator,
-            name="MenuFontButton", 
+            name="MenuFontButton",
         ):
             self.window = panel
             self.fontInfo = fontInfo
@@ -732,7 +730,7 @@ class ShowMenu(eg.ActionClass):
                 self,
                 panel,
                 id,
-                wx.Bitmap("images/font.png"), 
+                wx.Bitmap("images/font.png"),
                 pos,
                 size,
                 style,
@@ -756,7 +754,7 @@ class ShowMenu(eg.ActionClass):
                 data = dlg.GetFontData()
                 font = data.GetChosenFont()
                 listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
+                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()
                 for n in range(10,20):
                     font.SetPointSize(n)
                     listBoxCtrl.SetFont(font)
@@ -784,7 +782,7 @@ class ShowMenu(eg.ActionClass):
 
     ):
         self.Show_OSM(fore,back,fontInfo,False)
-    
+
     def Show_OSM(
         self,
         fore,
@@ -792,7 +790,7 @@ class ShowMenu(eg.ActionClass):
         fontInfo,
         flag
     ):
-    
+
         if self.plugin.menuDlg is not None:
             return
         self.fore = fore
@@ -806,21 +804,21 @@ class ShowMenu(eg.ActionClass):
         choices = self.plugin.favList
 
         self.plugin.menuDlg = wx.Frame(
-                None, -1, 'OS_Menu', 
+                None, -1, 'OS_Menu',
                 style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
             )
         favChoiceCtrl=wx.ListBox(
             self.plugin.menuDlg,
             choices = choices,
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
-        
+
         if fontInfo is None:
             font = favChoiceCtrl.GetFont()
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)        
+            font = wx.FontFromNativeInfoString(fontInfo)
         favChoiceCtrl.SetFont(font)
         # menu height calculation:
         h=favChoiceCtrl.GetCharHeight()
@@ -850,7 +848,7 @@ class ShowMenu(eg.ActionClass):
             self.plugin.menuDlg = None
             evt.Skip()
         self.plugin.menuDlg.Bind(wx.EVT_CLOSE, OnClose)
-               
+
 
         def On2Click(evt):
             if self.plugin.menuDlg is not None:
@@ -868,16 +866,16 @@ class ShowMenu(eg.ActionClass):
         def __init__(self,dlg):
             Thread.__init__(self)
             self.dlg = dlg
-    
+
         def run(self):
             sleep(5)
             try:
                 self.dlg.Close() #
             except:
                 pass
-            
+
 #===============================================================================
-        
+
     def GetLabel(
         self,
         fore,
@@ -885,8 +883,8 @@ class ShowMenu(eg.ActionClass):
         fontInfo,
     ):
         return self.name
-        
-        
+
+
     def Configure(
         self,
         fore = (0, 0, 0),
@@ -912,11 +910,11 @@ class ShowMenu(eg.ActionClass):
             panel,-1,
             size=wx.Size(420,120),
             choices = choices,
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
         listBoxCtrl.SetBackgroundColour(self.back)
         listBoxCtrl.SetForegroundColour(self.fore)
-        
+
         if fontInfo is None:
             font = listBoxCtrl.GetFont()
             font.SetPointSize(36)
@@ -929,7 +927,7 @@ class ShowMenu(eg.ActionClass):
             if listBoxCtrl.GetTextExtent('X')[1]>20:
                 break
         mainSizer.Add(listBoxCtrl,0,wx.TOP,5)
-        
+
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
         fontButton = self.MenuFontButton(fontInfo)
@@ -947,7 +945,7 @@ class ShowMenu(eg.ActionClass):
             back,
             self.text.background
         )
-        
+
         bottomSizer = wx.FlexGridSizer(3,3,hgap=0,vgap=3)
         bottomSizer.Add((140,10))
         bottomSizer.Add((140,10))
@@ -959,13 +957,13 @@ class ShowMenu(eg.ActionClass):
         bottomSizer.Add(foreColourButton)
         bottomSizer.Add(backColourButton)
         mainSizer.Add(bottomSizer)
-        
+
         def OnClick(evt):
             listBoxCtrl.SetSelection(-1)
             evt.StopPropagation()
         listBoxCtrl.Bind(wx.EVT_LISTBOX, OnClick)
-        
-        
+
+
         # re-assign the test button
         def OnButton(event):
             self.Show_OSM(
@@ -975,13 +973,13 @@ class ShowMenu(eg.ActionClass):
                 True
             )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
- 
+
 
         while panel.Affirmed():
             panel.SetResult(
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
-            fontButton.GetValue(), 
+            fontButton.GetValue(),
             )
 
 
@@ -998,20 +996,20 @@ class MoveCursor(eg.ActionClass):
                     sel = eval(self.value[1])
                 self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                     SetSelection(sel+self.value[2])
-                
+
 #===============================================================================
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
         if self.plugin.menuDlg is not None:
             self.plugin.PlayFavFromMenu()
-        
+
 #===============================================================================
 class Cancel_Btn(eg.ActionClass):
 
     def __call__(self):
         if self.plugin.menuDlg is not None:
-            self.plugin.menuDlg.Close() 
+            self.plugin.menuDlg.Close()
 
 #===============================================================================
 Actions = (
@@ -1048,5 +1046,5 @@ Actions = (
         )),
     )),
 )
-  
+
 

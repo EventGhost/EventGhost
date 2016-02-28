@@ -5,36 +5,37 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 
-# Every EventGhost plugin should start with the import of 'eg' and the 
+# Every EventGhost plugin should start with the import of 'eg' and the
 # definition of an eg.PluginInfo subclass.
 
 
 eg.RegisterPlugin(
     name = "Foobar2000",
     author = "MonsterMagnet",
-#    version = "1.3." + "$LastChangedRevision: 1488 $".split()[1],
-    version = "1.3.1423",
+    version = "1.3.1488",
     kind = "program",
     guid = "{50257196-DB5B-4291-BD62-FF3DE53DDCA2}",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.net/">'
         'Foobar2000</a> audio player.<br />'
-	'<br />'
-	'For v1.0 you need I <a href="http://foosion.foobar2000.net/components/?id=runcmd">foosion\'s Run Command (foo_runcmd) plugin</a>.'
+    '<br />'
+    'For v1.0 you need I <a href="http://foosion.foobar2000.net/components/?id=runcmd">foosion\'s Run Command (foo_runcmd) plugin</a>.'
     ),
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=695",
@@ -92,193 +93,193 @@ from win32api import ShellExecute
 
 ACTIONS = (
     (
-        "Run", 
-        "Run", 
-        "Run foobar with its default settings.", 
+        "Run",
+        "Run",
+        "Run foobar with its default settings.",
         ( None, None )
     ),
     (
-        "Exit", 
-        "Exit", 
-        "Quits foobar.", 
+        "Exit",
+        "Exit",
+        "Quits foobar.",
         ( "/exit", "/exit" )
-    ), 
+    ),
     ( eg.ActionGroup, "Playback_Control", "Playback Control", "Playback Control Functions\ne.g. Play/Pause",(
         (
             "Play",
-            "Play", 
-            "Simulate a press on the play button.", 
+            "Play",
+            "Simulate a press on the play button.",
             ( "/play", "/play" )
-        ), 
+        ),
         (
             "Pause",
-            "Pause", 
-            "Simulate a press on the pause button.", 
+            "Pause",
+            "Simulate a press on the pause button.",
             ( "/pause", "/pause" )
-        ), 
+        ),
         (
-            "PlayPause", 
-            "Toggle Play/Pause", 
-            "Simulate a press on the PlayPause button.", 
+            "PlayPause",
+            "Toggle Play/Pause",
+            "Simulate a press on the PlayPause button.",
             ( "/playpause", "/playpause" )
-        ), 
+        ),
         (
             "Stop",
-            "Stop", 
-            "Simulate a press on the stop button.", 
+            "Stop",
+            "Simulate a press on the stop button.",
             ( "/stop", "/stop" )
-        ), 
+        ),
         (
-            "Random", 
-            "Random", 
-            "Simulate a press on the random button.", 
+            "Random",
+            "Random",
+            "Simulate a press on the random button.",
             ( "/rand", "/rand" )
         ),
         (
             "PreviousTrack",
-            "Previous Track", 
-            "Simulate a press on the previous track button.", 
+            "Previous Track",
+            "Simulate a press on the previous track button.",
             ( "/prev", "/prev" )
-        ), 
+        ),
         (
-            "NextTrack", 
-            "Next Track", 
-            "Simulate a press on the next track button.", 
+            "NextTrack",
+            "Next Track",
+            "Simulate a press on the next track button.",
             ( "/next", "/next" )
-        ), 
+        ),
         ( eg.ActionGroup, "Seek_Functions", "Seek Functions", "Seek Functions",(
             (
-                "SeekAhead1s", 
-                "Seek ahead by 1 seconds", 
-                "Seek ahead by 1 seconds.", 
+                "SeekAhead1s",
+                "Seek ahead by 1 seconds",
+                "Seek ahead by 1 seconds.",
                 ( '/command:"Seek ahead by 1 seconds"', '/runcmd="Seek/Ahead by 1 second"' )
             ),
             (
-                "SeekAhead5s", 
-                "Seek ahead by 5 seconds", 
-                "Seek ahead by 5 seconds.", 
+                "SeekAhead5s",
+                "Seek ahead by 5 seconds",
+                "Seek ahead by 5 seconds.",
                 ( '/command:"Seek ahead by 5 seconds"', '/runcmd="Seek/Ahead by 5 second"' )
             ),
             (
-                "SeekAhead10s", 
-                "Seek ahead by 10 seconds", 
-                "Seek ahead by 10 seconds.", 
+                "SeekAhead10s",
+                "Seek ahead by 10 seconds",
+                "Seek ahead by 10 seconds.",
                 ( '/command:"Seek ahead by 10 seconds"', '/runcmd="Seek/Ahead by 10 second"' )
             ),
             (
-                "SeekAhead30s", 
-                "Seek ahead by 30 seconds", 
-                "Seek ahead by 30 seconds.", 
+                "SeekAhead30s",
+                "Seek ahead by 30 seconds",
+                "Seek ahead by 30 seconds.",
                 ( '/command:"Seek ahead by 30 seconds"', '/runcmd="Seek/Ahead by 30 second"' )
             ),
             (
-                "SeekAhead1m", 
-                "Seek ahead by 1 minute", 
-                "Seek ahead by 1 minute.", 
+                "SeekAhead1m",
+                "Seek ahead by 1 minute",
+                "Seek ahead by 1 minute.",
                 ( '/command:"Seek ahead by 1 minute"', '/runcmd="Seek/Ahead by 1 minute"' )
             ),
             (
-                "SeekAhead2m", 
-                "Seek ahead by 2 minute", 
-                "Seek ahead by 2 minute.", 
+                "SeekAhead2m",
+                "Seek ahead by 2 minute",
+                "Seek ahead by 2 minute.",
                 ( '/command:"Seek ahead by 2 minute"', '/runcmd="Seek/Ahead by 2 minute"' )
             ),
             (
-                "SeekAhead5m", 
-                "Seek ahead by 5 minute", 
-                "Seek ahead by 5 minute.", 
+                "SeekAhead5m",
+                "Seek ahead by 5 minute",
+                "Seek ahead by 5 minute.",
                 ( '/command:"Seek ahead by 5 minute"', '/runcmd="Seek/Ahead by 5 minute"' )
             ),
             (
-                "SeekAhead10m", 
-                "Seek ahead by 10 minute", 
-                "Seek ahead by 10 minute.", 
+                "SeekAhead10m",
+                "Seek ahead by 10 minute",
+                "Seek ahead by 10 minute.",
                 ( '/command:"Seek ahead by 10 minute"', '/runcmd="Seek/Ahead by 10 minute"' )
             ),
             (
-                "SeekBack1s", 
-                "Seek back by 1 seconds", 
-                "Seek back by 1 seconds.", 
+                "SeekBack1s",
+                "Seek back by 1 seconds",
+                "Seek back by 1 seconds.",
                 ( '/command:"Seek back by 1 seconds"', '/runcmd="Seek/Back by 1 second"' )
             ),
             (
-                "SeekBack5s", 
-                "Seek back by 5 seconds", 
-                "Seek back by 5 seconds.", 
+                "SeekBack5s",
+                "Seek back by 5 seconds",
+                "Seek back by 5 seconds.",
                 ( '/command:"Seek back by 5 seconds"', '/runcmd="Seek/Back by 5 second"' )
             ),
             (
-                "SeekBack10s", 
-                "Seek back by 10 seconds", 
-                "Seek back by 10 seconds.", 
+                "SeekBack10s",
+                "Seek back by 10 seconds",
+                "Seek back by 10 seconds.",
                 ( '/command:"Seek back by 10 seconds"', '/runcmd="Seek/Back by 10 second"' )
             ),
             (
-                "SeekBack30s", 
-                "Seek back by 30 seconds", 
-                "Seek back by 30 seconds.", 
+                "SeekBack30s",
+                "Seek back by 30 seconds",
+                "Seek back by 30 seconds.",
                 ( '/command:"Seek back by 30 seconds"', '/runcmd="Seek/Back by 30 second"' )
             ),
             (
-                "SeekBack1m", 
-                "Seek back by 1 minute", 
-                "Seek back by 1 minute.", 
+                "SeekBack1m",
+                "Seek back by 1 minute",
+                "Seek back by 1 minute.",
                 ( '/command:"Seek back by 1 minute"', '/runcmd="Seek/Back by 1 minute"' )
             ),
             (
-                "SeekBack2m", 
-                "Seek back by 2 minute", 
-                "Seek back by 2 minute.", 
+                "SeekBack2m",
+                "Seek back by 2 minute",
+                "Seek back by 2 minute.",
                 ( '/command:"Seek back by 2 minute"', '/runcmd="Seek/Back by 2 minute"' )
             ),
             (
-                "SeekBack5m", 
-                "Seek back by 5 minute", 
-                "Seek back by 5 minute.", 
+                "SeekBack5m",
+                "Seek back by 5 minute",
+                "Seek back by 5 minute.",
                 ( '/command:"Seek back by 5 minute"', '/runcmd="Seek/Back by 5 minute"' )
             ),
             (
-                "SeekBack10m", 
-                "Seek back by 10 minute", 
-                "Seek back by 10 minute.", 
+                "SeekBack10m",
+                "Seek back by 10 minute",
+                "Seek back by 10 minute.",
                 ( '/command:"Seek back by 10 minute"', '/runcmd="Seek/Back by 10 minute"' )
             ),
         ) ),
     ) ),
     ( eg.ActionGroup, "Volume_Control", "Volume Control", "Volume Control Functions",(
         (
-            "VolumeUp", 
-            "Volume Up", 
+            "VolumeUp",
+            "Volume Up",
             "Turn Volume Up.",
         ( '/command:"Volume up"', '/runcmd="Playback/Volume/Up"' )
         ),
         (
-            "VolumeDown", 
-            "Volume Down", 
-            "Turn Volume Down.", 
+            "VolumeDown",
+            "Volume Down",
+            "Turn Volume Down.",
         ( '/command:"Volume down"', '/runcmd="Playback/Volume/Down"' )
         ),
         (
-            "VolumeMute", 
-            "Volume Mute", 
-            "Turn Volume Mute.", 
+            "VolumeMute",
+            "Volume Mute",
+            "Turn Volume Mute.",
         ( '/command:"Volume mute"', '/runcmd="Playback/Volume/Mute"' )
         ),
     ) ),
     ( eg.ActionGroup, "Miscellaneous", "Miscellaneous", "Miscellaneous Functions",(
         (
-            "Show", 
-            "Show", 
-            "Shows foobar.", 
+            "Show",
+            "Show",
+            "Shows foobar.",
             ( "/show", "/show" )
-        ), 
+        ),
         (
-            "Hide", 
-            "Hide", 
-            "Hides foobar.", 
+            "Hide",
+            "Hide",
+            "Hides foobar.",
             ( "/hide", "/hide" )
-        ), 
-    ) ), 
+        ),
+    ) ),
 )
 
 
@@ -287,7 +288,7 @@ class ActionPrototype(eg.ActionClass):
     # Every action needs a workhorse.
     def __call__(self):
         if self.plugin.useRunCmdPlugin:
-	    command = self.value[1]
+            command = self.value[1]
         else:
             command = self.value[0]
         # This one is quite simple. It just calls ShellExecute.
@@ -301,7 +302,7 @@ class ActionPrototype(eg.ActionClass):
 
 # Now we can start to define the plugin by sub-classing eg.PluginClass
 class Foobar2000(eg.PluginClass):
-    
+
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
 
@@ -315,24 +316,24 @@ class Foobar2000(eg.PluginClass):
         if useRunCmdPlugin is None:
             useRunCmdPlugin = ( self.GetFoobar2000Version() >= '1.0' )
         self.useRunCmdPlugin = useRunCmdPlugin
-        
-        
+
+
     def Configure(self, foobar2000Path=None, useRunCmdPlugin=None):
         if foobar2000Path is None:
             foobar2000Path = self.GetFoobar2000Path()
             if foobar2000Path is None:
                 foobar2000Path = os.path.join(
-                    eg.folderPath.ProgramFiles, 
-                    "foobar2000", 
+                    eg.folderPath.ProgramFiles,
+                    "foobar2000",
                     "foobar2000.exe"
                 )
         if useRunCmdPlugin is None:
             useRunCmdPlugin = ( self.GetFoobar2000Version() >= '1.0' )
         panel = eg.ConfigPanel()
         filepathCtrl = eg.FileBrowseButton(
-            panel, 
+            panel,
             size=(320,-1),
-            initialValue=foobar2000Path, 
+            initialValue=foobar2000Path,
             startDirectory=eg.folderPath.ProgramFiles,
             labelText="",
             fileMask = "Foobar2000 executable|foobar2000.exe|All-Files (*.*)|*.*",
@@ -342,16 +343,16 @@ class Foobar2000(eg.PluginClass):
         panel.AddCtrl(filepathCtrl)
 
         useRunCmdPluginCtrl = wx.CheckBox(panel, -1, "Use foo_runcmd plugin (neccessary for foobar2000 v1.0)")
-	useRunCmdPluginCtrl.SetValue(useRunCmdPlugin)
+        useRunCmdPluginCtrl.SetValue(useRunCmdPlugin)
         panel.AddCtrl(useRunCmdPluginCtrl)
 
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), useRunCmdPluginCtrl.GetValue())
-        
+
 
     def GetFoobar2000Path(self):
         """
-        Get the path of Foobar2000's installation directory through querying 
+        Get the path of Foobar2000's installation directory through querying
         the Windows registry.
         """
         try:

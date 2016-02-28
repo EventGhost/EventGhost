@@ -46,7 +46,7 @@
 eg.RegisterPlugin(
     name = "Yamaha RX-V1000 Serial",
     author = "Mark Clarkson",
-    version = "0.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.1.1093",
     kind = "external",
     guid = "{A961D3D4-5AE2-4F76-B88C-7D8865C56C23}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=123",
@@ -144,7 +144,7 @@ class YamahaSerial(eg.PluginClass):
             '1':'GuardBySystem',
             '2':'GuardBySetting'
         }
-            
+
         self.EventList = {
             '00':{
                 'content':'NoGuard',
@@ -383,7 +383,7 @@ class YamahaSerial(eg.PluginClass):
                 self.plugin.serial.write(cmd)
                 self.plugin.serial.write('\x03')
             return write
-                        
+
         for cmd_name, cmd_text, cmd_cmd, cmd_rangespec in cmdList:
             if cmd_text is None:
                 # New subgroup, or back up
@@ -417,7 +417,7 @@ class YamahaSerial(eg.PluginClass):
         else:
             volumeChange = 'None'
 
-        self.TriggerEvent('MasterVolume' + '.' + str(newdbValue))            
+        self.TriggerEvent('MasterVolume' + '.' + str(newdbValue))
 
         self.currentVolume = newdbValue
 
@@ -459,19 +459,19 @@ class YamahaSerial(eg.PluginClass):
         thread.start_new_thread(self.reader,());
         # Do an initial master volume query so we can track it
         #self.serial.write('\x02' + '22001' + '\x03');
-        
-        
+
+
     def __stop__(self):
         self.readerkiller = True
         if self.serial is not None:
             self.serial.close()
             self.serial = None
-            
-            
+
+
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         panel.AddLine("Port:", portCtrl)
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue())
-                    
+

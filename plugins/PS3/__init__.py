@@ -28,11 +28,11 @@ The plugin will also automatically re-detect the PS3 remote after being in stand
 <u><b>3) Changelog</b></u>
 
 4.0.2:<br>
-Added support for 5 new BT buttons on 2011 PS3 remote:<br> 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. '-/--'<br> 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 'ChanUp'<br> 
+Added support for 5 new BT buttons on 2011 PS3 remote:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. '-/--'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 'ChanUp'<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 'ChanDown'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 'InstantNext'<br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 'InstantNext'<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 'InstantPrev'<br>
 
 4.0.3:<br>
@@ -45,10 +45,16 @@ Fix batteryLevel "out of range" error.
 
 eg.RegisterPlugin(
     name = "PlayStation 3 Bluetooth Remote",
-    author = "Thierry Couquillou, Tim Delaney, Chris Heitkamp, Peter Mathiasson, Eric Hodgerson",
+    author = (
+        "Thierry Couquillou",
+        "Tim Delaney",
+        "Chris Heitkamp",
+        "Peter Mathiasson",
+        "Eric Hodgerson",
+    ),
     version = "4.0.4",
     kind = "remote",
-    guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",    
+    guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=640",
     description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
     canMultiLoad = True,

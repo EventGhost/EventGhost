@@ -1,21 +1,23 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # plugins/OSE/__init__.py
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
@@ -55,8 +57,8 @@
 #         wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN
 #         wx.WXK_ESCAPE
 # 0.2.4  by Pako 2010-08-23 18:25 UTC+1
-#      - Added option "Delete folder" 
-#
+#      - Added option "Delete folder"
+
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
@@ -204,7 +206,7 @@ class MenuGrid(wx.grid.Grid):
         row = event.GetRow()
         self.SelectRow(row)
         if not self.IsVisible(row, 0):
-            self.MakeCellVisible(row, 0)  
+            self.MakeCellVisible(row, 0)
         event.Skip()
 
 
@@ -345,7 +347,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         hide = True,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
-        focus = True,        
+        focus = True,
     ):
         if not self.plugin.menuDlg:
             if not self.value:
@@ -517,7 +519,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         if self.value:
             folderLabel = wx.StaticText(panel, -1, self.text.folder)
             folderCtrl = MyDirBrowseButton(
-                panel, 
+                panel,
                 toolTip = self.text.toolTipFolder,
                 dialogTitle = self.text.browseTitle,
                 buttonText = eg.text.General.browse,
@@ -617,7 +619,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     backColourButton.GetValue(),
                     foreSelColourButton.GetValue(),
                     backSelColourButton.GetValue(),
-                    fontButton.GetValue(), 
+                    fontButton.GetValue(),
                     True,
                     self.plugin,
                     prefixCtrl.GetValue(),
@@ -1120,7 +1122,7 @@ class Menu(wx.Frame):
             None,
             -1,
             'OS_Explorer',
-            style = wx.STAY_ON_TOP|wx.BORDER_NONE 
+            style = wx.STAY_ON_TOP|wx.BORDER_NONE
         )
         self.plugin  = plugin
         self.plugin.menuDlg = self
@@ -1302,7 +1304,7 @@ class Menu(wx.Frame):
                 else:
                     filePath = os.path.split(filePath[:-3])[0]
         return sel, filePath
-        
+
 
     def GetValue(self):
         sel, filePath = self.GetFilePath()
@@ -1312,7 +1314,7 @@ class Menu(wx.Frame):
     def DefaultAction(self):
         sel, filePath = self.GetFilePath()
         eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = filePath)
-        if os.path.isfile(filePath): 
+        if os.path.isfile(filePath):
             self.destroyMenu()
             self.plugin.menuDlg = None
             try:

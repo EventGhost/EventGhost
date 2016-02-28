@@ -5,18 +5,20 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
@@ -31,7 +33,6 @@
 #     - {DATE} context is working properly
 # 1.0 by MonsterMagnet
 #     - initial version
-
 
 eg.RegisterPlugin(
     name = "Speech",
@@ -78,8 +79,8 @@ class Text:
     description = "Uses the Microsoft Speech API (SAPI) to speak a text."
     label = "Speak: %s"
     errorCreate = "Cannot create voice object"
-    buttonInsertTime = "Insert time HH:MM:SS"    
-    buttonInsertTime1 = "Insert time HH:MM"    
+    buttonInsertTime = "Insert time HH:MM:SS"
+    buttonInsertTime1 = "Insert time HH:MM"
     buttonInsertDate = "Insert date (20XX)"
     buttonInsertDate1 = "Insert date (XX)"
     normal = "Normal"
@@ -95,13 +96,13 @@ class Text:
     suffix = "SpeakingFinished"
     addSuffix = "Additional event suffix:"
     device = "Output device:"
-    
+
 
 class CustomSlider(wx.Window):
-    
+
     def __init__(
-        self, 
-        parent, 
+        self,
+        parent,
         id = -1,
         value = None,
         minValue = None,
@@ -125,13 +126,13 @@ class CustomSlider(wx.Window):
             maxValue,
             style = style
         )
-        sizer.Add(self.slider, (0, 0), (1, 3), wx.EXPAND)   
+        sizer.Add(self.slider, (0, 0), (1, 3), wx.EXPAND)
         st = wx.StaticText(self, -1, minLabel)
-        sizer.Add(st, (1, 0), (1, 1), wx.ALIGN_LEFT)   
+        sizer.Add(st, (1, 0), (1, 1), wx.ALIGN_LEFT)
         self.valueLabelCtrl = wx.StaticText(self, -1, valueLabel)
-        sizer.Add(self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL)   
+        sizer.Add(self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL)
         st = wx.StaticText(self, -1, maxLabel)
-        sizer.Add(st, (1, 2), (1, 1), wx.ALIGN_RIGHT)   
+        sizer.Add(st, (1, 2), (1, 1), wx.ALIGN_RIGHT)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
         sizer.Fit(self)
@@ -150,22 +151,22 @@ class CustomSlider(wx.Window):
 
     def OnSetFocus(self, event):
         self.slider.SetFocus()
-        
-        
+
+
     def OnScrollChanged(self, event=None):
         d = {"1": self.slider.GetValue()}
         self.valueLabelCtrl.SetLabel(self.valueLabel % d)
         if event:
             wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
-        
-    
+
+
     def GetValue(self):
         return self.slider.GetValue()
-        
-        
+
+
     def SetValue(self):
         self.slider.SetValue()
-        
+
 
 #class SpeechEvents:
 #    def OnEndStream(self, StreamNumber, StreamPosition):
@@ -208,16 +209,16 @@ class Speaker(Thread):
         tmp = [item[0] for item in voices]
         ix = tmp.index(self.voiceName) if self.voiceName in tmp else 0
         tts.Voice = voices[ix][1]
-        
+
         devs = tts.GetAudioOutputs()
         devices = [(dev.GetDescription(), dev) for dev in devs]
         tmp = [item[0] for item in devices]
         ix = tmp.index(self.device) if self.device in tmp else 0
-        tts.AudioOutput = devices[ix][1]       
-        
+        tts.AudioOutput = devices[ix][1]
+
         tts.Rate = self.rate
-        tts.Volume = self.volume        
-        tts.Speak(self.text,0) 
+        tts.Volume = self.volume
+        tts.Speak(self.text,0)
         suffix = self.plugin.text.suffix if self.suff == "" else "%s.%s" % (
             self.plugin.text.suffix,
             self.suff
@@ -225,18 +226,18 @@ class Speaker(Thread):
         self.plugin.TriggerEvent(suffix)
 
 
-class Speech(eg.PluginClass):  
+class Speech(eg.PluginClass):
 
     def __init__(self):
         self.AddAction(TextToSpeech)
 
-    
-    
+
+
 class TextToSpeech(eg.ActionClass):
     text = Text
-    
+
     def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
-        self.suff = suff if suff != 0 else ""            
+        self.suff = suff if suff != 0 else ""
 
         def filterFunc(s):
             if s == "DATE":
@@ -249,7 +250,7 @@ class TextToSpeech(eg.ActionClass):
                 return '</context><context ID = "time">' + strftime("%H:%M") + '</context><context>'
             else:
                 return None
-                
+
         voiceText = eg.ParseString(voiceText, filterFunc)
         voiceText = "<context>" + voiceText + "</context>"
         if voiceText.startswith('<context></context>'):
@@ -257,8 +258,8 @@ class TextToSpeech(eg.ActionClass):
         voiceText = voiceText.replace(
             '</context><context></context>',
             '</context>'
-        )      
-        
+        )
+
         sp=Speaker(
             self.plugin,
             voiceText,
@@ -268,55 +269,55 @@ class TextToSpeech(eg.ActionClass):
             suff,
             device
         )
-     
-    
+
+
     def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
         return self.text.label % voiceText
-   
+
 
     def Configure(
-        self, 
-        voiceName=None, 
+        self,
+        voiceName=None,
         rate=0,
-        voiceText="", 
-        suff="", 
+        voiceText="",
+        suff="",
         volume=100,
         device = None
     ):
-        suff = suff if suff != 0 else "" 
+        suff = suff if suff != 0 else ""
         text = self.text
         panel = eg.ConfigPanel()
         plugin = self.plugin
-            
-        textCtrl = wx.TextCtrl(panel, -1, voiceText)           
-        suffCtrl = wx.TextCtrl(panel, -1, suff)           
-       
+
+        textCtrl = wx.TextCtrl(panel, -1, voiceText)
+        suffCtrl = wx.TextCtrl(panel, -1, suff)
+
         insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
         def OnButton(event):
             textCtrl.WriteText('{TIME}')
             textCtrl.SetFocus()
         insertTimeButton.Bind(wx.EVT_BUTTON, OnButton)
-        
+
         insertTimeButton1 = wx.Button(panel, -1, text.buttonInsertTime1)
         def OnButton(event):
             textCtrl.WriteText('{TIME1}')
             textCtrl.SetFocus()
         insertTimeButton1.Bind(wx.EVT_BUTTON, OnButton)
-        
+
         insertDateButton = wx.Button(panel, -1, text.buttonInsertDate)
         def OnButton(event):
             textCtrl.WriteText('{DATE}')
             textCtrl.SetFocus()
         insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
-        
+
         insertDateButton1 = wx.Button(panel, -1, text.buttonInsertDate1)
         def OnButton(event):
             textCtrl.WriteText('{DATE1}')
             textCtrl.SetFocus()
         insertDateButton1.Bind(wx.EVT_BUTTON, OnButton)
-        
 
-        
+
+
         try:
             #self.VoiceObj = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
             VoiceObj = Dispatch("Sapi.SpVoice")
@@ -333,10 +334,10 @@ class TextToSpeech(eg.ActionClass):
         devChoice = wx.Choice(panel, -1, choices=devs)
         devName = device if device  else devs[0]
         devChoice.SetStringSelection(devName)
-        
-        
-        
-        
+
+
+
+
 
         rateCtrl = CustomSlider(
             panel,
@@ -348,7 +349,7 @@ class TextToSpeech(eg.ActionClass):
             maxLabel = text.fast,
             style = wx.SL_AUTOTICKS|wx.SL_TOP
         )
-                   
+
         volumeCtrl = CustomSlider(
             panel,
             value = volume,
@@ -360,7 +361,7 @@ class TextToSpeech(eg.ActionClass):
             style = wx.SL_AUTOTICKS|wx.SL_TOP
         )
         volumeCtrl.slider.SetTickFreq(10, 3)
-        
+
         sizer1 = eg.HBoxSizer(
             (textCtrl, 1, wx.EXPAND)
         )
@@ -393,20 +394,20 @@ class TextToSpeech(eg.ActionClass):
                 (suffCtrl, 0, wx.EXPAND)
             )
         )
-        
+
         staticBoxSizer2 = panel.VStaticBoxSizer(
             text.voiceProperties,
             (sizer3, 0, wx.EXPAND|wx.ALL, 5),
         )
-        
+
         panel.sizer.Add(staticBoxSizer1, 0, wx.EXPAND)
         panel.sizer.Add(staticBoxSizer2, 0, wx.EXPAND|wx.TOP, 10)
-       
+
         while panel.Affirmed():
             panel.SetResult(
                 voiceChoice.GetStringSelection(),
-                rateCtrl.GetValue(), 
-                textCtrl.GetValue(), 
+                rateCtrl.GetValue(),
+                textCtrl.GetValue(),
                 suffCtrl.GetValue(),
                 volumeCtrl.GetValue(),
                 devChoice.GetStringSelection()

@@ -2,26 +2,30 @@
 # plugins/DynamicWebserver/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Dynamic Webserver",
-    author = "Bitmonster/Kingtd",
-    version = "1.0." + "$LastChangedRevision: 503 $".split()[1],
+    author = (
+        "Bitmonster",
+        "Kingtd",
+    ),
+    version = "1.0.503",
     guid = "{2FC713FF-0093-4271-A520-F0F6BB05A0E8}",
-    description = u'''<rst>Implements a small webserver, 
+    description = u'''<rst>Implements a small webserver,
 that you can use to generate events through HTML-pages.
 
 ========================
@@ -76,11 +80,11 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
     def webvars(self, match ):
-	try:
-		value=getattr(eg.globals,match.group()[13:-2])
-		return value
-	except:
-		return ""
+        try:
+            value=getattr(eg.globals,match.group()[13:-2])
+            return value
+        except:
+            return ""
 
     def do_GET(self):
         """Serve a GET request."""
@@ -97,7 +101,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if not authenticated:
                 self.send_response(401)
                 self.send_header(
-                    'WWW-Authenticate', 
+                    'WWW-Authenticate',
                     'Basic realm="%s"' % self.server.authRealm
                 )
                 self.end_headers()
@@ -111,10 +115,10 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             f = self.send_head()
             if not f:
                 return
-	    tempwpage=f.read()
-	    tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
-    	    self.wfile.write(tempwpage)
-	    # self.copyfile(f, self.wfile)
+            tempwpage=f.read()
+            tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
+            self.wfile.write(tempwpage)
+            # self.copyfile(f, self.wfile)
             f.close()
             f = None
             if len(p) < 2:
@@ -250,12 +254,12 @@ class DynamicWebserver(eg.PluginClass):
 
 
     def __start__(
-        self, 
-        prefix=None, 
-        port=80, 
-        basepath=None, 
-        authRealm="Eventghost", 
-        authUsername="", 
+        self,
+        prefix=None,
+        port=80,
+        basepath=None,
+        authRealm="Eventghost",
+        authUsername="",
         authPassword=""
     ):
         self.info.eventPrefix = prefix
@@ -301,12 +305,12 @@ class DynamicWebserver(eg.PluginClass):
 
 
     def Configure(
-        self, 
-        prefix="HTTP", 
-        port=80, 
-        basepath="", 
-        authRealm="EventGhost", 
-        authUsername="", 
+        self,
+        prefix="HTTP",
+        port=80,
+        basepath="",
+        authRealm="EventGhost",
+        authUsername="",
         authPassword=""
     ):
         text = self.text
@@ -341,7 +345,7 @@ class DynamicWebserver(eg.PluginClass):
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
         sizer.Add(labels[3], 0, ACV)
         sizer.Add(authRealmCtrl)

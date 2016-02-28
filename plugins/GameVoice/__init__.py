@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Sidewinder Game Voice",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.1.614",
     kind = "remote",
     canMultiLoad = False,
     description = (
@@ -17,14 +17,14 @@ from eg.WinApi.HID import IsDeviceName
 
 class Text:
     errorFind = "Error finding Game Voice"
-    
+
 VENDOR_ID = 1118
 PRODUCT_ID = 59
 
 ButtonMapping = {
     0 : "All",
     1 : "Team",
-    2 : "1", 
+    2 : "1",
     3 : "2",
     4 : "3",
     5 : "4",
@@ -34,7 +34,7 @@ ButtonMapping = {
 class GameVoice(eg.PluginClass):
     def __init__(self):
         self.thread = None
-    
+
     def ButtonCallback(self, data):
         btnPressed = []
         for num in data:
@@ -47,7 +47,7 @@ class GameVoice(eg.PluginClass):
             self.TriggerEvent(btnPressed[0])
         else:
             self.TriggerEvent("+".join(btnPressed))
-            
+
     def StopCallback(self):
         self.TriggerEvent("Stopped")
         self.thread = None
@@ -62,37 +62,37 @@ class GameVoice(eg.PluginClass):
             True,
             0)
         return path;
-    
+
     def SetupHidThread(self, newDevicePath):
         #create thread
         self.thread = HIDThread(self.name, newDevicePath, self.name)
         self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         self.thread.SetButtonCallback(self.ButtonCallback)
-        
+
     def SetFeature(self, buffer):
         if self.thread:
             self.thread.SetFeature(buffer)
-    
+
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
             if not IsDeviceName(event.payload, VENDOR_ID, PRODUCT_ID):
                 return
-            
+
             #check if the right device was connected
             #getting devicePath
             newDevicePath = self.GetMyDevicePath()
             if not newDevicePath:
                 #wrong device
                 return
-            
+
             self.SetupHidThread(newDevicePath)
 
     def __start__(self):
-        #Bind plug in to RegisterDeviceNotification message 
+        #Bind plug in to RegisterDeviceNotification message
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
-        
+
         newDevicePath = self.GetMyDevicePath()
         if not newDevicePath:
             #device not found
@@ -103,6 +103,6 @@ class GameVoice(eg.PluginClass):
     def __stop__(self):
         if self.thread:
             self.thread.AbortThread()
-        
+
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)

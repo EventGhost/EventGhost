@@ -15,7 +15,7 @@ eg.RegisterPlugin(
     description = 'Plugin to control TellStick devices.',
     help = """
         <a href="http://www.telldus.se">Telldus Hompage</a>
-        
+
         <center><img src="tellstick.png" /></center>
     """,
     icon = (
@@ -53,7 +53,7 @@ class TellStick(eg.PluginClass):
         self.dll = None
         try:
             self.dll = windll.LoadLibrary("TellUsbD101.dll")
-        except: 
+        except:
             raise eg.Exception("TellUsbD101.dll not found.")
 
 
@@ -88,8 +88,8 @@ class DeviceBase(object):
         deviceCtrl = wx.Choice(panel, -1, choices=deviceList)
         deviceCtrl.Select(selected)
         panel.sizer.Add(
-            wx.StaticText(panel, -1, "Device:"), 
-            0, 
+            wx.StaticText(panel, -1, "Device:"),
+            0,
             wx.ALIGN_CENTER_VERTICAL
         )
         panel.sizer.Add(deviceCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -99,7 +99,7 @@ class DeviceBase(object):
             else:
                 device = 0
             panel.SetResult(device)
-            
+
 
 class TurnOn(DeviceBase, eg.ActionClass):
     name = "Turn on"
@@ -180,14 +180,14 @@ class Dim(eg.ActionClass):
         deviceCtrl.Select(selected)
         levelCtrl = wx.Slider(panel, -1, level, 1, 254)
         panel.sizer.Add(
-            wx.StaticText(panel, -1, "Device:"), 
-            0, 
+            wx.StaticText(panel, -1, "Device:"),
+            0,
             wx.ALIGN_CENTER_VERTICAL
         )
         panel.sizer.Add(deviceCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
         panel.sizer.Add(
-            wx.StaticText(panel, -1, "Level:"), 
-            0, 
+            wx.StaticText(panel, -1, "Level:"),
+            0,
             wx.ALIGN_CENTER_VERTICAL
         )
         panel.sizer.Add(levelCtrl, 0, wx.ALIGN_CENTER_VERTICAL)

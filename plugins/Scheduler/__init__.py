@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 #
 # plugins/Scheduler/__init__.py
-# 
+#
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
     name = "Scheduler",
@@ -35,7 +37,7 @@ eg.RegisterPlugin(
 #             Added event to allow controlling restart of threads when
 #             changing 'empty house' and 'vacation' modes
 # 2014-05-12  Plugin settings updated for 'empty house' and 'vacation' modes
-#             when changed via actions from externals 
+#             when changed via actions from externals
 # 2014-05-10  Plugin termination problem improved/solved
 # 2014-02-24  Added new day type, 'empty house', and new empty house mode
 # 2013-12-27  Synchronization is now deactived during vacation mode
@@ -152,19 +154,19 @@ class Text:
 
     class SetVacationON:
         txtMG_ON = "Vacation function ON"
-        txtInit = "Please wait, Scheduler is just initialising..."                
+        txtInit = "Please wait, Scheduler is just initialising..."
 
     class SetVacationOFF:
         txtMG_OFF = "Vacation function OFF"
-        txtInit = "Please wait, Scheduler is just initialising..."                
+        txtInit = "Please wait, Scheduler is just initialising..."
 
     class SetEmptyHouseON:
         txtMG_ON = "EmptyHouse function ON"
-        txtInit = "Please wait, Scheduler is just initialising..."                
+        txtInit = "Please wait, Scheduler is just initialising..."
 
     class SetEmptyHouseOFF:
         txtMG_OFF = "EmptyHouse function OFF"
-        txtInit = "Please wait, Scheduler is just initialising..."                
+        txtInit = "Please wait, Scheduler is just initialising..."
 
 
 
@@ -209,20 +211,20 @@ class SchedulerThread(Thread):
         self.bDoSynch = bDoSynch
         self.iSynchInterval = iSynchInterval
         self.emptyHouse_m = emptyHouse_m
-   
-   
+
+
     def run(self):
         try:
             dummy
         except NameError:
             dummy = 0
             init = 1
-            iSynch = 1      
+            iSynch = 1
             prevDate = 0
         random.jumpahead(213)
         self.lst_3 = []
 
-       
+
         def Check_for_holidays():
             currDate = time.strftime("%m/%d/%Y", time.localtime())
             date = time.strftime("%m%d", time.localtime())
@@ -236,7 +238,7 @@ class SchedulerThread(Thread):
             else:
                 dwt = 0
             nDw = dw
-            
+
             if (
                 self.fixedHolidays.find(date) != -1
                 or self.variableHolidays.find(date) != -1
@@ -245,7 +247,7 @@ class SchedulerThread(Thread):
                 if dwt < 5:
                     nDw = 6
                 if (
-                    self.fixedHolidays.find(dateTmw) != -1 
+                    self.fixedHolidays.find(dateTmw) != -1
                     or self.variableHolidays.find(dateTmw) != -1
                 ):
                     nDw = 5
@@ -263,15 +265,15 @@ class SchedulerThread(Thread):
             if self.vacation_m:
                 nDw = 7
             return(nDw)
-        
-        
+
+
         def GetDayOfWeek(dateString):
             # day of week (monday = 0) of a given month/day/year
             ds = dateString.split('/')
             dayOfWeek = int(calendar.weekday(int(ds[2]),int(ds[0]),int(ds[1])))
             return(dayOfWeek)
-        
-        
+
+
         def GetNameOfDay(dt):
             nd = ""
             if dt == "0":
@@ -295,21 +297,21 @@ class SchedulerThread(Thread):
             return(nd)
 
 
-        def CheckIfLog(lightOld, light, iSynch, label):       
+        def CheckIfLog(lightOld, light, iSynch, label):
             if (
                 light != lightOld
                 or iSynch == 1
             ):
                 LogToFile(label)
-        
-        
+
+
         def LogToFile(s):
             timeStamp = str(
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             )
             logStr = timeStamp+"\t"+s+"<br\n>"
             fileHandle = None
-            
+
             progData = eg.configDir + '\plugins\Scheduler'
             if not os.path.exists(progData) and not os.path.isdir(progData):
                     os.makedirs(progData)
@@ -337,7 +339,7 @@ class SchedulerThread(Thread):
                             )
                             self.finished.wait(self.cmdDelay)
                         LogToFile(self.eventNameOn)
-                  
+
                 if i % 2 == 1: #Try OFF settings
                     if trigTime == self.dayTimeSettings[i]:
                         for i in range(self.iNbrOfBurstsOFF):
@@ -348,9 +350,9 @@ class SchedulerThread(Thread):
                             )
                             self.finished.wait(self.cmdDelay)
                         LogToFile(self.eventNameOff)
-            
+
             #Restore device states at startup and during synch
-            if ( 
+            if (
                 init == 1
                 or iSynch == self.iSynchInterval
             ):
@@ -428,17 +430,17 @@ class SchedulerThread(Thread):
             self.finished.wait(remain)
             if self.abort:
                 break
-           
+
             # Get the current date & time now, check if it has changed
             trigTime = str(time.strftime("%H%M", time.localtime()))
             currDate = str(time.strftime("%m/%d/%Y", time.localtime()))
             if currDate != prevDate:
                 prevDate = 0
-                   
+
             # Get day of week and check for holidays
             odayType = str(GetDayOfWeek(currDate))
             dayType = str(Check_for_holidays())
-        
+
             if prevDate == 0:
                 # Initial logging when a new day begins
                 prevDate = currDate
@@ -486,7 +488,7 @@ class SchedulerThread(Thread):
                 lst_2 = self.dayTimeSettings[3+int(dayType)*6+3:]
                 lst_2.reverse()
                 self.lst_3 = lst_1 + lst_2
-                    
+
             j = 3
             for i in range(0,9):
                 #print dayType, str(i)
@@ -504,17 +506,17 @@ class SchedulerThread(Thread):
 
             init = 0
 
-        
+
     def AbortScheduler(self):
         self.abort = True
         #print self.text.thr_abort, self.name
         self.finished.set()
-       
-       
-  
+
+
+
 class Scheduler(eg.PluginClass):
     text = Text
-    
+
     def __init__(self):
         self.AddAction(SchedulerAction)
         self.AddAction(SetVacationON)
@@ -576,7 +578,7 @@ class Scheduler(eg.PluginClass):
 
 
     def SetVarMain(self, trItem, args):
-        eg.actionThread.Func(trItem.SetArguments)(args) # __stop__ / __start__        
+        eg.actionThread.Func(trItem.SetArguments)(args) # __stop__ / __start__
         eg.document.SetIsDirty()
         eg.document.Save()
         eg.TriggerEvent(
@@ -600,7 +602,7 @@ class Scheduler(eg.PluginClass):
                 args[int(i)] = arg
             ct = currentThread()
             if ct == eg.actionThread._ThreadWorker__thread:
-                trItem.SetArguments(args) # __stop__ / __start__      
+                trItem.SetArguments(args) # __stop__ / __start__
                 eg.document.SetIsDirty()
                 eg.document.Save()
                 eg.TriggerEvent(
@@ -705,7 +707,7 @@ class Scheduler(eg.PluginClass):
         eventPrefix = "Main",
         *args
     ):
-        
+
         panel = eg.ConfigPanel(self, resizable=True)
 
         panel.sizer.Add(
@@ -718,13 +720,13 @@ class Scheduler(eg.PluginClass):
         mySizer.AddGrowableCol(1)
         mySizer.AddGrowableCol(2)
         mySizer.AddGrowableCol(3)
-       
+
         schedulerListCtrl = wx.ListCtrl(
             panel,
             -1,
             style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL
         )
-       
+
         for i, colLabel in enumerate(self.text.colLabels):
             schedulerListCtrl.InsertColumn(i, colLabel)
 
@@ -739,18 +741,18 @@ class Scheduler(eg.PluginClass):
                 wx.LIST_AUTOSIZE_USEHEADER
             )
             size += schedulerListCtrl.GetColumnWidth(i)
-       
+
         schedulerListCtrl.SetMinSize((size, -1))
-       
+
         mySizer.Add(schedulerListCtrl, (0,0), (1, 5), flag = wx.EXPAND)
 
         #buttons
         abortButton = wx.Button(panel, -1, self.text.b_abort)
         mySizer.Add(abortButton, (1,0))
-       
+
         abortAllButton = wx.Button(panel, -1, self.text.b_abortAll)
         mySizer.Add(abortAllButton, (1,1), flag = wx.ALIGN_RIGHT)
-       
+
         restartAllButton = wx.Button(panel, -1, self.text.b_restartAll)
         mySizer.Add(restartAllButton, (1,2), flag = wx.ALIGN_RIGHT)
 
@@ -796,13 +798,13 @@ class Scheduler(eg.PluginClass):
         vacation_mCtrl = wx.CheckBox(panel, -1, self.text.txtVacation_m)
         vacation_mCtrl.SetValue(vacation_m)
         mySizer.Add(vacation_mCtrl,(5,0))
-       
+
         emptyHouse_mCtrl = wx.CheckBox(panel, -1, self.text.txtEmptyHouse_m)
         emptyHouse_mCtrl.SetValue(emptyHouse_m)
         mySizer.Add(emptyHouse_mCtrl,(5,1))
 
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
-       
+
         def PopulateList (event):
             schedulerListCtrl.DeleteAllItems()
             row = 0
@@ -845,7 +847,7 @@ class Scheduler(eg.PluginClass):
             abortButton.Enable(flag)
             event.Skip()
 
-           
+
         def OnSize(event):
             schedulerListCtrl.SetColumnWidth(
                 6,
@@ -854,19 +856,19 @@ class Scheduler(eg.PluginClass):
             event.Skip()
 
 
-        def OnApplyButton(event): 
+        def OnApplyButton(event):
             event.Skip()
             self.RestartAllSchedulers()
             PopulateList(wx.CommandEvent())
 
 
-        def OnOkButton(event): 
+        def OnOkButton(event):
             event.Skip()
             self.OkButtonClicked = True
 
-            
+
         PopulateList(wx.CommandEvent())
-       
+
         abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
         abortAllButton.Bind(wx.EVT_BUTTON, OnAbortAllButton)
         restartAllButton.Bind(wx.EVT_BUTTON, OnRestartAllButton)
@@ -938,15 +940,15 @@ class Scheduler(eg.PluginClass):
             self.AllschedulerNames.append(schedulerName)
         return self.AllschedulerNames.index(schedulerName)
 
-        
+
     def AddDayTimeSettings(self, dayTimeSettings, indx):
         try:
             del self.AlldayTimeSettings[indx]
         except IndexError:
             i = -1 # no match
         self.AlldayTimeSettings.insert(indx, dayTimeSettings)
- 
-            
+
+
     def AddEventNameOn(self, eventNameOn, indx):
         try:
             del self.AlleventNameOn[indx]
@@ -954,7 +956,7 @@ class Scheduler(eg.PluginClass):
             i = -1 # no match
         self.AlleventNameOn.insert(indx, eventNameOn)
 
-            
+
     def AddEventNameOff(self, eventNameOff, indx):
         try:
             del self.AlleventNameOff[indx]
@@ -962,7 +964,7 @@ class Scheduler(eg.PluginClass):
             i = -1 # no match
         self.AlleventNameOff.insert(indx, eventNameOff)
 
-            
+
     def AddInbrOfBurstsON(self, iNbrOfBurstsON, indx):
         try:
             del self.AlliNbrOfBurstsON[indx]
@@ -970,7 +972,7 @@ class Scheduler(eg.PluginClass):
             i = -1 # no match
         self.AlliNbrOfBurstsON.insert(indx, iNbrOfBurstsON)
 
-            
+
     def AddInbrOfBurstsOFF(self, iNbrOfBurstsOFF, indx):
         try:
             del self.AlliNbrOfBurstsOFF[indx]
@@ -985,7 +987,7 @@ class Scheduler(eg.PluginClass):
         except IndexError:
             i = -1 # no match
         self.AllcmdDelay.insert(indx, cmdDelay)
-            
+
 
     def AddDoLogLoops(self, doLogLoops, indx):
         try:
@@ -994,7 +996,7 @@ class Scheduler(eg.PluginClass):
             i = -1 # no match
         self.AlldoLogLoops.insert(indx, doLogLoops)
 
-            
+
     def AddBdoSynch(self, bDoSynch, indx):
         try:
             del self.AllbDoSynch[indx]
@@ -1002,7 +1004,7 @@ class Scheduler(eg.PluginClass):
             i = -1 # no match
         self.AllbDoSynch.insert(indx, bDoSynch)
 
-            
+
     def AddIsynchInterval(self, iSynchInterval, indx):
         try:
             del self.AlliSynchInterval[indx]
@@ -1185,13 +1187,13 @@ class SchedulerAction(eg.ActionClass):
         self.plugin.AddDoLogLoops(doLogLoops, indx)
         self.plugin.AddBdoSynch(bDoSynch, indx)
         self.plugin.AddIsynchInterval(iSynchInterval, indx)
-       
+
         return self.text.labelStart % (name)
 
 
     def timeFormat(self, theString):
         if theString == "----":
-            return theString 
+            return theString
         if (
             theString == "0000"
             or theString == "000"
@@ -1199,9 +1201,9 @@ class SchedulerAction(eg.ActionClass):
             or theString == "0"
             or theString == ""
         ):
-            return "----" 
+            return "----"
         if len(theString) != 4:
-            return "----" 
+            return "----"
         dat1 = theString[:2]
         dat2 = theString[2:]
         if int(dat1)>23:
@@ -1215,15 +1217,15 @@ class SchedulerAction(eg.ActionClass):
     def timeCheck(self, timeIntervals):
         t_list = [0]*6
 
-        for i in range(0,3): 
+        for i in range(0,3):
             theTime_1 = timeIntervals[i]
             theTime_2 = timeIntervals[i+3]
-        
+
             if theTime_1 == "----":
                 t_1 = 0
             else:
                 t_1 = int(theTime_1)
-                
+
             if theTime_2 == "----":
                 t_2 = 0
             else:
@@ -1243,11 +1245,11 @@ class SchedulerAction(eg.ActionClass):
                 if tL == 4:
                     tS = str(t_1)
                 t_list[i] = tS
-    
+
             if t_2 <= t_1 and t_1 > 0 and t_2 != 0:
                 t_2 = t_1+1
                 if t_2 > 2359:
-                    t_2 = 2359            
+                    t_2 = 2359
 
             if t_2 == 0:
                 t_list[i+3] = ("----")
@@ -1338,7 +1340,7 @@ class SchedulerAction(eg.ActionClass):
         emptyHouse_m = False
     ):
 
-        plugin = self.plugin      
+        plugin = self.plugin
         panel = eg.ConfigPanel(self)
         mySizer_1 = wx.GridBagSizer(10, 10)
         mySizer_2 = wx.GridBagSizer(5, 5)
@@ -1349,7 +1351,7 @@ class SchedulerAction(eg.ActionClass):
         schedulerNameCtrl.SetInitialSize((250,-1))
         mySizer_1.Add(wx.StaticText(panel, -1, self.text.name), (0,0))
         mySizer_1.Add(schedulerNameCtrl, (0,1))
-      
+
         #eventName ON
         eventNameOnCtrl = wx.TextCtrl(panel, -1, eventNameOn)
         eventNameOnCtrl.SetInitialSize((150,-1))
@@ -1401,7 +1403,7 @@ class SchedulerAction(eg.ActionClass):
         tuesdayON_3Ctrl.SetInitialSize((35,-1))
         tuesdayOFF_3Ctrl = wx.TextCtrl(panel, -1, tuesdayOFF_3)
         tuesdayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.tuON), (2,0))
         mySizer_2.Add(tuesdayON_1Ctrl, (2,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (2,2))
@@ -1428,7 +1430,7 @@ class SchedulerAction(eg.ActionClass):
         wednesdayON_3Ctrl.SetInitialSize((35,-1))
         wednesdayOFF_3Ctrl = wx.TextCtrl(panel, -1, wednesdayOFF_3)
         wednesdayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.weON), (3,0))
         mySizer_2.Add(wednesdayON_1Ctrl, (3,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (3,2))
@@ -1455,7 +1457,7 @@ class SchedulerAction(eg.ActionClass):
         thursdayON_3Ctrl.SetInitialSize((35,-1))
         thursdayOFF_3Ctrl = wx.TextCtrl(panel, -1, thursdayOFF_3)
         thursdayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.thON), (4,0))
         mySizer_2.Add(thursdayON_1Ctrl, (4,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (4,2))
@@ -1482,7 +1484,7 @@ class SchedulerAction(eg.ActionClass):
         fridayON_3Ctrl.SetInitialSize((35,-1))
         fridayOFF_3Ctrl = wx.TextCtrl(panel, -1, fridayOFF_3)
         fridayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.frON), (5,0))
         mySizer_2.Add(fridayON_1Ctrl, (5,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (5,2))
@@ -1509,7 +1511,7 @@ class SchedulerAction(eg.ActionClass):
         saturdayON_3Ctrl.SetInitialSize((35,-1))
         saturdayOFF_3Ctrl = wx.TextCtrl(panel, -1, saturdayOFF_3)
         saturdayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.saON), (6,0))
         mySizer_2.Add(saturdayON_1Ctrl, (6,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (6,2))
@@ -1536,7 +1538,7 @@ class SchedulerAction(eg.ActionClass):
         sundayON_3Ctrl.SetInitialSize((35,-1))
         sundayOFF_3Ctrl = wx.TextCtrl(panel, -1, sundayOFF_3)
         sundayOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.suON), (7,0))
         mySizer_2.Add(sundayON_1Ctrl, (7,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (7,2))
@@ -1563,7 +1565,7 @@ class SchedulerAction(eg.ActionClass):
         vacationON_3Ctrl.SetInitialSize((35,-1))
         vacationOFF_3Ctrl = wx.TextCtrl(panel, -1, vacationOFF_3)
         vacationOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.vcON), (8,0))
         mySizer_2.Add(vacationON_1Ctrl, (8,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (8,2))
@@ -1590,7 +1592,7 @@ class SchedulerAction(eg.ActionClass):
         emptyHouseON_3Ctrl.SetInitialSize((35,-1))
         emptyHouseOFF_3Ctrl = wx.TextCtrl(panel, -1, emptyHouseOFF_3)
         emptyHouseOFF_3Ctrl.SetInitialSize((35,-1))
- 
+
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.ehON), (9,0))
         mySizer_2.Add(emptyHouseON_1Ctrl, (9,1))
         mySizer_2.Add(wx.StaticText(panel, -1, self.text.txtOFF), (9,2))
@@ -1833,7 +1835,7 @@ class SchedulerAction(eg.ActionClass):
             sundayOFF_2 = self.timeFormat(sundayOFF_2Ctrl.GetValue())
             sundayON_3 = self.timeFormat(sundayON_3Ctrl.GetValue())
             sundayOFF_3 = self.timeFormat(sundayOFF_3Ctrl.GetValue())
-    
+
             suList = []
             suList.append(sundayON_1)
             suList.append(sundayOFF_1)
@@ -1968,7 +1970,7 @@ class SchedulerAction(eg.ActionClass):
                 emptyHouseOFF_3,
                 emptyHouse_m
             )
-             
+
             self.plugin.StartScheduler(
                 dayTimeSettings,
                 name,
@@ -1987,7 +1989,7 @@ class SchedulerAction(eg.ActionClass):
             )
 
 
-   
+
 class SetVacationON(eg.ActionClass):
     name = "Vacation ON"
     description = "Action to set the Vacation flag TRUE"

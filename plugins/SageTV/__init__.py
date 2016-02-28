@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "SageTV",
     author = "Bitmonster",
-    version = "1.2." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.2.1093",
     kind = "program",
     guid = "{654FC50A-3052-42F7-AE26-84A752FFDCA6}",
     createMacrosOnAdd = True,
@@ -31,7 +31,7 @@ eg.RegisterPlugin(
     ),
 )
 
-# Plugin implements the description from here: 
+# Plugin implements the description from here:
 # http://www.sage.tv/2_papers/SageTVWindowsMessages.txt
 
 # changelog:
@@ -155,10 +155,10 @@ from eg.WinApi import SendMessageTimeout, FindWindow
 
 
 class ActionPrototype(eg.ActionClass):
-    
+
     def __call__(self):
         """
-        Find SageTV's message window and send it a message with 
+        Find SageTV's message window and send it a message with
         SendMessageTimeout.
         """
         try:
@@ -171,25 +171,25 @@ class ActionPrototype(eg.ActionClass):
 
 
 class SageTV(eg.PluginClass):
-    
+
     def __init__(self):
         self.targetClass = "SageApp"
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-            
-    
+
+
     def __start__(self, useClient=False):
         if useClient:
             self.targetClass = "SageClientApp"
         else:
             self.targetClass = "SageApp"
-            
-        
+
+
     def Configure(self, useClient=False):
         panel = eg.ConfigPanel(self)
         useClientCtrl = wx.RadioBox(
-            panel, 
-            label = "Target:", 
-            choices=["SageTV.exe", "SageTVClient.exe"], 
+            panel,
+            label = "Target:",
+            choices=["SageTV.exe", "SageTVClient.exe"],
             style=wx.RA_SPECIFY_ROWS
         )
         useClientCtrl.SetSelection(useClient)

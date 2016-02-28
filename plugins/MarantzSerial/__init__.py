@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Marantz AV Receiver",
     author = "Dexter",
-    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.0.1093",
     kind = "external",
     guid = "{2189A326-0BAC-4D81-B69A-DCCD19060BAB}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=747",
@@ -124,7 +124,7 @@ commandsList = (
 
 
 class MarantzSerialAction(eg.ActionClass):
-    
+
     def __call__(self):
         self.plugin.SendCommand(self.appcmd, self.serialcmd)
 
@@ -139,7 +139,7 @@ class MarantzSerialSetVolumeAbsolute(eg.ActionWithStringParameter):
 
     def GetLabel(self, volume):
         return "Set Absolute Volume to %d" % volume
-        
+
     def Configure(self, volume=-40):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinIntCtrl(volume, min=-70, max=10)
@@ -158,7 +158,7 @@ class MarantzSerialSetVolumeRelative(eg.ActionWithStringParameter):
 
     def GetLabel(self, volume):
         return "Set Relative Volume to %d" % volume
-        
+
     def Configure(self, volume=0):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinIntCtrl(volume, min=-100, max=100)
@@ -211,9 +211,9 @@ class MarantzSerial(eg.PluginClass):
                 hAtom = GlobalAddAtom(cmd)
                 SendMessageTimeout(
                     self.hwndMarantzControl,
-                    WM_APP+102, 
-                    hAtom, 
-                    0, 
+                    WM_APP+102,
+                    hAtom,
+                    0,
                     SMTO_BLOCK|SMTO_ABORTIFHUNG,
                     500 # Wait at most 500ms
                 )
@@ -321,7 +321,7 @@ class MarantzSerial(eg.PluginClass):
                 volume = 10
             elif volume < -70:
                 volume = -70
-            
+
             self.SendCommandSerial("@VOL:0%+.2d" % (volume))
             return volume
 
@@ -366,4 +366,4 @@ class MarantzSerial(eg.PluginClass):
 
         while panel.Affirmed():
             panel.SetResult(methodCtrl.GetValue(), portCtrl.GetValue())
-        
+

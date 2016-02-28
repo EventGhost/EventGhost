@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 ur"""<rst>
 Plugin for the Speed-Link Media Remote Control (SL-6399)
@@ -60,7 +62,7 @@ CODES1 = {
     (3, 0, 16): "DVD",
     (3, 0, 29): "Aspect",
     (4, 0, 40): "Desktop",
-    (4, 0, 61): "PC",    
+    (4, 0, 61): "PC",
 }
 
 CODES2 =  {
@@ -99,8 +101,8 @@ class Speedlink(eg.PluginBase):
             "SPEEDLINK SL-6399 Media Remote", "USB\\VID_1241&PID_E000&MI_01"
         )
         self.winUsb.Start()
-        
-         
+
+
     def __stop__(self):
         self.winUsb.Stop()
 
@@ -124,4 +126,4 @@ class Speedlink(eg.PluginBase):
             self.TriggerEnduringEvent(CODES2[code])
         else:
             print "#2", data
-        
+
