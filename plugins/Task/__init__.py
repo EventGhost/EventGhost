@@ -111,7 +111,7 @@ class Task(eg.PluginBase):
         eg.messageReceiver.AddHandler(WM_APP+3, self.WindowDestroyedProc)
         eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
-        self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
+        self.hookDll = CDLL(abspath(join(dirname(__file__), "TaskHook.dll")))
         self.hookDll.StartHook()
         trayWindow = 0
         if "explorer" in self.names:

@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/hook.dll"
+				OutputFile="$(OutDir)/TaskHook.dll"
 				LinkIncremental="2"
 				ModuleDefinitionFile="hook.def"
 				GenerateDebugInformation="true"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)..\hook.dll"
+				OutputFile="$(OutDir)/TaskHook.dll"
 				Version="1.1"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
