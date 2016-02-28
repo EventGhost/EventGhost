@@ -37,7 +37,7 @@ eg.RegisterPlugin(
         "Bartman",
         "Fiasco",
     ),
-    version = "0.2." + "$LastChangedRevision: 1181 $".split()[1],
+    version = "0.2.1181",
     kind = "external",
     guid = "{ADA3F327-DA18-44E0-A712-8C1C90B52DEC}",
     description = "Control Samsung TV via RS232",

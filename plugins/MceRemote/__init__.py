@@ -17,11 +17,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
-# $LastChangedRevision: 1093 $
-# $LastChangedBy: Bitmonster $
 
 import eg
 
@@ -31,7 +26,7 @@ eg.RegisterPlugin(
         "Bitmonster",
         "James Lee",
     ),
-    version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.1.1093",
     kind = "remote",
     guid = "{02181DB1-F29D-4CCB-BF91-7A86EFB0D22C}",
     description = 'Plugin for the Microsoft MCE remote.',

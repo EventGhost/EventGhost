@@ -37,7 +37,7 @@ I="""
 eg.RegisterPlugin(
     name = "Joystick",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 1175 $".split()[1],
+    version = "1.0.1175",
     kind = "remote",
     guid = "{615F3B89-FB7E-4FD9-B7D5-9F07FEF0BED9}",
     description = (

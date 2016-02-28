@@ -19,17 +19,11 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
-# $LastChangedRevision: 1093 $
-# $LastChangedBy: Bitmonster $
-
 
 eg.RegisterPlugin(
     name        = "Hauppauge IR",
     author      = "Stefan Gollmer",
-    version     = "1.04." + "$LastChangedRevision: 1093 $".split()[1],
+    version     = "1.04.1093",
     kind        = "remote",
     guid        = "{B54E7F32-E117-4C24-A892-9D69BC290568}",
     description = (

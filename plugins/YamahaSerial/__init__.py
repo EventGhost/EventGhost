@@ -46,7 +46,7 @@
 eg.RegisterPlugin(
     name = "Yamaha RX-V1000 Serial",
     author = "Mark Clarkson",
-    version = "0.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.1.1093",
     kind = "external",
     guid = "{A961D3D4-5AE2-4F76-B88C-7D8865C56C23}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=123",

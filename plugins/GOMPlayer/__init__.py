@@ -24,7 +24,7 @@
 eg.RegisterPlugin(
     name = "GOM Player",
     author = "CHeitkamp",
-    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.0.1093",
     kind = "program",
     guid = "{A4CF41AC-8813-4920-98E9-576D08711022}",
     createMacrosOnAdd = True,

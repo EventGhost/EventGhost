@@ -23,7 +23,7 @@ import eg
 eg.RegisterPlugin(
     name = "MyTheatre",
     author = "Milbrot",
-    version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.1.1093",
     kind = "program",
     guid = "{2347B12C-FB95-4F9E-A89E-61DD72669DB8}",
     createMacrosOnAdd = True,

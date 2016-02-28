@@ -15,7 +15,7 @@ import time
 eg.RegisterPlugin(
     name = "ELV FS20 PCS",
     author = "Bartman",
-    version = "0.2." + "$LastChangedRevision: 1486 $".split()[1],
+    version = "0.2.1486",
     kind = "external",
     canMultiLoad = False,
     createMacrosOnAdd = False,

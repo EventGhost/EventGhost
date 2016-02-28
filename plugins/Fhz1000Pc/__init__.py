@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-11-30 17:36:52 +0100 (po, 30 11 2009) $
-# $LastChangedRevision: 1246 $
-# $LastChangedBy: Bitmonster $
 
 import eg
 
@@ -28,7 +23,7 @@ eg.RegisterPlugin(
     kind="external",
     author="Bitmonster",
     guid="{463CB248-A4CB-4EF0-B1FE-F35895A2D4F2}",
-    version = "1.0." + "$LastChangedRevision: 1246 $".split()[1],    
+    version = "1.0.1246",    
 )
 
 import wx

@@ -23,7 +23,7 @@
 eg.RegisterPlugin(
     name = "Windows Media Player",
     author = "Oystein Hansen",
-    version = "0.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.1.1093",
     kind = "program",
     guid = "{87D26B8D-990C-457C-85C2-8D634868E1D2}",
     createMacrosOnAdd = True,

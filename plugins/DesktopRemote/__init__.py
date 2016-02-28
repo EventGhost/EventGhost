@@ -30,7 +30,7 @@ import eg
 eg.RegisterPlugin(
     name = "Desktop Remote",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 1158 $".split()[1],
+    version = "1.0.1158",
     guid = "{5DFFBD61-7582-4D6F-8EA9-9CB36284C9CF}",
     canMultiLoad = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=513",

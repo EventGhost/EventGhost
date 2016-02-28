@@ -21,10 +21,6 @@
 # iPhone.  Thanks to BitMonster for the excellent Network Receiver Plugin.
 # EventGhost
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-#
-# $LastChangedDate: 2009-02-07 20:13:27 +0100 (Sa, 07 Feb 2009) $
-# $LastChangedRevision: 831 $
-# $LastChangedBy: bitmonster $
 
 import eg
 
@@ -35,7 +31,7 @@ eg.RegisterPlugin(
         u'\n\n<p>'
         u'<center><img src="picture.jpg" /></a></center>'
     ),
-    version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
+    version = "1.0.1",
     kind = "remote",
     guid = "{BAD86ECC-5B21-4F47-9ADE-9CC8FFF8D191}",
     canMultiLoad = True,

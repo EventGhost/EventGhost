@@ -23,7 +23,7 @@ eg.RegisterPlugin(
         "Bitmonster",
         "Kingtd",
     ),
-    version = "1.0." + "$LastChangedRevision: 503 $".split()[1],
+    version = "1.0.503",
     guid = "{2FC713FF-0093-4271-A520-F0F6BB05A0E8}",
     description = u'''<rst>Implements a small webserver, 
 that you can use to generate events through HTML-pages.

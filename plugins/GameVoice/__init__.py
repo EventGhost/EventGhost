@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Sidewinder Game Voice",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.1.614",
     kind = "remote",
     canMultiLoad = False,
     description = (

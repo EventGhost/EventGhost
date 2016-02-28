@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2010-01-04 18:53:33 +0100 (po, 04 1 2010) $
-# $LastChangedRevision: 1338 $
-# $LastChangedBy: Bitmonster $
 
 import eg
 

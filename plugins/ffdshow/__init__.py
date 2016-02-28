@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2010-03-21 18:15:28 +0100 (ne, 21 3 2010) $
-# $LastChangedRevision: 1454 $
-# $LastChangedBy: Bartman $
 
 eg.RegisterPlugin(
     name = "ffdshow",
@@ -27,7 +22,7 @@ eg.RegisterPlugin(
         "Bitmonster",
         "Bartman",
     ),
-    version = "1.0." + "$LastChangedRevision: 1454 $".split()[1],
+    version = "1.0.1454",
     kind = "program",
     guid = "{4CBEB5C8-97E2-4F65-A355-E72FCED4951F}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=613",

@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Meedio",
     author = "jorel1969",
-    version = "0.1." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.1.1093",
     kind = "program",
     guid = "{B20B058A-613D-4695-98F0-D55408555361}",
     createMacrosOnAdd = True,

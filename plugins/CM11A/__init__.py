@@ -38,7 +38,7 @@ Event generation can be disabled altogether.
 eg.RegisterPlugin(
     name = "CM11A",
     author = "Silviu Marghescu",
-    version = "0.3." + "$LastChangedRevision: 2 $".split()[1],
+    version = "0.3.2",
     kind = "external",
     guid = "{7D5FF697-3094-4209-AEF6-E3DA575FB657}",
     description = "Control a CM11A device via the serial interface",

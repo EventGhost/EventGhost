@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2008-06-29 21:09:03 +0100 (So, 18 Nov 2007) $
-# $LastChangedRevision: 501 $
-# $LastChangedBy: jitterjames $
 
 import eg
 
@@ -29,7 +24,7 @@ eg.RegisterPlugin(
         "Kingtd",
         "Bitmonster",
     ),
-    version = "2.2." + "$LastChangedRevision: 500 $".split()[1],
+    version = "2.2.501",
     description = (
         "Listens for and Transmits UDP Broadcasts"
     ),

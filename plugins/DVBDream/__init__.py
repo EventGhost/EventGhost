@@ -22,7 +22,7 @@
 eg.RegisterPlugin(
     name = "DVB Dream",
     author = "townkat",
-    version = "4.1" + "$LastChangedRevision: 1093 $".split()[1],
+    version = "4.1.1093",
     kind = "program",
     guid = "{9D8E0000-E1BE-4767-A4E5-8EC4687CECE1}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=612",

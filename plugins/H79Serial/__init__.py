@@ -24,7 +24,7 @@ Projector replies are returned to EventGhost as events."""
 eg.RegisterPlugin(
     name = "Optoma H79 Serial",
     author = "Oliver Wagner",
-    version = "0.2." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.2.1093",
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
     guid = "{776F4F93-93E3-4587-875C-6B3817D44329}",

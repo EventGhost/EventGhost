@@ -21,7 +21,7 @@
 eg.RegisterPlugin(
     name = "BSPlayer",
     author = "CHeitkamp",
-    version = "1.0." + "$LastChangedRevision: 1488 $".split()[1],
+    version = "1.0.1488",
     kind = "program",
     guid = "{AEBC185B-0F4D-4E3E-8C4E-7574C21C6BA2}",
     createMacrosOnAdd = True,

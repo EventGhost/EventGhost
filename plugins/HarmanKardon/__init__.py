@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
-# $LastChangedRevision: 1093 $
-# $LastChangedBy: Bitmonster $
 
 # POWER ON      80 70 C0 3F     
 # POWER OFF     80 70 9F 60     
@@ -98,7 +93,7 @@ eg.RegisterPlugin(
         "Kingtd",
         "Bitmonster",
     ),
-    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "1.0.1093",
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
     guid = "{460D31E6-231D-483D-8B9B-2781F9D2377A}",

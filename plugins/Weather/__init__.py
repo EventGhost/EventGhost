@@ -24,7 +24,7 @@ eg.RegisterPlugin(
     name = "Weather",
     author = "Peter",
     guid = "{E0ED124C-F85C-497B-8FFF-6A2B745F9076}",
-    version = "1.2." + "$LastChangedRevision: 1194 $".split()[1],
+    version = "1.2.1194",
     kind = "program",
     description = (
         "Uses the Google web service to retrieve current and forecasted weather information." 

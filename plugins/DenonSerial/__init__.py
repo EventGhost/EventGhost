@@ -44,7 +44,7 @@ support the FadeTo command."""
 eg.RegisterPlugin(
     name = "Denon AV Serial",
     author = "Oliver Wagner",
-    version = "0.6." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "0.6.1093",
     kind = "external",
     guid = "{12103708-40A0-46AE-856F-711D07912CD1}",
     description = "Control Denon A/V Amps/Receivers via RS232",
