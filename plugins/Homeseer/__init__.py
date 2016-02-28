@@ -21,7 +21,7 @@
 eg.RegisterPlugin(
     name = "Homeseer",
     guid = '{3B51BC0D-A030-4BF1-9E54-EBC3C236F582}',
-    author = "Me. made original, modified by krambriw",
+    author = "Smart Living, krambriw",
     version = "0.0.4",
     kind = "external",
     description = "Homeseer plugin. More info on http://smart-living.geoblog.be/",

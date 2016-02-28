@@ -20,6 +20,7 @@ import eg
 
 eg.RegisterPlugin(
     name = "Raw Input",
+    author = "Bitmonster",
 )
 
 import time
