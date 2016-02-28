@@ -288,7 +288,7 @@ class ActionPrototype(eg.ActionClass):
     # Every action needs a workhorse.
     def __call__(self):
         if self.plugin.useRunCmdPlugin:
-        command = self.value[1]
+            command = self.value[1]
         else:
             command = self.value[0]
         # This one is quite simple. It just calls ShellExecute.
@@ -343,7 +343,7 @@ class Foobar2000(eg.PluginClass):
         panel.AddCtrl(filepathCtrl)
 
         useRunCmdPluginCtrl = wx.CheckBox(panel, -1, "Use foo_runcmd plugin (neccessary for foobar2000 v1.0)")
-    useRunCmdPluginCtrl.SetValue(useRunCmdPlugin)
+        useRunCmdPluginCtrl.SetValue(useRunCmdPlugin)
         panel.AddCtrl(useRunCmdPluginCtrl)
 
         while panel.Affirmed():

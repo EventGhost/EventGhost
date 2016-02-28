@@ -80,11 +80,11 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
     def webvars(self, match ):
-    try:
-        value=getattr(eg.globals,match.group()[13:-2])
-        return value
-    except:
-        return ""
+        try:
+            value=getattr(eg.globals,match.group()[13:-2])
+            return value
+        except:
+            return ""
 
     def do_GET(self):
         """Serve a GET request."""
@@ -115,10 +115,10 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             f = self.send_head()
             if not f:
                 return
-        tempwpage=f.read()
-        tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
+            tempwpage=f.read()
+            tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
             self.wfile.write(tempwpage)
-        # self.copyfile(f, self.wfile)
+            # self.copyfile(f, self.wfile)
             f.close()
             f = None
             if len(p) < 2:

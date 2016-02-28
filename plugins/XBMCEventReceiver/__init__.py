@@ -128,13 +128,13 @@ class XbmceventbroadcastListener(eg.PluginClass):
     def __start__(self, prefix=None, xbmcip="None", xbmchttpport=8080, zone="255.255.255.255", port=8279, selfXbmceventbroadcast=False, payDelim="&&"):
         self.info.eventPrefix = prefix
         self.xbmcip = xbmcip
-    self.xbmchttpport = xbmchttpport
+        self.xbmchttpport = xbmchttpport
         self.port = port
         self.payDelim=payDelim
-    self.zone = zone
-    self.selfXbmceventbroadcast=selfXbmceventbroadcast
+        self.zone = zone
+        self.selfXbmceventbroadcast=selfXbmceventbroadcast
 
-    try:
+        try:
             self.server = Server(self.port, self.selfXbmceventbroadcast, self.payDelim, self)
         except socket.error, exc:
             raise self.Exception(exc[1])
@@ -175,11 +175,11 @@ class XbmceventbroadcastListener(eg.PluginClass):
         port_xbmc = int(xbmchttpportCtrl.GetValue())
         udp_xbmc = int(portCtrl.GetValue())
         url_xbmc = "http://" + str(host_xbmc) + ":" + str(port_xbmc) + "/xbmcCmds/xbmcHttp?command=SetBroadcast&parameter=2;" + str(udp_xbmc) + "(Notification(" + v_header + "," + v_message + "))"
-            print "str(url_xbmc)"
+        print "str(url_xbmc)"
         try:
-                urllib.urlopen(url_xbmc)
+            urllib.urlopen(url_xbmc)
         except IOError:
-                print 'Connection error'
+            print 'Connection error'
 
 
 
@@ -190,15 +190,14 @@ class XbmceventbroadcastListener(eg.PluginClass):
             return res
 
         def bcastSend(self, eventString, payload=""):
-
             addr = (self.plugin.zone, self.plugin.port)
-        UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
-        UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        if (payload==None):
+            UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
+            UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            if (payload==None):
                 UDPSock.sendto(eg.ParseString(eventString),addr)
-        else:
-            UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
-        UDPSock.close()
+            else:
+                UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
+            UDPSock.close()
 
     def Configure(self, command="", payload=""):
         text = self.text
@@ -207,17 +206,17 @@ class XbmceventbroadcastListener(eg.PluginClass):
         commandCtrl = panel.TextCtrl(command)
         payloadCtrl = panel.TextCtrl(payload)
 
-            commandlabel = panel.StaticText("Command:")
+        commandlabel = panel.StaticText("Command:")
         payloadlabel = panel.StaticText("Payload:")
         panel.sizer.Add(commandlabel,0,wx.EXPAND)
         panel.sizer.Add(commandCtrl,0,wx.EXPAND)
-            panel.sizer.Add((20, 20))
+        panel.sizer.Add((20, 20))
         panel.sizer.Add(payloadlabel,0,wx.EXPAND)
         panel.sizer.Add(payloadCtrl,0,wx.EXPAND)
 
 
         while panel.Affirmed():
             panel.SetResult(
-        commandCtrl.GetValue(),
-            payloadCtrl.GetValue()
-                )
+                commandCtrl.GetValue(),
+                payloadCtrl.GetValue()
+            )
