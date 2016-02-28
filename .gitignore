@@ -9,8 +9,8 @@
 !/build/docs/eg/index.rst
 /build/output/
 /eg/StaticImports.py
-/lib27/*
-!/lib27/site-packages/
+/lib??/*
+!/lib??/site-packages/
 
 # Python
 __pycache__/
