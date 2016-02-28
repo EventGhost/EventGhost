@@ -87,7 +87,7 @@ class CheckSources(builder.Task):
         sourceDir = self.buildSetup.sourceDir
         searchDirs = [
             join(sourceDir, "eg"),
-            join(sourceDir, "tools"),
+            join(sourceDir, "build"),
         ]
         for plugin in PLUGINS:
             searchDirs.append(join(sourceDir, "plugins", plugin))

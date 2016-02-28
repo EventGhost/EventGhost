@@ -45,7 +45,7 @@ import builder
 from builder.Utils import ListDir
 
 
-SKIP_DIRS = ['dist', '.git', '.idea', 'tools', 'extensions']
+SKIP_DIRS = ['.git', '.idea', 'build']
 DONT_INCLUDE = []
 INCLUDE_FILES = [
     'CHANGELOG.TXT',

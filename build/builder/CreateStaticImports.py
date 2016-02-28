@@ -45,8 +45,8 @@ HEADER = '''\
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This file was automatically created by the tools/StaticImports.py script.
-Don't try to edit this file yourself.
+This file was automatically created by the StaticImports.py script. Don't
+try to edit this file yourself.
 
 This module is not directly used by EventGhost. It only exists to help
 pylint and other tools to read the sources properly, as EventGhost is using

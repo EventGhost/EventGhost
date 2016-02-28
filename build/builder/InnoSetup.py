@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import sys
 import _winreg
 from os.path import abspath, join, exists
@@ -57,8 +58,9 @@ class StdHandler(object):
         return True
 
 
-
-LOG_FILENAME = 'Build.log'
+if not exists('output'):
+    os.mkdir('output')
+LOG_FILENAME = join('output', 'Build.log')
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,)
 logging.getLogger().setLevel(20)
 sys.stdout = StdHandler(sys.stdout, logging.info)

@@ -31,7 +31,7 @@ from builder.Utils import StartProcess, GetHtmlHelpCompilerPath, EncodePath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
-DOCS_SOURCE_DIR = join(MAIN_DIR, "docs")
+DOCS_SOURCE_DIR = join(MAIN_DIR, "build", "docs")
 
 sys.path.append(EncodePath(MAIN_DIR))
 import eg
