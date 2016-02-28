@@ -44,17 +44,16 @@ def GetPluginAuthors():
     """
     pluginAuthors = {}
     for pluginInfo in eg.pluginManager.database.itervalues():
+        pluginName = pluginInfo.name.replace(" ", "&nbsp;")
         for part in re.split("\s*(?:&|,|\+|/|and)\s*", pluginInfo.author):
             author = part.strip()
             if author.lower() != "bitmonster":
-                break
+                if author in pluginAuthors:
+                    pluginAuthors[author].append(pluginName)
+                else:
+                    pluginAuthors[author] = [pluginName]
         else:
             continue
-        pluginName = pluginInfo.name.replace(" ", "&nbsp;")
-        if author in pluginAuthors:
-            pluginAuthors[author].append(pluginName)
-        else:
-            pluginAuthors[author] = [pluginName]
     tmp = pluginAuthors.items()
     tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
     authorList = []
