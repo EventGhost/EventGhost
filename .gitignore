@@ -2,15 +2,15 @@
 /*.chm
 /*.dll
 /*.exe
-/docs/pluginlist.rst
-/docs/eg/*
-!/docs/eg/index.rst
+/build/builder/Data/Build.ini
+/build/builder/Data/Python??/imports.py
+/build/docs/pluginlist.rst
+/build/docs/eg/*
+!/build/docs/eg/index.rst
+/build/output/
 /eg/StaticImports.py
 /lib27/*
 !/lib27/site-packages/
-/tools/Build.log
-/tools/builder/Data/Build.ini
-/tools/builder/Data/Python??/imports.py
 
 # Python
 __pycache__/
