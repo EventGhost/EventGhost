@@ -175,13 +175,6 @@ class MyBuilder(builder.Builder):
                 and not filename.startswith("lib%s\\" % self.pyVersionStr)
             ):
                 continue
-            if filename.lower() == r"plugins\task\hook.dll":
-                inno.AddFile(
-                    join(self.sourceDir, filename),
-                    dirname(filename),
-                    ignoreversion=False
-                )
-                continue
             inno.AddFile(join(self.sourceDir, filename), dirname(filename))
         for filename in glob(join(self.libraryDir, '*.*')):
             inno.AddFile(filename, self.libraryName)
