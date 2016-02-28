@@ -48,8 +48,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'EventGhost'
-copyright = u'2005-2010, Bitmonster, 2011-2016, EventGhost Project'
-author = u'original: Bitmonster, current: EventGhost Project'
+copyright = u'2005-2016 EventGhost Project'
+author = u'EventGhost Project'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
