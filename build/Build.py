@@ -147,14 +147,14 @@ class MyBuilder(builder.Builder):
         files = files.difference(remove)
 
         noincludes = []
+        for f in files:
+            if f.endswith('noinclude'):
+                noincludes.append(f.replace('noinclude', ''))
+
         installFiles = []
-        for fname in files:
-            if fname.endswith('noinclude'):
-                noincludes.append(fname.replace('noinclude', ''))
-        for noinc in noincludes:
-                for fname in files:
-                    if not fname.startswith(noinc):
-                        installFiles.append(fname)
+        for f in files:
+            if not f.startswith(tuple(noincludes)):
+                installFiles.append(f)
 
         return installFiles
 
