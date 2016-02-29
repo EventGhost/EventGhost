@@ -46,7 +46,7 @@ from builder.Utils import ListDir
 
 
 SKIP_DIRS = ['.git', '.idea', 'build']
-SKIP_FILES = ["EventGhost.pyw"]
+SKIP_FILES = ["EventGhost.pyw", "README.md"]
 
 
 class MyBuilder(builder.Builder):
