@@ -46,21 +46,7 @@ from builder.Utils import ListDir
 
 
 SKIP_DIRS = ['.git', '.idea', 'build']
-DONT_INCLUDE = []
-INCLUDE_FILES = [
-    'CHANGELOG.TXT',
-    'EventGhost.chm',
-    'EventGhost.exe',
-    'Example.xml',
-    'LICENSE.TXT',
-    'Microsoft.VC90.CRT.manifest',
-    'msvcm90.dll',
-    'msvcp90.dll',
-    'msvcr90.dll',
-    'py.exe',
-    'pyw.exe',
-    'python27.dll',
-]
+SKIP_FILES = ["EventGhost.pyw"]
 
 
 class MyBuilder(builder.Builder):
@@ -138,13 +124,7 @@ class MyBuilder(builder.Builder):
         """
         srcDir = self.sourceDir
         files = set(ListDir(srcDir, SKIP_DIRS, fullpath=False))
-        files = files.difference(DONT_INCLUDE)
-        remove = []
-        for f in files:
-            if f.count('\\') == 0:
-                if f not in INCLUDE_FILES:
-                    remove.append(f)
-        files = files.difference(remove)
+        files = files.difference(SKIP_FILES)
 
         noincludes = []
         for f in files:
@@ -153,7 +133,7 @@ class MyBuilder(builder.Builder):
 
         installFiles = []
         for f in files:
-            if not f.startswith(tuple(noincludes)):
+            if not f.startswith(tuple(noincludes)) and not f.startswith("."):
                 installFiles.append(f)
 
         return installFiles
@@ -173,15 +153,15 @@ class MyBuilder(builder.Builder):
             if (
                 filename.startswith("lib")
                 and not filename.startswith("lib%s\\" % self.pyVersionStr)
+            ) or (
+                len(filename) < 10
+                and filename.startswith("py")
+                and filename.endswith(".exe")
             ):
                 continue
             inno.AddFile(join(self.sourceDir, filename), dirname(filename))
         for filename in glob(join(self.libraryDir, '*.*')):
             inno.AddFile(filename, self.libraryName)
-        inno.AddFile(
-            join(self.sourceDir, self.name + ".exe"),
-            destName="EventGhost.exe"
-        )
         inno.AddFile(
             join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
             destName="py.exe"
