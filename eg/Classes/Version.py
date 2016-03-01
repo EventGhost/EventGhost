@@ -18,12 +18,9 @@
 
 class Version:
     try:
-        from VersionRevision import major, minor, revision, buildTime
-        base = "{0}.{1}.{2}".format(major, minor, revision)
-        string = base
+        from VersionRevision import major, minor, patch, revision, buildTime
+        base = string = "{0}.{1}.{2}".format(major, minor, patch)
     except ImportError:
-        base = "developer"
-        revision = 0
-        buildTime = 0
-        string = "developer"
+        base = string = "WIP"
+        major = minor = patch = revision = buildTime = 0
 
