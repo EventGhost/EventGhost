@@ -151,11 +151,11 @@ class MainFrame(wx.Frame):
         self.OnFocusChange(self.treeCtrl)
         eg.Bind("ClipboardChange", self.OnClipboardChange)
         # tell FrameManager to manage this frame
-        if (
-            eg.config.revision == eg.revision
-            and Config.perspective is not None
-        ):
-            auiManager.LoadPerspective(Config.perspective, False)
+        if (Config.perspective is not None):
+            try:
+                auiManager.LoadPerspective(Config.perspective, False)
+            except:
+                pass
         artProvider = auiManager.GetArtProvider()
         artProvider.SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         artProvider.SetMetric(
