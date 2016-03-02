@@ -486,7 +486,7 @@ class AboutDialog(eg.TaskletDialog):
         notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
         notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
         notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
-        #notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
+        notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
 
         def OnPageChanged(event):
             pageNum = event.GetSelection()
