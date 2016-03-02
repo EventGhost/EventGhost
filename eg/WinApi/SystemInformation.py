@@ -182,16 +182,26 @@ def GetWindowsVersionString():
                     name += " Web Edition"
                 else:
                     name += " Standard Edition"
-    elif major_version == 6:
+    elif major_version >= 6:
         try:
             os_type = {
-                (0, True): "Vista",
-                (0, False): "Server 2008",
-                (1, True): "7",
-                (1, False): "Server 2008 R2",
-            }[(minor_version, osvi.wProductType == VER_NT_WORKSTATION)]
+                (6, 0, True): "Vista",
+                (6, 0, False): "Server 2008",
+                (6, 1, True): "7",
+                (6, 1, False): "Server 2008 R2",
+                (6, 2, True): "8",
+                (6, 2, False): "Server 2012",
+                (6, 3, True): "8.1",
+                (6, 3, False): "Server 2012 R2",
+                (10, 0, True): "10",
+                (10, 0, False): "Server 2016",
+            }[(
+                major_version,
+                minor_version,
+                osvi.wProductType == VER_NT_WORKSTATION,
+            )]
         except KeyError:
-            os_type = "Unknown OS 6.%d" % minor_version
+            os_type = "Unknown OS %d.%d" % (major_version, minor_version)
         dwType = DWORD()
         windll.kernel32.GetProductInfo(
             major_version, minor_version, 0, 0, byref(dwType)

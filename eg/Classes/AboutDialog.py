@@ -202,8 +202,8 @@ def GetRam():
     memoryStatus.dwLength = sizeof(MEMORYSTATUSEX)
     GlobalMemoryStatusEx(byref(memoryStatus))
     return (
-        int(round(memoryStatus.ullTotalPhys / 1048576.0)),
-        int(round(memoryStatus.ullAvailPhys / 1048576.0)),
+        round(memoryStatus.ullTotalPhys / 1024.0 / 1024 / 1024, 1),
+        round(memoryStatus.ullAvailPhys / 1024.0 / 1024 / 1024, 1),
     )
 
 
@@ -367,7 +367,7 @@ class SystemInfoPanel(HtmlPanel):
             "\nSystem",
             ("Operating System", GetWindowsVersionString()),
             ("CPU", GetCpuName()),
-            ("RAM", "%s MB" % totalMemory),
+            ("RAM", "%s GB" % totalMemory),
             "\nUSB-Devices",
         ]
         devices = eg.WinUsb.ListDevices()
