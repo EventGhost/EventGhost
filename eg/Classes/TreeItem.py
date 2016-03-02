@@ -296,10 +296,10 @@ class TreeItem(object):
             data = data[ix1:ix2].strip()
             if data[:24] == "EventGhost.PythonScript(":
                 #data = data[24:-1]
-                data = data[26:-2].replace('\\n',chr(10)) + chr(10)
+                data = data[26:-2].replace('\\n', '\n').rstrip() + '\n'
             elif data[:25] == "EventGhost.PythonCommand(":
                 #data = data[25:-1]
-                data = data[27:-2].replace('\\n',chr(10)) + chr(10)
+                data = data[27:-2].replace('\\n', '\n').strip()
             else:
                 data = "eg.plugins." + data
             wx.TheClipboard.SetData(wx.TextDataObject(data))
