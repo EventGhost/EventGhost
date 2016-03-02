@@ -37,8 +37,9 @@ class StdErr(object):
 sys.stderr = StdErr(sys.stderr, sys.stderr.encoding)
 
 import os
-from os.path import dirname, join, exists
+from os.path import abspath, dirname, exists, join
 from glob import glob
+from inspect import stack
 
 # local imports
 import builder
@@ -188,6 +189,9 @@ class MyBuilder(builder.Builder):
         )
         inno.ExecuteInnoSetup()
 
+
+# Always execute build from build folder.
+os.chdir(dirname(abspath(stack()[0][1])))
 
 MyBuilder().RunGui()
 
