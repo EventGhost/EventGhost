@@ -22,55 +22,6 @@ import _winreg
 from os.path import abspath, join, exists
 from builder.Utils import StartProcess, EncodePath
 
-import logging
-
-class StdHandler(object):
-    indent = 0
-
-    def __init__(self, oldStream, logger):
-        self.oldStream = oldStream
-        self.encoding = oldStream.encoding
-        self.buf = ""
-        self.logger = logger
-
-        # the following is a workaround for colorama (0.3.6),
-        # which is called by sphinx (build CHM docs).
-        self.closed = False
-
-    def write(self, data):
-        try:
-            self.buf += data
-        except UnicodeError:
-            self.buf += data.decode('mbcs')
-        lines = self.buf.split("\n")
-        for line in self.buf.split("\n")[:-1]:
-            line = (self.indent * 4 * " ") + line.rstrip()
-            self.logger(line)
-            self.oldStream.write(line + "\n")
-        self.buf = lines[-1]
-
-
-    def flush(self):
-        pass
-
-
-    def isatty(self):
-        return True
-
-
-if not exists('output'):
-    os.mkdir('output')
-LOG_FILENAME = join('output', 'Build.log')
-logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,)
-logging.getLogger().setLevel(20)
-sys.stdout = StdHandler(sys.stdout, logging.info)
-sys.stderr = StdHandler(sys.stderr, logging.error)
-
-def SetIndent(level):
-    StdHandler.indent = level
-
-
-
 def GetInnoCompilerPath():
     try:
         key = _winreg.OpenKey(

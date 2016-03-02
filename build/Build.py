@@ -20,22 +20,6 @@
 This script creates the EventGhost setup installer.
 """
 import sys
-
-
-class StdErr(object):
-    def __init__(self, stream, encoding):
-        self.stream = stream
-        self.encoding = encoding
-        self.filesystemencoding = 'mbcs'
-
-    def write(self, text):
-        try:
-            text = text.decode(self.filesystemencoding)
-        except:
-            pass
-        self.stream.write(text.encode(self.encoding))
-sys.stderr = StdErr(sys.stderr, sys.stderr.encoding)
-
 import os
 from os.path import abspath, dirname, exists, join
 from glob import glob
@@ -43,6 +27,7 @@ from inspect import stack
 
 # local imports
 import builder
+from builder.Logging import LogToFile
 from builder.Utils import ListDir
 
 
@@ -190,8 +175,16 @@ class MyBuilder(builder.Builder):
         inno.ExecuteInnoSetup()
 
 
+
 # Always execute build from build folder.
 os.chdir(dirname(abspath(stack()[0][1])))
+
+# Create output folder.
+if not exists("output"):
+    os.mkdir("output")
+
+# Initialize logging.
+LogToFile(join("output", "Build.log"))
 
 MyBuilder().RunGui()
 
