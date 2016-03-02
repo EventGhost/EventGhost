@@ -24,6 +24,7 @@ import os
 import sys
 import locale
 import ctypes
+import pywintypes
 from os.path import join, dirname, abspath
 
 ENCODING = locale.getdefaultlocale()[1]
@@ -139,6 +140,12 @@ if (
                 e.InstallPlugin(args.pluginFile)
             else:
                 e.BringToFront()
+        except pywintypes.com_error as err:
+            if err[0] == -2147024156:
+                msg = "Unable to launch unelevated while already running elevated."
+            else:
+                msg = "Failed to launch for unknown reasons."
+            ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
         finally:
             ctypes.windll.kernel32.ExitProcess(0)
 
