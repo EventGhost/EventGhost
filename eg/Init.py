@@ -20,6 +20,8 @@ import eg
 import wx
 import sys
 import os
+import site
+import winreg
 #from time import gmtime
 from types import ModuleType
 
@@ -37,6 +39,25 @@ def InitPil():
 def InitPathesAndBuiltins():
     sys.path.insert(0, eg.mainDir.encode('mbcs'))
     sys.path.insert(1, eg.sitePackagesDir.encode('mbcs'))
+
+    try:
+        if "PYTHONPATH" in os.environ:
+            for path in os.environ.get("PYTHONPATH").split(os.pathsep):
+                site.addsitedir(path)
+
+        key = winreg.HKEY_LOCAL_MACHINE
+        version = sys.version_info[:2]
+        subkey = r"SOFTWARE\Python\PythonCore\%d.%d\InstallPath" % version
+        with winreg.OpenKey(key, subkey) as hand:
+            site.addsitedir(
+                os.path.join(
+                    winreg.QueryValue(hand, None),
+                    "Lib",
+                    "site-packages",
+                )
+            )
+    except:
+        pass
 
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions
