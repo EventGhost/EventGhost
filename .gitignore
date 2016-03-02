@@ -18,8 +18,8 @@ __pycache__/
 *$py.class
 
 # Visual Studio
-/extensions/**/.vs/
-/extensions/**/Debug/
-/extensions/**/Release/
-/extensions/**/*.opendb
-/extensions/**/*.sdf
+.vs/
+Debug/
+Release/
+*.opendb
+*.sdf
