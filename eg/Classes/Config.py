@@ -86,23 +86,24 @@ class Config(Section):
         language = 'de_DE'
     else:
         language = 'en_EN'
-    startWithWindows = True
-    hideOnStartup = False
-    checkUpdate = False
-    logActions = True
-    logMacros = True
-    hideOnClose = False
-    useFixedFont = False
-    propResize = True
-    onlyLogAssigned = False
-    scrollLog = True
     autoloadFilePath = False
+    checkUpdate = False
+    colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
+    confirmDelete = True
+    defaultThreadStartTimeout = 5.00
+    hideOnClose = False
+    hideOnStartup = False
+    lastUpdateCheckDate = None
     limitMemory = False
     limitMemorySize = 8
-    confirmDelete = True
-    lastUpdateCheckDate = None
-    defaultThreadStartTimeout = 5.00
-    colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
+    logActions = True
+    logMacros = True
+    onlyLogAssigned = False
+    propResize = True
+    refreshEnv = False
+    scrollLog = True
+    startWithWindows = True
+    useFixedFont = False
 
     class plugins: #pylint: disable-msg=C0103
         pass
