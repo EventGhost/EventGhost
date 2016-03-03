@@ -61,15 +61,65 @@ class MainDialog(wx.Dialog):
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add(ctrlsSizer)
 
-        lbl = wx.StaticText(self, wx.ID_ANY, 'Version:')
-        self.versionStr = wx.TextCtrl(self, wx.ID_ANY, value=buildSetup.appVersion)
-        szr = wx.BoxSizer(wx.HORIZONTAL)
-        szr.Add(lbl, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-        szr.Add(self.versionStr)
+        # create controls for github connection
+        ghSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
+                                                 u"GitHub"), wx.VERTICAL)
+        sb = self  # ghSzr.GetStaticBox()
+        lblToken = wx.StaticText(sb, wx.ID_ANY, u"Token:")
+        htmlToken = wx.HyperlinkCtrl(sb, wx.ID_ANY, u"?",
+                                     u"https://github.com/settings/tokens")
+        htmlToken.SetToolTipString(u"Personal access tokens function like "
+                                   u"ordinary OAuth access tokens. They can "
+                                   u"be used instead of a password for Git "
+                                   u"over HTTPS, or can be used to "
+                                   u"authenticate to the API over Basic "
+                                   u"Authentication." )
+        self.txtToken = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubToken)
 
+        tokenSzr = wx.BoxSizer(wx.HORIZONTAL)
+        tokenSzr.Add(lblToken, 0, wx.ALIGN_CENTER_VERTICAL)
+        tokenSzr.Add(htmlToken, 0, wx.ALIGN_CENTER_VERTICAL |
+                     wx.LEFT | wx.RIGHT, 5)
+        tokenSzr.Add(self.txtToken, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 5)
+
+        lblUser = wx.StaticText(sb, wx.ID_ANY, u"User:")
+        self.txtUser = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubUser)
+        lblRepo = wx.StaticText(sb, wx.ID_ANY, u"Repository:")
+        self.txtRepo = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubRepo)
+        lblBranch = wx.StaticText(sb, wx.ID_ANY, u"Branch:")
+        self.txtBranch = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubBranch)
+
+        repoSzr = wx.BoxSizer(wx.HORIZONTAL)
+        repoSzr.Add(lblUser, 0, wx.ALIGN_CENTER_VERTICAL |
+                    wx.LEFT | wx.RIGHT, 5)
+        repoSzr.Add(self.txtUser, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        repoSzr.Add(lblRepo, 0, wx.ALIGN_CENTER_VERTICAL |
+                    wx.LEFT | wx.RIGHT, 5)
+        repoSzr.Add(self.txtRepo, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        repoSzr.Add(lblBranch, 0, wx.ALIGN_CENTER_VERTICAL |
+                    wx.LEFT | wx.RIGHT, 5)
+        repoSzr.Add(self.txtBranch, 1, wx.ALIGN_CENTER_VERTICAL |
+                    wx.RIGHT, 5)
+
+        ghSzr.Add(tokenSzr, 0, wx.ALL|wx.EXPAND, 5)
+        ghSzr.Add(repoSzr, 1, wx.ALL|wx.EXPAND, )
+
+        egSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
+                                               u"EventGhost"), wx.HORIZONTAL)
+        sb = self  # egSzr.GetStaticBox()
+        lblVersion = wx.StaticText(sb, wx.ID_ANY, u"Version to build:")
+        self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
+                                      value=buildSetup.appVersion)
+        egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
+                  wx.LEFT | wx.RIGHT, 5 )
+        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+                  wx.LEFT | wx.RIGHT, 5)
+
+        # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(szr, 0, wx.ALL, 5)
-        mainSizer.Add(sizer2, 1, wx.ALL|wx.EXPAND, 0)
+        mainSizer.Add(ghSzr, 0, wx.ALL, 5)
+        mainSizer.Add(egSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
+        mainSizer.Add(sizer2, 1, wx.ALL | wx.EXPAND, 10)
         mainSizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
         self.SetSizerAndFit(mainSizer)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -88,8 +138,12 @@ class MainDialog(wx.Dialog):
                 ctrl = self.ctrls[section]
                 task.activated = ctrl.GetValue()
                 ctrl.Enable(False)
-        self.buildSetup.config.SaveSettings()
         self.buildSetup.appVersion = self.versionStr.GetValue()
+        self.buildSetup.githubToken = self.txtToken.GetValue()
+        self.buildSetup.githubUser = self.txtUser.GetValue()
+        self.buildSetup.githubRepo = self.txtRepo.GetValue()
+        self.buildSetup.githubBranch = self.txtBranch.GetValue()
+        self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 

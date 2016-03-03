@@ -48,6 +48,17 @@ class Config(object):
                     task.options[option] = configParser.get(section, option)
                     print section, option, configParser.get(section, option)
 
+        if configParser.has_section('GitHub'):
+            self.buildSetup.githubToken = configParser.get('GitHub', "Token")
+            self.buildSetup.githubUser = configParser.get('GitHub', "User")
+            self.buildSetup.githubRepo = configParser.get('GitHub', "Repo")
+            self.buildSetup.githubBranch = configParser.get('GitHub', "Branch")
+        else:
+            self.buildSetup.githubToken = ""
+            self.buildSetup.githubUser = "EventGhost"
+            self.buildSetup.githubRepo = "EventGhost"
+            self.buildSetup.githubBranch = "master"
+
     def SaveSettings(self):
         """
         Save all options to the ini file.
@@ -61,6 +72,14 @@ class Config(object):
             if not config.has_section(section):
                 config.add_section(section)
             config.set(section, "enabled", task.activated)
+
+        if not config.has_section('GitHub'):
+                config.add_section('GitHub')
+        config.set('GitHub', "Token", self.buildSetup.githubToken)
+        config.set('GitHub', "User", self.buildSetup.githubUser)
+        config.set('GitHub', "Repo", self.buildSetup.githubRepo)
+        config.set('GitHub', "Branch", self.buildSetup.githubBranch)
+
         configFile = open(self._configFilePath, "w")
         config.write(configFile)
         configFile.close()

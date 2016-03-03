@@ -237,6 +237,7 @@ from builder.CreatePyExe import CreatePyExe
 from builder.CreateLibrary import CreateLibrary
 from builder.CreateWebsite import CreateWebsite
 from builder.CreateDocs import CreateHtmlDocs, CreateChmDocs
+from builder.CreateGitHubRelease import CreateGitHubRelease
 
 TASKS = [
     UpdateVersionFile,
@@ -248,6 +249,7 @@ TASKS = [
     CreatePyExe,
     CreateLibrary,
     CreateInstaller,
+    CreateGitHubRelease,
     Upload,
     CreateWebsite,
     CreateHtmlDocs,
