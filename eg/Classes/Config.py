@@ -86,7 +86,7 @@ class Config(Section):
         language = 'de_DE'
     else:
         language = 'en_EN'
-    startWithWindows = False
+    startWithWindows = True
     hideOnStartup = False
     checkUpdate = False
     logActions = True
@@ -132,6 +132,7 @@ class Config(Section):
                     raise
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
+            eg.Utils.UpdateStartupShortcut(self.startWithWindows)
         if self.language == "Deutsch":
             self.language = "de_DE"
 
