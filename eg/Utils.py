@@ -24,6 +24,7 @@ __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
 
 import eg
 import wx
+import os
 import sys
 import threading
 import time
@@ -486,4 +487,23 @@ def GetUpTime(seconds = True):
     ticks = GetTickCount64()/1000.0
     delta = str(td(seconds = ticks))
     return ticks if seconds else delta[:delta.index(".")]
+
+
+def UpdateStartupShortcut(create):
+    from eg import Shortcut
+
+    path = os.path.join(
+        eg.folderPath.Startup,
+        eg.APP_NAME + ".lnk"
+    )
+
+    if os.path.exists(path):
+        os.remove(path)
+
+    if create:
+        Shortcut.Create(
+            path=path,
+            target=os.path.abspath(sys.executable),
+            arguments="-h -e OnInitAfterBoot"
+        )
 

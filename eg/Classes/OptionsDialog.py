@@ -201,26 +201,8 @@ class OptionsDialog(eg.TaskletDialog):
 
         oldLanguage = config.language
         while self.Affirmed():
-            tmp = startWithWindowsCtrl.GetValue()
-            if tmp != eg.config.startWithWindows:
-                config.startWithWindows = tmp
-                path = os.path.join(
-                    eg.folderPath.Startup,
-                    eg.APP_NAME + ".lnk"
-                )
-                if tmp:
-                    # create shortcut in autostart dir
-                    eg.Shortcut.Create(
-                        path=path,
-                        target=os.path.abspath(sys.executable),
-                        arguments="-h -e OnInitAfterBoot"
-                    )
-                else:
-                    # remove shortcut from autostart dir
-                    try:
-                        os.remove(path)
-                    except:
-                        pass
+            config.startWithWindows = startWithWindowsCtrl.GetValue()
+            eg.Utils.UpdateStartupShortcut(config.startWithWindows)
 
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()

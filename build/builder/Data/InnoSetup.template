@@ -1,5 +1,5 @@
 [Tasks]
-Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: checkedonce 
+Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: checkedonce
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
@@ -70,8 +70,8 @@ Type: filesandordirs; Name: "{app}\drivers"
 Type: dirifempty; Name: "{app}"
 Type: files; Name: "{userstartup}\EventGhost.lnk"
 
-[Run] 
-Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
+[Run]
+Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Icons]
 Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
@@ -79,15 +79,15 @@ Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
-Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists 
+;Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists
 
 [Registry]
 Root: HKCR; Subkey: ".egtree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "EventGhost Tree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "EventGhost Tree\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
-Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 
+Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1"""
 
 Root: HKCR; Subkey: ".egplugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "EventGhost Plugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
-Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 
+Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1"""
