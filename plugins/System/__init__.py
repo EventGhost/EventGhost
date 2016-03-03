@@ -196,6 +196,7 @@ class System(eg.PluginBase):
 
         self.AddAction(Execute)
         self.AddAction(Command)
+        self.AddAction(RefreshEnvironment)
         self.AddAction(OpenDriveTray)
         self.AddAction(SetClipboard)
         self.AddAction(WakeOnLan)
@@ -422,6 +423,35 @@ class System(eg.PluginBase):
         ownerHwnd = GetClipboardOwner()
         if GetWindowThreadProcessId(ownerHwnd)[1] != eg.processId:
             self.TriggerEvent("ClipboardChanged")
+
+
+
+class RefreshEnvironment(eg.ActionBase):
+    class text:
+        name = "Refresh Environment"
+        description  = """<rst>
+            Refreshes environment variables by reading their current
+            values from the registry.
+
+            When a program launches, it inherits the current environment
+            from the program that launched it, and EventGhost is no
+            different. By default, if you modify an environment variable,
+            EventGhost won't pass your changes along to the programs it
+            launches because it doesn't know those changes took place. If
+            you update your %PATH%, for example, then open a Command
+            Prompt from EventGhost, you'll find you're unable to run
+            commands from the new folders you've added.
+
+            In the past, the only solution to this problem was to restart
+            EventGhost. Now, with the aid of this action (or "Always
+            refresh environment before launching programs" in Options),
+            EventGhost can read the latest environment variables from the
+            registry, apply them to its own environment, and thereby pass
+            them along to anything it launches going forward.
+        """
+
+    def __call__(self):
+        return eg.Environment.Refresh()
 
 
 

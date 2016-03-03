@@ -70,6 +70,8 @@ class Command(eg.ActionBase):
         disableWOW64=False,
         runAsAdmin = False,
     ):
+        if eg.config.refreshEnv:
+            eg.Environment.Refresh()
         prefix = self.plugin.info.eventPrefix
         suffix = self.text.eventSuffix
         if additionalSuffix != "":

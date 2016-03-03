@@ -44,6 +44,7 @@ class Text(eg.TranslatableStrings):
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
+    refreshEnv = "Always refresh environment before launching programs"
 
 
 
@@ -140,6 +141,11 @@ class OptionsDialog(eg.TaskletDialog):
             text.confirmDelete
         )
 
+        refreshEnvCtrl = page1.CheckBox(
+            config.refreshEnv,
+            text.refreshEnv
+        )
+
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
             filename = os.path.join(eg.imagesDir, "flags", "%s.png" % code)
@@ -174,6 +180,7 @@ class OptionsDialog(eg.TaskletDialog):
                 #(checkUpdateCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
+                (refreshEnvCtrl, 0, flags),
             )
         )
 
@@ -211,6 +218,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
+            config.refreshEnv = refreshEnvCtrl.GetValue()
 
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()

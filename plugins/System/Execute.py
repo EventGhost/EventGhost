@@ -100,6 +100,8 @@ class Execute(eg.ActionBase):
         disableParsingAdditionalSuffix=False,
         runAsAdmin = False,
     ):
+        if eg.config.refreshEnv:
+            eg.Environment.Refresh()
         returnValue = None
         if not disableParsingPathname:
             pathname = eg.ParseString(pathname)
