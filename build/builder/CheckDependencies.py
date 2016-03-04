@@ -178,12 +178,6 @@ class DllDependency(DependencyBase):
 
 DEPENDENCIES = [
     ModuleDependency(
-        name = "pygit2",
-        module = "pygit2",
-        version = "0.23.3",
-        url = "http://www.pygit2.org/",
-    ),
-    ModuleDependency(
         name = "wxPython",
         module = "wx",
         version = "2.8.12.1",
