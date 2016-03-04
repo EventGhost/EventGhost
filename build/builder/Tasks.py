@@ -35,14 +35,11 @@ class UpdateVersionFile(builder.Task):
         filename = join(buildSetup.tmpDir, "VersionRevision.py")
         outfile = open(filename, "wt")
         major, minor, patch = buildSetup.appVersion.split('.')
-        repo = buildSetup.repo
-        magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
-        revision = len(list(repo.walk(repo.head.target))) + magic
-        outfile.write("major = %d\n" % int(major))
-        outfile.write("minor = %d\n" % int(minor))
-        outfile.write("patch = %d\n" % int(patch))
-        outfile.write("revision = %d\n" % revision)
-        outfile.write("buildTime = %f\n" % buildSetup.buildTime)
+        outfile.write("major = {0}\n".format(major))
+        outfile.write("minor = {0}\n".format(minor))
+        outfile.write("patch = {0}\n".format(patch))
+        outfile.write("revision = {0}\n".format(buildSetup.appRevision))
+        outfile.write("buildTime = {0}\n".format(buildSetup.buildTime))
         outfile.close()
 
 

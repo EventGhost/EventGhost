@@ -53,11 +53,6 @@ class Config(object):
             self.buildSetup.githubUser = configParser.get('GitHub', "User")
             self.buildSetup.githubRepo = configParser.get('GitHub', "Repo")
             self.buildSetup.githubBranch = configParser.get('GitHub', "Branch")
-        else:
-            self.buildSetup.githubToken = ""
-            self.buildSetup.githubUser = "EventGhost"
-            self.buildSetup.githubRepo = "EventGhost"
-            self.buildSetup.githubBranch = "master"
 
     def SaveSettings(self):
         """

@@ -17,12 +17,8 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import tempfile
-import shutil
-import stat
-import pygit2
 import sys
-from os import chmod, mkdir
-from os.path import abspath, dirname, join, exists, isdir
+from os.path import abspath, dirname, join
 from Utils import GetRevision, DecodePath
 
 
@@ -60,10 +56,12 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
-        repoDir = pygit2.discover_repository(self.sourceDir)
-        self.repo = pygit2.Repository(repoDir)
-        self.branchFullname = self.repo.head.name
-        #self.appRevision = None
+        self.githubToken = ""
+        self.githubUser = "EventGhost"
+        self.githubRepo = "EventGhost"
+        self.githubBranch = "master"
+        self.appVersion = None
+        self.appRevision = None
         if not CheckDependencies(self):
             sys.exit(1)
         self.tmpDir = tempfile.mkdtemp()

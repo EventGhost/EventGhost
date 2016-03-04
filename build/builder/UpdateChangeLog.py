@@ -50,8 +50,9 @@ class UpdateChangeLog(builder.Task):
         else:
             to_commit = data['target_commitish']
 
-        new_logs = ['**{0} ({1})**\n'.format(appVer, bldDate),
-                    '\n']
+        new_logs = ['**{0} ({1})**\n'.format(appVer, bldDate), '\n']
+
+        # get commits since last release
         page = 1
         nextPage = True
         while nextPage:
@@ -59,7 +60,7 @@ class UpdateChangeLog(builder.Task):
                                                     per_page=100, page=page)
             if rc != 200:
                 print "INFO: couldn't get commits."
-                exit(2)
+                return
             for item in data:
                 if item['sha'] == to_commit:
                     break
@@ -122,8 +123,9 @@ class UpdateChangeLog(builder.Task):
         # try to find any release
         rc, data = gh.repos[user][repo].releases.get()
         if rc != 200:
-            print "INFO: couldn't get latest release info."
-            exit(2)
+            #print "INFO: couldn't get latest release info."
+            return None
+
         latestRelName = ''
         latestSha = None
         for item in data:
@@ -139,3 +141,4 @@ class UpdateChangeLog(builder.Task):
                         latestRelName = item['ref'][11:]
                         latestSha = item['object']['sha']
         return latestSha
+

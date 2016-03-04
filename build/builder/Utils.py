@@ -21,12 +21,12 @@ import sys
 import time
 import subprocess
 import re
-import imp
 import _winreg
 from os.path import join, normpath
 
 import builder
 from builder.subprocess2 import Popen
+from github import GitHub
 
 def EncodePath(path):
     return path.encode('mbcs')
@@ -74,26 +74,134 @@ def GetRevision(buildSetup):
     """
     Get the app version and revision.
     """
-
-    regex = re.compile('^refs/tags')
-    all_tags = filter(lambda r: regex.match(r),
-                      buildSetup.repo.listall_references())
-
-    if all_tags == []:
-        parts = ['0', '0','0']
-    else:
-        all_sorted = all_tags.sort() if len(all_tags)>1 else all_tags
-        parts = all_sorted[0].split('/')
-        parts = parts[len(parts)-1].split('.')
-        parts[0] = parts[0].strip('v')
-        if len(parts) == 3:
-            parts[2] = int(parts[2]) + 1
-        elif len(parts) == 4:
-            parts[2] = int(parts[2]) + 1
-            parts.pop(3)
-        else:
-            parts = ['wrong', 'version','format']
+    print "getting version and revision from GitHub."
+    parts = GetLastReleaseOrTagName(buildSetup).split('.')
+    parts[0] = parts[0].strip('v')
+    ln = len(parts)
+    if ln == 4:
+        parts.pop(3)
+    elif ln < 3 or ln > 4:
+        parts = ['0', '0','-1']
+    parts[2] = int(parts[2]) + 1
     buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
+    magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
+    buildSetup.appRevision = GetCommitCount(buildSetup) + magic
+
+
+def GetLastReleaseOrTagName(buildSetup):
+    '''
+    Get the name of latest release. If none is found, all releases
+    will be searched for highest number. If there is although no
+    name found, the tags will be searched.
+    '''
+    token = buildSetup.githubToken
+    user = buildSetup.githubUser
+    repo = buildSetup.githubRepo
+    branch = buildSetup.githubBranch
+    gh = GitHub(token=token)
+
+    # first try if there's already a latest release
+    rc, data = gh.repos[user][repo].releases.latest.get()
+    if rc == 200:
+        return data['name']
+
+    # if not, let's try if there's any release
+    lastRelease = ''
+    page = 1
+    nextPage = True
+    while nextPage:
+        rc, data = gh.repos[user][repo].releases.get(sha=branch,
+                                                     per_page=100, page=page)
+        if rc != 200:
+            break
+        hdr = gh.getheaders()
+        header = {item[0].strip(): item[1].strip() for item in hdr}
+        nextPage = False
+        if 'link' in header:
+            parts = header['link'].split(',')
+            for part in parts:
+                subparts = part.split(';')
+                sub = subparts[1].split('=')
+                if sub[0].strip() == 'rel':
+                    if sub[1] == '"next"':
+                        nextPage = True
+                        page = int(re.match(ur'.*page=(\d+).*',
+                                   subparts[0],
+                                   re.IGNORECASE | re.DOTALL | re.UNICODE).
+                                   groups()[0])
+        for release in data:
+            if release['name'] > lastRelease:
+                lastRelease = release['name']
+
+    # ok, no releases, let's check the tags.
+    if lastRelease == '':
+        page = 1
+        nextPage = True
+        while nextPage:
+            rc, data = gh.repos[user][repo].git.refs.tags.get(sha=branch,
+                                                     per_page=100, page=page)
+            if rc != 200:
+                break
+            hdr = gh.getheaders()
+            header = {item[0].strip(): item[1].strip() for item in hdr}
+            nextPage = False
+            if 'link' in header:
+                parts = header['link'].split(',')
+                for part in parts:
+                    subparts = part.split(';')
+                    sub = subparts[1].split('=')
+                    if sub[0].strip() == 'rel':
+                        if sub[1] == '"next"':
+                            nextPage = True
+                            page = int(re.match(ur'.*page=(\d+).*',
+                                       subparts[0],
+                                       re.IGNORECASE | re.DOTALL | re.UNICODE).
+                                       groups()[0])
+            for tag in data:
+                if tag['ref'][10:] > lastRelease:
+                    lastRelease = tag['ref'][10:]
+        return lastRelease
+
+
+def GetCommitCount(buildSetup):
+    '''
+    Get the count of commits for repository.
+    '''
+
+    token = buildSetup.githubToken
+    user = buildSetup.githubUser
+    repo = buildSetup.githubRepo
+    branch = buildSetup.githubBranch
+    gh = GitHub(token=token)
+
+    counter = 0
+    page = 1
+    nextPage = True
+    # get the commit count by adding contributions from all contributors
+    while nextPage:
+        rc, data = gh.repos[user][repo].contributors.get(sha=branch, anon='true',
+                                                         per_page=100, page=page)
+        if rc != 200:
+            # print "INFO: couldn't get contributors infos."
+            return None
+        hdr = gh.getheaders()
+        header = {item[0].strip(): item[1].strip() for item in hdr}
+        nextPage = False
+        if 'link' in header:
+            parts = header['link'].split(',')
+            for part in parts:
+                subparts = part.split(';')
+                sub = subparts[1].split('=')
+                if sub[0].strip() == 'rel':
+                    if sub[1] == '"next"':
+                        nextPage = True
+                        page = int(re.match(ur'.*page=(\d+).*',
+                                   subparts[0],
+                                   re.IGNORECASE | re.DOTALL | re.UNICODE).
+                                   groups()[0])
+        for contr in data:
+            counter += contr['contributions']
+    return counter
 
 
 def GetHtmlHelpCompilerPath():

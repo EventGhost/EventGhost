@@ -18,11 +18,10 @@
 
 import sys
 import threading
-
 import wx
 
 import builder
-
+from Utils import GetRevision
 
 class MainDialog(wx.Dialog):
 
@@ -64,7 +63,7 @@ class MainDialog(wx.Dialog):
         # create controls for github connection
         ghSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
                                                  u"GitHub"), wx.VERTICAL)
-        sb = self  # ghSzr.GetStaticBox()
+        sb = self  # <- wx=2.8, wx>=2.9 -> ghSzr.GetStaticBox()
         lblToken = wx.StaticText(sb, wx.ID_ANY, u"Token:")
         htmlToken = wx.HyperlinkCtrl(sb, wx.ID_ANY, u"?",
                                      u"https://github.com/settings/tokens")
@@ -106,14 +105,21 @@ class MainDialog(wx.Dialog):
 
         egSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
                                                u"EventGhost"), wx.HORIZONTAL)
-        sb = self  # egSzr.GetStaticBox()
+        sb = self  # <- wx=2.8, wx>=2.9 -> egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, u"Version to build:")
         self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
                                       value=buildSetup.appVersion)
+        refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
+                                         GetBitmap(wx.ART_GO_DOWN))
+        refreshVersion.SetToolTip(wx.ToolTip(
+            'Get Version from GitHub. Before using,\n'
+            'please fill the github section above.'))
+        refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
         egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
         egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
+        egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -170,6 +176,10 @@ class MainDialog(wx.Dialog):
         event.Skip()
         self.Destroy()
         wx.GetApp().ExitMainLoop()
+
+    def RefreshVersion(self, event):
+        GetRevision(self.buildSetup)
+        self.versionStr.SetValue(self.buildSetup.appVersion)
 
 
 def Main(buildSetup):
