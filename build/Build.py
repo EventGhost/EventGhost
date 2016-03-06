@@ -31,8 +31,25 @@ from builder.Logging import LogToFile
 from builder.Utils import ListDir
 
 
-SKIP_DIRS = ['.git', '.idea', 'build']
-SKIP_FILES = ["EventGhost.pyw", "README.md"]
+EXCLUDE_DIRS = [
+    # Files and folders beginning with "." are excluded automatically.
+    "build",
+]
+
+INCLUDE_FILES = [
+    "CHANGELOG.TXT",
+    "EventGhost.chm",
+    "EventGhost.exe",
+    "Example.xml",
+    "LICENSE.TXT",
+    "Microsoft.VC90.CRT.manifest",
+    "msvcm90.dll",
+    "msvcp90.dll",
+    "msvcr90.dll",
+    "py.exe",
+    "pyw.exe",
+    "python27.dll",
+]
 
 
 class MyBuilder(builder.Builder):
@@ -109,18 +126,20 @@ class MyBuilder(builder.Builder):
         Plugins with a "noinclude" file are also skipped.
         """
         srcDir = self.sourceDir
-        files = set(ListDir(srcDir, SKIP_DIRS, fullpath=False))
-        files = files.difference(SKIP_FILES)
+        files = set(ListDir(srcDir, EXCLUDE_DIRS, fullpath=False))
 
-        noincludes = []
+        noincludes = ["."]
         for f in files:
-            if f.endswith('noinclude'):
-                noincludes.append(f.replace('noinclude', ''))
+            if f.endswith("noinclude"):
+                noincludes.append(f.replace("noinclude", ""))
 
         installFiles = []
         for f in files:
-            if not f.startswith(tuple(noincludes)) and not f.startswith("."):
-                installFiles.append(f)
+            if not f.startswith(tuple(noincludes)):
+                if f.count("\\") == 0 and f not in INCLUDE_FILES:
+                    pass
+                else:
+                    installFiles.append(f)
 
         return installFiles
 
