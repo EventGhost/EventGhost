@@ -75,7 +75,13 @@ class Environment:
                     while True:
                         var, val = winreg.EnumValue(hand, i)[:2]
                         if var not in Environment.IGNORE_LIST:
-                            result[var] = val
+                            if var.upper() == "PATH":
+                                if "PATH" in result:
+                                    result["PATH"] += os.pathsep + val
+                                else:
+                                    result["PATH"] = val
+                            else:
+                                result[var] = val
                         i += 1
             except WindowsError:
                 pass
@@ -88,10 +94,7 @@ class Environment:
         Environment.ClearSafe()
 
         for var, val in Environment.GetLatest().iteritems():
-            if var.upper() == "PATH":
-                Environment.AppendPath(val)
-            else:
-                Environment.Set(var, val)
+            Environment.Set(var, val)
 
 
     @staticmethod
