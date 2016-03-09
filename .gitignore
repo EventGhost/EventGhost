@@ -12,6 +12,9 @@
 /lib??/*
 !/lib??/site-packages/
 
+# IDE storage
+/.*/
+
 # Python
 __pycache__/
 *.py[co]
