@@ -17,11 +17,11 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 
-import re
 import time
 from os.path import join
+from agithub.GitHub import GitHub
 import builder
-from github import GitHub
+from .Utils import NextPage
 
 
 class UpdateChangeLog(builder.Task):
@@ -36,26 +36,23 @@ class UpdateChangeLog(builder.Task):
         appVer = buildSetup.appVersion
         bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
 
-        token = buildSetup.githubToken
-        user = buildSetup.githubUser
-        repo = buildSetup.githubRepo
-        branch = buildSetup.githubBranch
+        token = buildSetup.gitConfig["token"]
+        user = buildSetup.gitConfig["user"]
+        repo = buildSetup.gitConfig["repo"]
+        branch = buildSetup.gitConfig["branch"]
 
         gh = GitHub(token=token)
-
         rc, data = gh.repos[user][repo].releases.latest.get()
         if rc != 200:
             # no latest release
             to_commit = self.get_alternative_release(gh, user, repo)
         else:
             to_commit = data['target_commitish']
-
         new_logs = ['**{0} ({1})**\n'.format(appVer, bldDate), '\n']
 
         # get commits since last release
         page = 1
-        nextPage = True
-        while nextPage:
+        while page > 0:
             rc, data = gh.repos[user][repo].commits.get(sha=branch,
                                                     per_page=100, page=page)
             if rc != 200:
@@ -67,28 +64,18 @@ class UpdateChangeLog(builder.Task):
                 author = item['commit']['author']['name']
                 try:
                     msg = item['commit']['message'].splitlines()[0]
+                    if msg.startswith("Merge pull request #"):
+                        continue
+                    newline = "- {0} ({1})\n".format(msg, author)
+                    new_logs.append(newline)
                 except IndexError:
-                    msg=''
-                newline = " - {0} ({1})\n".format(msg, author)
-                new_logs.append(newline)
+                    pass
 
             if item['sha'] == to_commit:
                 break
             hdr = gh.getheaders()
             header = {item[0].strip(): item[1].strip() for item in hdr}
-            nextPage = False
-            if 'link' in header:
-                parts = header['link'].split(',')
-                for part in parts:
-                    subparts = part.split(';')
-                    sub = subparts[1].split('=')
-                    if sub[0].strip() == 'rel':
-                        if sub[1] == '"next"':
-                            nextPage = True
-                            page = int(re.match(ur'.*page=(\d+).*',
-                                       subparts[0],
-                                       re.IGNORECASE | re.DOTALL | re.UNICODE).
-                                       groups()[0])
+            page = NextPage(gh)
 
         # read the existing changelog...
         try:

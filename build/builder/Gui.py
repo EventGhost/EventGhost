@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import sys
 import threading
 import wx
@@ -61,52 +62,42 @@ class MainDialog(wx.Dialog):
         sizer2.Add(ctrlsSizer)
 
         # create controls for github connection
-        ghSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
-                                                 u"GitHub"), wx.VERTICAL)
+        ghSzr = wx.StaticBoxSizer(
+            wx.StaticBox(self, wx.ID_ANY, u"GitHub"), wx.VERTICAL)
         sb = self  # <- wx=2.8, wx>=2.9 -> ghSzr.GetStaticBox()
-        lblToken = wx.StaticText(sb, wx.ID_ANY, u"Token:")
-        htmlToken = wx.HyperlinkCtrl(sb, wx.ID_ANY, u"?",
-                                     u"https://github.com/settings/tokens")
-        htmlToken.SetToolTipString(u"Personal access tokens function like "
-                                   u"ordinary OAuth access tokens. They can "
-                                   u"be used instead of a password for Git "
-                                   u"over HTTPS, or can be used to "
-                                   u"authenticate to the API over Basic "
-                                   u"Authentication." )
-        self.txtToken = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubToken)
 
-        tokenSzr = wx.BoxSizer(wx.HORIZONTAL)
-        tokenSzr.Add(lblToken, 0, wx.ALIGN_CENTER_VERTICAL)
-        tokenSzr.Add(htmlToken, 0, wx.ALIGN_CENTER_VERTICAL |
-                     wx.LEFT | wx.RIGHT, 5)
-        tokenSzr.Add(self.txtToken, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 5)
-
-        lblUser = wx.StaticText(sb, wx.ID_ANY, u"User:")
-        self.txtUser = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubUser)
         lblRepo = wx.StaticText(sb, wx.ID_ANY, u"Repository:")
-        self.txtRepo = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubRepo)
+        self.chcRepo = wx.Choice(sb, wx.ID_ANY)
+        repos = buildSetup.gitConfig["all_repos"].keys()
+        self.chcRepo.SetItems(repos)
+        self.chcRepo.SetStringSelection(buildSetup.gitConfig["repo_full"])
+        self.chcRepo.Bind(wx.EVT_CHOICE, self.OnRepoSelection)
+
         lblBranch = wx.StaticText(sb, wx.ID_ANY, u"Branch:")
-        self.txtBranch = wx.TextCtrl(sb, wx.ID_ANY, buildSetup.githubBranch)
+        self.chcBranch = wx.Choice(sb, wx.ID_ANY)
+        self.chcBranch.SetItems(
+            buildSetup.gitConfig["all_repos"]
+            [buildSetup.gitConfig["repo_full"]]["all_branches"]
+        )
+        self.chcBranch.SetStringSelection(
+            buildSetup.gitConfig["all_repos"]
+            [buildSetup.gitConfig["repo_full"]]["def_branch"]
+        )
 
-        repoSzr = wx.BoxSizer(wx.HORIZONTAL)
-        repoSzr.Add(lblUser, 0, wx.ALIGN_CENTER_VERTICAL |
-                    wx.LEFT | wx.RIGHT, 5)
-        repoSzr.Add(self.txtUser, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        repoSzr.Add(lblRepo, 0, wx.ALIGN_CENTER_VERTICAL |
-                    wx.LEFT | wx.RIGHT, 5)
-        repoSzr.Add(self.txtRepo, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        repoSzr.Add(lblBranch, 0, wx.ALIGN_CENTER_VERTICAL |
-                    wx.LEFT | wx.RIGHT, 5)
-        repoSzr.Add(self.txtBranch, 1, wx.ALIGN_CENTER_VERTICAL |
-                    wx.RIGHT, 5)
+        grdSzr = wx.FlexGridSizer(0, 2, 0, 0)
+        grdSzr.SetFlexibleDirection(wx.BOTH)
+        grdSzr.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+        grdSzr.Add(lblRepo, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
+        grdSzr.Add(self.chcRepo, 0, wx.ALL, 5)
+        grdSzr.Add(lblBranch, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
+        grdSzr.Add(self.chcBranch, 0, wx.ALL, 5)
+        ghSzr.Add(grdSzr, 1, wx.EXPAND)
 
-        ghSzr.Add(tokenSzr, 0, wx.ALL|wx.EXPAND, 5)
-        ghSzr.Add(repoSzr, 1, wx.ALL|wx.EXPAND, )
+        egSzr = wx.StaticBoxSizer(
+            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.VERTICAL)
 
-        egSzr = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY,
-                                               u"EventGhost"), wx.HORIZONTAL)
         sb = self  # <- wx=2.8, wx>=2.9 -> egSzr.GetStaticBox()
-        lblVersion = wx.StaticText(sb, wx.ID_ANY, u"Version to build:")
+        lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
         self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
                                       value=buildSetup.appVersion)
         refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
@@ -115,24 +106,46 @@ class MainDialog(wx.Dialog):
             'Get Version from GitHub. Before using,\n'
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
-        egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
+        lblRevison = wx.StaticText(sb, wx.ID_ANY, "Revision:")
+        self.txtRevision = wx.StaticText(sb, wx.ID_ANY, str(buildSetup.appRevision))
+
+        verSzr = wx.BoxSizer(wx.HORIZONTAL)
+        verSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
-        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+        verSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
-        egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        verSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        revSzr = wx.BoxSizer( wx.HORIZONTAL)
+        revSzr.Add(lblRevison, 0, wx.ALL, 5)
+        revSzr.Add(self.txtRevision, 0, wx.ALL, 5)
+
+        egSzr.Add(verSzr, 1, wx.EXPAND, 5)
+        egSzr.Add(revSzr, 1, wx.EXPAND, 5)
 
         # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(ghSzr, 0, wx.ALL, 5)
+        mainSizer.Add(ghSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         mainSizer.Add(egSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         mainSizer.Add(sizer2, 1, wx.ALL | wx.EXPAND, 10)
         mainSizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
         self.SetSizerAndFit(mainSizer)
+        self.Center()
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
 
     def OnOk(self, dummyEvent):
         """ Handles a click on the Ok button. """
+        repository = self.chcRepo.GetStringSelection()
+        try:
+            user, repo = repository.split('/')
+        except ValueError:
+            dlg = wx.MessageDialog(self, caption="Information", style=wx.OK,
+                            message="Repositoryname not valid. Must be:\n"
+                            "<user or organization>/<repository>.")
+            rc = dlg.ShowModal()
+            return
+
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
@@ -145,10 +158,11 @@ class MainDialog(wx.Dialog):
                 task.activated = ctrl.GetValue()
                 ctrl.Enable(False)
         self.buildSetup.appVersion = self.versionStr.GetValue()
-        self.buildSetup.githubToken = self.txtToken.GetValue()
-        self.buildSetup.githubUser = self.txtUser.GetValue()
-        self.buildSetup.githubRepo = self.txtRepo.GetValue()
-        self.buildSetup.githubBranch = self.txtBranch.GetValue()
+        self.buildSetup.gitConfig.update({
+            "user": user,
+            "repo": repo,
+            "branch": self.chcBranch.GetStringSelection(),
+            })
         self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()
@@ -177,10 +191,21 @@ class MainDialog(wx.Dialog):
         self.Destroy()
         wx.GetApp().ExitMainLoop()
 
+
     def RefreshVersion(self, event):
         GetRevision(self.buildSetup)
         self.versionStr.SetValue(self.buildSetup.appVersion)
+        self.txtRevision.SetLabel(self.buildSetup.appRevision)
 
+
+    def OnRepoSelection(self, event):
+        key = self.chcRepo.GetStringSelection()
+        self.chcBranch.SetItems(
+            self.buildSetup.gitConfig["all_repos"][key]["all_branches"]
+        )
+        self.chcBranch.SetStringSelection(
+            self.buildSetup.gitConfig["all_repos"][key]["def_branch"]
+        )
 
 def Main(buildSetup):
     app = wx.App(0)

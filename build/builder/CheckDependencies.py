@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import os
 import sys
 import warnings
@@ -177,6 +178,12 @@ class DllDependency(DependencyBase):
 
 
 DEPENDENCIES = [
+    ModuleDependency(
+        name = "agithub",
+        module = "agithub",
+        version = "2.0",
+        url = "https://github.com/jpaugh/agithub/releases/tag/v2.0",
+    ),
     ModuleDependency(
         name = "wxPython",
         module = "wx",
