@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import ConfigParser
 
 
@@ -48,6 +49,18 @@ class Config(object):
                     task.options[option] = configParser.get(section, option)
                     print section, option, configParser.get(section, option)
 
+        if configParser.has_option("GitHub", "Repository"):
+            repository = configParser.get('GitHub', "Repository")
+            try:
+                user, repo = repository.split('/')
+            except ValueError:
+                user = repo = ""
+            self.buildSetup.gitConfig.update({
+                "user": user,
+                "repo": repo,
+                "branch": configParser.get('GitHub', "Branch")
+            })
+
     def SaveSettings(self):
         """
         Save all options to the ini file.
@@ -61,6 +74,13 @@ class Config(object):
             if not config.has_section(section):
                 config.add_section(section)
             config.set(section, "enabled", task.activated)
+
+        if not config.has_section('GitHub'):
+                config.add_section('GitHub')
+        repo = "{user}/{repo}".format(**self.buildSetup.gitConfig)
+        config.set('GitHub', "Repository", repo)
+        config.set('GitHub', "Branch", self.buildSetup.gitConfig["branch"])
+
         configFile = open(self._configFilePath, "w")
         config.write(configFile)
         configFile.close()

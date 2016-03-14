@@ -18,7 +18,6 @@
 
 import shutil
 import time
-import pygit2
 from os.path import join
 import builder
 
@@ -36,140 +35,12 @@ class UpdateVersionFile(builder.Task):
         filename = join(buildSetup.tmpDir, "VersionRevision.py")
         outfile = open(filename, "wt")
         major, minor, patch = buildSetup.appVersion.split('.')
-        repo = buildSetup.repo
-        magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
-        revision = len(list(repo.walk(repo.head.target))) + magic
-        outfile.write("major = %d\n" % int(major))
-        outfile.write("minor = %d\n" % int(minor))
-        outfile.write("patch = %d\n" % int(patch))
-        outfile.write("revision = %d\n" % revision)
-        outfile.write("buildTime = %f\n" % buildSetup.buildTime)
+        outfile.write("major = {0}\n".format(major))
+        outfile.write("minor = {0}\n".format(minor))
+        outfile.write("patch = {0}\n".format(patch))
+        outfile.write("revision = {0}\n".format(buildSetup.appRevision))
+        outfile.write("buildTime = {0}\n".format(buildSetup.buildTime))
         outfile.close()
-
-
-class UpdateChangeLog(builder.Task):
-    """
-    Add a version header to CHANGELOG.TXT if needed.
-    """
-    description = "updating CHANGELOG.TXT"
-
-    def DoTask(self):
-        buildSetup = self.buildSetup
-        repo = buildSetup.repo
-        changelog_path = join(buildSetup.sourceDir, "CHANGELOG.TXT")
-
-        # read from CHANGELOG.TXT the last version number for which an
-        # entry exists (newest must be topmost).
-        latest_version_in_log_refname = 'refs/tags/v0.0.0'
-        try:
-            infile = open(changelog_path, "r")
-        except IOError:
-            pass
-        else:
-            line = infile.readline().strip()
-            while line:
-                if line.startswith("**"):
-                    latest_version_in_log_refname = 'refs/tags/v' + \
-                                                line[2:].split()[0]
-                    break
-                line = infile.readline().strip()
-            infile.close()
-
-        # Get the last release version number (=highest number) and increment it
-        app_version = buildSetup.appVersion
-
-        # check if CHANGELOG.TXT is already up to date
-        parts = latest_version_in_log_refname.split('/')
-        latest_version = parts[len(parts)-1].strip('v')
-        if latest_version == app_version:
-            return  # we don't need to add anything
-
-        tagnames = []
-        refs = repo.listall_references()
-        tags = []
-        tagsdict = {}
-        refsdict = {}
-        for r in refs:
-            if r.startswith('refs/tags/'):
-                tagnames.append(r)
-                ref = repo.lookup_reference(r)
-                if ref.type == pygit2.GIT_REF_OID:
-                    pass
-                elif ref.type == pygit2.GIT_REF_SYMBOLIC:
-                    pass
-                    # what to do with symbolic?
-                    # ref = ref.resolve()  ?
-                tags.append(ref.target)
-                tagsdict.update({ref.target : ref})
-                refsdict.update({r: ref})
-
-        # let's find out if we have a tag for the version from changelog.txt
-        # if not, use branch reference.
-        try:
-            last_log_ref = repo.lookup_reference(latest_version_in_log_refname)
-        except KeyError:
-            try:
-                last_log_ref = repo.lookup_reference(
-                        latest_version_in_log_refname.replace('tags/v', 'tags/'))
-            except KeyError:
-                last_log_ref = repo.lookup_reference(buildSetup.branchFullname)
-        last_release_version_oid = last_log_ref.target
-
-        # fetch all commit messages since the last version found in changelog.
-        bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
-        new_logs = '**{0} ({1})**\n\n'.format(app_version, bldDate)
-
-        for commit in repo.walk(last_log_ref.target, pygit2.GIT_SORT_TIME):
-            oid = commit.oid
-            if oid == last_release_version_oid and \
-                                last_log_ref.name != buildSetup.branchFullname:
-                break
-            elif oid in tags:
-                commitTime = time.strftime("%Y-%m-%d", time.gmtime(
-                    commit.commit_time + (commit.commit_time_offset*60)))
-                new_logs += '\n\n**{0} ({1})**\n\n'.format(
-                                            tagsdict[oid].shorthand.strip('v'),
-                                            commitTime
-                )
-            message = commit.message.split('\n')[0]
-            new_logs += '- {0} ({1})\n'.format(message, commit.author.name)
-
-            # chg = []
-            # for l in lines:
-            #     # remove some unnecessary text
-            #     if not l.startswith('git-svn-id:') and l.strip() != '':
-            #         chg.append(l)
-            # msg = '\n  '.join(chg)
-            # if msg:
-            #     new_logs += '- ' + msg + '\n'
-
-        # read the existing changelog...
-        try:
-            infile = open(changelog_path, "r")
-        except IOError:
-            old_changelog = ''
-        else:
-            old_changelog = infile.readlines()
-            infile.close()
-
-        # ... and put the new changelog on top
-        try:
-            outfile = open(changelog_path, "w+")
-        except IOError:
-            import sys
-            import wx
-            parent = wx.GetApp().GetTopWindow()
-
-            msg = "CHANGELOG.TXT couldn't be written.\n({0})".format(
-                                                                sys.exc_value)
-            dlg = wx.MessageDialog(parent, msg, caption="Error",
-                                   style=wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-        else:
-            outfile.write(new_logs + '\n\n')
-            if old_changelog:
-                outfile.writelines(old_changelog)
-            outfile.close()
 
 
 class CreateInstaller(builder.Task):
@@ -237,6 +108,8 @@ from builder.CreatePyExe import CreatePyExe
 from builder.CreateLibrary import CreateLibrary
 from builder.CreateWebsite import CreateWebsite
 from builder.CreateDocs import CreateHtmlDocs, CreateChmDocs
+from builder.CreateGitHubRelease import CreateGitHubRelease
+from builder.UpdateChangeLog import UpdateChangeLog
 
 TASKS = [
     UpdateVersionFile,
@@ -248,6 +121,7 @@ TASKS = [
     CreatePyExe,
     CreateLibrary,
     CreateInstaller,
+    CreateGitHubRelease,
     Upload,
     CreateWebsite,
     CreateHtmlDocs,

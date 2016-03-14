@@ -16,14 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import tempfile
-import shutil
-import stat
-import pygit2
 import sys
-from os import chmod, mkdir
-from os.path import abspath, dirname, join, exists, isdir
-from Utils import GetRevision, DecodePath
+from os.path import abspath, dirname, join
+from Utils import DecodePath, GetRevision, GetGithubConfig
 
 
 class Task(object):
@@ -60,10 +57,19 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
-        repoDir = pygit2.discover_repository(self.sourceDir)
-        self.repo = pygit2.Repository(repoDir)
-        self.branchFullname = self.repo.head.name
-        #self.appRevision = None
+        try:
+            self.gitConfig = GetGithubConfig()
+        except ValueError:
+            print ".gitconfig does not contain needed options. Please do:\n" \
+                  "\t$ git config --global github.user <your github username>\n" \
+                  "\t$ git config --global github.token <your github token>\n" \
+                  "To create a token, go to: https://github.com/settings/tokens\n"
+            exit(1)
+        except IOError:
+            print "could not open .gitconfig."
+            exit(1)
+        self.appVersion = None
+        self.appRevision = None
         if not CheckDependencies(self):
             sys.exit(1)
         self.tmpDir = tempfile.mkdtemp()
