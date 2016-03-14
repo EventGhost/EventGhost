@@ -256,21 +256,21 @@ def GetGithubConfig():
                         "repo_full": repo["full_name"],
                         "branch": repo["default_branch"]
                     })
-                page2 = 1
-                branches = []
-                while page2 > 0:
-                    rc2, data2 = gh.repos[gitcfg["user"]][repo["name"]].branches.get(page=page2)
-                    page2 = NextPage(gh)
-                    if rc2 == 200:
-                        for br in data2:
-                            branches.append(br["name"])
-                gitcfg["all_repos"].update({
-                    repo["full_name"]: {
-                        "name": repo["name"],
-                        "all_branches": branches,
-                        "def_branch": repo["default_branch"]
-                        }
-                    })
+                    page2 = 1
+                    branches = []
+                    while page2 > 0:
+                        rc2, data2 = gh.repos[gitcfg["user"]][repo["name"]].branches.get(page=page2)
+                        page2 = NextPage(gh)
+                        if rc2 == 200:
+                            for br in data2:
+                                branches.append(br["name"])
+                    gitcfg["all_repos"].update({
+                        repo["full_name"]: {
+                            "name": repo["name"],
+                            "all_branches": branches,
+                            "def_branch": repo["default_branch"]
+                            }
+                        })
     return gitcfg
 
 
