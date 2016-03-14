@@ -236,8 +236,8 @@ def GetGithubConfig():
         key, val = cfg[i].strip().split('=')
         gitcfg.update({key.strip(): val.strip()})
 
-    # no github section found, raise an error
-    if gitcfg == {}:
+    # no entry for 'token' and/or 'user' found in .gitconfig
+    if "token" not in gitcfg or "user" not in gitcfg:
         raise ValueError
 
     # try to get some defaults for repo and branch

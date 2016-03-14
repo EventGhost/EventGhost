@@ -63,7 +63,7 @@ class Builder(object):
             print ".gitconfig does not contain needed options. Please do:\n" \
                   "\t$ git config --global github.user <your github username>\n" \
                   "\t$ git config --global github.token <your github token>\n" \
-                  "To create a token got to: https://github.com/settings/tokens\n"
+                  "To create a token, go to: https://github.com/settings/tokens\n"
             exit(1)
         except IOError:
             print "could not open .gitconfig."

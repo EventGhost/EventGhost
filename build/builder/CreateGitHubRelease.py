@@ -78,7 +78,6 @@ class CreateGitHubRelease(builder.Task):
         gh = GitHub(token=token)
 
         print "getting release info"
-        upload = True
         releaseExists = False
         page = 1
         while page > 0:
@@ -97,7 +96,6 @@ class CreateGitHubRelease(builder.Task):
                         if dlg.ShowModal() == wx.ID_NO:
                             return
                         releaseId = rel["id"]
-                        upload = True
                         uploadUrl = str(rel['upload_url'][:-13])
                         releaseExists = True
 
@@ -200,33 +198,31 @@ class CreateGitHubRelease(builder.Task):
                 print "ERROR: couldn't create a release on GitHub."
                 return
             uploadUrl = str(data['upload_url'][:-13])
+        else:
+            print 'deleting existing asset'
+            rc, data = gh.repos[user][repo].releases[releaseId].assets.get()
+            if rc == 200:
+                for asset in data:
+                    if asset["name"] == setupFile:
+                        rc, data = gh.repos[user][repo].releases. \
+                                            assets[asset["id"]].delete()
+                        if rc != 204:
+                            print "ERROR: couldn't delete existing asset."
+                            return
+                        break
 
-        if upload:
-            if releaseExists:
-                print 'deleting existing asset'
-                rc, data = gh.repos[user][repo].releases[releaseId].assets.get()
-                if rc == 200:
-                    for asset in data:
-                        if asset["name"] == setupFile:
-                            rc, data = gh.repos[user][repo].releases. \
-                                                assets[asset["id"]].delete()
-                            if rc != 204:
-                                print "ERROR: couldn't delete existing asset."
-                                return
-                            break
-
-            print "uploading setup file"
-            url = uploadUrl + '?name={0}'.format(setupFile)
-            headers = {'content-type': 'application/octet-stream',
-                       'authorization': 'Token {0}'.format(token),
-                       'accept': 'application/vnd.github.v3+json',
-                       'user-agent': 'agithub/v2.0'}
-            conn = http.client.HTTPSConnection('uploads.github.com')
-            conn.request('POST', url, setupFileContent, headers)
-            response = conn.getresponse()
-            status = response.status
-            conn.close()
-            if status != 201:
-                print "ERROR: couldn't upload installer file to GitHub."
-                return
+        print "uploading setup file"
+        url = uploadUrl + '?name={0}'.format(setupFile)
+        headers = {'content-type': 'application/octet-stream',
+                   'authorization': 'Token {0}'.format(token),
+                   'accept': 'application/vnd.github.v3+json',
+                   'user-agent': 'agithub/v2.0'}
+        conn = http.client.HTTPSConnection('uploads.github.com')
+        conn.request('POST', url, setupFileContent, headers)
+        response = conn.getresponse()
+        status = response.status
+        conn.close()
+        if status != 201:
+            print "ERROR: couldn't upload installer file to GitHub."
+            return
 

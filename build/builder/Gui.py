@@ -94,7 +94,7 @@ class MainDialog(wx.Dialog):
         ghSzr.Add(grdSzr, 1, wx.EXPAND)
 
         egSzr = wx.StaticBoxSizer(
-            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.VERTICAL)
+            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.HORIZONTAL)
 
         sb = self  # <- wx=2.8, wx>=2.9 -> egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
@@ -106,22 +106,12 @@ class MainDialog(wx.Dialog):
             'Get Version from GitHub. Before using,\n'
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
-        lblRevison = wx.StaticText(sb, wx.ID_ANY, "Revision:")
-        self.txtRevision = wx.StaticText(sb, wx.ID_ANY, str(buildSetup.appRevision))
 
-        verSzr = wx.BoxSizer(wx.HORIZONTAL)
-        verSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
+        egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
-        verSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
-        verSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-
-        revSzr = wx.BoxSizer( wx.HORIZONTAL)
-        revSzr.Add(lblRevison, 0, wx.ALL, 5)
-        revSzr.Add(self.txtRevision, 0, wx.ALL, 5)
-
-        egSzr.Add(verSzr, 1, wx.EXPAND, 5)
-        egSzr.Add(revSzr, 1, wx.EXPAND, 5)
+        egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -195,7 +185,6 @@ class MainDialog(wx.Dialog):
     def RefreshVersion(self, event):
         GetRevision(self.buildSetup)
         self.versionStr.SetValue(self.buildSetup.appVersion)
-        self.txtRevision.SetLabel(self.buildSetup.appRevision)
 
 
     def OnRepoSelection(self, event):
