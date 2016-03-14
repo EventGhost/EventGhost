@@ -37,8 +37,7 @@ else:
 
 
 class CreateGitHubRelease(builder.Task):
-    description = "Create a Release on GitHub\n " \
-                  "(commit changelog and upload installer)"
+    description = "Create GitHub release"
     activated = False
 
     def DoTask(self):
