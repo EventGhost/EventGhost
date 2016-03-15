@@ -262,9 +262,10 @@ class CreateImports(builder.Task):
         )
         MODULES_TO_IGNORE.extend(badModules)
 
+        pyDir = sys.real_prefix if hasattr(sys, "real_prefix") else sys.prefix
         stdLibModules = (
-            FindModulesInPath(join(PYTHON_DIR, "DLLs"), "", True)
-            + FindModulesInPath(join(PYTHON_DIR, "lib"), "", True)
+            FindModulesInPath(join(pyDir, "DLLs"), "", True)
+            + FindModulesInPath(join(pyDir, "Lib"), "", True)
         )
 
         notFoundModules = []
