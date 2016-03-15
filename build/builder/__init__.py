@@ -51,6 +51,8 @@ class Builder(object):
         buildSetup = self
         baseDir = dirname(DecodePath(__file__))
         self.sourceDir = abspath(join(baseDir, "../.."))
+        if not CheckDependencies(self):
+            sys.exit(1)
         self.websiteDir = join(self.sourceDir, "website")
         self.dataDir = abspath(join(baseDir, "Data"))
         self.pyVersionStr = "%d%d" % sys.version_info[:2]
@@ -70,8 +72,6 @@ class Builder(object):
             exit(1)
         self.appVersion = None
         self.appRevision = None
-        if not CheckDependencies(self):
-            sys.exit(1)
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name
 

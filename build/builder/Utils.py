@@ -24,7 +24,6 @@ import subprocess
 import re
 import _winreg
 from os.path import join, normpath, expanduser
-from agithub.GitHub import GitHub
 import builder
 from builder.subprocess2 import Popen
 
@@ -93,6 +92,7 @@ def GetLastReleaseOrTagName(buildSetup):
     will be searched for highest number. If there is although no
     name found, the tags will be searched.
     '''
+    from agithub.GitHub import GitHub
     token = buildSetup.gitConfig["token"]
     user = buildSetup.gitConfig["user"]
     repo = buildSetup.gitConfig["repo"]
@@ -136,7 +136,7 @@ def GetCommitCount(buildSetup):
     '''
     Get the count of commits for repository.
     '''
-
+    from agithub.GitHub import GitHub
     token = buildSetup.gitConfig["token"]
     user = buildSetup.gitConfig["user"]
     repo = buildSetup.gitConfig["repo"]
@@ -219,7 +219,7 @@ def GetGithubConfig():
     '''
     Get GitHub from .gitconfig .
     '''
-
+    from agithub.GitHub import GitHub
     # read .gitconfig
     cfg = expanduser('~\.gitconfig')
     with open(cfg,"rt") as f:
