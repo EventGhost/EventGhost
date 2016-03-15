@@ -212,10 +212,16 @@ class CreateLibrary(Task):
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []
-        for _, _, files in os.walk(dirname(sys.executable)):
-            for filename in files:
-                if filename in dllNames:
-                    neededDlls.append(filename)
+
+        paths = [sys.prefix]
+        if hasattr(sys, "real_prefix"):
+            paths.append(sys.real_prefix)
+
+        for path in paths:
+            for _, _, files in os.walk(path):
+                for filename in files:
+                    if filename in dllNames:
+                        neededDlls.append(filename)
         for dllName in dllNames:
             if dllName not in neededDlls:
                 os.remove(join(libraryDir, dllName))

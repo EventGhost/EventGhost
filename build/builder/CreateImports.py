@@ -69,9 +69,6 @@ HEADER = """\
 
 warnings.simplefilter('error', DeprecationWarning)
 
-PYTHON_DIR = os.path.dirname(sys.executable)
-SITE_PACKAGES_PATH = join(PYTHON_DIR, "Lib", "site-packages")
-
 
 class DummyStdOut: #IGNORE:W0232 class has no __init__ method
     """
@@ -219,11 +216,16 @@ def GetPackageModules(package):
     """
     Returns a list with all modules of the package.
     """
-    pthPath = join(SITE_PACKAGES_PATH, package) + ".pth"
     moduleList = []
-    if os.path.exists(pthPath):
-        for path in ReadPth(pthPath):
-            moduleList.extend(FindModulesInPath(path))
+    tail = join("Lib", "site-packages", package) + ".pth"
+    pthPaths = [join(sys.prefix, tail)]
+    if hasattr(sys, "real_prefix"):
+        pthPaths.append(join(sys.real_prefix, tail))
+    for pthPath in pthPaths:
+        if os.path.exists(pthPath):
+            for path in ReadPth(pthPath):
+                moduleList.extend(FindModulesInPath(path))
+            break
     else:
         mod = __import__(package)
         moduleList.append(package)
@@ -260,9 +262,10 @@ class CreateImports(builder.Task):
         )
         MODULES_TO_IGNORE.extend(badModules)
 
+        pyDir = sys.real_prefix if hasattr(sys, "real_prefix") else sys.prefix
         stdLibModules = (
-            FindModulesInPath(join(PYTHON_DIR, "DLLs"), "", True)
-            + FindModulesInPath(join(PYTHON_DIR, "lib"), "", True)
+            FindModulesInPath(join(pyDir, "DLLs"), "", True)
+            + FindModulesInPath(join(pyDir, "Lib"), "", True)
         )
 
         notFoundModules = []
