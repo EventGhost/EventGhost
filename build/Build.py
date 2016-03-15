@@ -205,5 +205,12 @@ if not exists("output"):
 # Initialize logging.
 LogToFile(join("output", "Build.log"))
 
+# Search virtualenv for modules last so stock distutils is used.
+if hasattr(sys, "real_prefix"):
+    for path in sys.path[:]:
+        if path.startswith(sys.prefix):
+            sys.path.remove(path)
+            sys.path.append(path)
+
 MyBuilder().RunGui()
 
