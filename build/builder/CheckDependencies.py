@@ -64,6 +64,7 @@ class DependencyBase(object):
 
 class ModuleDependency(DependencyBase):
     module = None
+    attr = None
     version = None
 
     def Check(self):
@@ -73,7 +74,9 @@ class ModuleDependency(DependencyBase):
                 module = __import__(self.module)
         except ImportError:
             raise MissingDependency
-        if hasattr(module, "__version__"):
+        if self.attr and hasattr(module, self.attr):
+            version = getattr(module, self.attr)
+        elif hasattr(module, "__version__"):
             version = module.__version__
         elif hasattr(module, "VERSION"):
             version = module.VERSION
@@ -197,10 +200,11 @@ DEPENDENCIES = [
         url = "http://www.py2exe.org/",
     ),
     ModuleDependency(
-        name = "PIL (Python Image Library)",
-        module = "Image",
-        version = "1.1.7",
-        url = "http://www.pythonware.com/products/pil/",
+        name = "Pillow (Python Image Library)",
+        module = "PIL",
+        attr = "PILLOW_VERSION",
+        version = "3.1.1",
+        url = "https://python-pillow.org/",
     ),
     ModuleDependency(
         name = "comtypes package",

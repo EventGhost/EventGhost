@@ -26,7 +26,7 @@ import wx
 from os.path import abspath, dirname, join
 from base64 import b64decode
 from cStringIO import StringIO
-import Image
+from PIL import Image
 import eg
 
 IMAGES_PATH = eg.imagesDir
@@ -40,7 +40,7 @@ ACTION_PIL = Image.open(join(IMAGES_PATH, "action.png")).convert("RGBA")
 
 def PilToBitmap(pil):
     """ Convert a PIL image to a wx.Bitmap (with alpha channel support). """
-    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
+    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
 
 
 def GetBitmap(filePath):
@@ -69,7 +69,7 @@ def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
     small = foregroundIcon.pil.resize(size, Image.BICUBIC)
     pil = backgroundIcon.pil.copy()
     pil.paste(small, (16 - size[0], 16 - size[1]), small)
-    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
+    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
 
 
 class IconBase(object):
