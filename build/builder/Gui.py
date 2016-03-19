@@ -64,7 +64,7 @@ class MainDialog(wx.Dialog):
         # create controls for github connection
         ghSzr = wx.StaticBoxSizer(
             wx.StaticBox(self, wx.ID_ANY, u"GitHub"), wx.VERTICAL)
-        sb = self  # <- wx=2.8, wx>=2.9 -> ghSzr.GetStaticBox()
+        sb = ghSzr.GetStaticBox()
 
         lblRepo = wx.StaticText(sb, wx.ID_ANY, u"Repository:")
         self.chcRepo = wx.Choice(sb, wx.ID_ANY)
@@ -96,7 +96,7 @@ class MainDialog(wx.Dialog):
         egSzr = wx.StaticBoxSizer(
             wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.HORIZONTAL)
 
-        sb = self  # <- wx=2.8, wx>=2.9 -> egSzr.GetStaticBox()
+        sb = egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
         self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
                                       value=buildSetup.appVersion)
