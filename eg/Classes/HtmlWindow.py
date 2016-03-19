@@ -26,7 +26,6 @@ from wx.html import (
     HTML_URL_IMAGE, HTML_OPEN, EVT_HTML_LINK_CLICKED, HW_DEFAULT_STYLE
 )
 
-wx.InitAllImageHandlers()
 
 
 class HtmlWindow(wxHtmlWindow):
