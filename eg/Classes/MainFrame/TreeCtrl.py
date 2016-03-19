@@ -502,9 +502,19 @@ class TreeCtrl(wx.TreeCtrl):
         Expands all items in the tree.
         """
         self.Freeze()
-        wx.TreeCtrl.ExpandAll(self)
-        self.EnsureVisible(self.GetSelection())
-        self.Thaw()
+        def Exp(item):
+            child, cookie = self.GetFirstChild(item)
+            while child.IsOk():
+                if not self.IsExpanded(child):
+                    self.Expand(child)
+                Exp(child)
+                child, cookie = self.GetNextChild(child, cookie)
+        try:
+            item = self.GetRootItem()
+            Exp(item)
+        finally:
+            self.EnsureVisible(self.GetSelection())
+            self.Thaw()
 
 
     @eg.AssertInMainThread
