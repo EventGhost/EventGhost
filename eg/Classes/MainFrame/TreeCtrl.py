@@ -850,7 +850,12 @@ class TreeCtrl(wx.TreeCtrl):
             path = node.GetPath()
             parent = self.root
             for pos in path[:-1]:
-                parent = parent.childs[pos]
+                childNode = parent.childs[pos]
+                if childNode not in self.visibleNodes and \
+                    parent not in self.expandedNodes:
+                        self.Expand(self.visibleNodes[parent])
+                parent = childNode
+            if parent not in self. expandedNodes:
                 self.Expand(self.visibleNodes[parent])
         self.SelectItem(self.visibleNodes[node])
 
