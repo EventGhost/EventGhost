@@ -594,7 +594,6 @@ class MainFrame(wx.Frame):
                 t_val = self.treeCtrl.GetSizeTuple()[coord]
                 self.ratio = float(t_val)/float(l_val)
                 Config.ratio = self.ratio
-                self.auiManager.Update()
         else:
             self.ratioLock = True
 
