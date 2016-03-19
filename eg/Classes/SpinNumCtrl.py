@@ -22,8 +22,10 @@ import locale
 from wx import SystemSettings_GetColour as GetColour
 from wx.lib import masked
 
-ENCODING = locale.getdefaultlocale()[1]
-LOCALECONV = locale.localeconv()
+l=wx.Locale()
+l.Init2(language=wx.LANGUAGE_DEFAULT, flags=wx.LOCALE_LOAD_DEFAULT)
+THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
+DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
 
 
 class SpinNumCtrl(wx.Window):
@@ -38,8 +40,8 @@ class SpinNumCtrl(wx.Window):
         "allowNegative": False,
         "min": 0,
         "limited": True,
-        "groupChar": LOCALECONV['thousands_sep'].decode(ENCODING),
-        "decimalChar": LOCALECONV['decimal_point'].decode(ENCODING),
+        "groupChar": THOUSANDS_SEP,
+        "decimalChar": DECIMAL_POINT,
     }
 
     def __init__(
