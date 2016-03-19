@@ -627,7 +627,9 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.TraverseDelete(itemId)
+        self.Unbind(wx.EVT_TREE_ITEM_COLLAPSING)
         self.Collapse(itemId)
+        self.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsingEvent)
         self.DeleteChildren(itemId)
         self.SetItemHasChildren(itemId)
         node = self.GetPyData(itemId)
