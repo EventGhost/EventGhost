@@ -163,7 +163,7 @@ from os.path import getmtime, isfile, isdir, join, exists, splitdrive, split
 from wx.lib.mixins.listctrl import TextEditMixin
 #mod_pth = abspath(split(__file__)[0])
 #syspath.append(mod_pth + "\\lib")
-from websocket import WebSocketApp
+from websocket import WebSocket
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 
 CLOSE_CODE = {
@@ -225,7 +225,7 @@ def ClientChoice(evt, text, panel, id3, id4, cl_ip, cl_port, size2, rBMC):
         evt.Skip()
 #===============================================================================
 
-class WebSocketClient(WebSocketApp):
+class WebSocketClient(WebSocket):
     def __init__(self, title, url, login, password, noCert, plugin):
         kwargs = {
             'on_open' : plugin.on_open,
@@ -236,7 +236,7 @@ class WebSocketClient(WebSocketApp):
         if login is not None:
             password = password if password is not None else ""
             kwargs['header']=["Authorization:Basic " + b64encode(login+":"+password)]
-        WebSocketApp.__init__(self, url, **kwargs)
+        WebSocket.__init__(self, url, **kwargs)
         self.url = url
         self.conTime = None
         self.title = title
@@ -557,8 +557,6 @@ class ClientsDialog(wx.Frame):
         panel.SetSizer(sizer)
 
         cliSizer = wx.GridBagSizer(5, 5)
-        cliSizer.AddGrowableRow(0)
-        cliSizer.AddGrowableCol(2)
         clientListCtrl = Table(
             panel,
             text.colLabelsCli,
@@ -584,6 +582,8 @@ class ClientsDialog(wx.Frame):
         cliSizer.Add(abortButtonCli, (1, 0), flag = wx.LEFT, border = 10)
         cliSizer.Add(abortAllButtonCli, (1, 1))
         cliSizer.Add(refreshButtonCli, (1, 2))
+        cliSizer.AddGrowableRow(0)
+        cliSizer.AddGrowableCol(2)
         sizer.Add(cliSizer, 1, wx.EXPAND)
 
         def onDelete(evt):
@@ -707,8 +707,6 @@ class ServersDialog(wx.Frame):
         panel.SetSizer(sizer)
 
         srvSizer = wx.GridBagSizer(5, 5)
-        srvSizer.AddGrowableRow(0)
-        srvSizer.AddGrowableCol(2)
         serverListCtrl = Table(
             panel,
             text.colLabelsSrvr,
@@ -734,6 +732,8 @@ class ServersDialog(wx.Frame):
         srvSizer.Add(abortButtonSrv, (1, 0), flag = wx.LEFT, border = 10)
         srvSizer.Add(abortAllButtonSrv, (1, 1))
         srvSizer.Add(refreshButtonSrv, (1, 2))
+        srvSizer.AddGrowableRow(0)
+        srvSizer.AddGrowableCol(2)
         sizer.Add(srvSizer, 1, wx.EXPAND)
 
         def onDelete(evt):
@@ -3488,7 +3488,6 @@ class SendEvent(eg.ActionBase):
         passwordCtrl = panel.TextCtrl(password)
         fl = wx.EXPAND|wx.TOP
         box=wx.GridBagSizer(2, 5)
-        box.AddGrowableCol(1)
         box.Add(panel.StaticText(text.event), (0, 0), flag = wx.TOP, border=12)
         box.Add(eventCtrl, (0, 1), flag = fl, border=9)
         box.Add(parsCtrl, (1, 0), (1, 2))
@@ -3500,6 +3499,7 @@ class SendEvent(eg.ActionBase):
         box.Add(userCtrl, (4, 1), flag = fl, border=9)
         box.Add(panel.StaticText(text.password), (5, 0), flag=wx.TOP, border=12)
         box.Add(passwordCtrl, (5, 1), flag = fl, border=9)
+        box.AddGrowableCol(1)
         panel.sizer.Add(box, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 
         while panel.Affirmed():
@@ -4517,7 +4517,6 @@ class StartClient(eg.ActionBase):
         noCertCtrl = wx.CheckBox(panel, -1, text.noCert)
         noCertCtrl.SetValue(noCert)
         credSizer = wx.GridBagSizer(10, 8)
-        credSizer.AddGrowableCol(1)
         topSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, pext.authBox),
             wx.HORIZONTAL
@@ -4527,6 +4526,7 @@ class StartClient(eg.ActionBase):
         credSizer.Add(loginCtrl,(1,1),(1,1), flag = wx.EXPAND)
         credSizer.Add(passwordLabel,(0,0),(1,1),flag = wx.TOP, border = 3)
         credSizer.Add(passwordCtrl,(0,1),(1,1), flag = wx.EXPAND)
+        credSizer.AddGrowableCol(1)
 
         topSizer.Add(credSizer, 1, wx.EXPAND)
         panel.sizer.Add(titleSizer, 0, wx.EXPAND)

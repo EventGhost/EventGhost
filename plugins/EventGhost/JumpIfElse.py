@@ -152,7 +152,7 @@ class JumpIfElse(eg.ActionBase):
         kindCtrl.Bind(wx.EVT_CHOICE, onKind)
         onKind()
 
-        sizer = wx.FlexGridSizer(5, 2, 3, 5)
+        sizer = wx.FlexGridSizer(7, 2, 3, 5)
         sizer.AddGrowableCol(1, 1)
         sizer.Add(labels[0], 0, wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(kindCtrl)

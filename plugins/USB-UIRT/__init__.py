@@ -486,12 +486,12 @@ class TransmitIR(eg.ActionClass):
 
         gridSizer.Add(panel.StaticText(text.zone), (2, 0), flag=stFlags)
         gridSizer.Add(zoneCtrl, (2, 1))
-        gridSizer.AddGrowableCol(4, 1)
         gridSizer.Add(
             learnButton,
             (0,5),
             flag=wx.ALIGN_RIGHT|wx.EXPAND
         )
+        gridSizer.AddGrowableCol(4, 1)
 
         panel.sizer.Add(gridSizer, 0, wx.EXPAND)
 

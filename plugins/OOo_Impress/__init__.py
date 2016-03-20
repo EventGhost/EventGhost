@@ -965,7 +965,6 @@ class ShowMenu(eg.ActionClass):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         bottomSizer = wx.GridBagSizer(5, 5)
-        bottomSizer.AddGrowableCol(2)
         topMiddleSizer = wx.BoxSizer(wx.VERTICAL)
         previewLbl = wx.StaticText(panel, -1, self.text.menuPreview)
         previewLblSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1070,6 +1069,7 @@ class ShowMenu(eg.ActionClass):
         bottomSizer.Add(endlessCtrl,(3,1))
         bottomSizer.Add(label4,(4,0),flag = wx.TOP, border = 3)
         bottomSizer.Add(pauseCtrl,(4,1))
+        bottomSizer.AddGrowableCol(2)
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)

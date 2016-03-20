@@ -190,7 +190,7 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "wxPython",
         module = "wx",
-        version = "2.8.12.1",
+        version = "3.0.2",
         url = "http://www.wxpython.org/",
     ),
     ModuleDependency(

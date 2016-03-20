@@ -502,9 +502,19 @@ class TreeCtrl(wx.TreeCtrl):
         Expands all items in the tree.
         """
         self.Freeze()
-        wx.TreeCtrl.ExpandAll(self)
-        self.EnsureVisible(self.GetSelection())
-        self.Thaw()
+        def Exp(item):
+            child, cookie = self.GetFirstChild(item)
+            while child.IsOk():
+                if not self.IsExpanded(child):
+                    self.Expand(child)
+                Exp(child)
+                child, cookie = self.GetNextChild(child, cookie)
+        try:
+            item = self.GetRootItem()
+            Exp(item)
+        finally:
+            self.EnsureVisible(self.GetSelection())
+            self.Thaw()
 
 
     @eg.AssertInMainThread
@@ -627,7 +637,9 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.TraverseDelete(itemId)
+        self.Unbind(wx.EVT_TREE_ITEM_COLLAPSING)
         self.Collapse(itemId)
+        self.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsingEvent)
         self.DeleteChildren(itemId)
         self.SetItemHasChildren(itemId)
         node = self.GetPyData(itemId)
@@ -695,7 +707,7 @@ class TreeCtrl(wx.TreeCtrl):
         if itemId.IsOk():
             node = self.GetPyData(itemId)
             if node.isConfigurable:
-                while wx.GetMouseState().LeftDown():
+                while wx.GetMouseState().LeftIsDown():
                     wx.GetApp().Yield()
                 wx.CallLater(1, self.document.OnCmdConfigure, node)
         event.Skip()
@@ -817,6 +829,10 @@ class TreeCtrl(wx.TreeCtrl):
                 self.SetItemHasChildren(self.visibleNodes[parent], False)
                 self.expandedNodes.discard(parent)
         self.expandedNodes.discard(node)
+        self.Freeze()
+        self.SelectItem(self.visibleNodes[self.root])
+        self.SelectItem(self.visibleNodes[parent])
+        self.Thaw()
 
 
     @eg.AssertInMainThread
@@ -846,7 +862,12 @@ class TreeCtrl(wx.TreeCtrl):
             path = node.GetPath()
             parent = self.root
             for pos in path[:-1]:
-                parent = parent.childs[pos]
+                childNode = parent.childs[pos]
+                if childNode not in self.visibleNodes and \
+                    parent not in self.expandedNodes:
+                        self.Expand(self.visibleNodes[parent])
+                parent = childNode
+            if parent not in self. expandedNodes:
                 self.Expand(self.visibleNodes[parent])
         self.SelectItem(self.visibleNodes[node])
 
