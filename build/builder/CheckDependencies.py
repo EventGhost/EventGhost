@@ -92,9 +92,9 @@ class ModuleDependency(DependencyBase):
 
 
 class PyWin32Dependency(DependencyBase):
-    name = "pywin32 (Mark Hammond's Win32All package)"
+    name = "pywin32"
     version = "220"
-    url = "pywin32 (Mark Hammond's Win32All package)"
+    url = "https://sourceforge.net/projects/pywin32/files/pywin32/"
 
     def Check(self):
         versionFilePath = join(
@@ -127,7 +127,7 @@ class StacklessDependency(DependencyBase):
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
     version = "5.5.8"
-    url = "http://www.innosetup.com/isinfo.php"
+    url = "http://www.innosetup.com/isdl.php"
 
     def Check(self):
         if not GetInnoCompilerPath():
@@ -185,47 +185,47 @@ DEPENDENCIES = [
         name = "agithub",
         module = "agithub",
         version = "2.0",
-        url = "https://github.com/jpaugh/agithub/releases/tag/v2.0",
+        url = "https://github.com/jpaugh/agithub/archive/v2.0.zip",
     ),
     ModuleDependency(
         name = "comtypes",
         module = "comtypes",
         version = "1.1.2",
-        url = "http://sourceforge.net/projects/comtypes/"
+        url = None,
     ),
     ModuleDependency(
         name = "ctypeslib",
         module = "ctypeslib",
         version = "0.5.6",
-        url = "http://pypi.python.org/pypi/ctypeslib/"
+        url = "https://github.com/EventGhost/ctypeslib/archive/master.zip"
     ),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
     ModuleDependency(
-        name = "Pillow (Python Image Library)",
+        name = "Pillow",
         module = "PIL",
         attr = "PILLOW_VERSION",
         version = "3.1.1",
-        url = "https://python-pillow.org/",
+        url = None,
     ),
     ModuleDependency(
         name = "py2exe_py2",
         module = "py2exe",
         version = "0.6.9",
-        url = "http://www.py2exe.org/",
+        url = None,
     ),
     ModuleDependency(
-        name = "PyCrypto (Python Cryptography Toolkit)",
+        name = "PyCrypto",
         module = "Crypto",
         version = "2.6.1",
-        url = "http://www.dlitz.net/software/pycrypto/",
+        url = None,
     ),
     PyWin32Dependency(),
     ModuleDependency(
-        name = "Sphinx (Python documentation generator)",
+        name = "Sphinx",
         module = "sphinx",
         version = "1.3.5",
-        url = "http://sphinx.pocoo.org/",
+        url = None,
     ),
     StacklessDependency(),
     ModuleDependency(
@@ -251,8 +251,9 @@ def CheckDependencies(buildSetup):
                 print "The following dependencies are missing:"
                 isOK = False
             print "  *", dependency.name
-            print "       Needed version:", dependency.version
-            print "       Download URL:", dependency.url
+            print "    Needed version:", dependency.version
+            if dependency.url:
+                print "    Download URL:", dependency.url
     if not isOK:
         print "You need to install them first to run the build process!"
     return isOK
