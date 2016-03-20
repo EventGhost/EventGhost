@@ -188,17 +188,19 @@ DEPENDENCIES = [
         url = "https://github.com/jpaugh/agithub/releases/tag/v2.0",
     ),
     ModuleDependency(
-        name = "wxPython",
-        module = "wx",
-        version = "2.8.12.1",
-        url = "http://www.wxpython.org/",
+        name = "comtypes",
+        module = "comtypes",
+        version = "1.1.2",
+        url = "http://sourceforge.net/projects/comtypes/"
     ),
     ModuleDependency(
-        name = "py2exe",
-        module = "py2exe",
-        version = "0.6.9",
-        url = "http://www.py2exe.org/",
+        name = "ctypeslib",
+        module = "ctypeslib",
+        version = "0.5.6",
+        url = "http://pypi.python.org/pypi/ctypeslib/"
     ),
+    HtmlHelpWorkshopDependency(),
+    InnoSetupDependency(),
     ModuleDependency(
         name = "Pillow (Python Image Library)",
         module = "PIL",
@@ -207,16 +209,10 @@ DEPENDENCIES = [
         url = "https://python-pillow.org/",
     ),
     ModuleDependency(
-        name = "comtypes package",
-        module = "comtypes",
-        version = "1.1.2",
-        url = "http://sourceforge.net/projects/comtypes/"
-    ),
-    ModuleDependency(
-        name = "ctypeslib package",
-        module = "ctypeslib",
-        version = "0.5.6",
-        url = "http://pypi.python.org/pypi/ctypeslib/"
+        name = "py2exe_py2",
+        module = "py2exe",
+        version = "0.6.9",
+        url = "http://www.py2exe.org/",
     ),
     ModuleDependency(
         name = "PyCrypto (Python Cryptography Toolkit)",
@@ -224,16 +220,20 @@ DEPENDENCIES = [
         version = "2.6.1",
         url = "http://www.dlitz.net/software/pycrypto/",
     ),
+    PyWin32Dependency(),
     ModuleDependency(
         name = "Sphinx (Python documentation generator)",
         module = "sphinx",
         version = "1.3.5",
         url = "http://sphinx.pocoo.org/",
     ),
-    PyWin32Dependency(),
     StacklessDependency(),
-    InnoSetupDependency(),
-    HtmlHelpWorkshopDependency(),
+    ModuleDependency(
+        name = "wxPython",
+        module = "wx",
+        version = "2.8.12.1",
+        url = "http://www.wxpython.org/",
+    ),
     DllDependency(name="msvcm90.dll", version="9.0.21022.8"),
     DllDependency(name="msvcp90.dll", version="9.0.21022.8"),
     DllDependency(name="msvcr90.dll", version="9.0.21022.8"),
