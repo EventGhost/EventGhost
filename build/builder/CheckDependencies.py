@@ -199,6 +199,12 @@ DEPENDENCIES = [
         version = "0.5.6",
         url = "https://github.com/EventGhost/ctypeslib/archive/master.zip"
     ),
+    ModuleDependency(
+        name = "future",
+        module = "future",
+        version = "0.15.2",
+        url = "http://pypi.python.org/pypi/future/"
+    ),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
     ModuleDependency(
