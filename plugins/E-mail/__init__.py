@@ -3623,7 +3623,7 @@ class E_mail(eg.PluginClass):
 
         panel.validation = validation
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        topLeftSizer = wx.FlexGridSizer(4,2,2,8)
+        topLeftSizer = wx.FlexGridSizer(5,2,2,8)
         leftSizer.Add(topLeftSizer,0,wx.EXPAND)
         topMiddleSizer=wx.BoxSizer(wx.VERTICAL)
         previewLbl=wx.StaticText(panel, -1, text.accountsList)
