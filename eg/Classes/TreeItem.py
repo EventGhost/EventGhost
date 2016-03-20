@@ -374,17 +374,9 @@ class TreeItem(object):
         item = self
         root = self.root
         path = []
-        print "item:", item
-        print "root:", root
-        print
         while item is not root:
             parent = item.parent
-            print "parent:", parent
-            print "childs:", parent.childs
-            print "idx:", parent.childs.index(item)
             path.append(parent.childs.index(item))
-            print "path:", path
-            print "-----"
             item = parent
         path.reverse()
         return path
