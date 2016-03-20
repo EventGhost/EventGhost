@@ -39,6 +39,7 @@ MODULES_TO_IGNORE = [
     "wx.lib.graphics",
     "wx.lib.rpcMixin",
     "wx.lib.wxcairo",
+    "wx.build.config",
 ]
 
 HEADER = """\
