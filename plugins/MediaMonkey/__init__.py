@@ -3825,10 +3825,6 @@ Pay particular attention to the `WHERE Clause`_ .
         panel = eg.ConfigPanel(self,resizable = True)
         text = self.text
         mySizer = wx.GridBagSizer(10, 10)
-        mySizer.AddGrowableRow(0)
-        mySizer.AddGrowableCol(0)
-        mySizer.AddGrowableCol(1)
-        mySizer.AddGrowableCol(2)
         sqlTextCtrl=wx.TextCtrl(panel,-1,query,style=wx.TE_MULTILINE)
         mySizer.Add(sqlTextCtrl, (0,0), (1, 3), flag = wx.EXPAND)
         mySizer.Add(
@@ -3867,6 +3863,11 @@ Pay particular attention to the `WHERE Clause`_ .
         panel.sizer.Add(headLabel,flag = wx.ALIGN_CENTER_VERTICAL)
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND|wx.TOP,border=4)
         headLabel.SetFocus()
+
+        mySizer.AddGrowableRow(0)
+        mySizer.AddGrowableCol(0)
+        mySizer.AddGrowableCol(1)
+        mySizer.AddGrowableCol(2)
 
         def onColCtrl(evt):
             field = colCtrl.GetStringSelection()

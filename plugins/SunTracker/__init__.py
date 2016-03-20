@@ -2242,10 +2242,6 @@ class Suntracker(eg.PluginClass):
         panel = eg.ConfigPanel(self, resizable=True)
         mySizer_1 = wx.GridBagSizer(10, 10)
         mySizer_2 = wx.GridBagSizer(10, 10)
-        mySizer_1.AddGrowableRow(0)
-        mySizer_1.AddGrowableCol(1)
-        mySizer_1.AddGrowableCol(2)
-        mySizer_1.AddGrowableCol(3)
 
         suntrackerListCtrl = wx.ListCtrl(
             panel,
@@ -2284,6 +2280,11 @@ class Suntracker(eg.PluginClass):
 
         refreshButton = wx.Button(panel, -1, self.text.b_refresh)
         mySizer_1.Add(refreshButton,(1,4), flag = wx.ALIGN_RIGHT)
+
+        mySizer_1.AddGrowableRow(0)
+        mySizer_1.AddGrowableCol(1)
+        mySizer_1.AddGrowableCol(2)
+        mySizer_1.AddGrowableCol(3)
 
         f_myLatitude = float(myLatitude)
         myLatitudeCtrl = panel.SpinNumCtrl(

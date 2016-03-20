@@ -191,7 +191,6 @@ class TransferDialog(wx.Dialog):
         sizer4.Add(self.overallProgressCtrl, 0, wx.ALIGN_RIGHT)
 
         sizer5 = wx.FlexGridSizer(4, 5, 5, 5)
-        sizer5.AddGrowableCol(2, 1)
         sizer5.Add(SText("Elapsed time:"), 0, wx.ALIGN_RIGHT)
         sizer5.Add(self.elapsedCtrl)
         sizer5.Add((10, 0), 1, wx.EXPAND)
@@ -202,6 +201,7 @@ class TransferDialog(wx.Dialog):
         sizer5.Add((10, 0), 1, wx.EXPAND)
         sizer5.Add(SText("Remaining size:"), 0, wx.ALIGN_RIGHT)
         sizer5.Add(self.remainingSizeCtrl)
+        sizer5.AddGrowableCol(2, 1)
 
         sizer6 = wx.StaticBoxSizer(overallStaticBox, wx.VERTICAL)
         sizer6.Add(sizer4, 0, wx.EXPAND)

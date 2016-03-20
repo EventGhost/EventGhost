@@ -716,10 +716,6 @@ class Scheduler(eg.PluginClass):
         )
 
         mySizer = wx.GridBagSizer(5, 5)
-        mySizer.AddGrowableRow(0)
-        mySizer.AddGrowableCol(1)
-        mySizer.AddGrowableCol(2)
-        mySizer.AddGrowableCol(3)
 
         schedulerListCtrl = wx.ListCtrl(
             panel,
@@ -802,6 +798,10 @@ class Scheduler(eg.PluginClass):
         emptyHouse_mCtrl = wx.CheckBox(panel, -1, self.text.txtEmptyHouse_m)
         emptyHouse_mCtrl.SetValue(emptyHouse_m)
         mySizer.Add(emptyHouse_mCtrl,(5,1))
+        mySizer.AddGrowableRow(0)
+        mySizer.AddGrowableCol(1)
+        mySizer.AddGrowableCol(2)
+        mySizer.AddGrowableCol(3)
 
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
 

@@ -298,8 +298,6 @@ class FindWindow(eg.ActionBase):
         topSizer.Add(dragSizer)
 
         sizer1 = wx.GridBagSizer(vgap=4, hgap=4)
-        sizer1.AddGrowableCol(2, 100)
-        sizer1.AddGrowableRow(0, 100)
         sizer1.SetEmptyCellSize((0, 0))
         sizer1.Add(self.tree, (0, 0), (1, 5), wx.EXPAND)
         sizer1.Add(refreshButton, (1, 4), (2, 1), wx.ALIGN_TOP|wx.ALIGN_RIGHT)
@@ -379,6 +377,8 @@ class FindWindow(eg.ActionBase):
             ((5, 5), ),
             (sizer1, 1, wx.EXPAND),
         ])
+        sizer1.AddGrowableCol(2, 100)
+        sizer1.AddGrowableRow(0, 100)
         # re-assign the test button
         def OnTestButton(dummyEvent):
             args = GetResult()[:-2] # we don't need timeout and stopMacro
