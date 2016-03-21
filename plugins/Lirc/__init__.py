@@ -382,6 +382,7 @@ class Lirc(eg.RawReceiverPlugin):
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
         self.AddAction(self.Send)
+        self.Send.remotes = []
 
     def __start__(
         self, host, port, onlyfirst, addremote,
@@ -399,7 +400,6 @@ class Lirc(eg.RawReceiverPlugin):
         self.maxretries = maxretries
         self.currentattempt = 0
         self.retryinterval = retryinterval
-        self.Send.remotes = []
         self.Send.remotelist = []
         self.InitConnection()
         # Test if connection is formed succesfully, if not trigger retry
