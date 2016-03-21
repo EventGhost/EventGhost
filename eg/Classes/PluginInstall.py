@@ -148,7 +148,7 @@ class PluginInstall(object):
         pos = description.find("<rst>")
         if pos != -1:
             description = DecodeReST(description[pos+5:])
-        iconData = base64.b64encode(pluginInfo.icon.pil.tostring())
+        iconData = base64.b64encode(str(pluginInfo.icon.pil.tobytes()))
         return {
             "name": pluginInfo.englishName,
             "author": pluginInfo.author,

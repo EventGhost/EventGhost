@@ -1244,11 +1244,11 @@ def piltoimage(pil, hasAlpha):
     image = wx.EmptyImage(*pil.size)
     rgbPil = pil.convert('RGB')
     if hasAlpha:
-        image.SetData(rgbPil.tostring())
-        image.SetAlphaData(pil.convert("RGBA").tostring()[3::4])
+        image.SetData(rgbPil.tobytes())
+        image.SetAlphaData(pil.convert("RGBA").tobytes()[3::4])
     else:
         new_image = rgbPil
-        data = new_image.tostring()
+        data = new_image.tobytes()
         image.SetData(data)
     return image
 #===============================================================================
@@ -1511,7 +1511,7 @@ class ShowPictureFrame(wx.Frame):
             pil = pil.resize((w, h), Image.NEAREST)
 
         bitmap = wx.BitmapFromBuffer(
-            w, h, pil.convert('RGB').tostring()
+            w, h, pil.convert('RGB').tobytes()
         )
         self.staticBitmap.SetBitmap(bitmap)
         x = GetMonitorDimensions()[display][0] + (width_ - w) / 2
