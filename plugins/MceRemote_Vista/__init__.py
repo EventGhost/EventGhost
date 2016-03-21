@@ -124,7 +124,10 @@ class TransmitIR(eg.ActionBase):
         correctnessCtrl.SetInitialSize((50, -1))
 
         learnButton = panel.Button("Learn an IR Code...")
-        result = self.plugin.client.GetDeviceInfo()
+        try:
+            result = self.plugin.client.GetDeviceInfo()
+        except AttributeError:
+            result = None
         if result is None or result[2] != 2:
             learnButton.Enable(False)
 
