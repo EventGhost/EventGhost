@@ -25,7 +25,7 @@ if hasattr(sys, "frozen"):
     sys.path.append(dirname(filePath))
 #    sys.path.append(dirname(sys.executable.encode('mbcs')))
 
-if len(sys.argv) > 2 and sys.argv[1] == "-execfile":   
+if len(sys.argv) > 2 and sys.argv[1] == "-execfile":
     import imp
     import os
     filename = sys.argv[2]

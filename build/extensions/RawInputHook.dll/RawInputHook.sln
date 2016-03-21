@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RawInputHook", "RawInputHook.vcproj", "{0C8D1A27-7F66-4FDE-A844-2498AF9B330E}"
