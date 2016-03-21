@@ -707,7 +707,7 @@ class TreeCtrl(wx.TreeCtrl):
         if itemId.IsOk():
             node = self.GetPyData(itemId)
             if node.isConfigurable:
-                while wx.GetMouseState().LeftDown():
+                while wx.GetMouseState().LeftIsDown():
                     wx.GetApp().Yield()
                 wx.CallLater(1, self.document.OnCmdConfigure, node)
         event.Skip()
