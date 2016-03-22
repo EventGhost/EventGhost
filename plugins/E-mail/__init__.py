@@ -187,9 +187,6 @@ def SendCfg(
     textsCtrl.SetToolTipString(text.tip)
 
     topSizer = wx.GridBagSizer(5, 5)
-    topSizer.AddGrowableCol(1)
-    topSizer.AddGrowableCol(2)
-    topSizer.AddGrowableRow(4)
     topSizer.Add(subjectLbl,(0, 0),flag = wx.ALIGN_RIGHT)
     topSizer.Add(subjectCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
     topSizer.Add(fromLbl,(1, 0),flag = wx.ALIGN_RIGHT)
@@ -203,6 +200,9 @@ def SendCfg(
     topSizer.Add(outTextCtrl, (4, 1), (1, 2), flag = wx.EXPAND)
     topSizer.Add(textsLbl,(5, 0),flag = wx.ALIGN_RIGHT)
     topSizer.Add(textsCtrl, (5, 1), (1, 2), flag = wx.EXPAND)
+    topSizer.AddGrowableCol(1)
+    topSizer.AddGrowableCol(2)
+    topSizer.AddGrowableRow(4)
 
     return (subjectCtrl,
         fromCtrl,

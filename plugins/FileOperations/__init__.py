@@ -219,8 +219,6 @@ class FileOperations(eg.PluginClass):
         )
 
         mySizer = wx.GridBagSizer(5, 5)
-        mySizer.AddGrowableRow(0)
-        mySizer.AddGrowableCol(2)
 
         observListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
 
@@ -252,6 +250,9 @@ class FileOperations(eg.PluginClass):
         mySizer.Add(refreshButton, (1,3), flag = wx.ALIGN_RIGHT)
 
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
+
+        mySizer.AddGrowableRow(0)
+        mySizer.AddGrowableCol(2)
 
         def PopulateList (event=None):
             observListCtrl.DeleteAllItems()

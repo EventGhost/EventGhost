@@ -2139,9 +2139,9 @@ programmatically\nUse the action: Hide image"""
         box0 = wx.StaticBox(panel,-1,text.main)
         box1 = wx.StaticBox(panel,-1,text.other)
         inTopSizer = wx.FlexGridSizer(1, 2, 5, 5)
-        inTopSizer.AddGrowableCol(1)
         inTopSizer.Add(wx.StaticText(panel, -1, text.data),0,ACV)
         inTopSizer.Add(dataCtrl,0,wx.EXPAND)
+        inTopSizer.AddGrowableCol(1)
         topSizer = wx.StaticBoxSizer(box0, wx.VERTICAL)
         topSizer.Add(inTopSizer,0,wx.EXPAND)
 

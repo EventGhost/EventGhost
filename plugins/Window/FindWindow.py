@@ -298,8 +298,6 @@ class FindWindow(eg.ActionBase):
         topSizer.Add(dragSizer)
 
         sizer1 = wx.GridBagSizer(vgap=4, hgap=4)
-        sizer1.AddGrowableCol(2, 100)
-        sizer1.AddGrowableRow(0, 100)
         sizer1.SetEmptyCellSize((0, 0))
         sizer1.Add(self.tree, (0, 0), (1, 5), wx.EXPAND)
         sizer1.Add(refreshButton, (1, 4), (2, 1), wx.ALIGN_TOP|wx.ALIGN_RIGHT)
@@ -371,6 +369,8 @@ class FindWindow(eg.ActionBase):
         )
         line += 1
         sizer1.Add((1, 1), (line, 0))
+        sizer1.AddGrowableCol(2, 100)
+        sizer1.AddGrowableRow(0, 100)
         #sizer1.SetItemMinSize(options[0][1], 300, -1)
 
         # group the main lines together

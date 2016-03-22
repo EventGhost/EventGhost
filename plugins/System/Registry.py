@@ -272,9 +272,6 @@ class RegistryChooser(wx.Window):
         self.text = text
         wx.Window.__init__(self, parent, id, pos, size, style)
         sizer = wx.GridBagSizer(5, 5)
-        sizer.AddGrowableRow(1)
-        sizer.AddGrowableCol(3, 2)
-        sizer.AddGrowableCol(5, 1)
 
         sizer.SetEmptyCellSize((0, 0))
         sizer.Add(
@@ -352,6 +349,9 @@ class RegistryChooser(wx.Window):
             valueName = text.defaultText
         valueNameCtrl = wx.TextCtrl(self, -1, valueName, size=(100, -1))
         sizer.Add(valueNameCtrl, (2, 5), flag = wx.EXPAND)
+        sizer.AddGrowableRow(1)
+        sizer.AddGrowableCol(3, 2)
+        sizer.AddGrowableCol(5, 1)
 
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
