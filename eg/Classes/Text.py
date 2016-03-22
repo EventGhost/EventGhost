@@ -118,6 +118,7 @@ class Default:
             Import = "Import..."
             Close = "&Close"
             Options = "&Options..."
+            Restart = "&Restart"
             Exit = "E&xit"
 
             EditMenu = "&Edit"
