@@ -160,6 +160,10 @@ class App(wx.App):
             eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.Close()
+        eg.PrintDebugNotice("Triggering OnBeforeClose")
+        egEvent = eg.eventThread.TriggerEvent("OnBeforeClose")
+        while not egEvent.isEnded:
+            self.Yield()
         self.ExitMainLoop()
         return True
 
