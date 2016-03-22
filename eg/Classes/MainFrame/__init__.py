@@ -358,6 +358,8 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         Append("Options")
         menu.AppendSeparator()
+        Append("Restart", "\tShift+Ctrl+~")
+        menu.AppendSeparator()
         Append("Exit")
 
         # edit menu
@@ -841,6 +843,10 @@ class MainFrame(wx.Frame):
     @eg.AsTasklet
     def OnCmdOptions(self):
         eg.OptionsDialog.GetResult(self)
+
+
+    def OnCmdRestart(self):
+        eg.app.Restart()
 
 
     def OnCmdExit(self):
