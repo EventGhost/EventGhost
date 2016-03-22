@@ -160,6 +160,11 @@ class App(wx.App):
             eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.Close()
+        if not eg.startupArguments.translate:
+            eg.PrintDebugNotice("Triggering OnClose")
+            egEvent = eg.eventThread.TriggerEvent("OnClose")
+            while not egEvent.isEnded:
+                self.Yield()
         self.ExitMainLoop()
         return True
 
@@ -167,11 +172,6 @@ class App(wx.App):
     @eg.LogIt
     def OnExit(self):
         if not eg.startupArguments.translate:
-            eg.PrintDebugNotice("Triggering OnClose")
-            egEvent = eg.eventThread.TriggerEvent("OnClose")
-            while not egEvent.isEnded:
-                self.Yield()
-
             eg.PrintDebugNotice("Calling exit functions")
             for func in self.onExitFuncs:
                 eg.PrintDebugNotice(func)
