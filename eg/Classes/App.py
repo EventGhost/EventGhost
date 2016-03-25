@@ -160,6 +160,11 @@ class App(wx.App):
             eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.Close()
+        if not eg.startupArguments.translate:
+            eg.PrintDebugNotice("Triggering OnClose")
+            egEvent = eg.eventThread.TriggerEvent("OnClose")
+            while not egEvent.isEnded:
+                self.Yield()
         self.ExitMainLoop()
         return True
 
@@ -167,11 +172,6 @@ class App(wx.App):
     @eg.LogIt
     def OnExit(self):
         if not eg.startupArguments.translate:
-            eg.PrintDebugNotice("Triggering OnClose")
-            egEvent = eg.eventThread.TriggerEvent("OnClose")
-            while not egEvent.isEnded:
-                self.Yield()
-
             eg.PrintDebugNotice("Calling exit functions")
             for func in self.onExitFuncs:
                 eg.PrintDebugNotice(func)
@@ -213,9 +213,6 @@ class App(wx.App):
             eg.PrintDebugNotice("The following threads did not terminate:")
             for thread in threads:
                 eg.PrintDebugNotice(" ", thread, thread.getName())
-        # destroy the TaskBarIcon, as it would otherwise stay as a ghost
-        # icon in the system-tray.
-        wx.TaskBarIcon.Destroy(eg.taskBarIcon)
         eg.PrintDebugNotice("Done!")
         ExitProcess(0)
 

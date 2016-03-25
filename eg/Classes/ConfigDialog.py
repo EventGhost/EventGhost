@@ -88,7 +88,6 @@ class ConfigDialog(eg.TaskletDialog):
             )
         )
         self.mainSizer = mainSizer
-        self.notebook.SetSizer(self.sizer)
         def ShowHelp(dummyEvent):
             self.treeItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)

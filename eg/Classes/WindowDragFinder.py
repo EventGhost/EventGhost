@@ -42,9 +42,6 @@ class WindowDragFinder(wx.PyWindow):
 
         # load images
         self.dragBoxBitmap = GetInternalBitmap("findert")
-        self.emptyDragBoxBitmap = GetInternalBitmap("finderte")
-
-        # make a cursor from an image
         image = GetInternalImage('findertc')
         image.SetMaskColour(255, 0, 0)
 
@@ -58,6 +55,7 @@ class WindowDragFinder(wx.PyWindow):
 
         # the image of the drag target
         dragBoxImage = wx.StaticBitmap(self, -1, self.dragBoxBitmap)
+        dragBoxImage.SetMinSize(self.dragBoxBitmap.GetSize())
         dragBoxImage.Bind(wx.EVT_LEFT_DOWN, self.OnDragboxClick)
         self.dragBoxImage = dragBoxImage
 
@@ -79,13 +77,13 @@ class WindowDragFinder(wx.PyWindow):
 
         # put our drag target together
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(dragBoxImage)
-        sizer.Add(dragBoxText, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(dragBoxImage, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(dragBoxText, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER_HORIZONTAL)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
         sizer.Fit(self)
-        self.Layout()
         self.SetMinSize(self.GetSize())
+        wx.CallAfter(self.dragBoxImage.SetBitmap, self.dragBoxBitmap)
 
 
     def OnSize(self, dummyEvent):
@@ -94,7 +92,8 @@ class WindowDragFinder(wx.PyWindow):
         """
         if self.GetAutoLayout():
             self.Layout()
-
+            self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
+            
 
     @eg.LogIt
     def AcceptsFocusFromKeyboard(self):
@@ -115,9 +114,10 @@ class WindowDragFinder(wx.PyWindow):
 
         wx.SetCursor(self.cursor)
 
-        # set the box to the empty image
-        self.dragBoxImage.SetBitmap(self.emptyDragBoxBitmap)
+        # hide the image while dragging
+        self.dragBoxImage.Hide()
         self.dragBoxText.SetLabel(self.text.drag2)
+        self.Layout()
 
         # from now on we want all mouse motion events
         self.Bind(wx.EVT_MOTION, self.OnDrag)
@@ -151,11 +151,7 @@ class WindowDragFinder(wx.PyWindow):
 
 
     def OnDragEnd(self, dummyEvent):
-        # revert box to normal image
-        self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
-        self.dragBoxText.SetLabel(self.text.drag1)
-
-        # unbind the unneded events
+        # unbind the unneeded events
         self.Unbind(wx.EVT_MOTION)
         self.Unbind(wx.EVT_LEFT_UP)
 
@@ -167,6 +163,13 @@ class WindowDragFinder(wx.PyWindow):
             HighlightWindow(self.lastTarget)
 
         self.endFunc()
+        
+        # revert box to normal image
+        self.dragBoxText.SetLabel(self.text.drag1)
+        self.dragBoxImage.Show()
+        self.Layout()
+        self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
+
 
 
     def GetValue(self):

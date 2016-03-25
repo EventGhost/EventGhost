@@ -241,8 +241,6 @@ class Command(eg.ActionBase):
 
         SText = panel.StaticText
         lowerSizer2 = wx.GridBagSizer(2, 0)
-        lowerSizer2.AddGrowableCol(1)
-        lowerSizer2.AddGrowableCol(3)
         stTxt = SText(text.additionalSuffix)
         lowerSizer2.AddMany([
             ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
@@ -253,6 +251,8 @@ class Command(eg.ActionBase):
             (disableParsingAdditionalSuffixBox, (3, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
+        lowerSizer2.AddGrowableCol(1)
+        lowerSizer2.AddGrowableCol(3)
 
         def onEventCheckBox(evt = None):
             enable = eventCheckBox.GetValue()

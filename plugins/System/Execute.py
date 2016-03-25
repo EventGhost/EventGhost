@@ -267,8 +267,6 @@ class Execute(eg.ActionBase):
         SText = panel.StaticText
         procPriorLabel = SText(text.ProcessOptionsDesc)
         lowerSizer = wx.GridBagSizer(0, 0)
-        lowerSizer.AddGrowableCol(1)
-        lowerSizer.AddGrowableCol(3)
         lowerSizer.AddMany([
             (SText(text.WindowOptionsDesc), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             (winStateChoice, (1, 0)),
@@ -277,10 +275,10 @@ class Execute(eg.ActionBase):
             (priorityChoice, (1, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
+        lowerSizer.AddGrowableCol(1)
+        lowerSizer.AddGrowableCol(3)
 
         lowerSizer2 = wx.GridBagSizer(2, 0)
-        lowerSizer2.AddGrowableCol(1)
-        lowerSizer2.AddGrowableCol(3)
         stTxt = SText(text.additionalSuffix)
         lowerSizer2.AddMany([
             ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
@@ -290,6 +288,8 @@ class Execute(eg.ActionBase):
             (disableParsingAdditionalSuffixBox, (2, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
+        lowerSizer2.AddGrowableCol(1)
+        lowerSizer2.AddGrowableCol(3)
 
         def onEventCheckBox(evt = None):
             enable = eventCheckBox.GetValue()

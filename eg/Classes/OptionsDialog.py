@@ -170,7 +170,7 @@ class OptionsDialog(eg.TaskletDialog):
             (page1.StaticText(text.limitMemory2), 0, flags|wx.LEFT, 2),
         )
 
-        startGroupSizer = wx.GridSizer(4, 1, 2, 2)
+        startGroupSizer = wx.GridSizer(cols=1, vgap=2, hgap=2)
         startGroupSizer.AddMany(
             (
                 (startWithWindowsCtrl, 0, flags),

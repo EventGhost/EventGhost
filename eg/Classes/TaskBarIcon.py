@@ -61,6 +61,9 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def Close(self):
         eg.Unbind("ProcessingChange", self.OnProcessingChange)
+        # remove the TaskBarIcon, as it would otherwise stay as a ghost
+        # icon in the system-tray.
+        self.RemoveIcon()
 
 
     def OnTaskBarMenu(self, dummyEvent):

@@ -1869,7 +1869,6 @@ class SchedulGhost(eg.PluginBase):
         panel.holidButton.Bind(wx.EVT_BUTTON, onHolidButton)
 
         bottomSizer = wx.GridBagSizer(1, 1)
-        bottomSizer.AddGrowableCol(2)
         val = self.logfile != ""
         logCheckBox.SetValue(val)
         logFileCtrl.Enable(val)
@@ -1886,6 +1885,7 @@ class SchedulGhost(eg.PluginBase):
         bottomSizer.Add(firstDayCtrl, (1, 1), flag = wx.LEFT, border = 10)
         bottomSizer.Add(panel.holidButton, (0, 3), (2, 1), flag = wx.EXPAND)
         bottomSizer.Add(managerButton, (0, 4), (2, 1), flag = wx.EXPAND|wx.LEFT, border = 10)
+        bottomSizer.AddGrowableCol(2)
         sizerAdd(bottomSizer, 0, wx.TOP | wx.EXPAND, 15)
 
         def Validation():
@@ -3154,8 +3154,6 @@ class EggTimersList(wx.Frame):
 
         mainSizer = wx.GridBagSizer(0, 0)
         self.SetSizer(mainSizer)
-        mainSizer.AddGrowableRow(0)
-        mainSizer.AddGrowableCol(0)
         eggListCtrl = wx.ListCtrl(
             self,
             -1,
@@ -3188,6 +3186,8 @@ class EggTimersList(wx.Frame):
         self.SetMinSize((1.5*size, -1))
         rem2Size = size  - eggListCtrl.GetColumnWidth(4) + 4
         mainSizer.Add(eggListCtrl, (0,0), (1,1), flag = wx.EXPAND)
+        mainSizer.AddGrowableRow(0)
+        mainSizer.AddGrowableCol(0)
 
 
         def OnSize(event):
@@ -3333,9 +3333,6 @@ class SetEggTimer(eg.ActionBase):
         suffCtrl = wx.TextCtrl(panel, -1, self.args[2], size = (100, -1))
         nameCtrl = wx.TextCtrl(panel, -1, self.args[9], size = (100, -1))
         topSizer = wx.GridBagSizer(1,1)
-        topSizer.AddGrowableCol(2,1)
-        topSizer.AddGrowableCol(4,1)
-        topSizer.AddGrowableCol(6,1)
         spinBtn = wx.SpinButton(
             panel,
             -1,
@@ -3361,6 +3358,9 @@ class SetEggTimer(eg.ActionBase):
         topSizer.Add(prefCtrl, (1, 3))
         topSizer.Add(suffCtrl, (1, 5))
         topSizer.Add(nameCtrl, (1, 7))
+        topSizer.AddGrowableCol(2,1)
+        topSizer.AddGrowableCol(4,1)
+        topSizer.AddGrowableCol(6,1)
         sizerAdd = panel.sizer.Add
         sizerAdd(topSizer,0,wx.LEFT|wx.RIGHT|wx.EXPAND, 10)
         sizerAdd((-1,10))

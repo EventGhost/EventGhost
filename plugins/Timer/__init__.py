@@ -273,10 +273,6 @@ class Timer(eg.PluginClass):
         )
 
         mySizer = wx.GridBagSizer(5, 5)
-        mySizer.AddGrowableRow(0)
-        mySizer.AddGrowableCol(1)
-        mySizer.AddGrowableCol(2)
-        mySizer.AddGrowableCol(3)
 
         timerListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
 
@@ -312,6 +308,10 @@ class Timer(eg.PluginClass):
 
         refreshButton = wx.Button(panel, -1, "Refresh")
         mySizer.Add(refreshButton, (1,4), flag = wx.ALIGN_RIGHT)
+        mySizer.AddGrowableRow(0)
+        mySizer.AddGrowableCol(1)
+        mySizer.AddGrowableCol(2)
+        mySizer.AddGrowableCol(3)
 
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
 

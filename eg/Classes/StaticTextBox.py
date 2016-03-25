@@ -39,7 +39,6 @@ class StaticTextBox(wx.PyWindow):
             style=wx.TE_MULTILINE
                 |wx.TE_NO_VSCROLL
                 |wx.NO_BORDER
-                |wx.TE_AUTO_SCROLL
                 |wx.TE_READONLY
         )
         textCtrl.SetBackgroundColour(self.GetBackgroundColour())

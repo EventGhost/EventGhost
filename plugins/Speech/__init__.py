@@ -117,7 +117,6 @@ class CustomSlider(wx.Window):
         self.valueLabel = valueLabel
         wx.Window.__init__(self, parent, id, pos, size, style)
         sizer = wx.GridBagSizer()
-        sizer.AddGrowableCol(1, 1)
         self.slider = wx.Slider(
             self,
             -1,
@@ -133,6 +132,7 @@ class CustomSlider(wx.Window):
         sizer.Add(self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL)
         st = wx.StaticText(self, -1, maxLabel)
         sizer.Add(st, (1, 2), (1, 1), wx.ALIGN_RIGHT)
+        sizer.AddGrowableCol(1, 1)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
         sizer.Fit(self)
