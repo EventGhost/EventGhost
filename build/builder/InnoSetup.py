@@ -60,12 +60,12 @@ class InnoInstaller(object):
         self.innoSections[section].append(EncodePath(line))
 
 
-    def AddFile(self, source, destDir="", destName=None, ignoreversion=True):
+    def AddFile(self, source, destDir="", destName=None, ignoreversion=True, prefix="{app}"):
         """
         Adds a file to the [Files] section.
         """
-        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (
-            abspath(source), destDir
+        line = 'Source: "%s"; DestDir: "%s\\%s"' % (
+            abspath(source), prefix, destDir
         )
         if destName is not None:
             line += '; DestName: "%s"' % destName
