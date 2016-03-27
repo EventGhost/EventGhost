@@ -94,7 +94,7 @@ class ModuleDependency(DependencyBase):
 class PyWin32Dependency(DependencyBase):
     name = "pywin32"
     version = "220"
-    url = "https://sourceforge.net/projects/pywin32/files/pywin32/"
+    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
 
     def Check(self):
         versionFilePath = join(
@@ -127,7 +127,8 @@ class StacklessDependency(DependencyBase):
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
     version = "5.5.8"
-    url = "http://www.innosetup.com/isdl.php"
+    #url = "http://www.innosetup.com/isdl.php"
+    url = "http://www.innosetup.com/download.php/is-unicode.exe"
 
     def Check(self):
         if not GetInnoCompilerPath():
@@ -138,9 +139,10 @@ class InnoSetupDependency(DependencyBase):
 class HtmlHelpWorkshopDependency(DependencyBase):
     name = "HTML Help Workshop"
     version = "1.0"
+    #url = "https://www.microsoft.com/download/details.aspx?id=21138"
     url = (
-        "http://www.microsoft.com/Downloads/details.aspx?"
-        "familyid=00535334-C8A6-452F-9AA0-D597D16580CC&displaylang=en"
+        "https://download.microsoft.com/download"
+        "/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe"
     )
 
     def Check(self):
@@ -150,9 +152,10 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 
 class DllDependency(DependencyBase):
+    #url = "https://www.microsoft.com/download/details.aspx?id=29"
     url = (
-        "http://www.microsoft.com/downloads/details.aspx?"
-        "displaylang=en&FamilyID=9b2da534-3e03-4391-8a4d-074b9f2bc1bf"
+        "https://download.microsoft.com/download"
+        "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
     )
 
     def Check(self):
@@ -185,7 +188,7 @@ DEPENDENCIES = [
         name = "agithub",
         module = "agithub",
         version = "2.0",
-        url = "https://github.com/jpaugh/agithub/archive/v2.0.zip",
+        url = "https://eventghost.github.io/dist/dependencies/agithub-2.0-cp27-none-any.whl",
     ),
     ModuleDependency(
         name = "comtypes",
@@ -197,13 +200,13 @@ DEPENDENCIES = [
         name = "ctypeslib",
         module = "ctypeslib",
         version = "0.5.6",
-        url = "https://github.com/EventGhost/ctypeslib/archive/master.zip"
+        url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
     ),
     ModuleDependency(
         name = "future",
         module = "future",
         version = "0.15.2",
-        url = "http://pypi.python.org/pypi/future/"
+        url = None,
     ),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
@@ -224,7 +227,7 @@ DEPENDENCIES = [
         name = "PyCrypto",
         module = "Crypto",
         version = "2.6.1",
-        url = None,
+        url = "https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl",
     ),
     PyWin32Dependency(),
     ModuleDependency(
@@ -237,8 +240,8 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "wxPython",
         module = "wx",
-        version = "3.0.2",
-        url = "http://www.wxpython.org/",
+        version = "3.0.2.0",
+        url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
     ),
     DllDependency(name="msvcm90.dll", version="9.0.21022.8"),
     DllDependency(name="msvcp90.dll", version="9.0.21022.8"),
