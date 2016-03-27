@@ -80,18 +80,17 @@ class InnoInstaller(object):
         Inno Setup compiler.
         """
         srcDir = self.buildSetup.sourceDir
-        if self.buildSetup.pyVersionStr == "25":
-            self.AddFile(join(srcDir, "MFC71.dll"))
-            self.AddFile(join(srcDir, "msvcr71.dll"))
-            self.AddFile(join(srcDir, "msvcp71.dll"))
-            self.AddFile(join(srcDir, "python25.dll"))
-        elif self.buildSetup.pyVersionStr in ["26", "27"]:
+        if  self.buildSetup.pyVersionStr in ["26", "27"]:
             self.AddFile(join(srcDir, "msvcr90.dll"))
             self.AddFile(join(srcDir, "msvcp90.dll"))
             self.AddFile(join(srcDir, "msvcm90.dll"))
             self.AddFile(join(srcDir,
                         "python{0}.dll".format(self.buildSetup.pyVersionStr)))
             self.AddFile(join(srcDir, "Microsoft.VC90.CRT.manifest"))
+        else:
+            print "Python version not supported."
+            return
+        
         innoScriptTemplate = file(
                 join(self.buildSetup.dataDir, "InnoSetup.template"),
                 "rt"
