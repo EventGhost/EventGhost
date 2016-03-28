@@ -46,6 +46,7 @@ eg.RegisterPlugin(). Here is a typical start of a __init__.py::
     
     eg.RegisterPlugin(
         name = "My New Plugin",
+        guid = "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",
         author = "Me",
         version = "0.0.1",
         kind = "other",
@@ -64,24 +65,31 @@ completely as you can.
     This is the name the user will see for your plugin. If omitted, EventGhost 
     will use the name of the folder your __init__.py rests. 
 
+*guid*
+    This GUID will help EG to identify your plugin, so there are no name
+    clashes with other plugins that accidentally might have the same name and
+    will later ease the update of plugins.
+    
 *author*
     As you can guess, this parameter lets you define yourself as the author of 
-    the plugin. Otherwise it will default to "<unknown author>". 
+    the plugin. Otherwise it will default to ``"<unknown author>"``. 
 
 *version*
     Here you can define a version number for your plugin. Otherwise it will 
-    default to "<unknown version>". 
+    default to ``"<unknown version>"``. 
 
 *kind*
     This parameter defines where EventGhost will insert your plugin in the 
-    AddPluginDialog. Possible values are currently "receiver", "program", 
-    "external" (for plugins handling external hardware equipment) and "other". 
-    This parameter defaults to "other". 
+    AddPluginDialog. Possible values are currently ``"receiver"`` (for remote
+    receiver plugins), ``"program"`` (for program control plugins),
+    ``"external"`` (for plugins handling external hardware equipment) and
+    ``"other"`` (if none of the other categories match). 
+    This parameter defaults to ``"other"``. 
 
 *description*
     This value can be a HTML string and therefore include formatting, table, 
     image and URL tags. This 'description' will be shown on the right side of 
-    the AddPluginDialog and also if the user presses "Help" on your plugin. 
+    the 'AddPluginDialog' and also if the user presses 'Help' on your plugin. 
 
 
 .. note::
@@ -94,7 +102,27 @@ completely as you can.
     EventGhost will interrupt the loading of the __init__.py, after it has 
     got the needed information through `eg.RegisterPlugin()`.
 
+.. note::
 
+    To create a GUID for your plugin, open the "Python Shell" under
+    the "Help" menu. Then type:
+    
+       >>> import pythoncom
+       >>> pythoncom.CreateGuid()
+       
+    You will get something like: `IID('{DA3F5444-F359-4FEC-AF59-876BB152CC29}')`
+    You need the string value, so copy it and paste it to your plugin source
+    file, so it looks like this:
+
+        .. code:: python
+        
+            eg.RegisterPlugin(
+                name = "My Plugin",
+                ...
+                guid = '{DA3F5444-F359-4FEC-AF59-876BB152CC29}',
+                ...
+            )
+            
 For the rest of this tutorial I will use the call to `eg.RegisterPlugin()`
 without any parameters to save some space in the source.
 

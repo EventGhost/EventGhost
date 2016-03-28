@@ -300,16 +300,30 @@ def RegisterPlugin(
 
     :param name: should be a short descriptive string with the name of the
        plugin.
-    :param description: the description of the plugin.
+    :param description: a short description of the plugin.
     :param kind: gives a hint about the category the plugin belongs to. It
-       should be a string with a value out of "remote" (for remote receiver
-       plugins), "program" (for program control plugins), "external" (for
-       plugins that control external hardware) or "other" (if none of the
-       other categories match).
-    :param author: can be set to the name of the developer of the plugin.
+        should be a string with a value out of ``"remote"`` (for remote
+        receiver plugins), ``"program"`` (for program control plugins),
+        ``"external"`` (for plugins that control external hardware) or
+        ``"other"`` (if none of the other categories match).
+    :param author: can be set to the name or a list of names of the
+        developer(s) of the plugin.
     :param version: can be set to a version string.
+    :param icon: can be a base64 encoded image for the plugin. If
+        ``icon == None``, an "icon.png" will be used if it exists
+        in the plugin folder.
     :param canMultiLoad: set this to ``True``, if a configuration can have
        more than one instance of this plugin.
+    :param createMacrosOnAdd: if set to ``True``, when adding the plugin,
+        EventGhost will ask the user, if he/she wants to add a folder with all
+        actions of this plugin to his/her configuration.
+    :param url: displays a clickable link in the plugin info dialog.
+    :param help: a longer description and/or additional information for the
+        plugin. Will be added to
+        'description'.
+    :param guid: will help EG to identify your plugin, so there are no name
+        clashes with other plugins that accidentally might have the same
+        name and will later ease the update of plugins.
     :param \*\*kwargs: just to consume unknown parameters, to make the call
        backward compatible.
     """
