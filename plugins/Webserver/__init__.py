@@ -163,7 +163,10 @@ from os.path import getmtime, isfile, isdir, join, exists, splitdrive, split
 from wx.lib.mixins.listctrl import TextEditMixin
 #mod_pth = abspath(split(__file__)[0])
 #syspath.append(mod_pth + "\\lib")
-from websocket import WebSocketApp
+try:
+    from websocket import WebSocketApp
+except:
+    from websocket import WebSocket as WebSocketApp
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 
 CLOSE_CODE = {
