@@ -90,7 +90,7 @@ class InnoInstaller(object):
         else:
             print "Python version not supported."
             return
-        
+
         innoScriptTemplate = file(
                 join(self.buildSetup.dataDir, "InnoSetup.template"),
                 "rt"

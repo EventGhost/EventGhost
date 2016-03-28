@@ -93,7 +93,7 @@ class WindowDragFinder(wx.PyWindow):
         if self.GetAutoLayout():
             self.Layout()
             self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
-            
+
 
     @eg.LogIt
     def AcceptsFocusFromKeyboard(self):
@@ -163,7 +163,7 @@ class WindowDragFinder(wx.PyWindow):
             HighlightWindow(self.lastTarget)
 
         self.endFunc()
-        
+
         # revert box to normal image
         self.dragBoxText.SetLabel(self.text.drag1)
         self.dragBoxImage.Show()
