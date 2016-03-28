@@ -143,17 +143,12 @@ class MyBuilder(builder.Builder):
                 if f.count("\\") == 0 and f not in INCLUDE_FILES:
                     pass
                 else:
-                    core = True
-                    if f.startswith("plugins\\"):
-                        for plug in coreplugins:
-                            core = f.startswith(plug)
-                            if core: break
-                    if core:
-                        installFiles.append([f, "{app}"])
-                    else:
-                        # Install to ProgrammData\EventGhost\plugins
-                        installFiles.append([f,
-                             "{commonappdata}\\%s" % self.appName])
+                    #if f.startswith(tuple(coreplugins)):
+                    installFiles.append([f, "{app}"])
+                    #else:
+                        # Install to ProgramData\EventGhost\plugins
+                        #installFiles.append([f,
+                            #"{commonappdata}\\%s" % self.appName])
 
         return installFiles
 
