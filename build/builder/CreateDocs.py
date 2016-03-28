@@ -228,5 +228,11 @@ class CreateChmDocs(builder.Task):
             )
         hhpPath = join(tmpDir, "EventGhost.hhp")
         StartProcess(htmlHelpCompilerPath, hhpPath)
-        shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
+        try:
+            shutil.copy(join(tmpDir, "EventGhost.chm"),
+                        self.buildSetup.sourceDir)
+        except IOError:
+            print("ERROR: 'EventGhost.chm' couldn't be copied from temporary "
+                  "folder ({0} to '{1}'".format(tmpDir,
+                                               self.buildSetup.sourceDir))
 
