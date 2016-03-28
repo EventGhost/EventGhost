@@ -129,9 +129,13 @@ class MyBuilder(builder.Builder):
         files = set(ListDir(srcDir, EXCLUDE_DIRS, fullpath=False))
 
         noincludes = ["."]
-        for f in files:
+        coreplugins = []
+        for f in files.copy():
             if f.endswith("noinclude"):
                 noincludes.append(f.replace("noinclude", ""))
+            elif f.endswith("core-plugin"):
+                coreplugins.append(f.replace("core-plugin", ""))
+                files.remove(f)
 
         installFiles = []
         for f in files:
@@ -139,7 +143,17 @@ class MyBuilder(builder.Builder):
                 if f.count("\\") == 0 and f not in INCLUDE_FILES:
                     pass
                 else:
-                    installFiles.append(f)
+                    core = True
+                    if f.startswith("plugins\\"):
+                        for plug in coreplugins:
+                            core = f.startswith(plug)
+                            if core: break
+                    if core:
+                        installFiles.append([f, "{app}"])
+                    else:
+                        # Install to ProgrammData\EventGhost\plugins
+                        installFiles.append([f,
+                             "{commonappdata}\\%s" % self.appName])
 
         return installFiles
 
@@ -151,7 +165,7 @@ class MyBuilder(builder.Builder):
         from builder.InnoSetup import InnoInstaller
         inno = InnoInstaller(self)
         plugins = {}
-        for filename in self.GetSetupFiles():
+        for filename, prefix in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
                 pluginFolder = filename.split("\\")[1]
                 plugins[pluginFolder] = True
@@ -164,7 +178,7 @@ class MyBuilder(builder.Builder):
                 and filename.endswith(".exe")
             ):
                 continue
-            inno.AddFile(join(self.sourceDir, filename), dirname(filename))
+            inno.AddFile(join(self.sourceDir, filename), dirname(filename), prefix=prefix)
         for filename in glob(join(self.libraryDir, '*.*')):
             inno.AddFile(filename, self.libraryName)
         inno.AddFile(
