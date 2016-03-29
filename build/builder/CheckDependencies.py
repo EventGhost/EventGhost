@@ -22,8 +22,9 @@ import sys
 import warnings
 import shutil
 import glob
+import re
 from string import digits
-from os.path import join
+from os.path import basename, join
 
 from builder.InnoSetup import GetInnoCompilerPath
 from builder.Utils import GetHtmlHelpCompilerPath
@@ -152,35 +153,39 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 
 class DllDependency(DependencyBase):
-    #url = "https://www.microsoft.com/download/details.aspx?id=29"
-    url = (
-        "https://download.microsoft.com/download"
-        "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
-    )
-
     def Check(self):
-        path = join(self.buildSetup.sourceDir, self.name)
-        wantedVersion = tuple(int(x) for x in self.version.split("."))
-        if not os.path.exists(path) or GetFileVersion(path) != wantedVersion:
-            self.TryCopy()
-            if GetFileVersion(path) != wantedVersion:
-                raise WrongVersion
-
-
-    def TryCopy(self):
-        winSxsDir = join(
-            os.environ["SystemRoot"],
-            "WinSxS",
-            "x86_microsoft.vc90.crt_*_%s_*_*" % self.version,
-            self.name
+        with open(join(self.buildSetup.pyVersionDir, "manifest.template")) as f:
+            manifest = f.read()
+        match = re.search(
+            'name="(?P<name>.+\.CRT)"\n'
+            '\s*version="(?P<ver>.+)"\n'
+            '\s*processorArchitecture="(?P<arch>.+)"',
+            manifest
         )
-        pathes = glob.glob(winSxsDir)
-        if len(pathes) < 1:
+        self.version = match.group("ver")
+        wantedVersion = tuple(int(x) for x in self.version.split("."))
+
+        files = glob.glob(
+            join(
+                os.environ["SystemRoot"],
+                "WinSxS",
+                "{2}_{0}_*_{1}_*_*".format(
+                    *match.groups()
+                ),
+                "*.dll",
+            )
+        )
+
+        if len(files):
+            for file in files:
+                if GetFileVersion(file) != wantedVersion:
+                    raise WrongVersion
+                else:
+                    dest = join(self.buildSetup.sourceDir, basename(file))
+                    shutil.copyfile(file, dest)
+                    shutil.copystat(file, dest)
+        else:
             raise MissingDependency
-        src = pathes[0]
-        dst = join(self.buildSetup.sourceDir, self.name)
-        shutil.copyfile(src, dst)
-        shutil.copystat(src, dst)
 
 
 DEPENDENCIES = [
@@ -243,9 +248,14 @@ DEPENDENCIES = [
         version = "3.0.2.0",
         url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
     ),
-    DllDependency(name="msvcm90.dll", version="9.0.21022.8"),
-    DllDependency(name="msvcp90.dll", version="9.0.21022.8"),
-    DllDependency(name="msvcr90.dll", version="9.0.21022.8"),
+    DllDependency(
+        name="Microsoft Visual C++ Redistributable",
+        #url = "https://www.microsoft.com/download/details.aspx?id=29",
+        url = (
+            "https://download.microsoft.com/download"
+            "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
+        ),
+    ),
 ]
 
 
