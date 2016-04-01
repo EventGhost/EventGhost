@@ -25,7 +25,8 @@ import shutil
 import sys
 import warnings
 from distutils.util import get_platform
-from os.path import basename, dirname, exists, join
+from os.path import basename, exists, expandvars, join
+from pip._vendor import requests
 from string import digits
 
 from builder import VirtualEnv
@@ -131,7 +132,7 @@ class PyWin32Dependency(DependencyBase):
 class StacklessDependency(DependencyBase):
     name = "Stackless Python"
     version = "2.7.9"
-    url = "http://www.stackless.com/"
+    url = "http://www.stackless.com/binaries/python-2.7.9150-stackless.msi"
 
     def Check(self):
         try:
@@ -310,9 +311,7 @@ def CheckDependencies(buildSetup):
         if not VirtualEnv.Running():
             if not VirtualEnv.Exists():
                 print "Creating our virtual environment..."
-                Pip("install", "pip", "-q")
-                Pip("install", "virtualenvwrapper-win", "-q")
-                StartProcess("mkvirtualenv.bat", VirtualEnv.NAME)
+                CreateVirtualEnv()
                 print ""
             VirtualEnv.Activate()
 
@@ -346,7 +345,8 @@ def CheckDependencies(buildSetup):
                     "and try again."
                 )
             print ""
-        print "---\n"
+        print "---"
+        print ""
         VirtualEnv.Restart()
 
     if failedDeps:
@@ -396,6 +396,52 @@ def Choco(*args):
     return (StartProcess(choco, *args) == 0)
 
 
+def CreateVirtualEnv():
+    # These files will be replaced by virtualenv. We don't want that.
+    backups = [
+        join(VirtualEnv.PATH, "Lib", "distutils", "__init__.py"),
+        join(VirtualEnv.PATH, "Lib", "site.py"),
+    ]
+
+    # Install virtualenv and virtualenvwrapper.
+    #Pip("install", "pip", "-q")
+    Pip("install", "virtualenvwrapper-win", "-q")
+
+    # Install Stackless Python in virtualenv folder.
+    url = [d.url for d in DEPENDENCIES if d.name == "Stackless Python"][0]
+    file = DownloadFile(url)
+    InstallMSI(file, VirtualEnv.PATH)
+    os.unlink(file)
+
+    # Backup stock files.
+    for f in backups:
+        shutil.copy(f, f + ".bak")
+
+    # Create virtualenv on top of Stackless Python.
+    result = (StartProcess(
+        "virtualenv",
+        "--python=%s" % join(VirtualEnv.PATH, "python.exe"),
+        VirtualEnv.PATH,
+    ) == 0)
+
+    # Restore stock files.
+    for f in backups:
+        os.unlink(f)
+        os.rename(f + ".bak", f)
+
+    return result
+
+
+def DownloadFile(url, path = "%TEMP%"):
+    file = expandvars(join(path, basename(url.split("?")[0])))
+    r = requests.get(url, stream=True)
+    with open(file, "wb") as f:
+        for chunk in r.iter_content(chunk_size=16384):
+            if chunk:
+                f.write(chunk)
+    return file
+
+
 def GetChocolateyPath():
     path = join(
         GetEnvironmentVar("ChocolateyInstall"),
@@ -413,18 +459,9 @@ def GetGitPath():
     return path if exists(path) else ""
 
 
-def GetPipPath():
-    path = join(
-        dirname(sys.executable).lower().rstrip("scripts"),
-        "scripts",
-        "pip.exe",
-    )
-    return path if exists(path) else ""
-
-
 def InstallDependency(dep):
     if dep.name == "Stackless Python":
-        return InstallStackless(dep.version)
+        return dep.Check()
     elif not dep.url and not dep.package:
         package = dep.name + ("==" + dep.version if dep.exact else "")
         return Pip("install", package)
@@ -441,30 +478,26 @@ def InstallDependency(dep):
         raise MissingInstallMethod
 
 
-def InstallStackless(version):
-    ucs = 4 if sys.maxunicode >> 16 else 2
-    platform = get_platform()
-    package = "stackless-installer-C%d-%s" % (ucs, platform)
-    package_url = (
-        "https://bitbucket.org/akruis/slp-installer/downloads"
-        "/%s-%s.1.zip" % (package.replace("-", "_"), version)
-    )
-
-    Pip("install", package_url)
-    result = (StartProcess("install-stackless") == 0)
-    Pip("uninstall", package)
-    return result
+def InstallMSI(file, path):
+    file = file if exists(file) else DownloadFile(file)
+    return (StartProcess(
+        "msiexec",
+        "/a",
+        file,
+        "/qb",
+        "TARGETDIR=%s" % path,
+    ) == 0)
 
 
 def Pip(*args):
-    pip = GetPipPath()
-    if not pip:
-        raise MissingPip
-
     args = list(args)
     if args[0].lower() == "install":
         args += ["-U"]
     elif args[0].lower() == "uninstall":
         args += ["-y"]
-    return (StartProcess(pip, *args) == 0)
+
+    try:
+        return (StartProcess("pip", *args) == 0)
+    except WindowsError:
+        raise MissingPip
 
