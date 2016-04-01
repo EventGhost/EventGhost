@@ -34,6 +34,10 @@ import builder
 from builder.subprocess2 import Popen
 
 
+class InvalidVersion(Exception):
+    pass
+
+
 def EncodePath(path):
     return path.encode('mbcs')
 
@@ -81,19 +85,21 @@ def GetRevision(buildSetup):
     Get the app version and revision.
     """
     #print "getting version and revision from GitHub."
-    if buildSetup.gitConfig["token"]:
+    if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
         parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
         parts[0] = parts[0].strip('v')
         while len(parts) < 3:
             parts.append("0")
         parts[2] = int(parts[2]) + 1
         buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
+        buildSetup.appVersionShort = buildSetup.appVersion
         magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
         commits = GetCommitCount(buildSetup)
         buildSetup.appRevision = (commits + magic) if commits else 0
     else:
-        buildSetup.appVersion = "0.0.0"
-        buildSetup.appRevision = 0
+        buildSetup.appVersion, buildSetup.appVersionShort = (
+            ParseVersion(buildSetup.args.version)
+        )
 
 
 def GetLastReleaseOrTagName(buildSetup):
@@ -357,6 +363,23 @@ def IsAdmin():
         return True
     except:
         return False
+
+
+def ParseVersion(ver):
+    """
+    Return long and short versions of the specified string.
+    """
+    if not ver:
+        return ("WIP-%s" % time.strftime("%Y.%m.%d_%H.%M.%S"), "0.0.0")
+    else:
+        match = re.search(
+            "^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)" +
+            "(?:-(?P<extra>(?:alpha|beta|dev)\d+))*?$", ver
+        )
+        if match:
+            return (ver, ".".join(match.groups()[:3]))
+        else:
+            raise InvalidVersion
 
 
 def WrapText(text, i1 = "", i2 = ""):

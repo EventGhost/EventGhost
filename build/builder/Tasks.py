@@ -34,7 +34,8 @@ class UpdateVersionFile(builder.Task):
         buildSetup.buildTime = time.time()
         filename = join(buildSetup.tmpDir, "VersionRevision.py")
         outfile = open(filename, "wt")
-        major, minor, patch = buildSetup.appVersion.split('.')
+        major, minor, patch = buildSetup.appVersionShort.split('.')[:3]
+        outfile.write("string = '{0}'\n".format(buildSetup.appVersion))
         outfile.write("major = {0}\n".format(major))
         outfile.write("minor = {0}\n".format(minor))
         outfile.write("patch = {0}\n".format(patch))

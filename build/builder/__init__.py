@@ -24,7 +24,9 @@ from os.path import abspath, dirname, join
 
 import builder
 from builder import VirtualEnv
-from builder.Utils import DecodePath, GetRevision, GetGitHubConfig
+from builder.Utils import (
+    DecodePath, GetRevision, GetGitHubConfig, ParseVersion,
+)
 
 
 class Task(object):
@@ -104,7 +106,8 @@ class Builder(object):
             }
 
         self.appVersion = None
-        self.appRevision = None
+        self.appVersionShort = None
+        self.appRevision = 0
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name
 
@@ -127,9 +130,8 @@ class Builder(object):
         )
         parser.add_argument(
             "-p", "--package",
-            action="store",
+            action="store_true",
             help="build changelog, docs, and setup.exe",
-            metavar="VERSION",
         )
         parser.add_argument(
             "-r", "--release",
@@ -141,6 +143,11 @@ class Builder(object):
             action="store_true",
             help="build and synchronize website",
         )
+        parser.add_argument(
+            "-v", "--version",
+            action="store",
+            help="package as the specified version",
+        )
         return parser.parse_args()
 
     def Start(self):
@@ -150,12 +157,10 @@ class Builder(object):
         self.config = Config(self, join(self.dataDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
-        import Gui
         GetRevision(self)
         if self.showGui:
+            import Gui
             Gui.Main(self)
         else:
-            if self.args.package:
-                self.appVersion = self.args.package
             builder.Tasks.Main(self)
 
