@@ -34,6 +34,7 @@ else:
     NAME = "eg-py%d%d" % sys.version_info[:2]
     PATH = join(HOME, NAME)
 PATH_ACTIVATE = join(PATH, "Scripts", "activate.bat")
+PATH_EXECUTABLE = join(PATH, "Scripts", "python.exe")
 
 
 def Activate():
@@ -43,15 +44,10 @@ def Activate():
     if not Running():
         restarted = False
         while True:
-            if exists(join(PATH, "Scripts", "slpython.exe")):
-                python = "slpython"
-            else:
-                python = "python"
-
             exitCode = os.system(
-                ("%s %s && " % (PATH_ACTIVATE, NAME)) +
+                ("%s && " % (PATH_ACTIVATE)) +
                 ("SET _REST=1 && " if restarted else "") +
-                ("%s %s" % (python, ARGV))
+                ("%s %s" % (PATH_EXECUTABLE, ARGV))
             )
 
             if exitCode == _CODE_DEACTIVATE:
@@ -90,5 +86,5 @@ def Running():
     """
     Check if we're running inside a virtualenv.
     """
-    return hasattr(sys, "real_prefix")
+    return (sys.executable.lower() == PATH_EXECUTABLE.lower())
 
