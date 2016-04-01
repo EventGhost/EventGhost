@@ -201,7 +201,7 @@ class CreateLibrary(builder.Task):
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "imports"],
+                    includes=["encodings", "encodings.*", "Imports"],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = DLL_EXCLUDES,
                     dist_dir = EncodePath(buildSetup.sourceDir),
