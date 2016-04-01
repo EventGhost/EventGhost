@@ -143,6 +143,18 @@ class StacklessDependency(DependencyBase):
 
 
 
+class GitDependency(DependencyBase):
+    name = "Git"
+    version = "2.8.0"
+    package = "git"
+    url = "https://git-scm.com/download/win"
+
+    def Check(self):
+        if not (os.system('"%s" --version >NUL 2>NUL' % GetGitPath()) == 0):
+            raise MissingDependency
+
+
+
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
     version = "5.5.8"
@@ -232,6 +244,7 @@ DEPENDENCIES = [
         module = "future",
         version = "0.15.2",
     ),
+    #GitDependency(),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
     DllDependency(
@@ -389,6 +402,14 @@ def GetChocolateyPath():
         "bin",
         "choco.exe",
     )
+    return path if exists(path) else ""
+
+
+def GetGitPath():
+    path = ""
+    for p in GetEnvironmentVar("PATH").split(os.pathsep):
+        if "\\Git\\" in p:
+            path = join(p, "git.exe")
     return path if exists(path) else ""
 
 
