@@ -22,6 +22,7 @@ import sys
 import tempfile
 from os.path import abspath, dirname, join
 
+from builder import VirtualEnv
 from builder.Utils import DecodePath, GetRevision, GetGithubConfig
 
 
@@ -47,6 +48,9 @@ class Task(object):
 
 class Builder(object):
     def __init__(self):
+        if not VirtualEnv.Running() and VirtualEnv.Exists():
+            VirtualEnv.Activate()
+
         global buildSetup
         Task.buildSetup = self
         buildSetup = self
