@@ -55,7 +55,6 @@ class Builder(object):
         Task.buildSetup = self
         buildSetup = self
 
-        self.args = self.ParseArgs()
         baseDir = dirname(DecodePath(__file__))
         self.sourceDir = abspath(join(baseDir, "../.."))
         self.websiteDir = join(self.sourceDir, "website")
@@ -64,6 +63,8 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
+
+        self.args = self.ParseArgs()
 
         from CheckDependencies import CheckDependencies
         if not CheckDependencies(self):
@@ -102,9 +103,35 @@ class Builder(object):
     def ParseArgs(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
+            "-b", "--build",
+            action="store_true",
+            help="build imports, lib%s, and interpreters" % self.pyVersionStr,
+        )
+        parser.add_argument(
+            "-c", "--check",
+            action="store_true",
+            help="check source files for issues",
+        )
+        parser.add_argument(
             "-m", "--make-env",
             action="store_true",
             help="auto-install dependencies into a virtualenv",
+        )
+        parser.add_argument(
+            "-p", "--package",
+            action="store",
+            help="build changelog, docs, and setup.exe",
+            metavar="VERSION",
+        )
+        parser.add_argument(
+            "-r", "--release",
+            action="store_true",
+            help="release to github and web if credentials available",
+        )
+        parser.add_argument(
+            "-s", "--sync",
+            action="store_true",
+            help="build and synchronize website",
         )
         return parser.parse_args()
 
