@@ -33,6 +33,7 @@ if hasattr(sys, "real_prefix"):
 else:
     NAME = "eg-py%d%d" % sys.version_info[:2]
     PATH = join(HOME, NAME)
+PATH_ACTIVATE = join(PATH, "Scripts", "activate.bat")
 
 
 def Activate():
@@ -48,7 +49,7 @@ def Activate():
                 python = "python"
 
             exitCode = os.system(
-                ("%s %s && " % (join(PATH, "Scripts", "activate.bat"), NAME)) +
+                ("%s %s && " % (PATH_ACTIVATE, NAME)) +
                 ("SET _REST=1 && " if restarted else "") +
                 ("%s %s" % (python, ARGV))
             )
@@ -74,7 +75,7 @@ def Exists():
     """
     Check if the virtualenv for our Python version exists.
     """
-    return exists(PATH)
+    return exists(PATH_ACTIVATE)
 
 
 def Restart():
