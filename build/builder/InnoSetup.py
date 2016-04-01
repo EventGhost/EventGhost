@@ -86,7 +86,6 @@ class InnoInstaller(object):
             self.AddFile(join(srcDir, "msvcm90.dll"))
             self.AddFile(join(srcDir,
                         "python{0}.dll".format(self.buildSetup.pyVersionStr)))
-            self.AddFile(join(srcDir, "Microsoft.VC90.CRT.manifest"))
         else:
             print "Python version not supported."
             return
