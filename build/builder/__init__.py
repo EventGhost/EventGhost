@@ -82,14 +82,13 @@ class Builder(object):
 
         try:
             self.gitConfig = GetGitHubConfig()
-        except ValueError:
-            print ".gitconfig does not contain needed options. Please do:\n" \
-                  "\t$ git config --global github.user <your github username>\n" \
-                  "\t$ git config --global github.token <your github token>\n" \
-                  "To create a token, go to: https://github.com/settings/tokens\n"
-            exit(1)
-        except IOError:
-            print "WARNING: Git config not available; can't release to GitHub!"
+        except:
+            print(
+                "WARNING: Can't release to GitHub until you do the following:\n"
+                "    $ git config --global github.user <your github username>\n"
+                "    $ git config --global github.token <your github token>\n"
+                "To create a token, go to: https://github.com/settings/tokens\n"
+            )
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {
