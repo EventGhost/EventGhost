@@ -18,12 +18,18 @@
 
 
 import os
-import sys
-import time
-import subprocess
 import re
+import struct
+import subprocess
+import sys
+import textwrap
+import time
 import _winreg
-from os.path import join, normpath, expanduser
+from ctypes import windll, create_string_buffer
+from os.path import (
+    dirname, exists, expanduser, expandvars, join, normpath
+)
+
 import builder
 from builder.subprocess2 import Popen
 
@@ -169,7 +175,7 @@ def GetHtmlHelpCompilerPath():
     except WindowsError:
         path = join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
     programPath = join(path, "hhc.exe")
-    if not os.path.exists(programPath):
+    if not exists(programPath):
         return None
     return programPath
 
@@ -290,4 +296,72 @@ def NextPage(gh):
                                groups()[0])
                     return page
     return 0
+
+
+def GetEnvironmentVar(var):
+    """
+    Pull the latest version of an environment var from the registry.
+    """
+    KEY_LIST = (
+        (
+            _winreg.HKEY_LOCAL_MACHINE,
+            "System\CurrentControlSet\Control\Session Manager\Environment"
+        ),
+        (
+            _winreg.HKEY_CURRENT_USER,
+            "Environment"
+        ),
+    )
+
+    for key, subkey in KEY_LIST:
+        try:
+            with _winreg.OpenKey(key, subkey) as hand:
+                return expandvars(_winreg.QueryValueEx(hand, var)[0])
+        except WindowsError:
+            return ""
+
+
+def GetTerminalSize(fallback=(80, 24)):
+    """
+    Get the dimensions of the current console window.
+    """
+    columns = lines = 0
+
+    try:
+        handle = windll.kernel32.GetStdHandle(-11)
+        csbi = create_string_buffer(22)
+        res = windll.kernel32.GetConsoleScreenBufferInfo(handle, csbi)
+        if res:
+            res = struct.unpack("hhhhHhhhhhh", csbi.raw)
+            left, top, right, bottom = res[5:9]
+            columns = right - left + 1
+            lines = bottom - top + 1
+    except Exception:
+        pass
+
+    return ((columns, lines) if columns and lines else fallback)
+
+_COLUMNS, _LINES = GetTerminalSize()
+
+
+def IsAdmin():
+    """
+    Determine whether or not we're running as Administrator.
+    """
+    try:
+        os.listdir(join(os.environ.get("SystemRoot", r"C:\Windows"), "Temp"))
+        return True
+    except:
+        return False
+
+
+def WrapText(text, i1 = "", i2 = ""):
+    """
+    Wrap text based on the size of the current console window.
+    """
+    return textwrap.TextWrapper(
+        width=_COLUMNS - 1,
+        initial_indent=i1,
+        subsequent_indent=i2,
+    ).fill(text)
 

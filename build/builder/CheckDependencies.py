@@ -17,21 +17,35 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 
+import glob
 import os
+import platform
+import re
+import shutil
 import sys
 import warnings
-import shutil
-import glob
-import re
+from distutils.util import get_platform
+from os.path import basename, dirname, exists, join
 from string import digits
-from os.path import basename, join
 
-from builder.InnoSetup import GetInnoCompilerPath
-from builder.Utils import GetHtmlHelpCompilerPath
+from builder import VirtualEnv
 from builder.DllVersionInfo import GetFileVersion
+from builder.InnoSetup import GetInnoCompilerPath
+from builder.Utils import (
+    GetEnvironmentVar, GetHtmlHelpCompilerPath, IsAdmin, StartProcess,
+    WrapText,
+)
 
 
+class MissingChocolatey(Exception):
+    pass
 class MissingDependency(Exception):
+    pass
+class MissingInstallMethod(Exception):
+    pass
+class MissingPip(Exception):
+    pass
+class MissingPowerShell(Exception):
     pass
 class WrongVersion(Exception):
     pass
@@ -55,6 +69,14 @@ def CompareVersion(actualVersion, wantedVersion):
 
 
 class DependencyBase(object):
+    #name = None
+    #version = None
+    attr = None
+    exact = False
+    module = None
+    package = None
+    url = None
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -64,10 +86,6 @@ class DependencyBase(object):
 
 
 class ModuleDependency(DependencyBase):
-    module = None
-    attr = None
-    version = None
-
     def Check(self):
         try:
             with warnings.catch_warnings():
@@ -128,6 +146,7 @@ class StacklessDependency(DependencyBase):
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
     version = "5.5.8"
+    package = "innosetup"
     #url = "http://www.innosetup.com/isdl.php"
     url = "http://www.innosetup.com/download.php/is-unicode.exe"
 
@@ -139,7 +158,8 @@ class InnoSetupDependency(DependencyBase):
 
 class HtmlHelpWorkshopDependency(DependencyBase):
     name = "HTML Help Workshop"
-    version = "1.0"
+    version = "1.32"
+    package = "html-help-workshop"
     #url = "https://www.microsoft.com/download/details.aspx?id=21138"
     url = (
         "https://download.microsoft.com/download"
@@ -162,6 +182,7 @@ class DllDependency(DependencyBase):
             '\s*processorArchitecture="(?P<arch>.+)"',
             manifest
         )
+        self.exact = True
         self.version = match.group("ver")
         wantedVersion = tuple(int(x) for x in self.version.split("."))
 
@@ -199,7 +220,6 @@ DEPENDENCIES = [
         name = "comtypes",
         module = "comtypes",
         version = "1.1.2",
-        url = None,
     ),
     ModuleDependency(
         name = "ctypeslib",
@@ -211,22 +231,28 @@ DEPENDENCIES = [
         name = "future",
         module = "future",
         version = "0.15.2",
-        url = None,
     ),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
+    DllDependency(
+        name="Microsoft Visual C++ Redistributable",
+        package="vcredist2008",
+        #url = "https://www.microsoft.com/download/details.aspx?id=29",
+        url = (
+            "https://download.microsoft.com/download"
+            "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
+        ),
+    ),
     ModuleDependency(
         name = "Pillow",
         module = "PIL",
         attr = "PILLOW_VERSION",
         version = "3.1.1",
-        url = None,
     ),
     ModuleDependency(
         name = "py2exe_py2",
         module = "py2exe",
         version = "0.6.9",
-        url = None,
     ),
     ModuleDependency(
         name = "PyCrypto",
@@ -239,7 +265,6 @@ DEPENDENCIES = [
         name = "Sphinx",
         module = "sphinx",
         version = "1.3.5",
-        url = None,
     ),
     StacklessDependency(),
     ModuleDependency(
@@ -248,32 +273,177 @@ DEPENDENCIES = [
         version = "3.0.2.0",
         url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
     ),
-    DllDependency(
-        name="Microsoft Visual C++ Redistributable",
-        #url = "https://www.microsoft.com/download/details.aspx?id=29",
-        url = (
-            "https://download.microsoft.com/download"
-            "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
-        ),
-    ),
 ]
 
 
 def CheckDependencies(buildSetup):
-    isOK = True
-    for dependency in DEPENDENCIES:
-        dependency.buildSetup = buildSetup
+    failedDeps = []
+
+    for dep in DEPENDENCIES:
+        dep.buildSetup = buildSetup
         try:
-            dependency.Check()
+            dep.Check()
         except (WrongVersion, MissingDependency):
-            if isOK:
-                print "The following dependencies are missing:"
-                isOK = False
-            print "  *", dependency.name
-            print "    Needed version:", dependency.version
-            if dependency.url:
-                print "    Download URL:", dependency.url
-    if not isOK:
-        print "You need to install them first to run the build process!"
-    return isOK
+            failedDeps.append(dep)
+
+    if failedDeps and buildSetup.args.make_env and not os.environ.get("_REST"):
+        if not IsAdmin():
+            print WrapText(
+                "ERROR: Can't create virtual environment from a command "
+                "prompt without administrative privileges."
+            )
+            return False
+
+        if not VirtualEnv.Running():
+            if not VirtualEnv.Exists():
+                print "Creating our virtual environment..."
+                Pip("install", "pip", "-q")
+                Pip("install", "virtualenvwrapper-win", "-q")
+                StartProcess("mkvirtualenv.bat", VirtualEnv.NAME)
+                print ""
+            VirtualEnv.Activate()
+
+        for dep in failedDeps[:]:
+            print "Installing %s..." % dep.name
+            try:
+                if InstallDependency(dep):  #and dep.Check():
+                    failedDeps.remove(dep)
+                else:
+                    print "ERROR: Installation of %s failed!" % dep.name
+            except MissingChocolatey:
+                print WrapText(
+                    "ERROR: To complete installation of this package, I need "
+                    "package manager Chocolatey, which wasn't found and "
+                    "couldn't be installed automatically. Please install it "
+                    "by hand and try again."
+                )
+            except MissingPip:
+                print WrapText(
+                    "ERROR: To complete installation of this package, I need "
+                    "package manager pip, which wasn't found. Note that "
+                    "all versions of Python capable of building EventGhost "
+                    "come bundled with pip, so please install a supported "
+                    "version of Python and try again."
+                )
+            except MissingPowerShell:
+                print WrapText(
+                    "ERROR: To complete installation of this package, I need "
+                    "package manager Chocolatey, which can't be installed "
+                    "without PowerShell. Please install PowerShell by hand "
+                    "and try again."
+                )
+            print ""
+        print "---\n"
+        VirtualEnv.Restart()
+
+    if failedDeps:
+        print WrapText(
+            "Before we can continue, the following dependencies must "
+            "be installed:"
+        )
+        print ""
+        for dep in failedDeps:
+            print "  *", dep.name, dep.version
+            if dep.url:
+                print "    Link:", dep.url
+            print ""
+        print WrapText(
+            "Dependencies without an associated URL can be installed via "
+            "`pip install [package-name]`. Dependencies in .whl format "
+            "can be installed via `pip install [url]`. All other dependencies "
+            "will need to be installed manually or via Chocolatey "
+            "<https://chocolatey.org/>."
+        )
+        if not buildSetup.args.make_env:
+            print ""
+            print WrapText(
+                "Alternately, from a command prompt with administrative "
+                "privileges, I can try to create a virtual environment for "
+                "you that satisfies all dependencies via `%s %s --make-env`."
+                % (basename(sys.executable).split(".")[0], sys.argv[0])
+            )
+    return not failedDeps
+
+
+def Choco(*args):
+    choco = GetChocolateyPath()
+    if not choco:
+        try:
+            if not (StartProcess(
+                "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-Command", "iex ((new-object net.webclient).DownloadString"
+                "('https://chocolatey.org/install.ps1'))"
+            ) == 0):
+                raise MissingChocolatey
+        except WindowsError:
+            raise MissingPowerShell
+
+    choco = GetChocolateyPath()
+    args = list(args) + ["-f", "-y"]
+    return (StartProcess(choco, *args) == 0)
+
+
+def GetChocolateyPath():
+    path = join(
+        GetEnvironmentVar("ChocolateyInstall"),
+        "bin",
+        "choco.exe",
+    )
+    return path if exists(path) else ""
+
+
+def GetPipPath():
+    path = join(
+        dirname(sys.executable).lower().rstrip("scripts"),
+        "scripts",
+        "pip.exe",
+    )
+    return path if exists(path) else ""
+
+
+def InstallDependency(dep):
+    if dep.name == "Stackless Python":
+        return InstallStackless(dep.version)
+    elif not dep.url and not dep.package:
+        package = dep.name + ("==" + dep.version if dep.exact else "")
+        return Pip("install", package)
+    elif dep.url and dep.url.endswith(".whl"):
+        return Pip("install", dep.url)
+    elif dep.package:
+        args = []
+        if dep.exact:
+            args.append("--version=%s" % dep.version)
+            if platform.architecture()[0] == "32bit":
+                args.append("--x86")
+        return Choco("install", dep.package, *args)
+    else:
+        raise MissingInstallMethod
+
+
+def InstallStackless(version):
+    ucs = 4 if sys.maxunicode >> 16 else 2
+    platform = get_platform()
+    package = "stackless-installer-C%d-%s" % (ucs, platform)
+    package_url = (
+        "https://bitbucket.org/akruis/slp-installer/downloads"
+        "/%s-%s.1.zip" % (package.replace("-", "_"), version)
+    )
+
+    Pip("install", package_url)
+    result = (StartProcess("install-stackless") == 0)
+    Pip("uninstall", package)
+    return result
+
+
+def Pip(*args):
+    pip = GetPipPath()
+    if not pip:
+        raise MissingPip
+
+    args = list(args)
+    if args[0].lower() == "install":
+        args += ["-U"]
+    elif args[0].lower() == "uninstall":
+        args += ["-y"]
+    return (StartProcess(pip, *args) == 0)
 
