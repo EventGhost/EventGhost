@@ -413,15 +413,6 @@ def GetGitPath():
     return path if exists(path) else ""
 
 
-def GetPipPath():
-    path = join(
-        dirname(sys.executable).lower().rstrip("scripts"),
-        "scripts",
-        "pip.exe",
-    )
-    return path if exists(path) else ""
-
-
 def InstallDependency(dep):
     if dep.name == "Stackless Python":
         return InstallStackless(dep.version)
@@ -457,14 +448,15 @@ def InstallStackless(version):
 
 
 def Pip(*args):
-    pip = GetPipPath()
-    if not pip:
-        raise MissingPip
-
     args = list(args)
     if args[0].lower() == "install":
         args += ["-U"]
     elif args[0].lower() == "uninstall":
         args += ["-y"]
-    return (StartProcess(pip, *args) == 0)
+
+    try:
+        return (StartProcess("pip", *args) == 0)
+    except WindowsError:
+        raise MissingPip
+
 
