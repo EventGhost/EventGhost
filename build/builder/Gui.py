@@ -93,6 +93,9 @@ class MainDialog(wx.Dialog):
         grdSzr.Add(self.chcBranch, 0, wx.ALL, 5)
         ghSzr.Add(grdSzr, 1, wx.EXPAND)
 
+        if not self.buildSetup.gitConfig["token"]:
+            sb.Disable()
+
         egSzr = wx.StaticBoxSizer(
             wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.HORIZONTAL)
 
@@ -112,6 +115,9 @@ class MainDialog(wx.Dialog):
         egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
         egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        if not self.buildSetup.gitConfig["token"]:
+            refreshVersion.Disable()
 
         # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)

@@ -17,10 +17,13 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 
-import tempfile
+import argparse
 import sys
+import tempfile
 from os.path import abspath, dirname, join
-from Utils import DecodePath, GetRevision, GetGithubConfig
+
+from builder import VirtualEnv
+from builder.Utils import DecodePath, GetRevision, GetGitHubConfig
 
 
 class Task(object):
@@ -45,22 +48,29 @@ class Task(object):
 
 class Builder(object):
     def __init__(self):
-        from CheckDependencies import CheckDependencies
+        if not VirtualEnv.Running() and VirtualEnv.Exists():
+            VirtualEnv.Activate()
+
         global buildSetup
         Task.buildSetup = self
         buildSetup = self
+
+        self.args = self.ParseArgs()
         baseDir = dirname(DecodePath(__file__))
         self.sourceDir = abspath(join(baseDir, "../.."))
-        if not CheckDependencies(self):
-            sys.exit(1)
         self.websiteDir = join(self.sourceDir, "website")
         self.dataDir = abspath(join(baseDir, "Data"))
         self.pyVersionStr = "%d%d" % sys.version_info[:2]
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
+
+        from CheckDependencies import CheckDependencies
+        if not CheckDependencies(self):
+            sys.exit(1)
+
         try:
-            self.gitConfig = GetGithubConfig()
+            self.gitConfig = GetGitHubConfig()
         except ValueError:
             print ".gitconfig does not contain needed options. Please do:\n" \
                   "\t$ git config --global github.user <your github username>\n" \
@@ -68,12 +78,35 @@ class Builder(object):
                   "To create a token, go to: https://github.com/settings/tokens\n"
             exit(1)
         except IOError:
-            print "could not open .gitconfig."
-            exit(1)
+            print "WARNING: Git config not available; can't release to GitHub!"
+            self.gitConfig = {
+                "all_repos": {
+                    "EventGhost/EventGhost": {
+                        "all_branches": ["master"],
+                        "def_branch": "master",
+                        "name": "EventGhost",
+                    },
+                },
+                "branch": "master",
+                "repo": "EventGhost",
+                "repo_full": "EventGhost/EventGhost",
+                "token": "",
+                "user": "EventGhost",
+            }
+
         self.appVersion = None
         self.appRevision = None
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name
+
+    def ParseArgs(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-m", "--make-env",
+            action="store_true",
+            help="auto-install dependencies into a virtualenv",
+        )
+        return parser.parse_args()
 
     def RunGui(self):
         from Tasks import TASKS
