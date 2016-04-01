@@ -135,7 +135,7 @@ class Builder(object):
         )
         return parser.parse_args()
 
-    def RunGui(self):
+    def Start(self):
         from Tasks import TASKS
         self.tasks = [task(self) for task in TASKS]
         from Config import Config

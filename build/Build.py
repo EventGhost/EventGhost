@@ -220,5 +220,5 @@ if hasattr(sys, "real_prefix"):
             sys.path.remove(path)
             sys.path.append(path)
 
-MyBuilder().RunGui()
+MyBuilder().Start()
 
