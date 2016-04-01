@@ -151,7 +151,7 @@ class Target:
         if exists(iconPath):
             self.icon_resources.append((1, iconPath))
         manifest = file(
-            join(buildSetup.pyVersionDir, "manifest.template")
+            join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read() % buildSetup.__dict__
         self.other_resources = [(RT_MANIFEST, 1, manifest)]
         self.name = buildSetup.name

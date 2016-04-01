@@ -51,7 +51,7 @@ class CreatePyExe(builder.Task):
         buildSetup = self.buildSetup
         tmpDir = tempfile.mkdtemp()
         manifest = file(
-            join(buildSetup.pyVersionDir, "manifest.template")
+            join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read()
         setup(
             script_args = ["py2exe"],

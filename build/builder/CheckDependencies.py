@@ -186,7 +186,7 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 class DllDependency(DependencyBase):
     def Check(self):
-        with open(join(self.buildSetup.pyVersionDir, "manifest.template")) as f:
+        with open(join(self.buildSetup.pyVersionDir, "Manifest.xml")) as f:
             manifest = f.read()
         match = re.search(
             'name="(?P<name>.+\.CRT)"\n'
