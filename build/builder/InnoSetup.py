@@ -22,6 +22,11 @@ import _winreg
 from os.path import abspath, join, exists
 from builder.Utils import StartProcess, EncodePath
 
+
+class InnoSetupError(Exception):
+    pass
+
+
 def GetInnoCompilerPath():
     try:
         key = _winreg.OpenKey(
@@ -109,5 +114,6 @@ class InnoInstaller(object):
                 issFile.write("%s\n" % line)
         issFile.close()
 
-        StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q")
+        if not (StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q") == 0):
+            raise InnoSetupError
 
