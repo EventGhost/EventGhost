@@ -22,6 +22,7 @@ import sys
 import tempfile
 from os.path import abspath, dirname, join
 
+import builder
 from builder import VirtualEnv
 from builder.Utils import DecodePath, GetRevision, GetGitHubConfig
 
@@ -65,6 +66,13 @@ class Builder(object):
         self.libraryDir = join(self.sourceDir, self.libraryName)
 
         self.args = self.ParseArgs()
+        self.showGui = not (
+            self.args.build or
+            self.args.check or
+            self.args.package or
+            self.args.release or
+            self.args.sync
+        )
 
         from CheckDependencies import CheckDependencies
         if not CheckDependencies(self):
@@ -144,5 +152,10 @@ class Builder(object):
             task.Setup()
         import Gui
         GetRevision(self)
-        Gui.Main(self)
+        if self.showGui:
+            Gui.Main(self)
+        else:
+            if self.args.package:
+                self.appVersion = self.args.package
+            builder.Tasks.Main(self)
 

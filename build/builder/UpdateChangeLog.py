@@ -30,6 +30,10 @@ class UpdateChangeLog(builder.Task):
     """
     description = "updating CHANGELOG.TXT"
 
+    def Setup(self):
+        if not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.package)
+
     def DoTask(self):
         buildSetup = self.buildSetup
         changelog_path = join(buildSetup.sourceDir, "CHANGELOG.TXT")

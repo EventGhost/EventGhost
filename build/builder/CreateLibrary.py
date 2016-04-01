@@ -21,7 +21,7 @@ import sys
 from glob import glob
 from os.path import exists, join, basename, dirname
 
-from builder import Task
+import builder
 from builder.Utils import EncodePath
 
 
@@ -164,14 +164,16 @@ class Target:
 
 
 
-class CreateLibrary(Task):
+class CreateLibrary(builder.Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
 
     def Setup(self):
         self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
-        if exists(join(self.buildSetup.libraryDir, self.zipName)):
-            self.activated = False
-
+        if self.buildSetup.showGui:
+            if exists(join(self.buildSetup.libraryDir, self.zipName)):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.build)
 
     def DoTask(self):
         """

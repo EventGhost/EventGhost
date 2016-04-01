@@ -89,9 +89,11 @@ class CreateStaticImports(builder.Task):
     def Setup(self):
         self.outFileName = join(self.buildSetup.sourceDir,
                                 "eg", "StaticImports.py")
-        if os.path.exists(self.outFileName):
-            self.activated = False
-
+        if self.buildSetup.showGui:
+            if os.path.exists(self.outFileName):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.build)
 
     def DoTask(self):
         outDir = join(self.buildSetup.sourceDir, "eg")

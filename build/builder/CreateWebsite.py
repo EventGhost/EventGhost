@@ -108,7 +108,12 @@ def rst2html(rst):
 
 class CreateWebsite(builder.Task):
     description = "Build website"
-    activated = False
+
+    def Setup(self):
+        if self.buildSetup.showGui:
+            self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.sync)
 
     def DoTask(self):
         buildSetup = self.buildSetup

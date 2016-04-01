@@ -41,11 +41,13 @@ class CreatePyExe(builder.Task):
     description = "Build py.exe and pyw.exe"
 
     def Setup(self):
-        sourceDir = self.buildSetup.sourceDir
-        if (exists(join(sourceDir, PY_BASE_NAME + ".exe")) and
-                exists(join(sourceDir, PYW_BASE_NAME + ".exe"))):
-            self.activated = False
-
+        if self.buildSetup.showGui:
+            sourceDir = self.buildSetup.sourceDir
+            if (exists(join(sourceDir, PY_BASE_NAME + ".exe")) and
+                    exists(join(sourceDir, PYW_BASE_NAME + ".exe"))):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.build)
 
     def DoTask(self):
         buildSetup = self.buildSetup

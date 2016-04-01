@@ -46,6 +46,10 @@ class UpdateVersionFile(builder.Task):
 class CreateInstaller(builder.Task):
     description = "Build Setup.exe"
 
+    def Setup(self):
+        if not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.package)
+
     def DoTask(self):
         self.buildSetup.CreateInstaller()
 
@@ -58,6 +62,8 @@ class Upload(builder.Task):
         if not self.options["url"]:
             self.enabled = False
             self.activated = False
+        elif not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.release)
 
     def DoTask(self):
         import builder.Upload
@@ -80,6 +86,8 @@ class SyncWebsite(builder.Task):
         if not self.options["url"]:
             self.enabled = False
             self.activated = False
+        elif not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.sync)
 
     def DoTask(self):
         from SftpSync import SftpSync
