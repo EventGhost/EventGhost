@@ -80,16 +80,20 @@ def GetRevision(buildSetup):
     """
     Get the app version and revision.
     """
-    print "getting version and revision from GitHub."
-    parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
-    parts[0] = parts[0].strip('v')
-    while len(parts) < 3:
-        parts.append("0")
-    parts[2] = int(parts[2]) + 1
-    buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
-    magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
-    commits = GetCommitCount(buildSetup)
-    buildSetup.appRevision = (commits + magic) if commits else 0
+    #print "getting version and revision from GitHub."
+    if buildSetup.gitConfig["token"]:
+        parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
+        parts[0] = parts[0].strip('v')
+        while len(parts) < 3:
+            parts.append("0")
+        parts[2] = int(parts[2]) + 1
+        buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
+        magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
+        commits = GetCommitCount(buildSetup)
+        buildSetup.appRevision = (commits + magic) if commits else 0
+    else:
+        buildSetup.appVersion = "0.0.0"
+        buildSetup.appRevision = 0
 
 
 def GetLastReleaseOrTagName(buildSetup):
@@ -221,7 +225,7 @@ def ListDir(path, skip_dirs=[], fullpath=True):
     return files
 
 
-def GetGithubConfig():
+def GetGitHubConfig():
     '''
     Get GitHub from .gitconfig .
     '''

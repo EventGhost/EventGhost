@@ -23,7 +23,7 @@ import tempfile
 from os.path import abspath, dirname, join
 
 from builder import VirtualEnv
-from builder.Utils import DecodePath, GetRevision, GetGithubConfig
+from builder.Utils import DecodePath, GetRevision, GetGitHubConfig
 
 
 class Task(object):
@@ -70,7 +70,7 @@ class Builder(object):
             sys.exit(1)
 
         try:
-            self.gitConfig = GetGithubConfig()
+            self.gitConfig = GetGitHubConfig()
         except ValueError:
             print ".gitconfig does not contain needed options. Please do:\n" \
                   "\t$ git config --global github.user <your github username>\n" \
@@ -78,8 +78,21 @@ class Builder(object):
                   "To create a token, go to: https://github.com/settings/tokens\n"
             exit(1)
         except IOError:
-            print "could not open .gitconfig."
-            exit(1)
+            print "WARNING: Git config not available; can't release to GitHub!"
+            self.gitConfig = {
+                "all_repos": {
+                    "EventGhost/EventGhost": {
+                        "all_branches": ["master"],
+                        "def_branch": "master",
+                        "name": "EventGhost",
+                    },
+                },
+                "branch": "master",
+                "repo": "EventGhost",
+                "repo_full": "EventGhost/EventGhost",
+                "token": "",
+                "user": "EventGhost",
+            }
 
         self.appVersion = None
         self.appRevision = None

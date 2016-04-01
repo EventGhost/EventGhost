@@ -40,6 +40,9 @@ class CreateGitHubRelease(builder.Task):
     description = "Create GitHub release"
     activated = False
 
+    def Setup(self):
+        self.enabled = bool(self.buildSetup.gitConfig["token"])
+
     def DoTask(self):
         buildSetup = self.buildSetup
         srcDir = buildSetup.sourceDir
