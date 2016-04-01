@@ -51,105 +51,106 @@ class args:
     pluginDir = None
 
 
-for arg in argvIter:
-    arg = arg.lower()
-    if arg.startswith('-debug'):
-        args.debugLevel = 1
-        if len(arg) > 6:
-            args.debugLevel = int(arg[6:])
-    elif arg in ("-n", "-netsend"):
-        from Classes.NetworkSend import Main
-        Main(list(argvIter))
-        sys.exit(0)
-    elif arg in ('-h', '-hide'):
-        args.hideOnStartup = True
-    elif arg == '-install':
-        import compileall
-        compileall.compile_dir(mainDir)
-        args.install = True
-    elif arg == '-uninstall':
-        for root, dirs, files in os.walk(mainDir):
-            for name in files:
-                if name.lower().endswith(".pyc"):
-                    os.remove(join(root, name))
-        sys.exit(0)
-    elif arg in ('-m', '-multiload'):
-        args.allowMultiLoad = True
-    elif arg in ('-e', '-event'):
-        eventstring = argvIter.next()
-        payloads = list(argvIter)
-        if len(payloads) == 0:
-            payloads = None
-        args.startupEvent = (eventstring, payloads)
-    elif arg in ('-f', '-file'):
-        args.startupFile = abspath(argvIter.next())
-    elif arg in ('-p', '-plugin'):
-        args.pluginFile = abspath(argvIter.next())
-        #args.isMain = False
-    elif arg == '-plugindir':
-        args.plugindir = argvIter.next()
-    elif arg == '-configdir':
-        args.configDir = argvIter.next()
-    elif arg == '-translate':
-        args.translate = True
-    elif arg == "-restart":
-        import time
-        while True:
-            appMutex = ctypes.windll.kernel32.CreateMutexA(
-                None,
-                0,
-                "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-            )
-            err = ctypes.GetLastError()
-            if appMutex:
-                ctypes.windll.kernel32.CloseHandle(appMutex)
-            if err == 0:
-                break
-            time.sleep(0.1)
+if args.isMain:
+    for arg in argvIter:
+        arg = arg.lower()
+        if arg.startswith('-debug'):
+            args.debugLevel = 1
+            if len(arg) > 6:
+                args.debugLevel = int(arg[6:])
+        elif arg in ("-n", "-netsend"):
+            from Classes.NetworkSend import Main
+            Main(list(argvIter))
+            sys.exit(0)
+        elif arg in ('-h', '-hide'):
+            args.hideOnStartup = True
+        elif arg == '-install':
+            import compileall
+            compileall.compile_dir(mainDir)
+            args.install = True
+        elif arg == '-uninstall':
+            for root, dirs, files in os.walk(mainDir):
+                for name in files:
+                    if name.lower().endswith(".pyc"):
+                        os.remove(join(root, name))
+            sys.exit(0)
+        elif arg in ('-m', '-multiload'):
+            args.allowMultiLoad = True
+        elif arg in ('-e', '-event'):
+            eventstring = argvIter.next()
+            payloads = list(argvIter)
+            if len(payloads) == 0:
+                payloads = None
+            args.startupEvent = (eventstring, payloads)
+        elif arg in ('-f', '-file'):
+            args.startupFile = abspath(argvIter.next())
+        elif arg in ('-p', '-plugin'):
+            args.pluginFile = abspath(argvIter.next())
+            #args.isMain = False
+        elif arg == '-plugindir':
+            args.plugindir = argvIter.next()
+        elif arg == '-configdir':
+            args.configDir = argvIter.next()
+        elif arg == '-translate':
+            args.translate = True
+        elif arg == "-restart":
+            import time
+            while True:
+                appMutex = ctypes.windll.kernel32.CreateMutexA(
+                    None,
+                    0,
+                    "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+                )
+                err = ctypes.GetLastError()
+                if appMutex:
+                    ctypes.windll.kernel32.CloseHandle(appMutex)
+                if err == 0:
+                    break
+                time.sleep(0.1)
 
-    else:
-        path = abspath(arg)
-        ext = os.path.splitext(path)[1].lower()
-        if ext == ".egplugin":
-            args.pluginFile = path
-        elif ext in (".egtree", ".xml"):
-            args.startupFile = path
+        else:
+            path = abspath(arg)
+            ext = os.path.splitext(path)[1].lower()
+            if ext == ".egplugin":
+                args.pluginFile = path
+            elif ext in (".egtree", ".xml"):
+                args.startupFile = path
 
-if (
-    not args.allowMultiLoad
-    and not args.translate
-    and args.isMain
-    #and not args.pluginFile
-):
-    # check if another instance of the program is running
-    appMutex = ctypes.windll.kernel32.CreateMutexA(
-        None,
-        0,
-        "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-    )
-    if ctypes.GetLastError() != 0:
-        # another instance of EventGhost is running
-        from win32com.client import Dispatch
-        try:
-            e = Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-            if args.startupFile is not None:
-                e.OpenFile(args.startupFile)
-            if args.startupEvent is not None:
-                e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
-            elif args.pluginFile:
-                e.InstallPlugin(args.pluginFile)
-            else:
-                e.BringToFront()
-        except pywintypes.com_error as err:
-            if err[0] == -2147024156:
-                msg = "Unable to launch unelevated while already running elevated."
-            else:
-                msg = "Failed to launch for unknown reasons."
-            ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
-        finally:
-            ctypes.windll.kernel32.ExitProcess(0)
+    if (
+        not args.allowMultiLoad
+        and not args.translate
+        and args.isMain
+        #and not args.pluginFile
+    ):
+        # check if another instance of the program is running
+        appMutex = ctypes.windll.kernel32.CreateMutexA(
+            None,
+            0,
+            "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+        )
+        if ctypes.GetLastError() != 0:
+            # another instance of EventGhost is running
+            from win32com.client import Dispatch
+            try:
+                e = Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
+                if args.startupFile is not None:
+                    e.OpenFile(args.startupFile)
+                if args.startupEvent is not None:
+                    e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
+                elif args.pluginFile:
+                    e.InstallPlugin(args.pluginFile)
+                else:
+                    e.BringToFront()
+            except pywintypes.com_error as err:
+                if err[0] == -2147024156:
+                    msg = "Unable to launch unelevated while already running elevated."
+                else:
+                    msg = "Failed to launch for unknown reasons."
+                ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
+            finally:
+                ctypes.windll.kernel32.ExitProcess(0)
 
-# change working directory to program directory
-if args.debugLevel < 1 and args.isMain:
-    os.chdir(mainDir)
+    # change working directory to program directory
+    if args.debugLevel < 1 and args.isMain:
+        os.chdir(mainDir)
 
