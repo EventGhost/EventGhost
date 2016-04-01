@@ -37,7 +37,7 @@ else:
 
 
 class CreateGitHubRelease(builder.Task):
-    description = "Create GitHub release"
+    description = "Release to GitHub"
 
     def Setup(self):
         self.enabled = bool(self.buildSetup.gitConfig["token"])

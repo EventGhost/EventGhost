@@ -38,7 +38,7 @@ PYW_BASE_NAME = "pyw%s" % PYVERSION
 
 
 class CreatePyExe(builder.Task):
-    description = "Build py.exe and pyw.exe"
+    description = "Build interpreters (py.exe, pyw.exe)"
 
     def Setup(self):
         if self.buildSetup.showGui:

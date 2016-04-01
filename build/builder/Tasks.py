@@ -55,7 +55,7 @@ class CreateInstaller(builder.Task):
 
 
 class Upload(builder.Task):
-    description = "Upload through FTP"
+    description = "Release to web"
     options = {"url": ""}
 
     def Setup(self):
@@ -121,13 +121,13 @@ from builder.UpdateChangeLog import UpdateChangeLog
 
 TASKS = [
     UpdateVersionFile,
-    UpdateChangeLog,
+    CheckSources,
     CreateStaticImports,
     CreateImports,
-    CheckSources,
-    CreateChmDocs,
     CreatePyExe,
     CreateLibrary,
+    UpdateChangeLog,
+    CreateChmDocs,
     CreateInstaller,
     CreateGitHubRelease,
     Upload,

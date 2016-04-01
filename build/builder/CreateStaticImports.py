@@ -84,7 +84,7 @@ def ScanDir(srcDir, outfile, modName):
 
 
 class CreateStaticImports(builder.Task):
-    description = "Create StaticImports.py"
+    description = "Build StaticImports.py"
 
     def Setup(self):
         self.outFileName = join(self.buildSetup.sourceDir,
