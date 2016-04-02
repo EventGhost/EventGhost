@@ -37,11 +37,16 @@ else:
 
 
 class CreateGitHubRelease(builder.Task):
-    description = "Create GitHub release"
-    activated = False
+    description = "Release to GitHub"
 
     def Setup(self):
         self.enabled = bool(self.buildSetup.gitConfig["token"])
+        if self.buildSetup.showGui:
+            self.activated = False
+        else:
+            self.activated = (
+                bool(self.buildSetup.args.release) and self.enabled
+            )
 
     def DoTask(self):
         buildSetup = self.buildSetup

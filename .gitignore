@@ -3,7 +3,7 @@
 /*.dll
 /*.exe
 /build/builder/Data/Build.ini
-/build/builder/Data/Python??/imports.py
+/build/builder/Data/Python??/[Ii]mports.py
 /build/docs/pluginlist.rst
 /build/docs/eg/*
 !/build/docs/eg/index.rst

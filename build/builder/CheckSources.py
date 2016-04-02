@@ -82,6 +82,9 @@ PLUGINS = [
 class CheckSources(builder.Task):
     description = "Check source files"
 
+    def Setup(self):
+        if not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.check)
 
     def DoTask(self):
         sourceDir = self.buildSetup.sourceDir

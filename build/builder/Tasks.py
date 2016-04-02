@@ -34,7 +34,8 @@ class UpdateVersionFile(builder.Task):
         buildSetup.buildTime = time.time()
         filename = join(buildSetup.tmpDir, "VersionRevision.py")
         outfile = open(filename, "wt")
-        major, minor, patch = buildSetup.appVersion.split('.')
+        major, minor, patch = buildSetup.appVersionShort.split('.')[:3]
+        outfile.write("string = '{0}'\n".format(buildSetup.appVersion))
         outfile.write("major = {0}\n".format(major))
         outfile.write("minor = {0}\n".format(minor))
         outfile.write("patch = {0}\n".format(patch))
@@ -46,18 +47,24 @@ class UpdateVersionFile(builder.Task):
 class CreateInstaller(builder.Task):
     description = "Build Setup.exe"
 
+    def Setup(self):
+        if not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.package)
+
     def DoTask(self):
         self.buildSetup.CreateInstaller()
 
 
 class Upload(builder.Task):
-    description = "Upload through FTP"
+    description = "Release to web"
     options = {"url": ""}
 
     def Setup(self):
         if not self.options["url"]:
             self.enabled = False
             self.activated = False
+        elif not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.release)
 
     def DoTask(self):
         import builder.Upload
@@ -80,6 +87,8 @@ class SyncWebsite(builder.Task):
         if not self.options["url"]:
             self.enabled = False
             self.activated = False
+        elif not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.sync)
 
     def DoTask(self):
         from SftpSync import SftpSync
@@ -113,13 +122,13 @@ from builder.UpdateChangeLog import UpdateChangeLog
 
 TASKS = [
     UpdateVersionFile,
-    UpdateChangeLog,
+    CheckSources,
     CreateStaticImports,
     CreateImports,
-    CheckSources,
-    CreateChmDocs,
     CreatePyExe,
     CreateLibrary,
+    UpdateChangeLog,
+    CreateChmDocs,
     CreateInstaller,
     CreateGitHubRelease,
     Upload,

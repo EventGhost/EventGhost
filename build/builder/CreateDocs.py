@@ -173,7 +173,12 @@ def Prepare():
 
 class CreateHtmlDocs(builder.Task):
     description = "Build HTML docs"
-    activated = False
+
+    def Setup(self):
+        if self.buildSetup.showGui:
+            self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.sync)
 
     def DoTask(self):
         Prepare()
@@ -195,11 +200,13 @@ class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
-        if os.path.exists(
-            join(self.buildSetup.sourceDir, "EventGhost.chm")
-        ):
-            self.activated = False
-
+        if self.buildSetup.showGui:
+            if os.path.exists(
+                join(self.buildSetup.sourceDir, "EventGhost.chm")
+            ):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
         tmpDir = join(self.buildSetup.tmpDir, "chm")

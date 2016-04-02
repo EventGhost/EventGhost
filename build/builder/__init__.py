@@ -22,8 +22,11 @@ import sys
 import tempfile
 from os.path import abspath, dirname, join
 
+import builder
 from builder import VirtualEnv
-from builder.Utils import DecodePath, GetRevision, GetGitHubConfig
+from builder.Utils import (
+    DecodePath, GetRevision, GetGitHubConfig, ParseVersion,
+)
 
 
 class Task(object):
@@ -55,7 +58,6 @@ class Builder(object):
         Task.buildSetup = self
         buildSetup = self
 
-        self.args = self.ParseArgs()
         baseDir = dirname(DecodePath(__file__))
         self.sourceDir = abspath(join(baseDir, "../.."))
         self.websiteDir = join(self.sourceDir, "website")
@@ -65,20 +67,28 @@ class Builder(object):
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
 
+        self.args = self.ParseArgs()
+        self.showGui = not (
+            self.args.build or
+            self.args.check or
+            self.args.package or
+            self.args.release or
+            self.args.sync
+        )
+
         from CheckDependencies import CheckDependencies
         if not CheckDependencies(self):
             sys.exit(1)
 
         try:
             self.gitConfig = GetGitHubConfig()
-        except ValueError:
-            print ".gitconfig does not contain needed options. Please do:\n" \
-                  "\t$ git config --global github.user <your github username>\n" \
-                  "\t$ git config --global github.token <your github token>\n" \
-                  "To create a token, go to: https://github.com/settings/tokens\n"
-            exit(1)
-        except IOError:
-            print "WARNING: Git config not available; can't release to GitHub!"
+        except:
+            print(
+                "WARNING: Can't release to GitHub until you do the following:\n"
+                "    $ git config --global github.user <your github username>\n"
+                "    $ git config --global github.token <your github token>\n"
+                "To create a token, go to: https://github.com/settings/tokens\n"
+            )
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {
@@ -95,27 +105,61 @@ class Builder(object):
             }
 
         self.appVersion = None
-        self.appRevision = None
+        self.appVersionShort = None
+        self.appRevision = 0
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name
 
     def ParseArgs(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
+            "-b", "--build",
+            action="store_true",
+            help="build imports, lib%s, and interpreters" % self.pyVersionStr,
+        )
+        parser.add_argument(
+            "-c", "--check",
+            action="store_true",
+            help="check source files for issues",
+        )
+        parser.add_argument(
             "-m", "--make-env",
             action="store_true",
             help="auto-install dependencies into a virtualenv",
         )
+        parser.add_argument(
+            "-p", "--package",
+            action="store_true",
+            help="build changelog, docs, and setup.exe",
+        )
+        parser.add_argument(
+            "-r", "--release",
+            action="store_true",
+            help="release to github and web if credentials available",
+        )
+        parser.add_argument(
+            "-s", "--sync",
+            action="store_true",
+            help="build and synchronize website",
+        )
+        parser.add_argument(
+            "-v", "--version",
+            action="store",
+            help="package as the specified version",
+        )
         return parser.parse_args()
 
-    def RunGui(self):
+    def Start(self):
         from Tasks import TASKS
         self.tasks = [task(self) for task in TASKS]
         from Config import Config
         self.config = Config(self, join(self.dataDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
-        import Gui
         GetRevision(self)
-        Gui.Main(self)
+        if self.showGui:
+            import Gui
+            Gui.Main(self)
+        else:
+            builder.Tasks.Main(self)
 

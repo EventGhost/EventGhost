@@ -28,7 +28,11 @@ class UpdateChangeLog(builder.Task):
     """
     Add a version header to CHANGELOG.TXT if needed.
     """
-    description = "updating CHANGELOG.TXT"
+    description = "Build changelog"
+
+    def Setup(self):
+        if not self.buildSetup.showGui:
+            self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
         buildSetup = self.buildSetup
