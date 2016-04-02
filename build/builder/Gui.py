@@ -102,7 +102,7 @@ class MainDialog(wx.Dialog):
         sb = egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
         self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
-                                      value=buildSetup.appVersion)
+                                      value=buildSetup.appVersionShort)
         refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
                                          GetBitmap(wx.ART_GO_DOWN))
         refreshVersion.SetToolTip(wx.ToolTip(
