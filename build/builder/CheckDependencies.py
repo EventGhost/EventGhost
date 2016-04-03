@@ -431,6 +431,10 @@ def CreateVirtualEnv():
         os.unlink(f)
         os.rename(f + ".bak", f)
 
+    # Start in build folder when virtualenv activated manually.
+    with open(join(VirtualEnv.PATH, ".project"), "w") as f:
+        f.write(os.getcwd())
+
     return result
 
 
