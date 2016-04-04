@@ -49,7 +49,7 @@ class StdErrReplacement(object):
                 self._file = open(self._logFilePath, 'a')
             except Exception, details:
                 self._error = details
-                if not os.environ["USERNAME"].lower() == "appveyor":
+                if "-q" not in sys.argv and "-quiet" not in sys.argv:
                     import atexit
                     import ctypes
                     atexit.register(
@@ -63,7 +63,7 @@ class StdErrReplacement(object):
                         0
                     )
             else:
-                if not os.environ["USERNAME"].lower() == "appveyor":
+                if "-q" not in sys.argv and "-quiet" not in sys.argv:
                     import atexit
                     atexit.register(self.__DisplayMessage)
         if self._file is not None:
