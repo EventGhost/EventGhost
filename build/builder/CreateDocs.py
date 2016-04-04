@@ -187,6 +187,7 @@ class CreateHtmlDocs(builder.Task):
             "-a",
             "-b", "html",
             "-E",
+            "-N",
             "-P",
             "-D", "release=%s" % self.buildSetup.appVersion,
             "-d", join(self.buildSetup.tmpDir, ".doctree"),
@@ -218,6 +219,7 @@ class CreateChmDocs(builder.Task):
             "-b", "htmlhelp",
             "-E",  # Don’t use a saved environment (the structure
                    # caching all cross-references),
+            "-N",  # Prevent colored output.
             "-P",  # (Useful for debugging only.) Run the Python debugger,
                     # pdb, if an unhandled exception occurs while building.
             "-D", "release=%s" % self.buildSetup.appVersion,
