@@ -49,21 +49,23 @@ class StdErrReplacement(object):
                 self._file = open(self._logFilePath, 'a')
             except Exception, details:
                 self._error = details
-                import atexit
-                import ctypes
-                atexit.register(
-                    ctypes.windll.user32.MessageBoxA,
-                    0,
-                    "The logfile '%s' could not be opened:\n %s" % (
-                        self._logFilePath,
-                        details
-                    ),
-                    "Error occurred in EventGhost",
-                    0
-                )
+                if not os.environ["USERNAME"].lower() == "appveyor":
+                    import atexit
+                    import ctypes
+                    atexit.register(
+                        ctypes.windll.user32.MessageBoxA,
+                        0,
+                        "The logfile '%s' could not be opened:\n %s" % (
+                            self._logFilePath,
+                            details
+                        ),
+                        "Error occurred in EventGhost",
+                        0
+                    )
             else:
-                import atexit
-                atexit.register(self.__DisplayMessage)
+                if not os.environ["USERNAME"].lower() == "appveyor":
+                    import atexit
+                    atexit.register(self.__DisplayMessage)
         if self._file is not None:
             self._file.write(text)
             self._file.flush()
