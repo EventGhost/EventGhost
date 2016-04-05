@@ -1531,3 +1531,7 @@ LPCTSTR = LPCWSTR
 COINIT_MULTITHREADED = 0
 COINIT_APARTMENTTHREADED = 2
 
+FreeLibrary = _kernel32.FreeLibrary
+FreeLibrary.restype = BOOL
+FreeLibrary.argtypes = [HMODULE]
+

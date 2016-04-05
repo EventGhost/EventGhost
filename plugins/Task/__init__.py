@@ -52,7 +52,7 @@ from eg.WinApi.Dynamic import (
     EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE,
     HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HSHELL_WINDOWACTIVATED,
     WS_VISIBLE, GWL_HWNDPARENT, IsWindowVisible, GetAncestor, GA_ROOT,
-    GetShellWindow
+    GetShellWindow, FreeLibrary
 )
 from eg.WinApi.Utils import GetProcessName
 from eg.WinApi import GetTopLevelWindowList, GetWindowText, GetClassName
@@ -124,6 +124,7 @@ class Task(eg.PluginBase):
 
     def __stop__(self):
         self.hookDll.StopHook()
+        FreeLibrary(self.hookDll._handle)
         DeregisterShellHookWindow(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.WindowGotFocusProc)
