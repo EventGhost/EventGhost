@@ -369,7 +369,7 @@ def ParseVersion(ver):
     """
     Return long and short versions of the specified string.
     """
-    if not ver:
+    if not ver or ver == "0.0.0":
         return ("WIP-%s" % time.strftime("%Y.%m.%d-%H.%M.%S"), "0.0.0")
     else:
         match = re.search(
