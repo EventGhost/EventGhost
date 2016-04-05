@@ -17,8 +17,9 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
-from time import clock
+from fnmatch import fnmatchcase
 from threading import Event
+from time import clock
 
 # some shortcuts to speed things up
 #pylint: disable-msg=C0103
@@ -132,20 +133,13 @@ class EventGhostEvent(object):
         eg.eventString = eventString
         eg.EventString = eventString # eg.EventString is deprecated
 
-        get = eg.eventTable.get
         eventHandlerList = []
-        eventHandlerList += get(eventString, [])
-        #if self.prefix != "Keyboard":
-        eventHandlerList += get(self.suffix, [])
-        key2 = self.suffix.rsplit(".", 1)[-1]
-        if self.suffix != key2:
-            eventHandlerList += get(key2, [])
-        eventHandlerList += get('*', [])
-        key1 = eventString.rsplit(".", 1)[0] + '.*'
-        eventHandlerList += get(key1, [])
-        key2 = eventString.split(".", 1)[0] + '.*'
-        if key1 != key2:
-            eventHandlerList += get(key2, [])
+        for key, val in eg.eventTable.iteritems():
+            if (
+                eventString == key or
+                (("*" in key or "?" in key) and fnmatchcase(eventString, key))
+            ):
+                eventHandlerList += val
 
         activeHandlers = set()
         for eventHandler in eventHandlerList:
