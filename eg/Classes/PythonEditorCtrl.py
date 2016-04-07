@@ -99,12 +99,11 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetMarginWidth(1, 40)
 
         # Indentation and tab stuff
-        self.SetIndent(4)               # Proscribed indent size for wx
+        self.SetIndentSize(value)
         self.SetIndentationGuides(True) # Show indent guides
         self.SetBackSpaceUnIndents(True)# Backspace unindents rather than
                                         # delete 1 space
         self.SetTabIndents(True)        # Tab key indents
-        self.SetTabWidth(4)             # Proscribed tab size for wx
         self.SetUseTabs(False)          # Use spaces rather than tabs, or
                                         # TabTimmy will complain!
         # White space
@@ -222,7 +221,6 @@ class PythonEditorCtrl(StyledTextCtrl):
         )
         self.reslash = re.compile(r"\\\Z")
         self.renonwhitespace = re.compile('\S', re.M)
-        self.tabwidth = 4
 
         # popup menu
         menu = wx.Menu()
@@ -451,6 +449,8 @@ class PythonEditorCtrl(StyledTextCtrl):
 
 
     def AutoIndent(self):
+        indentSize = self.SetIndentSize(self.GetValue())
+
         pos = self.GetCurrentPos()
 
         #Strip trailing whitespace first.
@@ -472,17 +472,17 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         self.GotoLine(clinenumber)
 
-        numtabs = self.GetLineIndentation(clinenumber+1) / self.tabwidth
+        numtabs = self.GetLineIndentation(clinenumber+1) / indentSize
 
         search = self.renonwhitespace.search
         if (
             search(self.GetLine(clinenumber+1)) is not None
             and search(self.GetLine(clinenumber)) is None
         ):
-            numtabs += self.GetLineIndentation(clinenumber) / self.tabwidth
+            numtabs += self.GetLineIndentation(clinenumber) / indentSize
 
         if numtabs == 0:
-            numtabs = self.GetLineIndentation(linenumber) / self.tabwidth
+            numtabs = self.GetLineIndentation(linenumber) / indentSize
 
         if True:
             checkat = self.GetLineEndPosition(linenumber) - 1
@@ -509,11 +509,22 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.GotoPos(pos)
         x = 0
         while (x < numtabs):
-            self.AddText('    ')
+            self.AddText(' ' * indentSize)
             x = x + 1
         #/Auto Indent Code
 
         #Ensure proper keyboard navigation:
         self.CmdKeyExecute(STC_CMD_CHARLEFT)
         self.CmdKeyExecute(STC_CMD_CHARRIGHT)
+
+
+    def SetIndentSize(self, value):
+        indentSize = 4
+        if value:
+            match = re.search("^( +)", value, re.MULTILINE)
+            if match:
+                indentSize = len(match.group())
+        self.SetIndent(indentSize)
+        self.SetTabWidth(indentSize)
+        return indentSize
 
