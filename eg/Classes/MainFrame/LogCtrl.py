@@ -19,6 +19,7 @@
 import eg
 import wx
 import collections
+from ast import literal_eval
 from time import strftime, localtime
 import wx.lib.mixins.listctrl as listmix
 
@@ -80,6 +81,10 @@ class LogCtrl(wx.ListCtrl):
         menu = wx.Menu()
         menu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
         self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
+        menu.AppendSeparator()
+        menuId = wx.NewId()
+        menu.Append(menuId, eg.text.MainFrame.Menu.Replay)
+        self.Bind(wx.EVT_MENU, self.OnCmdReplay, id=menuId)
         menu.AppendSeparator()
         menuId = wx.NewId()
         menu.Append(menuId, eg.text.MainFrame.Menu.ClearLog)
@@ -223,6 +228,19 @@ class LogCtrl(wx.ListCtrl):
         self.FocusLastItem()
         self.ScrollList(0, 1000000)
         self.Refresh()
+
+
+    def OnCmdReplay(self, dummyEvent=None):
+        item = self.GetFirstSelected()
+        while item != -1:
+            text, icon = self.GetItemData(item)[:2]
+            if icon == eg.Icons.EVENT_ICON:
+                parts = text.split(" ", 1)
+                e = parts[0]
+                prefix, suffix = e.split(".", 1) if "." in e else [e, ""]
+                payload = literal_eval(parts[1]) if len(parts) == 2 else None
+                eg.TriggerEvent(suffix, payload, prefix)
+            item = self.GetNextSelected(item)
 
 
     def OnRightUp(self, dummyEvent):

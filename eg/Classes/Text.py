@@ -164,6 +164,7 @@ class Default:
             CheckUpdate = "Check for Update..."
             PythonShell = "Python Shell"
             Reset = "Reset"
+            Replay = "&Replay"
 
         class SaveChanges:
             mesg = (
