@@ -60,7 +60,7 @@ eg.sitePackagesDir = join(
     "lib%d%d" % sys.version_info[:2],
     "site-packages"
 )
-eg.revision = eg.Version.revision
+eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]

@@ -22,7 +22,7 @@ import threading
 import wx
 
 import builder
-from Utils import GetRevision, ParseVersion
+from Utils import GetVersion, ParseVersion
 
 class MainDialog(wx.Dialog):
 
@@ -191,7 +191,7 @@ class MainDialog(wx.Dialog):
 
 
     def RefreshVersion(self, event):
-        GetRevision(self.buildSetup)
+        GetVersion(self.buildSetup)
         self.versionStr.SetValue(self.buildSetup.appVersion)
 
 

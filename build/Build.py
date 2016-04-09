@@ -184,7 +184,7 @@ class MyBuilder(builder.Builder):
             destName="pyw.exe"
         )
         inno.AddFile(
-            join(self.tmpDir, "VersionRevision.py"),
+            join(self.tmpDir, "VersionInfo.py"),
             destDir="eg\\Classes"
         )
         # create entries in the [InstallDelete] section of the Inno script to

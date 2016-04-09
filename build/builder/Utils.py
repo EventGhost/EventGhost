@@ -80,11 +80,11 @@ def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
 
 
-def GetRevision(buildSetup):
+def GetVersion(buildSetup):
     """
-    Get the app version and revision.
+    Get the app version.
     """
-    #print "getting version and revision from GitHub."
+    #print "getting version from GitHub."
     if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
         parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
         parts[0] = parts[0].strip('v')
@@ -93,9 +93,6 @@ def GetRevision(buildSetup):
         parts[2] = int(parts[2]) + 1
         buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
         buildSetup.appVersionShort = buildSetup.appVersion
-        magic = 1722 - 1046  # Last SVN revision - total Git commits at r1722
-        commits = GetCommitCount(buildSetup)
-        buildSetup.appRevision = (commits + magic) if commits else 0
     else:
         buildSetup.appVersion, buildSetup.appVersionShort = (
             ParseVersion(buildSetup.args.version)
