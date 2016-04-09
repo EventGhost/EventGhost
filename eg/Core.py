@@ -72,7 +72,6 @@ eg.globals.eg = eg
 eg.event = None
 eg.eventTable = {}
 eg.eventString = ""
-eg.EventString = "" # eg.EventString is deprecated
 eg.notificationHandlers = {}
 eg.programCounter = None
 eg.programReturnStack = []

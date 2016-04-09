@@ -28,7 +28,6 @@ from threading import Lock
 class TreeStateData(eg.PersistentData):
     guid = None
     time = None
-    expandState = None # deprecated
     expanded = None
 
 
