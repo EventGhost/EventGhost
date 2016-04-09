@@ -25,7 +25,7 @@ from os.path import abspath, dirname, join
 import builder
 from builder import VirtualEnv
 from builder.Utils import (
-    DecodePath, GetRevision, GetGitHubConfig, ParseVersion,
+    DecodePath, GetVersion, GetGitHubConfig, ParseVersion,
 )
 
 
@@ -106,7 +106,6 @@ class Builder(object):
 
         self.appVersion = None
         self.appVersionShort = None
-        self.appRevision = 0
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name
 
@@ -156,7 +155,7 @@ class Builder(object):
         self.config = Config(self, join(self.dataDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
-        GetRevision(self)
+        GetVersion(self)
         if self.showGui:
             import Gui
             Gui.Main(self)

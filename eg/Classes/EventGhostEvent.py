@@ -131,7 +131,6 @@ class EventGhostEvent(object):
 
         eg.event = self
         eg.eventString = eventString
-        eg.EventString = eventString # eg.EventString is deprecated
 
         eventHandlerList = []
         for key, val in eg.eventTable.iteritems():

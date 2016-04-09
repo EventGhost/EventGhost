@@ -81,7 +81,7 @@ def RecursivePySave(obj, fileWriter, indent=""):
 
 
 class Config(Section):
-    revision = 0
+    version = eg.Version.string
     if LOCALE.GetLanguageName(LOCALE.GetSystemLanguage()) == 'German':
         language = 'de_DE'
     else:
@@ -139,7 +139,7 @@ class Config(Section):
 
 
     def Save(self):
-        self.revision = eg.revision
+        self.version = eg.Version.string
         configFile = open(self._configFilePath, 'w+')
         RecursivePySave(self, configFile.write)
         configFile.close()

@@ -152,7 +152,7 @@ class TreeItem(object):
         if isinstance(self, eg.RootItem):
             self.WriteXmlString(stream.write)
         else:
-            stream.write('<EventGhost Version="%s">\r\n' % str(eg.revision))
+            stream.write('<EventGhost Version="%s">\r\n' % str(eg.Version.string))
             self.WriteXmlString(stream.write, "    ")
             stream.write('</EventGhost>')
         xmlString = stream.getvalue()

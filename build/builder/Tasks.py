@@ -24,7 +24,7 @@ import builder
 
 class UpdateVersionFile(builder.Task):
     """
-    Update buildTime and revision for eg/Classes/VersionRevision.py
+    Write version information to eg/Classes/VersionInfo.py
     """
     description = "Update version file"
     enabled = False
@@ -32,14 +32,13 @@ class UpdateVersionFile(builder.Task):
     def DoTask(self):
         buildSetup = self.buildSetup
         buildSetup.buildTime = time.time()
-        filename = join(buildSetup.tmpDir, "VersionRevision.py")
+        filename = join(buildSetup.tmpDir, "VersionInfo.py")
         outfile = open(filename, "wt")
         major, minor, patch = buildSetup.appVersionShort.split('.')[:3]
         outfile.write("string = '{0}'\n".format(buildSetup.appVersion))
         outfile.write("major = {0}\n".format(major))
         outfile.write("minor = {0}\n".format(minor))
         outfile.write("patch = {0}\n".format(patch))
-        outfile.write("revision = {0}\n".format(buildSetup.appRevision))
         outfile.write("buildTime = {0}\n".format(buildSetup.buildTime))
         outfile.close()
 

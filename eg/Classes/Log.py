@@ -198,7 +198,7 @@ class Log(object):
         if excInfo is None:
             excInfo = sys.exc_info()
         tbType, tbValue, tbTraceback = excInfo
-        slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
+        slist = ['Traceback (most recent call last) (%s):\n' % eg.Version.string]
         if tbTraceback:
             decode = codecs.getdecoder('mbcs')
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
@@ -220,7 +220,7 @@ class Log(object):
 
 
     def PrintStack(self, skip=0):
-        strs = ['Stack trace (most recent call last) (%d):\n' % eg.revision]
+        strs = ['Stack trace (most recent call last) (%s):\n' % eg.Version.string]
         strs += format_stack(sys._getframe().f_back)[skip:]
         error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
