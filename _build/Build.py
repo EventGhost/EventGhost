@@ -32,8 +32,7 @@ from builder.Utils import ListDir
 
 
 EXCLUDE_DIRS = [
-    # Files and folders beginning with "." are excluded automatically.
-    "build",
+    # Files and folders beginning with "." and "_" are excluded automatically.
 ]
 
 INCLUDE_FILES = [
@@ -127,7 +126,7 @@ class MyBuilder(builder.Builder):
         srcDir = self.sourceDir
         files = set(ListDir(srcDir, EXCLUDE_DIRS, fullpath=False))
 
-        noincludes = ["."]
+        noincludes = [".", "_"]
         coreplugins = []
         for f in files.copy():
             if f.endswith("noinclude"):
