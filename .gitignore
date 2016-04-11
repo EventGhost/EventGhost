@@ -2,8 +2,8 @@
 /*.chm
 /*.dll
 /*.exe
-/_build/builder/Data/Build.ini
-/_build/builder/Data/Python??/[Ii]mports.py
+/_build/data/Build.ini
+/_build/data/Python??/[Ii]mports.py
 /_build/docs/pluginlist.rst
 /_build/docs/eg/*
 !/_build/docs/eg/index.rst
