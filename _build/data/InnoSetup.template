@@ -71,14 +71,14 @@ Type: dirifempty; Name: "{app}"
 Type: files; Name: "{userstartup}\EventGhost.lnk"
 
 [Run]
-Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Icons]
 Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
+Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
 ;Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists
 
 [Registry]
