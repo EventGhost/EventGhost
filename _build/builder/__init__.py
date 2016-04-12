@@ -26,9 +26,7 @@ from os.path import abspath, dirname, exists, join
 import builder
 from builder import VirtualEnv
 from builder.Logging import LogToFile
-from builder.Utils import (
-    DecodePath, GetVersion, GetGitHubConfig, ParseVersion,
-)
+from builder.Utils import GetVersion, GetGitHubConfig
 
 
 class Task(object):

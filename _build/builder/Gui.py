@@ -154,7 +154,7 @@ class MainDialog(wx.Dialog):
                 task.activated = ctrl.GetValue()
                 ctrl.Enable(False)
         self.buildSetup.appVersion, self.buildSetup.appVersionShort = (
-            ParseVersion(self.versionStr.GetValue())
+            ParseVersion(self.versionStr.GetValue())[:2]
         )
         self.buildSetup.gitConfig.update({
             "user": user,

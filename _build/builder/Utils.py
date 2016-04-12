@@ -95,7 +95,7 @@ def GetVersion(buildSetup):
         buildSetup.appVersionShort = buildSetup.appVersion
     else:
         buildSetup.appVersion, buildSetup.appVersionShort = (
-            ParseVersion(buildSetup.args.version)
+            ParseVersion(buildSetup.args.version)[:2]
         )
 
 
@@ -367,14 +367,16 @@ def ParseVersion(ver):
     Return long and short versions of the specified string.
     """
     if not ver or ver == "0.0.0":
-        return ("WIP-%s" % time.strftime("%Y.%m.%d-%H.%M.%S"), "0.0.0")
+        return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), "0.0.0", "0", "0")
     else:
         match = re.search(
             "^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)" +
-            "(?:-(?P<extra>(?:alpha|beta|dev)\d+))*?$", ver
+            "(?:-alpha(?P<alpha>\d+)|-beta(?P<beta>\d+))?$", ver
         )
         if match:
-            return (ver, ".".join(match.groups()[:3]))
+            alpha = match.group("alpha") or "0"
+            beta = match.group("beta") or "0"
+            return (ver, ".".join(match.groups()[:3]), alpha, beta)
         else:
             raise InvalidVersion
 
