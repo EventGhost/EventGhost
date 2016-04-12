@@ -49,7 +49,7 @@ class ForumPage(Page):
 class DocsPage(Page):
     name = "Documentation"
     target = "/docs/"
-    outfile = r"..\docs\_templates\header_docs.html"
+    outfile = "css/header_docs.html"
     template = "header_only.tmpl"
 
 

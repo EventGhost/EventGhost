@@ -53,7 +53,7 @@ def StartProcess(*args):
     startupInfo.wShowWindow = subprocess.SW_HIDE
     process = Popen(
         args,
-        cwd=EncodePath(join(builder.buildSetup.sourceDir, "build")),
+        cwd=EncodePath(join(builder.buildSetup.buildDir)),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         startupinfo=startupInfo,

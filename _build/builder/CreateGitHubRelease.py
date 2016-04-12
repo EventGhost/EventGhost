@@ -50,7 +50,6 @@ class CreateGitHubRelease(builder.Task):
 
     def DoTask(self):
         buildSetup = self.buildSetup
-        srcDir = buildSetup.sourceDir
         appVer = buildSetup.appVersion
         gitConfig = buildSetup.gitConfig
         token = gitConfig["token"]
@@ -59,12 +58,12 @@ class CreateGitHubRelease(builder.Task):
         branch = gitConfig["branch"]
         ref = 'heads/{0}'.format(branch)
         setupFile = 'EventGhost_{0}_Setup.exe'.format(appVer)
-        setupPath = join(srcDir, 'build', 'output', setupFile)
+        setupPath = join(buildSetup.outputDir, setupFile)
         chglogFile = 'CHANGELOG.TXT'
 
         print "reading changelog"
         try:
-            f = open(join(srcDir, chglogFile), 'r')
+            f = open(join(buildSetup.sourceDir, chglogFile), 'r')
         except IOError:
             print "ERROR: couldn't read changelog file ({0}).".format(chglogFile)
             return
@@ -74,7 +73,7 @@ class CreateGitHubRelease(builder.Task):
 
         print "loading setup file"
         try:
-            f = open(join(srcDir, setupPath), 'rb')
+            f = open(setupPath, 'rb')
         except IOError:
             print "ERROR: '{0}' not found.".format(setupFile)
             return

@@ -6,4 +6,4 @@
 Changelog
 =========
 
-.. include:: ../../CHANGELOG.TXT
+.. include:: ../../../CHANGELOG.TXT

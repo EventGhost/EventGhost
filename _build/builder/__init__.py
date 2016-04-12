@@ -58,10 +58,11 @@ class Builder(object):
         Task.buildSetup = self
         buildSetup = self
 
-        baseDir = dirname(DecodePath(__file__))
-        self.sourceDir = abspath(join(baseDir, "../.."))
-        self.websiteDir = join(self.sourceDir, "website")
-        self.dataDir = abspath(join(baseDir, "Data"))
+        self.buildDir = abspath(join(dirname(__file__), ".."))
+        self.sourceDir = abspath(join(self.buildDir, ".."))
+        self.dataDir = join(self.buildDir, "data")
+        self.outputDir = join(self.buildDir, "output")
+        self.websiteDir = join(self.outputDir, "website")
         self.pyVersionStr = "%d%d" % sys.version_info[:2]
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
@@ -152,7 +153,7 @@ class Builder(object):
         from Tasks import TASKS
         self.tasks = [task(self) for task in TASKS]
         from Config import Config
-        self.config = Config(self, join(self.dataDir, "Build.ini"))
+        self.config = Config(self, join(self.outputDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
         GetVersion(self)

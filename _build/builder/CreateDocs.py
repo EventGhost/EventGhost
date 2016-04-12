@@ -31,7 +31,7 @@ from builder.Utils import StartProcess, GetHtmlHelpCompilerPath, EncodePath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
-DOCS_SOURCE_DIR = join(MAIN_DIR, "build", "docs")
+DOCS_SOURCE_DIR = join(builder.buildSetup.dataDir, "docs")
 
 sys.path.append(EncodePath(MAIN_DIR))
 import eg
@@ -192,7 +192,7 @@ class CreateHtmlDocs(builder.Task):
             "-D", "release=%s" % self.buildSetup.appVersion,
             "-d", join(self.buildSetup.tmpDir, ".doctree"),
             DOCS_SOURCE_DIR,
-            join(self.buildSetup.sourceDir, "website", "docs"),
+            join(self.buildSetup.websiteDir, "docs"),
         ])
 
 
