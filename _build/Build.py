@@ -19,15 +19,11 @@
 """
 This script creates the EventGhost setup installer.
 """
-import sys
-import os
-from os.path import abspath, dirname, exists, join
+from os.path import dirname, join
 from glob import glob
-from inspect import stack
 
 # local imports
 import builder
-from builder.Logging import LogToFile
 from builder.Utils import ListDir
 
 
@@ -200,24 +196,6 @@ class MyBuilder(builder.Builder):
         )
         inno.ExecuteInnoSetup()
 
-
-
-# Always execute build from build folder.
-os.chdir(dirname(abspath(stack()[0][1])))
-
-# Create output folder.
-if not exists("output"):
-    os.mkdir("output")
-
-# Initialize logging.
-LogToFile(join("output", "Build.log"))
-
-# Search virtualenv for modules last so stock distutils is used.
-if hasattr(sys, "real_prefix"):
-    for path in sys.path[:]:
-        if path.startswith(sys.prefix):
-            sys.path.remove(path)
-            sys.path.append(path)
 
 MyBuilder().Start()
 

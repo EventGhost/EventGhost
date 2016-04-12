@@ -18,12 +18,14 @@
 
 
 import argparse
+import os
 import sys
 import tempfile
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, exists, join
 
 import builder
 from builder import VirtualEnv
+from builder.Logging import LogToFile
 from builder.Utils import (
     DecodePath, GetVersion, GetGitHubConfig, ParseVersion,
 )
@@ -76,6 +78,13 @@ class Builder(object):
             self.args.release or
             self.args.sync
         )
+
+        os.chdir(self.buildDir)
+
+        if not exists(self.outputDir):
+            os.mkdir(self.outputDir)
+
+        LogToFile(join(self.outputDir, "Build.log"))
 
         from CheckDependencies import CheckDependencies
         if not CheckDependencies(self):

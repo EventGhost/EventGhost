@@ -30,6 +30,10 @@ HOME = os.environ.get("WORKON_HOME", expandvars("%USERPROFILE%\Envs"))
 if hasattr(sys, "real_prefix"):
     NAME = sys.prefix.split("\\")[-1]
     PATH = sys.prefix
+    for path in sys.path[:]:
+        if path.startswith(sys.prefix):
+            sys.path.remove(path)
+            sys.path.append(path)
 else:
     NAME = "eg-py%d%d" % sys.version_info[:2]
     PATH = join(HOME, NAME)
