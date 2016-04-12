@@ -19,7 +19,7 @@
 import os
 import sys
 from glob import glob
-from os.path import exists, join, basename, dirname
+from os.path import basename, exists, join
 
 import builder
 from builder.Utils import EncodePath
@@ -86,7 +86,8 @@ DLL_EXCLUDES = [
     "api-ms-win-power-base-l1-1-0.dll",
     "api-ms-win-power-setting-l1-1-0.dll",
     "api-ms-win-security-activedirectoryclient-l1-1-0.dll",
-    "api-ms-win-security-activedirectoryclient-l1-1-1.dll", "api-ms-win-security-base-l1-2-0.dll",
+    "api-ms-win-security-activedirectoryclient-l1-1-1.dll",
+    "api-ms-win-security-base-l1-2-0.dll",
 ]
 
 def RemoveAllManifests(scanDir):
@@ -97,8 +98,6 @@ def RemoveAllManifests(scanDir):
     This seems to be the only way how the setup can run with Python 2.6
     on Vista and above.
     """
-    # TODO: Check if the above is true for Python 2.7
-
     import ctypes
     BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
     UpdateResource = ctypes.windll.kernel32.UpdateResourceW
@@ -228,6 +227,5 @@ class CreateLibrary(builder.Task):
             if dllName not in neededDlls:
                 os.remove(join(libraryDir, dllName))
 
-        if buildSetup.pyVersionStr == "27":
-            RemoveAllManifests(libraryDir)
+        #RemoveAllManifests(libraryDir)
 
