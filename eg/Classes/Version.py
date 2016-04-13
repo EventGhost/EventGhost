@@ -18,9 +18,11 @@
 
 class Version:
     try:
-        from VersionInfo import string, major, minor, patch, buildTime
+        from VersionInfo import (
+            string, major, minor, patch, alpha, beta, buildTime
+        )
         base = string
     except ImportError:
         base = string = "WIP"
-        major = minor = patch = buildTime = 0
+        major = minor = patch = alpha = beta = buildTime = 0
 
