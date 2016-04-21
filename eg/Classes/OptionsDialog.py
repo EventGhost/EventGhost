@@ -124,7 +124,7 @@ class OptionsDialog(eg.TaskletDialog):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
-        #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,
@@ -177,7 +177,7 @@ class OptionsDialog(eg.TaskletDialog):
                 (hideOnCloseCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
-                #(checkUpdateCtrl, 0, flags),
+                (checkUpdateCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
                 (refreshEnvCtrl, 0, flags),
@@ -214,7 +214,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
-            #config.checkUpdate = checkUpdateCtrl.GetValue()
+            config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
