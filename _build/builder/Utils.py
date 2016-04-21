@@ -88,7 +88,7 @@ def GetVersion(buildSetup):
     if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
         parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
         parts[0] = parts[0].strip('v')
-        while len(parts) < 5:
+        while len(parts) < 6:
             parts.append("0")
         parts[2] = int(parts[2]) + 1
         buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
@@ -372,11 +372,11 @@ def ParseVersion(ver):
     Return long, short, and tuple versions of the specified string.
     """
     if not ver or ver == "0.0.0":
-        return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), "0.0.0", ("0",) * 5)
+        return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), "0.0.0", ("0",) * 6)
     else:
         match = re.search(
             "^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)" +
-            "(?:-alpha(?P<alpha>\d+)|-beta(?P<beta>\d+))?$", ver
+            "(?:-alpha(?P<alpha>\d+)|-beta(?P<beta>\d+)|-rc(?P<rc>\d+))?$", ver
         )
         if match:
             ver_info = tuple(map(lambda x: x or "0", match.groups()))

@@ -34,13 +34,14 @@ class UpdateVersionFile(builder.Task):
         buildSetup.buildTime = time.time()
         filename = join(buildSetup.tmpDir, "VersionInfo.py")
         outfile = open(filename, "wt")
-        major, minor, patch, alpha, beta = buildSetup.appVersionInfo
+        major, minor, patch, alpha, beta, rc = buildSetup.appVersionInfo
         outfile.write("string = '{0}'\n".format(buildSetup.appVersion))
         outfile.write("major = {0}\n".format(major))
         outfile.write("minor = {0}\n".format(minor))
         outfile.write("patch = {0}\n".format(patch))
         outfile.write("alpha = {0}\n".format(alpha))
         outfile.write("beta = {0}\n".format(beta))
+        outfile.write("rc = {0}\n".format(rc))
         outfile.write("buildTime = {0}\n".format(buildSetup.buildTime))
         outfile.close()
 
