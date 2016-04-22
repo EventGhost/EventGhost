@@ -88,6 +88,7 @@ class Config(Section):
         language = 'en_EN'
     autoloadFilePath = False
     checkUpdate = False
+    checkPreRelease = False
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
     confirmDelete = True
     defaultThreadStartTimeout = 5.00

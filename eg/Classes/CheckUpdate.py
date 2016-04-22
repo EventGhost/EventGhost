@@ -21,6 +21,7 @@ import wx
 import threading
 import webbrowser
 from agithub.GitHub import GitHub
+from operator import itemgetter
 
 
 class Text(eg.TranslatableStrings):
@@ -126,53 +127,80 @@ def _checkUpdate(manually=False):
         if manually:
             dialog = ShowWaitDialog()
 
-        token = "d5db10741c1f4cbb766037f96e59525cd59d7980"
-        gh = GitHub(token=token)
+        gh = GitHub()
 
         # get the latest release
         rc, data = gh.repos["EventGhost"]["EventGhost"].releases.latest.get()
         if rc != 200:
             if manually:
-                dialog = wx.MessageDialog(
+                dialog.Destroy()
+                dlg = wx.MessageDialog(
                     None,
                     Text.ManErrorMesg,
                     eg.APP_NAME,
                     style=wx.OK | wx.ICON_ERROR
                 )
-                dialog.ShowModal()
-                dialog.Destroy()
+                dlg.ShowModal()
+                dlg.Destroy()
             return
 
-        cmpResult = compareVersions(eg.Version.string, data["name"])
+        relName = data["name"]
+        relUrl = data["html_url"]
+        cmpResult = compareVersions(eg.Version.string, relName)
+
+        if eg.config.checkPreRelease:
+            # check if we have a pre-release that is newer than latest release
+            # and installed version
+            rc2, data2 = gh.repos["EventGhost"]["EventGhost"].releases.get()
+            if rc2 == 200:
+                prereleases = [item for item in data2 if
+                               item["prerelease"] == True]
+                if len(prereleases) > 0:
+                    latestPreRelease = sorted(
+                        prereleases,
+                        key=itemgetter("created_at", "published_at"),
+                        reverse=True
+                    )[0]
+                    if cmpResult == 2:
+                        result = compareVersions(relName,
+                                                 latestPreRelease["name"])
+                    else:
+                        result = compareVersions(eg.Version.string,
+                                                 latestPreRelease["name"])
+                    if result == 2:
+                        cmpResult = 2
+                        relName = latestPreRelease["name"]
+                        relUrl = latestPreRelease["html_url"]
+
 
         if dialog:
             dialog.Destroy()
             dialog = None
 
         if cmpResult == 2:
-            wx.CallAfter(MessageDialog, data["name"], data["html_url"])
+            wx.CallAfter(MessageDialog, relName, relUrl)
         else:
             if manually:
-                dialog = wx.MessageDialog(
+                dlg = wx.MessageDialog(
                     None,
                     Text.ManOkMesg,
                     eg.APP_NAME,
                     style=wx.OK|wx.ICON_INFORMATION
                 )
-                dialog.ShowModal()
-                dialog.Destroy()
+                dlg.ShowModal()
+                dlg.Destroy()
     except:
         if dialog:
             dialog.Destroy()
         if manually:
-            dialog = wx.MessageDialog(
+            dlg = wx.MessageDialog(
                 None,
                 Text.ManErrorMesg,
                 eg.APP_NAME,
                 style=wx.OK|wx.ICON_ERROR
             )
-            dialog.ShowModal()
-            dialog.Destroy()
+            dlg.ShowModal()
+            dlg.Destroy()
 
 
 

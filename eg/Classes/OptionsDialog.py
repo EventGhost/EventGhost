@@ -41,6 +41,7 @@ class Text(eg.TranslatableStrings):
     )
     StartWithWindows = "Autostart EventGhost on system startup"
     CheckUpdate = "Check for newer version on startup"
+    CheckPreRelease = "Include pre-releases in update check"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
@@ -125,6 +126,7 @@ class OptionsDialog(eg.TaskletDialog):
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,
@@ -178,6 +180,7 @@ class OptionsDialog(eg.TaskletDialog):
                 (useFixedFontCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (checkUpdateCtrl, 0, flags),
+                (checkPreReleaseCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
                 (refreshEnvCtrl, 0, flags),
@@ -215,6 +218,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
             config.checkUpdate = checkUpdateCtrl.GetValue()
+            config.checkPreRelease = checkPreReleaseCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
