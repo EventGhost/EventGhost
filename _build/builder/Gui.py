@@ -22,7 +22,7 @@ import threading
 import wx
 
 import builder
-from Utils import GetVersion, ParseVersion
+from Utils import GetVersion, ParseVersion, InvalidVersion
 
 class MainDialog(wx.Dialog):
 
@@ -97,12 +97,15 @@ class MainDialog(wx.Dialog):
             sb.Disable()
 
         egSzr = wx.StaticBoxSizer(
-            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.HORIZONTAL)
+            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.VERTICAL)
 
         sb = egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
-        self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
-                                      value=buildSetup.appVersionShort)
+        self.versionStr = wx.TextCtrl(
+            sb, wx.ID_ANY,
+            value=buildSetup.appVersionShort,
+            style=wx.TE_PROCESS_ENTER
+            )
         refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
                                          GetBitmap(wx.ART_GO_DOWN))
         refreshVersion.SetToolTip(wx.ToolTip(
@@ -110,11 +113,25 @@ class MainDialog(wx.Dialog):
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
 
-        egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
+        self.chkPrerelease = wx.CheckBox(sb, wx.ID_ANY, label="pre-release")
+        self.chkPrerelease.SetValue(bool(buildSetup.args.prerelease))
+        def OnVersionStringEdited(event):
+            try:
+                v = ParseVersion(event.GetString())
+            except InvalidVersion:
+                pass
+            else:
+                self.chkPrerelease.SetValue(("-" in v[0]))
+        self.versionStr.Bind(wx.EVT_TEXT_ENTER, OnVersionStringEdited)
+        egHszr = wx.BoxSizer(wx.HORIZONTAL)
+        egHszr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
-        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+        egHszr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
-        egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        egHszr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        egSzr.Add(egHszr)
+        egSzr.Add(self.chkPrerelease, 0, wx.ALIGN_CENTER | wx.BOTTOM, 5)
 
         if not self.buildSetup.gitConfig["token"]:
             refreshVersion.Disable()
@@ -160,6 +177,7 @@ class MainDialog(wx.Dialog):
         ) = (
             ParseVersion(self.versionStr.GetValue())
         )
+        self.buildSetup.args.prerelease = self.chkPrerelease.GetValue()
         self.buildSetup.gitConfig.update({
             "user": user,
             "repo": repo,
