@@ -41,7 +41,7 @@ class Text(eg.TranslatableStrings):
     )
     StartWithWindows = "Autostart EventGhost on system startup"
     CheckUpdate = "Check for newer version on startup"
-    CheckPreRelease = "Include pre-releases in update check"
+    CheckPreRelease = "Always notify about new pre-releases"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
