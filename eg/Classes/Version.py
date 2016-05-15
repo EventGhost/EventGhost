@@ -18,10 +18,8 @@
 
 class Version:
     try:
-        from VersionInfo import (
-            string, major, minor, patch, alpha, beta, rc, buildTime
-        )
-        base = string
+        import VersionInfo
+        locals().update(VersionInfo.__dict__)
     except ImportError:
         base = string = "WIP"
         major = minor = patch = alpha = beta = rc = buildTime = 0
