@@ -113,25 +113,13 @@ class MainDialog(wx.Dialog):
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
 
-        self.chkPrerelease = wx.CheckBox(sb, wx.ID_ANY, label="pre-release")
-        self.chkPrerelease.SetValue(bool(buildSetup.args.prerelease))
-        def OnVersionStringEdited(event):
-            try:
-                v = ParseVersion(event.GetString())
-            except InvalidVersion:
-                pass
-            else:
-                self.chkPrerelease.SetValue(("-" in v[0]))
-        self.versionStr.Bind(wx.EVT_TEXT_ENTER, OnVersionStringEdited)
         egHszr = wx.BoxSizer(wx.HORIZONTAL)
         egHszr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
         egHszr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
         egHszr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-
         egSzr.Add(egHszr)
-        egSzr.Add(self.chkPrerelease, 0, wx.ALIGN_CENTER | wx.BOTTOM, 5)
 
         if not self.buildSetup.gitConfig["token"]:
             refreshVersion.Disable()
@@ -177,7 +165,6 @@ class MainDialog(wx.Dialog):
         ) = (
             ParseVersion(self.versionStr.GetValue())
         )
-        self.buildSetup.args.prerelease = self.chkPrerelease.GetValue()
         self.buildSetup.gitConfig.update({
             "user": user,
             "repo": repo,

@@ -197,7 +197,7 @@ class CreateGitHubRelease(builder.Task):
                     'name': 'v{0}'.format(appVer),
                     'body': relChglog,
                     #'draft': False,
-                    'prerelease': bool(self.buildSetup.args.prerelease)
+                    'prerelease': ("-" in self.buildSetup.appVersion)
                     }
             rc, data = gh.repos[user][repo].releases.post(body=body)
             if rc != 201:

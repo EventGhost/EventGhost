@@ -146,11 +146,6 @@ class Builder(object):
             help="release to github and web if credentials available",
         )
         parser.add_argument(
-            "-P", "--prerelease",
-            action="store_true",
-            help="label the github release as pre-release",
-        )
-        parser.add_argument(
             "-s", "--sync",
             action="store_true",
             help="build and synchronize website",
