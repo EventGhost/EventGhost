@@ -19,10 +19,10 @@
 import eg
 import wx
 import re
+import time
 import threading
 import webbrowser
 from agithub.GitHub import GitHub
-from operator import itemgetter
 
 
 class Text(eg.TranslatableStrings):
@@ -38,14 +38,13 @@ class Text(eg.TranslatableStrings):
         "It wasn't possible to get the information from the EventGhost "\
         "website.\n\n"\
         "Please try it again later."
-    wipUpdateMsg = "Update check not available in developer version."
+    wipUpdateMsg = "Update check not available when running from source."
 
 
 class MessageDialog(eg.Dialog):
 
     def __init__(self, version, url):
         self.url = url
-        currentVersion = eg.Version.string
         eg.Dialog.__init__(self, None, -1, eg.APP_NAME)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION,
@@ -54,7 +53,7 @@ class MessageDialog(eg.Dialog):
         )
         staticBitmap = wx.StaticBitmap(self, -1, bmp)
         staticText = self.StaticText(
-            Text.newVersionMesg % (currentVersion, version)
+            Text.newVersionMesg % (eg.Version.string, version)
         )
         downloadButton = wx.Button(self, -1, Text.downloadButton)
         downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -126,64 +125,31 @@ def _checkUpdate(manually=False):
     dialog = None
     try:
         if manually:
-            if eg.Version.base == "WIP":
+            if eg.Version.string == "WIP":
                 wx.MessageBox(Text.wipUpdateMsg, eg.APP_NAME)
                 return
             dialog = ShowWaitDialog()
 
         gh = GitHub()
 
-        # get the latest release
-        rc, data = gh.repos["EventGhost"]["EventGhost"].releases.latest.get()
-        if rc != 200:
-            if manually:
-                dialog.Destroy()
-                dlg = wx.MessageDialog(
-                    None,
-                    Text.ManErrorMesg,
-                    eg.APP_NAME,
-                    style=wx.OK | wx.ICON_ERROR
-                )
-                dlg.ShowModal()
-                dlg.Destroy()
-            return
+        rc, data = gh.repos["EventGhost"]["EventGhost"].releases.get()
+        if rc == 200:
+            for rel in data:
+                if rel["prerelease"]:
+                    if eg.config.checkPreRelease or "-" in eg.Version.string:
+                        break
+                else:
+                    break
 
-        relName = data["name"]
-        relUrl = data["html_url"]
-        cmpResult = compareVersions(eg.Version.string, relName)
-
-        if eg.config.checkPreRelease:
-            # check if we have a pre-release that is newer than latest release
-            # and installed version
-            rc2, data2 = gh.repos["EventGhost"]["EventGhost"].releases.get()
-            if rc2 == 200:
-                prereleases = [item for item in data2 if
-                               item["prerelease"] == True]
-                if len(prereleases) > 0:
-                    latestPreRelease = sorted(
-                        prereleases,
-                        key=itemgetter("created_at", "published_at"),
-                        reverse=True
-                    )[0]
-                    if cmpResult == 2:
-                        result = compareVersions(
-                            relName,
-                            latestPreRelease["name"]
-                        )
-                    else:
-                        result = compareVersions(
-                            eg.Version.string,
-                            latestPreRelease["name"]
-                        )
-                    if result == 2:
-                        cmpResult = 2
-                        relName = latestPreRelease["name"]
-                        relUrl = latestPreRelease["html_url"]
         if dialog:
             dialog.Destroy()
             dialog = None
-        if cmpResult == 2:
-            wx.CallAfter(MessageDialog, relName, relUrl)
+
+        time_release = time.strptime(
+            rel["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        time_local_eg = time.gmtime(eg.Version.buildTime)
+        if rc == 200 and time_release > time_local_eg:
+            wx.CallAfter(MessageDialog, rel["name"], rel["html_url"])
         else:
             if manually:
                 dlg = wx.MessageDialog(
