@@ -60,7 +60,6 @@ class Builder(object):
         self.pyVersionStr = "%d%d" % sys.version_info[:2]
         self.buildDir = abspath(join(dirname(__file__), ".."))
         self.sourceDir = abspath(join(self.buildDir, ".."))
-        sys.path.append(self.sourceDir)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
         self.dataDir = join(self.buildDir, "data")
@@ -68,6 +67,9 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.outputDir = join(self.buildDir, "output")
         self.websiteDir = join(self.outputDir, "website")
+
+        sys.path.append(self.sourceDir)
+        sys.path.append(join(self.libraryDir, "site-packages"))
 
         self.args = self.ParseArgs()
         self.showGui = not (
