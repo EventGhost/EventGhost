@@ -87,7 +87,7 @@ class Config(Section):
     else:
         language = 'en_EN'
     autoloadFilePath = False
-    checkUpdate = False
+    checkUpdate = True
     checkPreRelease = False
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
     confirmDelete = True

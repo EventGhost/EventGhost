@@ -19,7 +19,6 @@
 import eg
 import wx
 import os
-import sys
 
 from wx.combo import BitmapComboBox
 
@@ -127,6 +126,11 @@ class OptionsDialog(eg.TaskletDialog):
 
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
+        checkPreReleaseCtrl.Enable(config.checkUpdate)
+        def OnCheckUpdateCheckBox(event):
+            checkPreReleaseCtrl.Enable(event.IsChecked())
+        checkUpdateCtrl.Bind(wx.EVT_CHECKBOX, OnCheckUpdateCheckBox)
+
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,

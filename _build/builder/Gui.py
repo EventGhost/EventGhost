@@ -22,7 +22,7 @@ import threading
 import wx
 
 import builder
-from Utils import GetVersion, ParseVersion, InvalidVersion
+from Utils import GetVersion, ParseVersion
 
 class MainDialog(wx.Dialog):
 
@@ -97,15 +97,12 @@ class MainDialog(wx.Dialog):
             sb.Disable()
 
         egSzr = wx.StaticBoxSizer(
-            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.VERTICAL)
+            wx.StaticBox(self, wx.ID_ANY, "EventGhost"), wx.HORIZONTAL)
 
         sb = egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
-        self.versionStr = wx.TextCtrl(
-            sb, wx.ID_ANY,
-            value=buildSetup.appVersionShort,
-            style=wx.TE_PROCESS_ENTER
-            )
+        self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
+                                      value=buildSetup.appVersionShort)
         refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
                                          GetBitmap(wx.ART_GO_DOWN))
         refreshVersion.SetToolTip(wx.ToolTip(
@@ -113,13 +110,11 @@ class MainDialog(wx.Dialog):
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
 
-        egHszr = wx.BoxSizer(wx.HORIZONTAL)
-        egHszr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
+        egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5 )
-        egHszr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
-        egHszr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        egSzr.Add(egHszr)
+        egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         if not self.buildSetup.gitConfig["token"]:
             refreshVersion.Disable()

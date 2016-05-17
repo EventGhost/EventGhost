@@ -18,7 +18,6 @@
 
 import eg
 import wx
-import re
 import time
 import threading
 import webbrowser
@@ -185,66 +184,3 @@ class CheckUpdate:
     @classmethod
     def CheckUpdateManually(cls):
         _checkUpdate(manually=True)
-
-
-def compareVersions(ver_a, ver_b):
-    """ Compare two version numbers. Return 0 if a==b or error, 1 if a>b and 2 if b>a """
-    if not ver_a or not ver_b:
-        return 0
-    try:
-        a = Version(ver_a)
-        b = Version(ver_b)
-    except InvalidVersion:
-        return -1
-
-    if a > b:
-        return 1
-    elif b > a:
-        return 2
-    return 0
-
-
-class InvalidVersion(Exception):
-    pass
-
-
-def ParseVersion(ver):
-    match = re.search(
-        "^v?(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
-        "(-(?P<pre>:alpha|beta|rc)(?P<pre_nr>\d+))?$",
-        ver.strip().lower()
-    )
-    if match:
-        return match.groupdict()
-    else:
-        raise InvalidVersion
-
-
-class Version:
-    def __init__(self, ver_str):
-        ver = ParseVersion(ver_str)
-        self.ver_str = "{0:04}{1:04}{2:04}{3}{4:04}".format(
-            int(ver["major"]),
-            int(ver["minor"]),
-            int(ver["patch"]),
-            ver["pre"] if ver["pre"] else "z",
-            int(ver["pre_nr"]) if ver["pre_nr"] else 9999
-        )
-
-    def __lt__(self, other):
-        return self.ver_str < other.ver_str
-
-    def __le__(self, other):
-        return self.ver_str <= other.ver_str
-
-    def __gt__(self, other):
-        return self.ver_str > other.ver_str
-
-    def __ge__(self, other):
-        return self.ver_str >= other.ver_str
-
-    def __eq__(self, other):
-        return self.ver_str == other.ver_str
-
-    def __ne__(self, other):
-        return self.ver_str != other.ver_str
