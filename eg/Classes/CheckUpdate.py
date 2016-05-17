@@ -18,9 +18,10 @@
 
 import eg
 import wx
+import time
 import threading
-import httplib
 import webbrowser
+from agithub.GitHub import GitHub
 
 
 class Text(eg.TranslatableStrings):
@@ -36,14 +37,13 @@ class Text(eg.TranslatableStrings):
         "It wasn't possible to get the information from the EventGhost "\
         "website.\n\n"\
         "Please try it again later."
-
+    wipUpdateMsg = "Update check not available when running from source."
 
 
 class MessageDialog(eg.Dialog):
 
     def __init__(self, version, url):
         self.url = url
-        currentVersion = eg.Version.string
         eg.Dialog.__init__(self, None, -1, eg.APP_NAME)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION,
@@ -52,7 +52,7 @@ class MessageDialog(eg.Dialog):
         )
         staticBitmap = wx.StaticBitmap(self, -1, bmp)
         staticText = self.StaticText(
-            Text.newVersionMesg % (currentVersion, version)
+            Text.newVersionMesg % (eg.Version.string, version)
         )
         downloadButton = wx.Button(self, -1, Text.downloadButton)
         downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -124,49 +124,53 @@ def _checkUpdate(manually=False):
     dialog = None
     try:
         if manually:
+            if eg.Version.string == "WIP":
+                wx.MessageBox(Text.wipUpdateMsg, eg.APP_NAME)
+                return
             dialog = ShowWaitDialog()
-        conn = httplib.HTTPConnection("www.eventghost.net")
-        conn.connect()
-        conn.sock.settimeout(10.0)
-        conn.request("GET", "/latest_version.txt")
-        response = conn.getresponse()
+
+        gh = GitHub()
+
+        rc, data = gh.repos["EventGhost"]["EventGhost"].releases.get()
+        if rc == 200:
+            for rel in data:
+                if rel["prerelease"]:
+                    if eg.config.checkPreRelease or "-" in eg.Version.string:
+                        break
+                else:
+                    break
+
         if dialog:
             dialog.Destroy()
             dialog = None
-        if response.status != 200:
-            conn.close()
-            raise
-        data = response.read().splitlines()
-        conn.close()
-        newVersion = data[0]
-        newVersionTuple = newVersion.split(".")
-        currentVersionTuple = eg.Version.string.split(".")
-        numParts = min(len(newVersionTuple), len(currentVersionTuple))
-        for i in range(numParts):
-            if newVersionTuple[i] > currentVersionTuple[i]:
-                wx.CallAfter(MessageDialog, newVersion, data[1])
-                return
-        if manually:
-            dialog = wx.MessageDialog(
-                None,
-                Text.ManOkMesg,
-                eg.APP_NAME,
-                style=wx.OK|wx.ICON_INFORMATION
-            )
-            dialog.ShowModal()
-            dialog.Destroy()
+
+        time_release = time.strptime(
+            rel["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        time_local_eg = time.gmtime(eg.Version.buildTime)
+        if rc == 200 and time_release > time_local_eg:
+            wx.CallAfter(MessageDialog, rel["name"], rel["html_url"])
+        else:
+            if manually:
+                dlg = wx.MessageDialog(
+                    None,
+                    Text.ManOkMesg,
+                    eg.APP_NAME,
+                    style=wx.OK|wx.ICON_INFORMATION
+                )
+                dlg.ShowModal()
+                dlg.Destroy()
     except:
         if dialog:
             dialog.Destroy()
         if manually:
-            dialog = wx.MessageDialog(
+            dlg = wx.MessageDialog(
                 None,
                 Text.ManErrorMesg,
                 eg.APP_NAME,
                 style=wx.OK|wx.ICON_ERROR
             )
-            dialog.ShowModal()
-            dialog.Destroy()
+            dlg.ShowModal()
+            dlg.Destroy()
 
 
 
@@ -180,4 +184,3 @@ class CheckUpdate:
     @classmethod
     def CheckUpdateManually(cls):
         _checkUpdate(manually=True)
-

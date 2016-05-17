@@ -19,7 +19,6 @@
 import eg
 import wx
 import os
-import sys
 
 from wx.combo import BitmapComboBox
 
@@ -41,6 +40,7 @@ class Text(eg.TranslatableStrings):
     )
     StartWithWindows = "Autostart EventGhost on system startup"
     CheckUpdate = "Check for newer version on startup"
+    CheckPreRelease = "Always notify about new pre-releases"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
@@ -124,7 +124,13 @@ class OptionsDialog(eg.TaskletDialog):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
-        #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
+        checkPreReleaseCtrl.Enable(config.checkUpdate)
+        def OnCheckUpdateCheckBox(event):
+            checkPreReleaseCtrl.Enable(event.IsChecked())
+        checkUpdateCtrl.Bind(wx.EVT_CHECKBOX, OnCheckUpdateCheckBox)
+
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,
@@ -177,7 +183,8 @@ class OptionsDialog(eg.TaskletDialog):
                 (hideOnCloseCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
-                #(checkUpdateCtrl, 0, flags),
+                (checkUpdateCtrl, 0, flags),
+                (checkPreReleaseCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
                 (refreshEnvCtrl, 0, flags),
@@ -214,7 +221,8 @@ class OptionsDialog(eg.TaskletDialog):
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
-            #config.checkUpdate = checkUpdateCtrl.GetValue()
+            config.checkUpdate = checkUpdateCtrl.GetValue()
+            config.checkPreRelease = checkPreReleaseCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
