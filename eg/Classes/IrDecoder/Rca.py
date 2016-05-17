@@ -16,11 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 class Rca(IrProtocolBase):
-
     def Decode(self, data):
         raise DecodeError("not implemented")
-

@@ -19,9 +19,7 @@
 import pythoncom
 from win32com.shell import shell
 
-
 class Shortcut:
-
     @classmethod
     def Create(
         cls,
@@ -63,7 +61,6 @@ class Shortcut:
         persist = sh.QueryInterface(pythoncom.IID_IPersistFile)
         persist.Save(path, 1)
 
-
     @classmethod
     def Get(cls, filename):
         sh = pythoncom.CoCreateInstance(
@@ -72,7 +69,7 @@ class Shortcut:
             pythoncom.CLSCTX_INPROC_SERVER,
             shell.IID_IShellLink
         )
-        persist = sh.QueryInterface(pythoncom.IID_IPersistFile).Load(filename)
+        persist = sh.QueryInterface(pythoncom.IID_IPersistFile).Load(filename)  # NOQA
         self = cls()
         self.path = filename
         self.target = sh.GetPath(shell.SLGP_SHORTPATH)[0]
@@ -81,4 +78,3 @@ class Shortcut:
         self.startIn = sh.GetWorkingDirectory()
         self.icons = sh.GetIconLocation()
         return self
-

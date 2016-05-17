@@ -18,31 +18,32 @@
 
 import re
 
+# Local imports
 from Dynamic import (
     byref,
-    sizeof,
-    cast,
-    WinError,
-    GetLastError,
-    create_unicode_buffer,
-    Structure,
     c_ubyte,
+    cast,
+    create_unicode_buffer,
     DWORD,
+    GetLastError,
     PBYTE,
+    sizeof,
+    Structure,
     TCHAR,
+    WinError,
 )
 from Dynamic.SetupApi import (
+    DIGCF_PRESENT,
+    GUID,
+    PSP_DEVICE_INTERFACE_DETAIL_DATA,
     SetupDiDestroyDeviceInfoList,
     SetupDiEnumDeviceInterfaces,
     SetupDiGetClassDevs,
     SetupDiGetDeviceInterfaceDetail,
     SetupDiGetDeviceRegistryProperty,
-    GUID,
-    SP_DEVINFO_DATA,
     SP_DEVICE_INTERFACE_DATA,
     SP_DEVICE_INTERFACE_DETAIL_DATA,
-    PSP_DEVICE_INTERFACE_DETAIL_DATA,
-    DIGCF_PRESENT,
+    SP_DEVINFO_DATA,
 )
 
 GUID_CLASS_COMPORT = GUID(
@@ -52,14 +53,13 @@ GUID_CLASS_COMPORT = GUID(
     (c_ubyte * 8)(0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73)
 )
 
-DIGCF_PRESENT = 2
+#DIGCF_PRESENT = 2
 DIGCF_DEVICEINTERFACE = 16
 INVALID_HANDLE_VALUE = 0
 ERROR_INSUFFICIENT_BUFFER = 122
 SPDRP_HARDWAREID = 1
 SPDRP_FRIENDLYNAME = 12
 ERROR_NO_MORE_ITEMS = 259
-
 
 def GetComPorts(availableOnly=True):
     """
@@ -106,11 +106,12 @@ def GetComPorts(availableOnly=True):
             err = GetLastError()
             if err != ERROR_INSUFFICIENT_BUFFER:
                 raise WinError(err)
+
         # allocate buffer
         class _SP_DEVICE_INTERFACE_DETAIL_DATA(Structure):
             _fields_ = [
                 ('cbSize', DWORD),
-                ('DevicePath', TCHAR*(dwRequiredSize.value - sizeof(DWORD))),
+                ('DevicePath', TCHAR * (dwRequiredSize.value - sizeof(DWORD))),
             ]
         idd = _SP_DEVICE_INTERFACE_DETAIL_DATA()
         idd.cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
@@ -132,7 +133,7 @@ def GetComPorts(availableOnly=True):
             SPDRP_HARDWAREID,
             None,
             cast(stringBuffer, PBYTE),
-            sizeof(stringBuffer)-1,
+            sizeof(stringBuffer) - 1,
             None
         ):
             # Ignore ERROR_INSUFFICIENT_BUFFER
@@ -147,7 +148,7 @@ def GetComPorts(availableOnly=True):
             SPDRP_FRIENDLYNAME,
             None,
             cast(stringBuffer, PBYTE),
-            sizeof(stringBuffer)-1,
+            sizeof(stringBuffer) - 1,
             None
         ):
             # Ignore ERROR_INSUFFICIENT_BUFFER
@@ -162,8 +163,6 @@ def GetComPorts(availableOnly=True):
     SetupDiDestroyDeviceInfoList(hdi)
     return result
 
-
 if __name__ == '__main__':
     for port, desc, hwid in GetComPorts():
         print "%s: %s" % (port, desc)
-

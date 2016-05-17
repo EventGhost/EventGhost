@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from MacroItem import MacroItem
 from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_AFTER
-
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
@@ -56,23 +56,18 @@ class AutostartItem(MacroItem):
         self.name = eg.text.General.autostartItem
         self.document.autostartMacro = self
 
-
     def CanCut(self):
         return False
-
 
     def CanCopy(self):
         return False
 
-
     def CanDelete(self):
         return False
-
 
     def Enable(self, flag=True):
         # never disable the Autostart item
         pass
-
 
     @eg.LogIt
     @eg.AssertInActionThread
@@ -81,4 +76,3 @@ class AutostartItem(MacroItem):
             if child.__class__ == self.document.PluginItem:
                 child.info.Close()
                 child.info.RemovePluginInstance()
-

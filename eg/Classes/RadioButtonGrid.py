@@ -18,7 +18,6 @@
 
 import wx
 
-
 class RadioButtonGrid(wx.Panel):
     CtrlType = wx.RadioButton
     firstCtrlStyle = wx.RB_GROUP
@@ -75,12 +74,6 @@ class RadioButtonGrid(wx.Panel):
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
-
-    def OnSize(self, event):
-        if self.GetAutoLayout():
-            self.Layout()
-
-
     def GetValue(self):
         result = []
         for column in self.ctrlTable:
@@ -90,8 +83,10 @@ class RadioButtonGrid(wx.Panel):
             result.append(i)
         return result
 
+    def OnSize(self, event):
+        if self.GetAutoLayout():
+            self.Layout()
 
     def SetValue(self, value):
         for column, val in enumerate(value):
             self.ctrlTable[column][val].SetValue(True)
-

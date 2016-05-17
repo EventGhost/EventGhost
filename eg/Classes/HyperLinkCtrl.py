@@ -16,13 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx.lib.hyperlink
 import webbrowser
+import wx.lib.hyperlink
 from threading import Thread
 
-
 class HyperLinkCtrl(wx.lib.hyperlink.HyperLinkCtrl):
-
     def GotoURL(self, URL, ReportErrors=True, NotSameWinIfPossible=False):
         Thread(
             target=webbrowser.open,
@@ -31,4 +29,3 @@ class HyperLinkCtrl(wx.lib.hyperlink.HyperLinkCtrl):
         self.SetVisited(True)
         self.UpdateLink(True)
         return True
-

@@ -16,7 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+from os.path import abspath, dirname, join, splitext
+
+# Local imports
 import eg
+from eg.WinApi import GetClassName, GetTopLevelWindowList
+from eg.WinApi.Dynamic import (
+    BOOL, byref, CDLL, DeregisterShellHookWindow, DWORD, EnumWindows,
+    FreeLibrary, GA_ROOT, GetAncestor, GetShellWindow, GetWindowLong,
+    GetWindowThreadProcessId, GWL_HWNDPARENT, GWL_STYLE,
+    HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED,
+    HWND, IsWindowVisible, LPARAM, RegisterShellHookWindow,
+    RegisterWindowMessage, WINFUNCTYPE, WM_APP, WS_VISIBLE,
+)
+from eg.WinApi.Utils import GetProcessName
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
@@ -44,71 +57,22 @@ eg.RegisterPlugin(
     ),
 )
 
-import wx
-from os.path import abspath, join, dirname, splitext
-from eg.WinApi.Dynamic import (
-    DWORD, CDLL, byref, GetWindowThreadProcessId, RegisterWindowMessage,
-    RegisterShellHookWindow, DeregisterShellHookWindow, GetWindowLong,
-    EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE,
-    HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HSHELL_WINDOWACTIVATED,
-    WS_VISIBLE, GWL_HWNDPARENT, IsWindowVisible, GetAncestor, GA_ROOT,
-    GetShellWindow, FreeLibrary
-)
-from eg.WinApi.Utils import GetProcessName
-from eg.WinApi import GetTopLevelWindowList, GetWindowText, GetClassName
-
 ENUM_WINDOWS_PROC_TYPE = WINFUNCTYPE(BOOL, HWND, LPARAM)
 EnumWindows.argtypes = [ENUM_WINDOWS_PROC_TYPE, LPARAM]
 
 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 
-
-def GetWindowPid(hwnd):
-    dwProcessId = DWORD()
-    GetWindowThreadProcessId(hwnd, byref(dwProcessId))
-    return dwProcessId.value
-
-
-class ProcessInfo(object):
-
-    def __init__(self, name):
-        self.name = name
-        self.hwnds = set()
-
-
-
-def EnumProcesses():
-    names = {}
-    hwnds = {}
-    dwProcessId = DWORD()
-    for hwnd in GetTopLevelWindowList(False):
-        GetWindowThreadProcessId(hwnd, byref(dwProcessId))
-        pid = dwProcessId.value
-        name = splitext(GetProcessName(pid))[0]
-        if name not in names:
-            processInfo = ProcessInfo(name)
-            names[name] = processInfo
-        else:
-            processInfo = names[name]
-        processInfo.hwnds.add(hwnd)
-        hwnds[hwnd] = processInfo
-    return names, hwnds
-
-
-
 class Task(eg.PluginBase):
-
     def __init__(self):
         self.AddEvents()
-
 
     def __start__(self, *dummyArgs):
         self.names, self.hwnds = EnumProcesses()
         self.flashing = set()
         self.lastActivated = None
-        eg.messageReceiver.AddHandler(WM_APP+1, self.WindowGotFocusProc)
-        eg.messageReceiver.AddHandler(WM_APP+2, self.WindowCreatedProc)
-        eg.messageReceiver.AddHandler(WM_APP+3, self.WindowDestroyedProc)
+        eg.messageReceiver.AddHandler(WM_APP + 1, self.WindowGotFocusProc)
+        eg.messageReceiver.AddHandler(WM_APP + 2, self.WindowCreatedProc)
+        eg.messageReceiver.AddHandler(WM_APP + 3, self.WindowDestroyedProc)
         eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
         self.hookDll = CDLL(abspath(join(dirname(__file__), "TaskHook.dll")))
@@ -121,16 +85,14 @@ class Task(eg.PluginBase):
                     break
         self.desktopHwnds = (GetShellWindow(), trayWindow)
 
-
     def __stop__(self):
         self.hookDll.StopHook()
         FreeLibrary(self.hookDll._handle)
         DeregisterShellHookWindow(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
-        eg.messageReceiver.RemoveHandler(WM_APP+1, self.WindowGotFocusProc)
-        eg.messageReceiver.RemoveHandler(WM_APP+2, self.WindowCreatedProc)
-        eg.messageReceiver.RemoveHandler(WM_APP+3, self.WindowDestroyedProc)
-
+        eg.messageReceiver.RemoveHandler(WM_APP + 1, self.WindowGotFocusProc)
+        eg.messageReceiver.RemoveHandler(WM_APP + 2, self.WindowCreatedProc)
+        eg.messageReceiver.RemoveHandler(WM_APP + 3, self.WindowDestroyedProc)
 
     def CheckWindow(self, hwnd):
         hwnd2 = GetAncestor(hwnd, GA_ROOT)
@@ -159,10 +121,17 @@ class Task(eg.PluginBase):
         self.TriggerEvent("NewWindow." + name)
         return name, hwnd
 
+    def MyWndProc(self, dummyHwnd, dummyMesg, wParam, lParam):
+        if wParam == HSHELL_WINDOWDESTROYED:
+            self.WindowDestroyedProc(None, None, lParam, None)
+        elif wParam in (HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED, 0x8004):
+            self.WindowGotFocusProc(None, None, lParam, None)
+        elif wParam == 0x8006:
+            self.WindowFlashedProc(None, None, lParam, None)
+        return 1
 
     def WindowCreatedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         self.CheckWindow(hwnd)
-
 
     def WindowDestroyedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         #hwnd2 = GetAncestor(hwnd, GA_ROOT)
@@ -179,13 +148,11 @@ class Task(eg.PluginBase):
                 self.TriggerEvent("Destroyed." + name)
                 self.names.pop(name, None)
 
-
     def WindowFlashedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         processInfo = self.hwnds.get(hwnd, None)
         if processInfo and hwnd not in self.flashing:
             self.flashing.add(hwnd)
             self.TriggerEvent("Flashed." + processInfo.name)
-
 
     def WindowGotFocusProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         ident = self.CheckWindow(hwnd)
@@ -198,12 +165,30 @@ class Task(eg.PluginBase):
             self.lastActivated = ident
 
 
-    def MyWndProc(self, dummyHwnd, dummyMesg, wParam, lParam):
-        if wParam == HSHELL_WINDOWDESTROYED:
-            self.WindowDestroyedProc(None, None, lParam, None)
-        elif wParam in (HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED, 0x8004):
-            self.WindowGotFocusProc(None, None, lParam, None)
-        elif wParam == 0x8006:
-            self.WindowFlashedProc(None, None, lParam, None)
-        return 1
+class ProcessInfo(object):
+    def __init__(self, name):
+        self.name = name
+        self.hwnds = set()
 
+
+def EnumProcesses():
+    names = {}
+    hwnds = {}
+    dwProcessId = DWORD()
+    for hwnd in GetTopLevelWindowList(False):
+        GetWindowThreadProcessId(hwnd, byref(dwProcessId))
+        pid = dwProcessId.value
+        name = splitext(GetProcessName(pid))[0]
+        if name not in names:
+            processInfo = ProcessInfo(name)
+            names[name] = processInfo
+        else:
+            processInfo = names[name]
+        processInfo.hwnds.add(hwnd)
+        hwnds[hwnd] = processInfo
+    return names, hwnds
+
+def GetWindowPid(hwnd):
+    dwProcessId = DWORD()
+    GetWindowThreadProcessId(hwnd, byref(dwProcessId))
+    return dwProcessId.value

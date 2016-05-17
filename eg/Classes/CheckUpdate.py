@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
-import time
 import threading
+import time
 import webbrowser
+import wx
 from agithub.GitHub import GitHub
 
+# Local imports
+import eg
 
 class Text(eg.TranslatableStrings):
     newVersionMesg = \
@@ -40,8 +41,18 @@ class Text(eg.TranslatableStrings):
     wipUpdateMsg = "Update check not available when running from source."
 
 
-class MessageDialog(eg.Dialog):
+class CheckUpdate:
+    @classmethod
+    @eg.LogIt
+    def Start(cls):
+        threading.Thread(target=_checkUpdate, name="CheckUpdate").start()
 
+    @classmethod
+    def CheckUpdateManually(cls):
+        _checkUpdate(manually=True)
+
+
+class MessageDialog(eg.Dialog):
     def __init__(self, version, url):
         self.url = url
         eg.Dialog.__init__(self, None, -1, eg.APP_NAME)
@@ -60,12 +71,12 @@ class MessageDialog(eg.Dialog):
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
 
         sizer2 = eg.HBoxSizer(
-            (staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10),
+            (staticBitmap, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 10),
             ((5, 5), 0),
             (
                 staticText,
                 0,
-                wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL,
+                wx.TOP | wx.RIGHT | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL,
                 10
             ),
         )
@@ -85,15 +96,12 @@ class MessageDialog(eg.Dialog):
         )
         self.ShowModal()
 
-
     def OnCancel(self, event):
         self.Close()
-
 
     def OnOk(self, event):
         webbrowser.open(self.url, True, True)
         self.Close()
-
 
 
 def CenterOnParent(self):
@@ -107,9 +115,8 @@ def CenterOnParent(self):
         ((parentWidth - width) / 2 + x, (parentHeight - height) / 2 + y)
     )
 
-
 def ShowWaitDialog():
-    dialog = wx.Dialog(None, style=wx.THICK_FRAME|wx.DIALOG_NO_PARENT)
+    dialog = wx.Dialog(None, style=wx.THICK_FRAME | wx.DIALOG_NO_PARENT)
     staticText = wx.StaticText(dialog, -1, Text.waitMesg)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     sizer.Add(staticText, 1, wx.ALL, 20)
@@ -118,7 +125,6 @@ def ShowWaitDialog():
     dialog.Show()
     wx.GetApp().Yield()
     return dialog
-
 
 def _checkUpdate(manually=False):
     if eg.Version.string == "WIP":
@@ -157,7 +163,7 @@ def _checkUpdate(manually=False):
                     None,
                     Text.ManOkMesg,
                     eg.APP_NAME,
-                    style=wx.OK|wx.ICON_INFORMATION
+                    style=wx.OK | wx.ICON_INFORMATION
                 )
                 dlg.ShowModal()
                 dlg.Destroy()
@@ -169,20 +175,7 @@ def _checkUpdate(manually=False):
                 None,
                 Text.ManErrorMesg,
                 eg.APP_NAME,
-                style=wx.OK|wx.ICON_ERROR
+                style=wx.OK | wx.ICON_ERROR
             )
             dlg.ShowModal()
             dlg.Destroy()
-
-
-
-class CheckUpdate:
-    @classmethod
-    @eg.LogIt
-    def Start(cls):
-        threading.Thread(target=_checkUpdate, name="CheckUpdate").start()
-
-
-    @classmethod
-    def CheckUpdateManually(cls):
-        _checkUpdate(manually=True)

@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 class Sony(IrProtocolBase):
     """
     IR decoder for the Sony SIRC protocol.
     """
-
     def Decode(self, data):
         if not (1800 < data[0] < 3000):
             raise DecodeError("wrong header pulse")
@@ -41,7 +40,7 @@ class Sony(IrProtocolBase):
                     break
                 raise DecodeError("space too long %d" % space)
 
-            mark = data[i+1]
+            mark = data[i + 1]
             if mark < 250:
                 raise DecodeError("mark too short %d" % mark)
             elif mark < 1000:
@@ -54,4 +53,3 @@ class Sony(IrProtocolBase):
             i += 2
 
         return "SIRC%d.%0.4X" % (i / 2, buf)
-

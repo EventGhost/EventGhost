@@ -16,17 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import math
 
+# Local imports
+import eg
 
 class SmartSpinIntCtrl(eg.SmartSpinNumCtrl):
     """
     A wx.Control that shows a integer value and spin buttons to let the user
     easily input an integer value.
     """
-
     def __init__(
         self,
         parent,
@@ -34,7 +33,7 @@ class SmartSpinIntCtrl(eg.SmartSpinNumCtrl):
         value=0,
         min=0,
         max=None,
-        size=(-1,-1),
+        size=(-1, -1),
         style=0,
         numWidth = 60,
         textWidth = 120,
@@ -61,4 +60,3 @@ class SmartSpinIntCtrl(eg.SmartSpinNumCtrl):
             numWidth = numWidth,
             textWidth = textWidth
         )
-

@@ -16,29 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
-
-def DeepCopy(lst):
-    res = []
-    for item in lst:
-        if type(item) in (list, tuple):
-            res.append(DeepCopy(item))
-        else:
-            res.append(item)
-    if type(lst) is tuple:
-        res = tuple(res)
-    return res
-
-
-def DoExecute(item, newArgs):
-    oldArgs = item.GetArguments()
-    item.SetArguments(newArgs)
-    item.Execute()
-    item.SetArguments(oldArgs)
-
 
 class Configure(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Configure.replace("&", "")
@@ -52,8 +34,8 @@ class Configure(UndoHandlerBase):
         ActionThreadFunc = eg.actionThread.Func
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
         #oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
-        newArgs = ActionThreadFunc(item.GetArguments)() # bugfix: http://www.eventghost.net/forum/viewtopic.php?f=4&t=3676
-        oldArgs = DeepCopy(newArgs)                     # bugfix
+        newArgs = ActionThreadFunc(item.GetArguments)()  # bugfix: http://www.eventghost.net/forum/viewtopic.php?f=4&t=3676
+        oldArgs = DeepCopy(newArgs)                      # bugfix
         revertOnCancel = False
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
 
@@ -82,7 +64,6 @@ class Configure(UndoHandlerBase):
             item.Refresh()
         return True
 
-
     @eg.AssertInActionThread
     def Undo(self):
         item = self.treePosition.GetItem()
@@ -96,3 +77,20 @@ class Configure(UndoHandlerBase):
 
     Redo = Undo
 
+
+def DeepCopy(lst):
+    res = []
+    for item in lst:
+        if type(item) in (list, tuple):
+            res.append(DeepCopy(item))
+        else:
+            res.append(item)
+    if type(lst) is tuple:
+        res = tuple(res)
+    return res
+
+def DoExecute(item, newArgs):
+    oldArgs = item.GetArguments()
+    item.SetArguments(newArgs)
+    item.Execute()
+    item.SetArguments(oldArgs)

@@ -16,12 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 import types
-
+import wx
 
 class BoxedGroup(wx.StaticBoxSizer):
-
     def __init__(self, parent, label="", *items):
         staticBox = wx.StaticBox(parent, -1, label)
         wx.StaticBoxSizer.__init__(self, staticBox, wx.VERTICAL)
@@ -33,7 +31,7 @@ class BoxedGroup(wx.StaticBoxSizer):
                 lineSizer.Add(
                     labelCtrl,
                     0,
-                    wx.LEFT|wx.ALIGN_CENTER_VERTICAL,
+                    wx.LEFT | wx.ALIGN_CENTER_VERTICAL,
                     5
                 )
                 self.items.append([labelCtrl])
@@ -45,28 +43,25 @@ class BoxedGroup(wx.StaticBoxSizer):
                         lineSizer.Add(
                             subitem,
                             0,
-                            wx.LEFT|wx.ALIGN_CENTER_VERTICAL,
+                            wx.LEFT | wx.ALIGN_CENTER_VERTICAL,
                             5
                         )
                     else:
                         lineSizer.Add(
                             subitem,
                             0,
-                            wx.ALL|wx.ALIGN_CENTER_VERTICAL,
+                            wx.ALL | wx.ALIGN_CENTER_VERTICAL,
                             5
                         )
                     lineItems.append(subitem)
                 self.items.append(lineItems)
             else:
-                lineSizer.Add(item, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+                lineSizer.Add(item, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
                 self.items.append([item])
             self.Add(lineSizer, 0, wx.EXPAND)
-
-
-    def GetColumnItems(self, colNum):
-        return [row[colNum] for row in self.items if len(row) > colNum]
-
 
     def AppendItem(self):
         pass
 
+    def GetColumnItems(self, colNum):
+        return [row[colNum] for row in self.items if len(row) > colNum]

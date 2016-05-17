@@ -17,13 +17,15 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
+import eg
 from eg.Icons import GetInternalBitmap
 
 class FontSelectButton(wx.BitmapButton):
     """
     A button to select a font.
     """
-
     def __init__(
         self,
         parent,
@@ -49,6 +51,8 @@ class FontSelectButton(wx.BitmapButton):
         )
         self.Bind(wx.EVT_BUTTON, self.OnButton)
 
+    def GetValue(self):
+        return self.value
 
     def OnButton(self, event):
         fontData = wx.FontData()
@@ -70,11 +74,5 @@ class FontSelectButton(wx.BitmapButton):
         evt = eg.ValueChangedEvent(self.GetId(), value = self.value)
         wx.PostEvent(self, evt)
 
-
-    def GetValue(self):
-        return self.value
-
-
     def SetValue(self, value):
         self.value = value
-

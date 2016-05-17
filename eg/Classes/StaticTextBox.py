@@ -18,9 +18,7 @@
 
 import wx
 
-
 class StaticTextBox(wx.PyWindow):
-
     def __init__(self, parent, id=-1, label='', pos=(-1, -1), size=(-1, -1)):
         wx.PyWindow.__init__(
             self,
@@ -36,37 +34,33 @@ class StaticTextBox(wx.PyWindow):
             self,
             -1,
             label,
-            style=wx.TE_MULTILINE
-                |wx.TE_NO_VSCROLL
-                |wx.NO_BORDER
-                |wx.TE_READONLY
+            style=(
+                wx.TE_MULTILINE |
+                wx.TE_NO_VSCROLL |
+                wx.NO_BORDER |
+                wx.TE_READONLY
+            )
         )
         textCtrl.SetBackgroundColour(self.GetBackgroundColour())
         #sizer.Add((0,0), 1, wx.EXPAND)
-        sizer.Add(textCtrl, 0, wx.EXPAND|wx.ALL, 3)
+        sizer.Add(textCtrl, 0, wx.EXPAND | wx.ALL, 3)
         sizer.Add((0, 0), 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.textCtrl = textCtrl
 
+    def AcceptsFocus(self):
+        return False
+
+    def GetValue(self):
+        return self.textCtrl.GetLabel()
 
     def OnSize(self, event):
         if self.GetAutoLayout():
             self.Layout()
 
-
     def SetLabel(self, label):
         self.textCtrl.SetLabel(label)
 
-
     def SetValue(self, label):
         self.textCtrl.SetLabel(label)
-
-
-    def GetValue(self):
-        return self.textCtrl.GetLabel()
-
-
-    def AcceptsFocus(self):
-        return False
-

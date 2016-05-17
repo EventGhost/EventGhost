@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class EventRemapDialog(eg.Dialog):
-
     def __init__(self, parent, mapping=None):
-
         eg.Dialog.__init__(
             self, parent, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
@@ -59,4 +58,3 @@ class EventRemapDialog(eg.Dialog):
 
         sizer.Add(editSizer)
         self.SetSizerAndFit(sizer)
-

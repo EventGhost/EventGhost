@@ -16,23 +16,23 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 import colorsys
-from eg.WinApi.Dynamic import (
-    GetSysColor,
-    COLOR_ACTIVECAPTION,
-    COLOR_GRADIENTACTIVECAPTION,
-    COLOR_CAPTIONTEXT,
-    COLOR_INACTIVECAPTION,
-    COLOR_GRADIENTINACTIVECAPTION,
-    COLOR_INACTIVECAPTIONTEXT,
-)
+import wx
 
+# Local imports
+from eg.WinApi.Dynamic import (
+    COLOR_ACTIVECAPTION,
+    COLOR_CAPTIONTEXT,
+    COLOR_GRADIENTACTIVECAPTION,
+    COLOR_GRADIENTINACTIVECAPTION,
+    COLOR_INACTIVECAPTION,
+    COLOR_INACTIVECAPTIONTEXT,
+    GetSysColor,
+)
 
 def GetWinSysColour(nIndex):
     val = GetSysColor(nIndex)
     return val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF
-
 
 class Colour:
     """
@@ -51,15 +51,27 @@ class Colour:
     inactiveCaptionGradient = GetWinSysColour(COLOR_GRADIENTINACTIVECAPTION)
     inactiveCaptionTextColour = GetWinSysColour(COLOR_INACTIVECAPTIONTEXT)
 
-
-    @staticmethod
-    def RgbToHsv(colour):
+    def GetOddLogColour(self):
         """
-        Returns HSV (Hue, Saturation, Value) from a RGB colour tuple.
+        Returns the colour for odd lines in the log.
         """
-        red, green, blue = colour
-        return colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+        hue, saturation, value = self.RgbToHsv(self.windowBackground)
+        if value > 0.5:
+            value -= 0.05
+        else:
+            value += 0.2
+        return self.HsvToRgb(hue, saturation, value)
 
+    def GetRenamedColor(self):
+        """
+        Returns the colour for renamed elements in the configuration tree.
+        """
+        hue, saturation, value = self.RgbToHsv(self.windowText)
+        if value > 0.5:
+            value -= 0.25
+        else:
+            value += 0.25
+        return self.HsvToRgb(hue, saturation, value)
 
     @staticmethod
     def HsvToRgb(hue, saturation, value):
@@ -73,27 +85,10 @@ class Colour:
             int(round(blue * 255.0))
         )
 
-
-    def GetOddLogColour(self):
+    @staticmethod
+    def RgbToHsv(colour):
         """
-        Returns the colour for odd lines in the log.
+        Returns HSV (Hue, Saturation, Value) from a RGB colour tuple.
         """
-        hue, saturation, value = self.RgbToHsv(self.windowBackground)
-        if value > 0.5:
-            value -= 0.05
-        else:
-            value += 0.2
-        return self.HsvToRgb(hue, saturation, value)
-
-
-    def GetRenamedColor(self):
-        """
-        Returns the colour for renamed elements in the configuration tree.
-        """
-        hue, saturation, value = self.RgbToHsv(self.windowText)
-        if value > 0.5:
-            value -= 0.25
-        else:
-            value += 0.25
-        return self.HsvToRgb(hue, saturation, value)
-
+        red, green, blue = colour
+        return colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)

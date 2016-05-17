@@ -18,6 +18,5 @@ setup(
             ],
             libraries=['user32', 'ole32', 'Advapi32'],
         )
-   ],
+    ],
 )
-

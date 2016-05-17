@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-License="""
+License = """
 <h3>GNU General Public License</h3>
 <p>
 Version 2, June 1991
@@ -418,4 +418,3 @@ POSSIBILITY OF SUCH DAMAGES.
 
 </p><h3>END OF TERMS AND CONDITIONS</h3>
 """
-

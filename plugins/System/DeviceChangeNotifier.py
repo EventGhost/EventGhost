@@ -16,45 +16,26 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.WinApi.Dynamic import (
-    pointer,
-    sizeof,
-    wstring_at,
-    WM_DEVICECHANGE,
-    DEV_BROADCAST_HDR,
-    DEV_BROADCAST_DEVICEINTERFACE,
-    DEV_BROADCAST_VOLUME,
+    CLSIDFromString,
     DBT_DEVICEARRIVAL,
     DBT_DEVICEREMOVECOMPLETE,
-    DBT_DEVTYP_VOLUME,
     DBT_DEVTYP_DEVICEINTERFACE,
-    CLSIDFromString,
+    DBT_DEVTYP_VOLUME,
+    DEV_BROADCAST_DEVICEINTERFACE,
+    DEV_BROADCAST_HDR,
+    DEV_BROADCAST_VOLUME,
+    pointer,
     RegisterDeviceNotification,
+    sizeof,
     UnregisterDeviceNotification,
+    WM_DEVICECHANGE,
+    wstring_at,
 )
 
-class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
-
-    def __init__(self, dbcc_devicetype=0, dbcc_classguid=None):
-        self.dbcc_devicetype = dbcc_devicetype
-        CLSIDFromString(dbcc_classguid, self.dbcc_classguid)
-        self.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE)
-
-DBD_NAME_OFFSET = DEV_BROADCAST_DEVICEINTERFACE.dbcc_name.offset
-
-
-def DriveLettersFromMask(mask):
-    return [
-        chr(65 + driveNum)
-            for driveNum in range(0, 26)
-                if (mask & (2 ** driveNum))
-    ]
-
-
-
 class DeviceChangeNotifier:
-
     def __init__(self, plugin):
         self.TriggerEvent = plugin.TriggerEvent
         eg.messageReceiver.AddHandler(WM_DEVICECHANGE, self.OnDeviceChange)
@@ -104,14 +85,12 @@ class DeviceChangeNotifier:
             0
         )
 
-
     def Close(self):
         UnregisterDeviceNotification(self.handle1)
         UnregisterDeviceNotification(self.handle2)
         UnregisterDeviceNotification(self.handle3)
         UnregisterDeviceNotification(self.handle4)
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
-
 
     def OnDeviceChange(self, hwnd, msg, wparam, lparam):
         #
@@ -141,3 +120,18 @@ class DeviceChangeNotifier:
                 self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1
 
+
+class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
+    def __init__(self, dbcc_devicetype=0, dbcc_classguid=None):
+        self.dbcc_devicetype = dbcc_devicetype
+        CLSIDFromString(dbcc_classguid, self.dbcc_classguid)
+        self.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE)
+
+DBD_NAME_OFFSET = DEV_BROADCAST_DEVICEINTERFACE.dbcc_name.offset
+
+
+def DriveLettersFromMask(mask):
+    return [
+        chr(65 + driveNum) for driveNum in range(0, 26)
+        if (mask & (2 ** driveNum))
+    ]

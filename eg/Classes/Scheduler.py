@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-from time import time
-from heapq import heappush, heapify, heappop
 import threading
+from heapq import heapify, heappop, heappush
+from time import time
 
-
+# Local imports
+import eg
 
 class Scheduler(threading.Thread):
     """
@@ -32,7 +32,6 @@ class Scheduler(threading.Thread):
     EventGhost creates a single instance of this class that is accessible as
     :obj:`eg.scheduler`.
     """
-
     def __init__(self):
         self.keepRunning = True
         self.event = threading.Event()
@@ -43,16 +42,6 @@ class Scheduler(threading.Thread):
             target=self.MainLoop,
             name="SchedulerThread"
         )
-
-
-    def LongTask(self, *args, **kwargs):
-        thrd = threading.Thread(
-            target = args[-1],
-            args = args[:-1],
-            kwargs = kwargs
-        )
-        thrd.start()
-
 
     def AddShortTask(self, waitTime, func, *args, **kwargs):
         """
@@ -89,7 +78,6 @@ class Scheduler(threading.Thread):
         """
         return self.AddShortTaskAbsolute(time() + waitTime, func, *args, **kwargs)
 
-
     def AddShortTaskAbsolute(self, startTime, func, *args, **kwargs):
         """
         This does the same as :meth:`AddShortTask`, but the `startTime` parameter
@@ -116,18 +104,15 @@ class Scheduler(threading.Thread):
             self.lock.release()
         return task
 
-
     def AddTask(self, waitTime, func, *args, **kwargs):
         args = list(args)
         args.append(func)
         return self.AddShortTask(waitTime, self.LongTask, *args, **kwargs)
 
-
     def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
         args = list(args)
         args.append(func)
         return self.AddShortTaskAbsolute(startTime, self.LongTask, *args, **kwargs)
-
 
     def CancelTask(self, task):
         """
@@ -145,6 +130,13 @@ class Scheduler(threading.Thread):
         finally:
             self.lock.release()
 
+    def LongTask(self, *args, **kwargs):
+        thrd = threading.Thread(
+            target = args[-1],
+            args = args[:-1],
+            kwargs = kwargs
+        )
+        thrd.start()
 
     def MainLoop(self):
         timeout = 0
@@ -165,9 +157,7 @@ class Scheduler(threading.Thread):
                 self.lock.release()
             timeout = startTime - time()
 
-
     def Stop(self):
         def DoIt():
             self.keepRunning = False
         self.AddShortTask(-1, DoIt)
-

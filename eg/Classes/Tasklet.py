@@ -28,7 +28,6 @@
 
 import stackless
 
-
 class Tasklet(stackless.tasklet):
     countTasklets = 0
 
@@ -38,11 +37,9 @@ class Tasklet(stackless.tasklet):
         Tasklet.countTasklets += 1
         self.taskId = Tasklet.countTasklets
 
-
     @classmethod
     def GetCurrentId(cls):
         try:
             return stackless.getcurrent().taskId
         except AttributeError:
             return 0
-

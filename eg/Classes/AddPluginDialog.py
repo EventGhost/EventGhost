@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 KIND_TAGS = ["remote", "program", "external", "other"]
 
@@ -28,7 +29,6 @@ class Config(eg.PersistentData):
     splitPosition = 240
     lastSelection = None
     collapsed = set()
-
 
 
 class Text(eg.TranslatableStrings):
@@ -48,9 +48,26 @@ class Text(eg.TranslatableStrings):
     descriptionBox = "Description"
 
 
-
 class AddPluginDialog(eg.TaskletDialog):
     instance = None
+
+    def CheckMultiload(self):
+        if not self.checkMultiLoad:
+            return True
+        info = self.resultData
+        if not info:
+            return True
+        if info.canMultiLoad:
+            return True
+        if any((plugin.info.path == info.path) for plugin in eg.pluginList):
+            eg.MessageBox(
+                Text.noMultiload,
+                Text.noMultiloadTitle,
+                style=wx.ICON_EXCLAMATION
+            )
+            return False
+        else:
+            return True
 
     @eg.LogItWithReturn
     def Configure(self, parent, checkMultiLoad=True, title=None):
@@ -69,22 +86,26 @@ class AddPluginDialog(eg.TaskletDialog):
             parent,
             -1,
             title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
 
         splitterWindow = wx.SplitterWindow(
             self,
-            style = wx.SP_LIVE_UPDATE
-                |wx.CLIP_CHILDREN
-                |wx.NO_FULL_REPAINT_ON_RESIZE
+            style=(
+                wx.SP_LIVE_UPDATE |
+                wx.CLIP_CHILDREN |
+                wx.NO_FULL_REPAINT_ON_RESIZE
+            )
         )
 
         self.treeCtrl = treeCtrl = wx.TreeCtrl(
             splitterWindow,
-            style=wx.TR_SINGLE
-                |wx.TR_HAS_BUTTONS
-                |wx.TR_HIDE_ROOT
-                |wx.TR_LINES_AT_ROOT
+            style=(
+                wx.TR_SINGLE |
+                wx.TR_HAS_BUTTONS |
+                wx.TR_HIDE_ROOT |
+                wx.TR_LINES_AT_ROOT
+            )
         )
 
         treeCtrl.SetMinSize((170, 200))
@@ -134,18 +155,18 @@ class AddPluginDialog(eg.TaskletDialog):
 
         self.nameText = nameText = wx.StaticText(rightPanel)
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
-        rightSizer.Add(nameText, 0, wx.EXPAND|wx.LEFT|wx.BOTTOM, 5)
+        rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         subSizer = wx.FlexGridSizer(2, 2)
         self.authorLabel = wx.StaticText(rightPanel, label=Text.author)
         subSizer.Add(self.authorLabel)
         self.authorText = wx.StaticText(rightPanel)
-        subSizer.Add(self.authorText, 0, wx.EXPAND|wx.LEFT, 5)
+        subSizer.Add(self.authorText, 0, wx.EXPAND | wx.LEFT, 5)
         self.versionLabel = wx.StaticText(rightPanel, label=Text.version)
         subSizer.Add(self.versionLabel)
         self.versionText = wx.StaticText(rightPanel)
-        subSizer.Add(self.versionText, 0, wx.EXPAND|wx.LEFT, 5)
-        rightSizer.Add(subSizer, 0, wx.EXPAND|wx.LEFT|wx.BOTTOM, 5)
+        subSizer.Add(self.versionText, 0, wx.EXPAND | wx.LEFT, 5)
+        rightSizer.Add(subSizer, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
             wx.StaticBox(rightPanel, label=Text.descriptionBox)
@@ -154,7 +175,7 @@ class AddPluginDialog(eg.TaskletDialog):
         self.descrBox = eg.HtmlWindow(rightPanel)
         staticBoxSizer.Add(self.descrBox, 1, wx.EXPAND)
 
-        rightSizer.Add(staticBoxSizer, 1, wx.EXPAND|wx.LEFT, 5)
+        rightSizer.Add(staticBoxSizer, 1, wx.EXPAND | wx.LEFT, 5)
 
         splitterWindow.SplitVertically(self.treeCtrl, rightPanel)
         splitterWindow.SetMinimumPaneSize(60)
@@ -166,7 +187,7 @@ class AddPluginDialog(eg.TaskletDialog):
         self.okButton.Enable(False)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)
+        mainSizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
 
         self.SetSizerAndFit(mainSizer)
@@ -188,10 +209,18 @@ class AddPluginDialog(eg.TaskletDialog):
         Config.splitPosition = splitterWindow.GetSashPosition()
         Config.collapsed = set(
             kind for kind, treeId in typeIds.iteritems()
-                if not treeCtrl.IsExpanded(treeId)
+            if not treeCtrl.IsExpanded(treeId)
         )
         self.__class__.instance = None
 
+    def OnItemActivated(self, event):
+        item = self.treeCtrl.GetSelection()
+        info = self.treeCtrl.GetPyData(item)
+        if info is not None:
+            #self.SetResult("huhu")
+            self.OnOK(wx.CommandEvent())
+            return
+        event.Skip()
 
     def OnSelectionChanged(self, event):
         """
@@ -220,33 +249,3 @@ class AddPluginDialog(eg.TaskletDialog):
         self.nameText.SetLabel(name)
         url = info.url if info else None
         self.descrBox.SetPage(eg.Utils.AppUrl(description, url))
-
-
-    def CheckMultiload(self):
-        if not self.checkMultiLoad:
-            return True
-        info = self.resultData
-        if not info:
-            return True
-        if info.canMultiLoad:
-            return True
-        if any((plugin.info.path == info.path) for plugin in eg.pluginList):
-            eg.MessageBox(
-                Text.noMultiload,
-                Text.noMultiloadTitle,
-                style=wx.ICON_EXCLAMATION
-            )
-            return False
-        else:
-            return True
-
-
-    def OnItemActivated(self, event):
-        item = self.treeCtrl.GetSelection()
-        info = self.treeCtrl.GetPyData(item)
-        if info is not None:
-            #self.SetResult("huhu")
-            self.OnOK(wx.CommandEvent())
-            return
-        event.Skip()
-

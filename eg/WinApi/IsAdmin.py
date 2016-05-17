@@ -16,37 +16,37 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 from Dynamic import (
+    AllocateAndInitializeSid,
     byref,
     cast,
-    POINTER,
-    WinError,
-    GetLastError,
-    OpenThreadToken,
-    OpenProcessToken,
-    GetTokenInformation,
-    GetCurrentThread,
+    create_string_buffer,
+    DOMAIN_ALIAS_RID_ADMINS,
+    DWORD,
+    EqualSid,
+    ERROR_INSUFFICIENT_BUFFER,
+    ERROR_NO_TOKEN,
+    FreeSid,
     GetCurrentProcess,
+    GetCurrentThread,
+    GetLastError,
+    GetTokenInformation,
+    HANDLE,
+    OpenProcessToken,
+    OpenThreadToken,
+    POINTER,
+    PSID,
+    SECURITY_BUILTIN_DOMAIN_RID,
+    SID_AND_ATTRIBUTES,
+    SID_IDENTIFIER_AUTHORITY,
+    TOKEN_GROUPS,
     TOKEN_QUERY,
     TokenGroups,
-    ERROR_NO_TOKEN,
-    HANDLE,
-    DWORD,
-    ERROR_INSUFFICIENT_BUFFER,
-    TOKEN_GROUPS,
-    SECURITY_BUILTIN_DOMAIN_RID,
-    DOMAIN_ALIAS_RID_ADMINS,
-    PSID,
-    create_string_buffer,
-    AllocateAndInitializeSid,
-    SID_IDENTIFIER_AUTHORITY,
-    EqualSid,
-    SID_AND_ATTRIBUTES,
-    FreeSid,
+    WinError,
 )
 
 SECURITY_NT_AUTHORITY = 5
-
 
 def IsAdmin():
     """
@@ -56,7 +56,7 @@ def IsAdmin():
     # First we must open a handle to the access token for this thread.
     hThread = HANDLE()
     if not OpenThreadToken(
-        GetCurrentThread(), TOKEN_QUERY, 0 , byref(hThread)
+        GetCurrentThread(), TOKEN_QUERY, 0, byref(hThread)
     ):
         err = GetLastError()
         if err == ERROR_NO_TOKEN:
@@ -122,7 +122,5 @@ def IsAdmin():
     FreeSid(psidAdmin)
     return isAdmin
 
-
 if __name__ == "__main__":
     print "Current user is administrator:", IsAdmin()
-

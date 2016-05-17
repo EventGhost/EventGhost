@@ -16,10 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 from fnmatch import fnmatchcase
 from threading import Event
 from time import clock
+
+# Local imports
+import eg
 
 # some shortcuts to speed things up
 #pylint: disable-msg=C0103
@@ -29,7 +31,6 @@ RunProgram = eg.RunProgram
 GetItemPath = eg.EventItem.GetPath
 config = eg.config
 #pylint: enable-msg=C0103
-
 
 class EventGhostEvent(object):
     """
@@ -80,7 +81,6 @@ class EventGhostEvent(object):
         the button is still pressed.
 
     """
-
     skipEvent = False
 
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
@@ -94,18 +94,11 @@ class EventGhostEvent(object):
         self.shouldEnd = Event()
         self.upFuncList = []
 
-
     def AddUpFunc(self, func, *args, **kwargs):
         if self.isEnded:
             func(*args, **kwargs)
         else:
             self.upFuncList.append((func, args, kwargs))
-
-
-    def SetStarted(self):
-        if self.shouldEnd.isSet():
-            self.DoUpFuncs()
-
 
     def DoUpFuncs(self):
         for func, args, kwargs in self.upFuncList:
@@ -113,20 +106,12 @@ class EventGhostEvent(object):
         del self.upFuncList[:]
         self.isEnded = True
 
-
-    def SetShouldEnd(self):
-        if not self.shouldEnd.isSet():
-            self.shouldEnd.set()
-            eg.SetProcessingState(0, self)
-            actionThread.Call(self.DoUpFuncs)
-
-
     def Execute(self):
         #start = clock()
         eventString = self.string
         if eventString in eg.notificationHandlers:
             for listener in eg.notificationHandlers[eventString].listeners:
-                if listener(self) == True:
+                if listener(self) is True:
                     return
 
         eg.event = self
@@ -175,3 +160,12 @@ class EventGhostEvent(object):
         self.SetStarted()
         eg.SetProcessingState(1, self)
 
+    def SetShouldEnd(self):
+        if not self.shouldEnd.isSet():
+            self.shouldEnd.set()
+            eg.SetProcessingState(0, self)
+            actionThread.Call(self.DoUpFuncs)
+
+    def SetStarted(self):
+        if self.shouldEnd.isSet():
+            self.DoUpFuncs()

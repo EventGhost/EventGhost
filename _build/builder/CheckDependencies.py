@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import glob
 import os
 import platform
@@ -24,11 +23,11 @@ import re
 import shutil
 import sys
 import warnings
-from distutils.util import get_platform
 from os.path import basename, exists, expandvars, join
 from pip._vendor import requests
 from string import digits
 
+# Local imports
 from builder import VirtualEnv
 from builder.DllVersionInfo import GetFileVersion
 from builder.InnoSetup import GetInnoCompilerPath
@@ -37,7 +36,7 @@ from builder.Utils import (
     WrapText,
 )
 
-
+# Exceptions
 class MissingChocolatey(Exception):
     pass
 class MissingDependency(Exception):
@@ -50,24 +49,6 @@ class MissingPowerShell(Exception):
     pass
 class WrongVersion(Exception):
     pass
-
-
-def CompareVersion(actualVersion, wantedVersion):
-    wantedParts = wantedVersion.split(".")
-    actualParts = actualVersion.split(".")
-    numParts = min(len(wantedParts), len(actualParts))
-    for i in range(numParts):
-        wantedPart = wantedParts[i]
-        actualPart = actualParts[i]
-        wantedPart = int(filter(lambda c: c in digits, wantedPart))
-        actualPart = int(filter(lambda c: c in digits, actualPart))
-        if wantedPart > actualPart:
-            return -1
-        elif wantedPart < actualPart:
-            return 1
-    return 0
-
-
 
 class DependencyBase(object):
     #name = None
@@ -83,106 +64,6 @@ class DependencyBase(object):
 
     def Check(self):
         raise NotImplementedError
-
-
-
-class ModuleDependency(DependencyBase):
-    def Check(self):
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                module = __import__(self.module)
-        except ImportError:
-            raise MissingDependency
-        if self.attr and hasattr(module, self.attr):
-            version = getattr(module, self.attr)
-        elif hasattr(module, "__version__"):
-            version = module.__version__
-        elif hasattr(module, "VERSION"):
-            version = module.VERSION
-        elif hasattr(module, "version"):
-            version = module.version
-        else:
-            raise Exception("Can't get version information")
-        if type(version) != type(""):
-            version = ".".join(str(x) for x in version)
-        if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
-
-
-
-class PyWin32Dependency(DependencyBase):
-    name = "pywin32"
-    version = "220"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
-
-    def Check(self):
-        versionFilePath = join(
-            sys.prefix, "lib/site-packages/pywin32.version.txt"
-        )
-        try:
-            version = open(versionFilePath, "rt").readline().strip()
-        except IOError:
-            raise MissingDependency
-        if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
-
-
-
-class StacklessDependency(DependencyBase):
-    name = "Stackless Python"
-    version = "2.7.9"
-    url = "http://www.stackless.com/binaries/python-2.7.9150-stackless.msi"
-
-    def Check(self):
-        try:
-            import stackless
-        except:
-            raise MissingDependency
-        if CompareVersion("%d.%d.%d" % sys.version_info[:3], self.version) < 0:
-            raise WrongVersion
-
-
-
-class GitDependency(DependencyBase):
-    name = "Git"
-    version = "2.8.0"
-    package = "git"
-    url = "https://git-scm.com/download/win"
-
-    def Check(self):
-        if not (os.system('"%s" --version >NUL 2>NUL' % GetGitPath()) == 0):
-            raise MissingDependency
-
-
-
-class InnoSetupDependency(DependencyBase):
-    name = "Inno Setup"
-    version = "5.5.8"
-    package = "innosetup"
-    #url = "http://www.innosetup.com/isdl.php"
-    url = "http://www.innosetup.com/download.php/is-unicode.exe"
-
-    def Check(self):
-        if not GetInnoCompilerPath():
-            raise MissingDependency
-
-
-
-class HtmlHelpWorkshopDependency(DependencyBase):
-    name = "HTML Help Workshop"
-    version = "1.32"
-    package = "html-help-workshop"
-    #url = "https://www.microsoft.com/download/details.aspx?id=21138"
-    url = (
-        "https://download.microsoft.com/download"
-        "/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe"
-    )
-
-    def Check(self):
-        if not GetHtmlHelpCompilerPath():
-            raise MissingDependency
-
 
 
 class DllDependency(DependencyBase):
@@ -220,6 +101,99 @@ class DllDependency(DependencyBase):
                     shutil.copystat(file, dest)
         else:
             raise MissingDependency
+
+
+class GitDependency(DependencyBase):
+    name = "Git"
+    version = "2.8.0"
+    package = "git"
+    url = "https://git-scm.com/download/win"
+
+    def Check(self):
+        if not (os.system('"%s" --version >NUL 2>NUL' % GetGitPath()) == 0):
+            raise MissingDependency
+
+
+class HtmlHelpWorkshopDependency(DependencyBase):
+    name = "HTML Help Workshop"
+    version = "1.32"
+    package = "html-help-workshop"
+    #url = "https://www.microsoft.com/download/details.aspx?id=21138"
+    url = (
+        "https://download.microsoft.com/download"
+        "/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe"
+    )
+
+    def Check(self):
+        if not GetHtmlHelpCompilerPath():
+            raise MissingDependency
+
+
+class InnoSetupDependency(DependencyBase):
+    name = "Inno Setup"
+    version = "5.5.8"
+    package = "innosetup"
+    #url = "http://www.innosetup.com/isdl.php"
+    url = "http://www.innosetup.com/download.php/is-unicode.exe"
+
+    def Check(self):
+        if not GetInnoCompilerPath():
+            raise MissingDependency
+
+
+class ModuleDependency(DependencyBase):
+    def Check(self):
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                module = __import__(self.module)
+        except ImportError:
+            raise MissingDependency
+        if self.attr and hasattr(module, self.attr):
+            version = getattr(module, self.attr)
+        elif hasattr(module, "__version__"):
+            version = module.__version__
+        elif hasattr(module, "VERSION"):
+            version = module.VERSION
+        elif hasattr(module, "version"):
+            version = module.version
+        else:
+            raise Exception("Can't get version information")
+        if not isinstance(version, str):
+            version = ".".join(str(x) for x in version)
+        if CompareVersion(version, self.version) < 0:
+            raise WrongVersion
+
+
+class PyWin32Dependency(DependencyBase):
+    name = "pywin32"
+    version = "220"
+    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
+
+    def Check(self):
+        versionFilePath = join(
+            sys.prefix, "lib/site-packages/pywin32.version.txt"
+        )
+        try:
+            version = open(versionFilePath, "rt").readline().strip()
+        except IOError:
+            raise MissingDependency
+        if CompareVersion(version, self.version) < 0:
+            raise WrongVersion
+
+
+class StacklessDependency(DependencyBase):
+    name = "Stackless Python"
+    version = "2.7.9"
+    url = "http://www.stackless.com/binaries/python-2.7.9150-stackless.msi"
+
+    def Check(self):
+        try:
+            import stackless  # NOQA
+        except:
+            raise MissingDependency
+        if CompareVersion("%d.%d.%d" % sys.version_info[:3], self.version) < 0:
+            raise WrongVersion
 
 
 DEPENDENCIES = [
@@ -288,7 +262,6 @@ DEPENDENCIES = [
         url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
     ),
 ]
-
 
 def CheckDependencies(buildSetup):
     failedDeps = []
@@ -377,7 +350,6 @@ def CheckDependencies(buildSetup):
             )
     return not failedDeps
 
-
 def Choco(*args):
     choco = GetChocolateyPath()
     if not choco:
@@ -395,6 +367,20 @@ def Choco(*args):
     args = list(args) + ["-f", "-y"]
     return (StartProcess(choco, *args) == 0)
 
+def CompareVersion(actualVersion, wantedVersion):
+    wantedParts = wantedVersion.split(".")
+    actualParts = actualVersion.split(".")
+    numParts = min(len(wantedParts), len(actualParts))
+    for i in range(numParts):
+        wantedPart = wantedParts[i]
+        actualPart = actualParts[i]
+        wantedPart = int(filter(lambda c: c in digits, wantedPart))
+        actualPart = int(filter(lambda c: c in digits, actualPart))
+        if wantedPart > actualPart:
+            return -1
+        elif wantedPart < actualPart:
+            return 1
+    return 0
 
 def CreateVirtualEnv():
     # These files will be replaced by virtualenv. We don't want that.
@@ -437,7 +423,6 @@ def CreateVirtualEnv():
 
     return result
 
-
 def DownloadFile(url, path = "%TEMP%"):
     file = expandvars(join(path, basename(url.split("?")[0])))
     r = requests.get(url, stream=True)
@@ -447,7 +432,6 @@ def DownloadFile(url, path = "%TEMP%"):
                 f.write(chunk)
     return file
 
-
 def GetChocolateyPath():
     path = join(
         GetEnvironmentVar("ChocolateyInstall"),
@@ -456,14 +440,12 @@ def GetChocolateyPath():
     )
     return path if exists(path) else ""
 
-
 def GetGitPath():
     path = ""
     for p in GetEnvironmentVar("PATH").split(os.pathsep):
         if "\\Git\\" in p:
             path = join(p, "git.exe")
     return path if exists(path) else ""
-
 
 def InstallDependency(dep):
     if dep.name == "Stackless Python":
@@ -483,7 +465,6 @@ def InstallDependency(dep):
     else:
         raise MissingInstallMethod
 
-
 def InstallMSI(file, path):
     file = file if exists(file) else DownloadFile(file)
     return (StartProcess(
@@ -493,7 +474,6 @@ def InstallMSI(file, path):
         "/qb",
         "TARGETDIR=%s" % path,
     ) == 0)
-
 
 def Pip(*args):
     args = list(args)
@@ -506,4 +486,3 @@ def Pip(*args):
         return (StartProcess(sys.executable, "-m", "pip", *args) == 0)
     except WindowsError:
         raise MissingPip
-

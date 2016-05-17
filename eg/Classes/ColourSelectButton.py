@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class ColourSelectButton(wx.BitmapButton):
-
     def __init__(
         self,
         parent,
@@ -41,6 +41,8 @@ class ColourSelectButton(wx.BitmapButton):
         self.SetValue(value)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
 
+    def GetValue(self):
+        return self.value
 
     def OnButton(self, event):
         colourData = wx.ColourData()
@@ -61,15 +63,9 @@ class ColourSelectButton(wx.BitmapButton):
         evt = eg.ValueChangedEvent(self.GetId(), value = self.value)
         wx.PostEvent(self, evt)
 
-
-    def GetValue(self):
-        return self.value
-
-
     def SetValue(self, value):
         self.value = value
         width, height = self.GetSize()
-        image = wx.EmptyImage(width-10, height-10)
-        image.SetRGBRect((1, 1, width-12, height-12), *value)
+        image = wx.EmptyImage(width - 10, height - 10)
+        image.SetRGBRect((1, 1, width - 12, height - 12), *value)
         self.SetBitmapLabel(image.ConvertToBitmap())
-

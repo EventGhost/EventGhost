@@ -16,12 +16,18 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import os
-import sys
 import atexit
+import os
 import pythoncom
+import pywintypes
+import sys
+import win32com
+import win32com.client
+from win32com.server import factory
+from win32com.server.register import RegisterClasses
 
+# Local imports
+import eg
 
 class EventGhostCom:
     _public_methods_ = [
@@ -34,6 +40,16 @@ class EventGhostCom:
     _reg_clsid_ = "{7EB106DC-468D-4345-9CFE-B0021039114B}"
     _reg_clsctx_ = pythoncom.CLSCTX_LOCAL_SERVER
 
+    def BringToFront(self):
+        eg.document.ShowFrame()
+
+    def InstallPlugin(self, pluginFile):
+        import wx
+        wx.CallAfter(eg.PluginInstall.Import, pluginFile)
+
+    def OpenFile(self, filePath):
+        eg.document.Open(filePath)
+
     def TriggerEvent(self, eventString, payload=None, prefix=None):
         kwargs = {}
         if payload:
@@ -43,20 +59,6 @@ class EventGhostCom:
         eg.TriggerEvent(eventString, **kwargs)
 
 
-
-    def BringToFront(self):
-        eg.document.ShowFrame()
-
-
-    def OpenFile(self, filePath):
-        eg.document.Open(filePath)
-
-
-    def InstallPlugin(self, pluginFile):
-        import wx
-        wx.CallAfter(eg.PluginInstall.Import, pluginFile)
-
-
 # Patch win32com to use the gen_py directory in the programs
 # application data directory instead of its package directory.
 # When the program runs "frozen" it would not be able to modify
@@ -64,25 +66,20 @@ class EventGhostCom:
 genPath = os.path.join(eg.configDir, "gen_py").encode('mbcs')
 if not os.path.exists(genPath):
     os.makedirs(genPath)
-import win32com
 win32com.__gen_path__ = genPath
 sys.modules["win32com.gen_py"].__path__ = [genPath]
-import win32com.client
 win32com.client.gencache.is_readonly = False
 
 # Support for the COM-Server of the program
 if hasattr(sys, "frozen"):
     pythoncom.frozen = 1
 
-from win32com.server.register import RegisterClasses
-import pywintypes
 try:
     RegisterClasses(EventGhostCom, quiet=True)
 except pywintypes.error, data:
     if data[0] != 5:
         raise
 sys.coinit_flags = 2
-from win32com.server import factory
 try:
     __factory_infos = factory.RegisterClassFactories(
         [EventGhostCom._reg_clsid_]
@@ -99,11 +96,9 @@ try:
 except:
     sys.stderr.write("Unable to establish COM dispatch!\n")
 
-
 def DeInit():
     # shutdown COM-Server
     factory.RevokeClassFactories(__factory_infos)
     pythoncom.CoUninitialize()
 
 atexit.register(DeInit)
-

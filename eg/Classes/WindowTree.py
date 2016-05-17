@@ -16,34 +16,33 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 from time import sleep
 
+# Local imports
+import eg
 from eg.Icons import GetInternalBitmap
 from eg.WinApi import (
+    EnumProcesses,
+    GetClassName,
+    GetProcessName,
     GetTopLevelWindowList,
     GetWindowText,
-    GetClassName,
     GetWindowThreadProcessId,
-    GetProcessName,
-    EnumProcesses,
 )
 from eg.WinApi.Dynamic import (
-    GetAncestor,
-    GA_ROOT,
     GA_PARENT,
+    GA_ROOT,
+    GetAncestor,
 )
 from eg.WinApi.Utils import (
-    GetHwndIcon,
     GetHwndChildren,
-    HwndHasChildren,
+    GetHwndIcon,
     HighlightWindow,
+    HwndHasChildren,
 )
 
-
 class WindowTree(wx.TreeCtrl):
-
     def __init__(self, parent, includeInvisible=False):
         self.includeInvisible = includeInvisible
         self.pids = {}
@@ -51,9 +50,11 @@ class WindowTree(wx.TreeCtrl):
             self,
             parent,
             -1,
-            style=wx.TR_DEFAULT_STYLE
-                |wx.TR_HIDE_ROOT
-                |wx.TR_FULL_ROW_HIGHLIGHT,
+            style=(
+                wx.TR_DEFAULT_STYLE |
+                wx.TR_HIDE_ROOT |
+                wx.TR_FULL_ROW_HIGHLIGHT
+            ),
             size=(-1, 150)
         )
         self.imageList = imageList = wx.ImageList(16, 16)
@@ -81,40 +82,37 @@ class WindowTree(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnItemCollapsed)
         self.AppendPrograms()
 
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
 
-    def OnItemRightClick(self, dummyEvent):
-        """
-        Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
-        """
-        self.PopupMenu(self.contextMenu)
+    def AppendChildWindows(self, parentHwnd, item):
+        for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
+            name = GetWindowText(hwnd)
+            className = GetClassName(hwnd)
+            if name != "":
+                name = "\"" + name + "\" "
+            index = self.AppendItem(item, name + className, 0)
+            self.SetPyData(index, hwnd)
+            if className == "Edit" or className == "TEdit":
+                self.SetItemImage(index, 1, which=wx.TreeItemIcon_Normal)
+            elif className == "Static" or className == "TStaticText":
+                self.SetItemImage(index, 2, which=wx.TreeItemIcon_Normal)
+            elif className == "Button" or className == "TButton":
+                self.SetItemImage(index, 3, which=wx.TreeItemIcon_Normal)
+            elif GetClassName(parentHwnd) == "MDIClient":
+                icon = GetHwndIcon(hwnd)
+                if icon:
+                    iconIndex = self.imageList.AddIcon(icon)
+                    self.SetItemImage(
+                        index,
+                        iconIndex,
+                        which=wx.TreeItemIcon_Normal
+                    )
 
-
-    def OnItemExpanding(self, event):
-        """
-        Handles wx.EVT_TREE_ITEM_EXPANDING events.
-        """
-        item = event.GetItem()
-        if self.IsExpanded(item):
-            # This event can happen twice in the self.Expand call
-            return
-
-        res = self.GetItemParent(item)
-        if res == self.root:
-            pid = self.GetPyData(item)
-            self.AppendToplevelWindows(pid, item)
-        else:
-            hwnd = self.GetPyData(item)
-            self.AppendChildWindows(hwnd, item)
-
-
-    def OnItemCollapsed(self, event):
-        """
-        Handles wx.EVT_TREE_ITEM_COLLAPSED events.
-        """
-        # We need to remove all children here, otherwise we'll see all
-        # that old rubbish again after the next expansion.
-        self.DeleteChildren(event.GetItem())
-
+            if HwndHasChildren(hwnd, self.includeInvisible):
+                self.SetItemHasChildren(index, True)
 
     def AppendPrograms(self):
         self.pids.clear()
@@ -145,7 +143,6 @@ class WindowTree(wx.TreeCtrl):
             self.SetPyData(item, pid)
             self.SetItemImage(item, iconIndex, which=wx.TreeItemIcon_Normal)
 
-
     def AppendToplevelWindows(self, pid, item):
         hwnds = self.pids[pid]
         for hwnd in hwnds:
@@ -171,34 +168,42 @@ class WindowTree(wx.TreeCtrl):
             if HwndHasChildren(hwnd, self.includeInvisible):
                 self.SetItemHasChildren(newItem, True)
 
+    @eg.LogIt
+    def Destroy(self):
+        self.Unselect()
+        self.imageList.Destroy()
+        return wx.TreeCtrl.Destroy(self)
 
-    def AppendChildWindows(self, parentHwnd, item):
-        for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
-            name = GetWindowText(hwnd)
-            className = GetClassName(hwnd)
-            if name != "":
-                name = "\"" + name + "\" "
-            index = self.AppendItem(item, name + className, 0)
-            self.SetPyData(index, hwnd)
-            if className == "Edit" or className == "TEdit":
-                self.SetItemImage(index, 1, which=wx.TreeItemIcon_Normal)
-            elif className == "Static" or className == "TStaticText":
-                self.SetItemImage(index, 2, which=wx.TreeItemIcon_Normal)
-            elif className == "Button" or className == "TButton":
-                self.SetItemImage(index, 3, which=wx.TreeItemIcon_Normal)
-            elif GetClassName(parentHwnd) == "MDIClient":
-                icon = GetHwndIcon(hwnd)
-                if icon:
-                    iconIndex = self.imageList.AddIcon(icon)
-                    self.SetItemImage(
-                        index,
-                        iconIndex,
-                        which=wx.TreeItemIcon_Normal
-                    )
+    def OnItemCollapsed(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_COLLAPSED events.
+        """
+        # We need to remove all children here, otherwise we'll see all
+        # that old rubbish again after the next expansion.
+        self.DeleteChildren(event.GetItem())
 
-            if HwndHasChildren(hwnd, self.includeInvisible):
-                self.SetItemHasChildren(index, True)
+    def OnItemExpanding(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_EXPANDING events.
+        """
+        item = event.GetItem()
+        if self.IsExpanded(item):
+            # This event can happen twice in the self.Expand call
+            return
 
+        res = self.GetItemParent(item)
+        if res == self.root:
+            pid = self.GetPyData(item)
+            self.AppendToplevelWindows(pid, item)
+        else:
+            hwnd = self.GetPyData(item)
+            self.AppendChildWindows(hwnd, item)
+
+    def OnItemRightClick(self, dummyEvent):
+        """
+        Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
+        """
+        self.PopupMenu(self.contextMenu)
 
     @eg.LogIt
     def Refresh(self):
@@ -206,14 +211,6 @@ class WindowTree(wx.TreeCtrl):
         self.DeleteChildren(self.root)
         self.AppendPrograms()
         self.Thaw()
-
-
-    @eg.LogIt
-    def Destroy(self):
-        self.Unselect()
-        self.imageList.Destroy()
-        return wx.TreeCtrl.Destroy(self)
-
 
     @eg.LogIt
     def SelectHwnd(self, hwnd):
@@ -244,10 +241,3 @@ class WindowTree(wx.TreeCtrl):
                     return
             lastItem = item
         self.SelectItem(lastItem)
-
-
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-

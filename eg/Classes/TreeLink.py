@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class TreeLink(object):
     currentXmlId = 0
@@ -34,6 +35,68 @@ class TreeLink(object):
         self.owner = owner
         self.xmlId = -1
 
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
+
+    def __repr__(self):
+        return "XmlIdLink(%d)" % self.xmlId
+
+    @classmethod
+    def CreateFromArgument(cls, owner, xmlId):
+        self = TreeLink(owner)
+        cls.linkList.append((self, xmlId))
+        return self
+
+    def Delete(self):
+        if self.target:
+            self.target.dependants.remove(self)
+        self.target = None
+
+    @classmethod
+    def NewXmlId(cls, xmlId, obj):
+        if TreeLink.inUndo:
+            if xmlId != -1:
+                cls.id2target[xmlId] = obj
+                if xmlId in cls.unresolvedIds:
+                    obj.dependants = cls.unresolvedIds[xmlId]
+                    for link in obj.dependants:
+                        link.target = obj
+                        if link.owner:
+                            link.owner.Refresh()
+                return xmlId
+        if xmlId != -1:
+            cls.sessionId2target[xmlId] = obj
+        cls.currentXmlId += 1
+        return cls.currentXmlId
+
+    def Refresh(self):
+        eg.Notify("NodeChanged", self.owner)
+
+    @classmethod
+    def RemoveDependants(cls, target):
+        for link in target.dependants:
+            link.target = None
+            if link.owner:
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
+        cls.unresolvedIds[target.xmlId] = target.dependants
+        target.dependants = None
+
+    def SetTarget(self, target):
+        if target == self.target:
+            return
+        if self.target:
+            self.target.dependants.remove(self)
+        self.target = target
+        if target:
+            if target.dependants is None:
+                target.dependants = [self]
+            else:
+                target.dependants.append(self)
+            self.xmlId = target.xmlId
+            self.id2target[target.xmlId] = target
+        eg.Notify("NodeChanged", self.owner)
 
     @classmethod
     @eg.LogIt
@@ -43,6 +106,9 @@ class TreeLink(object):
         cls.unresolvedIds.clear()
         cls.sessionId2target.clear()
 
+    @classmethod
+    def StartUndo(cls):
+        cls.inUndo = True
 
     @classmethod
     def StopLoad(cls):
@@ -65,30 +131,6 @@ class TreeLink(object):
                 wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         del cls.linkList[:]
 
-
-    @classmethod
-    def NewXmlId(cls, xmlId, obj):
-        if TreeLink.inUndo:
-            if xmlId != -1:
-                cls.id2target[xmlId] = obj
-                if xmlId in cls.unresolvedIds:
-                    obj.dependants = cls.unresolvedIds[xmlId]
-                    for link in obj.dependants:
-                        link.target = obj
-                        if link.owner:
-                            link.owner.Refresh()
-                return xmlId
-        if xmlId != -1:
-            cls.sessionId2target[xmlId] = obj
-        cls.currentXmlId += 1
-        return cls.currentXmlId
-
-
-    @classmethod
-    def StartUndo(cls):
-        cls.inUndo = True
-
-
     @classmethod
     def StopUndo(cls):
         cls.inUndo = False
@@ -109,57 +151,3 @@ class TreeLink(object):
                 #eg.Notify("NodeChanged", link.owner) # August 2012
                 wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         cls.linkList = notFoundLinks
-
-
-    @classmethod
-    def RemoveDependants(cls, target):
-        for link in target.dependants:
-            link.target = None
-            if link.owner:
-                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
-        cls.unresolvedIds[target.xmlId] = target.dependants
-        target.dependants = None
-
-
-    @classmethod
-    def CreateFromArgument(cls, owner, xmlId):
-        self = TreeLink(owner)
-        cls.linkList.append((self, xmlId))
-        return self
-
-
-    def SetTarget(self, target):
-        if target == self.target:
-            return
-        if self.target:
-            self.target.dependants.remove(self)
-        self.target = target
-        if target:
-            if target.dependants is None:
-                target.dependants = [self]
-            else:
-                target.dependants.append(self)
-            self.xmlId = target.xmlId
-            self.id2target[target.xmlId] = target
-        eg.Notify("NodeChanged", self.owner)
-
-
-    def Refresh(self):
-        eg.Notify("NodeChanged", self.owner)
-
-
-    def Delete(self):
-        if self.target:
-            self.target.dependants.remove(self)
-        self.target = None
-
-
-    def __repr__(self):
-        return "XmlIdLink(%d)" % self.xmlId
-
-
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-

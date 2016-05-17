@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from NewItem import NewItem
-
 
 class NewPlugin(NewItem):
     """
@@ -47,4 +47,3 @@ class NewPlugin(NewItem):
         if pluginInfo.createMacrosOnAdd:
             eg.UndoHandler.AddActionGroup(document).Do(pluginItem)
         return pluginItem
-

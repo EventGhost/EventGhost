@@ -16,19 +16,18 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import threading
+import wx
 from os.path import join
 
+# Local imports
+import eg
 
 ID_SHOW = wx.NewId()
 ID_HIDE = wx.NewId()
 ID_EXIT = wx.NewId()
 
-
 class TaskBarIcon(wx.TaskBarIcon):
-
     def __init__(self, show):
         self.stateIcons = (
             wx.Icon(join(eg.imagesDir, "Tray1.png"), wx.BITMAP_TYPE_PNG),
@@ -58,39 +57,27 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarMenu)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
 
-
     def Close(self):
         eg.Unbind("ProcessingChange", self.OnProcessingChange)
         # remove the TaskBarIcon, as it would otherwise stay as a ghost
         # icon in the system-tray.
         self.RemoveIcon()
 
-
-    def OnTaskBarMenu(self, dummyEvent):
-        self.menu.Enable(ID_HIDE, eg.document.frame is not None)
-        self.PopupMenu(self.menu)
-
-
-    def OnCmdShow(self, dummyEvent=None):
-        eg.document.ShowFrame()
-
+    def OnCmdExit(self, event):
+        eg.app.Exit(event)
 
     def OnCmdHide(self, dummyEvent):
         eg.document.HideFrame()
 
-
-    def OnCmdExit(self, event):
-        eg.app.Exit(event)
-
+    def OnCmdShow(self, dummyEvent=None):
+        eg.document.ShowFrame()
 
     def OnProcessingChange(self, state):
         self.SetIcon(self.stateIcons[state], self.tooltip)
 
-
-    def SetToolTip(self, tooltip):
-        self.tooltip = tooltip
-        wx.CallAfter(self.SetIcon, self.stateIcons[self.currentState], tooltip)
-
+    def OnTaskBarMenu(self, dummyEvent):
+        self.menu.Enable(ID_HIDE, eg.document.frame is not None)
+        self.PopupMenu(self.menu)
 
     def SetProcessingState(self, state, event):
         self.reentrantLock.acquire()
@@ -117,3 +104,6 @@ class TaskBarIcon(wx.TaskBarIcon):
         finally:
             self.reentrantLock.release()
 
+    def SetToolTip(self, tooltip):
+        self.tooltip = tooltip
+        wx.CallAfter(self.SetIcon, self.stateIcons[self.currentState], tooltip)

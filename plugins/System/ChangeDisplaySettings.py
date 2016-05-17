@@ -16,31 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
-from eg.WinApi.Display import GetDisplays, GetDisplay
 
-
-
-class DisplayChoice(wx.Choice):
-
-    def __init__(self, parent, id=-1, display=0):
-        self.displays = GetDisplays()
-        wx.Choice.__init__(self, parent, id)
-        for i, display in enumerate(self.displays):
-            self.Append("%d: %s" % (i+1, display.deviceString))
-            self.SetClientData(i, display.deviceName)
-        self.SetSelection(0)
-
-
-    def GetValue(self):
-        pos = wx.Choice.GetSelection(self)
-        return self.displays[pos]
-
-
+# Local imports
+import eg
+from eg.WinApi.Display import GetDisplay, GetDisplays
 
 class ChangeDisplaySettings(eg.ActionBase):
     name = "Change Display Settings"
+    description = "Changes display settings."
     iconFile = "icons/Display"
 
     class text:
@@ -51,7 +35,6 @@ class ChangeDisplaySettings(eg.ActionBase):
         colourDepth = "Colour Depth:"
         includeAll = "Include modes this monitor might not support."
         storeInRegistry = "Store mode in the registry."
-
 
     def __call__(
         self,
@@ -67,19 +50,6 @@ class ChangeDisplaySettings(eg.ActionBase):
         GetDisplay(displayNum - 1).SetDisplayMode(
             size, frequency, depth, flags
         )
-
-
-    def GetLabel(
-        self,
-        displayNum,
-        size,
-        frequency,
-        depth,
-        includeAll,
-        updateRegistry=False
-    ):
-        return self.text.label % (displayNum, size[0], size[1], frequency)
-
 
     def Configure(
         self,
@@ -110,17 +80,17 @@ class ChangeDisplaySettings(eg.ActionBase):
 
         sizer = wx.GridBagSizer(6, 5)
         flag = wx.ALIGN_CENTER_VERTICAL
-        sizer.Add(panel.StaticText(text.display),     (0, 0), flag=flag)
-        sizer.Add(panel.StaticText(text.resolution),  (1, 0), flag=flag)
-        sizer.Add(panel.StaticText(text.frequency),   (2, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.display), (0, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.resolution), (1, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.frequency), (2, 0), flag=flag)
         sizer.Add(panel.StaticText(text.colourDepth), (3, 0), flag=flag)
-        sizer.Add(displayChoice,                      (0, 1), flag=flag)
-        sizer.Add(resolutionChoice,                   (1, 1), flag=flag)
-        sizer.Add(frequencyChoice,                    (2, 1), flag=flag)
-        sizer.Add(depthChoice,                        (3, 1), flag=flag)
+        sizer.Add(displayChoice, (0, 1), flag=flag)
+        sizer.Add(resolutionChoice, (1, 1), flag=flag)
+        sizer.Add(frequencyChoice, (2, 1), flag=flag)
+        sizer.Add(depthChoice, (3, 1), flag=flag)
 
         panel.sizer.Add(sizer, 0, wx.EXPAND)
-        flag = wx.ALIGN_CENTER_VERTICAL|wx.TOP
+        flag = wx.ALIGN_CENTER_VERTICAL | wx.TOP
         panel.sizer.Add(includeAllCheckBox, 0, flag, 10)
         panel.sizer.Add(updateRegistryCheckBox, 0, flag, 10)
 
@@ -128,24 +98,6 @@ class ChangeDisplaySettings(eg.ActionBase):
 
         def GetClientData(ctrl):
             return ctrl.GetClientData(ctrl.GetSelection())
-
-        def UpdateResolutions(event=None):
-            display = displayChoice.GetValue()
-            modes = display.GetDisplayModes(includeAllCheckBox.GetValue())
-            settings.modes = modes
-            resolutions = modes.keys()
-            resolutions.sort()
-            resolutionChoice.Clear()
-            sel = 0
-            for pos, res in enumerate(resolutions):
-                resolutionChoice.Append("%d x %d" % res)
-                resolutionChoice.SetClientData(pos, res)
-                if res == size:
-                    sel = pos
-            resolutionChoice.Select(sel)
-            UpdateDeepth(None)
-            if event:
-                event.Skip()
 
         def UpdateDeepth(event=None):
             resolution = GetClientData(resolutionChoice)
@@ -164,7 +116,6 @@ class ChangeDisplaySettings(eg.ActionBase):
             if event:
                 event.Skip()
 
-
         def UpdateFrequencies(event=None):
             depth = GetClientData(depthChoice)
             frequencyList = settings.depthDict[depth]
@@ -176,6 +127,24 @@ class ChangeDisplaySettings(eg.ActionBase):
                 if frequency == frequency:
                     sel = pos
             frequencyChoice.Select(sel)
+            if event:
+                event.Skip()
+
+        def UpdateResolutions(event=None):
+            display = displayChoice.GetValue()
+            modes = display.GetDisplayModes(includeAllCheckBox.GetValue())
+            settings.modes = modes
+            resolutions = modes.keys()
+            resolutions.sort()
+            resolutionChoice.Clear()
+            sel = 0
+            for pos, res in enumerate(resolutions):
+                resolutionChoice.Append("%d x %d" % res)
+                resolutionChoice.SetClientData(pos, res)
+                if res == size:
+                    sel = pos
+            resolutionChoice.Select(sel)
+            UpdateDeepth(None)
             if event:
                 event.Skip()
 
@@ -196,3 +165,27 @@ class ChangeDisplaySettings(eg.ActionBase):
                 updateRegistryCheckBox.GetValue()
             )
 
+    def GetLabel(
+        self,
+        displayNum,
+        size,
+        frequency,
+        depth,
+        includeAll,
+        updateRegistry=False
+    ):
+        return self.text.label % (displayNum, size[0], size[1], frequency)
+
+
+class DisplayChoice(wx.Choice):
+    def __init__(self, parent, id=-1, display=0):
+        self.displays = GetDisplays()
+        wx.Choice.__init__(self, parent, id)
+        for i, display in enumerate(self.displays):
+            self.Append("%d: %s" % (i + 1, display.deviceString))
+            self.SetClientData(i, display.deviceName)
+        self.SetSelection(0)
+
+    def GetValue(self):
+        pos = wx.Choice.GetSelection(self)
+        return self.displays[pos]

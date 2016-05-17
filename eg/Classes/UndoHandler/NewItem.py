@@ -16,31 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
 
 class NewItem(UndoHandlerBase):
     """
     Abstract class for the creation of new tree items.
     """
-
     def Do(self, selection):
         raise NotImplementedError
-
-
-    def StoreItem(self, item):
-        self.treePosition = eg.TreePosition(item)
-        item.document.AppendUndoHandler(self)
-
-
-    @eg.AssertInActionThread
-    @eg.LogIt
-    def Undo(self):
-        item = self.treePosition.GetItem()
-        self.data = item.GetFullXml()
-        item.Delete()
-
 
     @eg.AssertInActionThread
     @eg.LogIt
@@ -48,3 +33,13 @@ class NewItem(UndoHandlerBase):
         item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
 
+    def StoreItem(self, item):
+        self.treePosition = eg.TreePosition(item)
+        item.document.AppendUndoHandler(self)
+
+    @eg.AssertInActionThread
+    @eg.LogIt
+    def Undo(self):
+        item = self.treePosition.GetItem()
+        self.data = item.GetFullXml()
+        item.Delete()

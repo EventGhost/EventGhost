@@ -18,7 +18,6 @@
 
 import logging
 import sys
-from os.path import join
 
 class StdHandler(object):
     indent = 0
@@ -33,6 +32,12 @@ class StdHandler(object):
         # which is called by sphinx (build CHM docs).
         self.closed = False
 
+    def flush(self):
+        pass
+
+    def isatty(self):
+        return True
+
     def write(self, data):
         try:
             self.buf += data
@@ -46,22 +51,11 @@ class StdHandler(object):
         self.buf = lines[-1]
 
 
-    def flush(self):
-        pass
-
-
-    def isatty(self):
-        return True
-
-
-
 def LogToFile(file):
     logging.basicConfig(filename=file, level=logging.DEBUG,)
     logging.getLogger().setLevel(20)
     sys.stdout = StdHandler(sys.stdout, logging.info)
     sys.stderr = StdHandler(sys.stderr, logging.error)
 
-
 def SetIndent(level):
     StdHandler.indent = level
-

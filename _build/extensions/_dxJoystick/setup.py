@@ -1,6 +1,6 @@
+import os
 from distutils.core import setup
 from distutils.extension import Extension
-import os
 
 sdkPath = os.getenv('DXSDK_DIR')
 assert sdkPath is not None, "Error: Microsoft DirectX SDK not found"
@@ -22,6 +22,5 @@ setup(
                 'dinput8',
             ],
         )
-   ],
+    ],
 )
-

@@ -16,14 +16,14 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 
 STANDARD_IDS = (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP)
 
-
 class ButtonRow(object):
-
     def __init__(self, parent, buttonIds, resizeGrip=False, center=False):
         self.parent = parent
         self.numSpecialCtrls = 0
@@ -74,34 +74,33 @@ class ButtonRow(object):
             if center:
                 sizer.Add(self.sizeGrip.GetSize(), 0, wx.EXPAND)
                 sizer.Add((1, 1), 1, wx.EXPAND)
-                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add(buttonSizer, 0, wx.TOP | wx.BOTTOM, 6)
                 sizer.Add((1, 1), 1, wx.EXPAND)
             else:
                 sizer.Add(self.sizeGrip.GetSize(), 1, wx.EXPAND)
-                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
-            sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
+                sizer.Add(buttonSizer, 0, wx.TOP | wx.BOTTOM, 6)
+            sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
         else:
             if center:
                 sizer.Add((3, 3), 1, wx.EXPAND)
-                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add(buttonSizer, 0, wx.TOP | wx.BOTTOM, 6)
                 sizer.Add((3, 3), 1, wx.EXPAND)
             else:
                 sizer.Add((3, 3), 1)
-                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add(buttonSizer, 0, wx.TOP | wx.BOTTOM, 6)
                 sizer.Add((3, 3), 0)
-
 
     def Add(
         self,
         ctrl,
         proportion=0,
-        flags=wx.ALIGN_CENTER_VERTICAL|wx.RIGHT,
+        flags=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
         border=5
     ):
         if self.numSpecialCtrls == 0:
             self.sizer.Insert(0, (15, 5))
         self.sizer.Insert(
-            self.numSpecialCtrls+1,
+            self.numSpecialCtrls + 1,
             ctrl,
             proportion,
             flags,
@@ -109,13 +108,11 @@ class ButtonRow(object):
         )
         self.numSpecialCtrls += 1
 
-
-    def OnOK(self, event):
-        if hasattr(self.parent, "OnOK"):
-            self.parent.OnOK(event)
+    def OnApply(self, event):
+        if hasattr(self.parent, "OnApply"):
+            self.parent.OnApply(event)
         else:
             event.Skip()
-
 
     def OnCancel(self, event):
         if hasattr(self.parent, "OnCancel"):
@@ -123,17 +120,14 @@ class ButtonRow(object):
         else:
             event.Skip()
 
-
-    def OnApply(self, event):
-        if hasattr(self.parent, "OnApply"):
-            self.parent.OnApply(event)
-        else:
-            event.Skip()
-
-
     def OnHelp(self, event):
         if hasattr(self.parent, "OnHelp"):
             self.parent.OnHelp(event)
         else:
             event.Skip()
 
+    def OnOK(self, event):
+        if hasattr(self.parent, "OnOK"):
+            self.parent.OnOK(event)
+        else:
+            event.Skip()

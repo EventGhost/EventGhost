@@ -16,21 +16,21 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import collections
+import wx
 from ast import literal_eval
-from time import strftime, localtime
-import wx.lib.mixins.listctrl as listmix
+from time import localtime, strftime
 
+# Local imports
+import eg
 
 EVENT_ICON = eg.EventItem.icon
 ERROR_ICON = eg.Icons.ERROR_ICON
 
-
 class LogCtrl(wx.ListCtrl):
-    """Implementation of a ListCtrl with a circular buffer."""
-
+    """
+    Implementation of a ListCtrl with a circular buffer.
+    """
     def __init__(self, parent):
         self.maxlength = 2000
         self.removeOnMax = 200
@@ -40,12 +40,12 @@ class LogCtrl(wx.ListCtrl):
             self,
             parent,
             style=(
-                wx.LC_REPORT
-                |wx.LC_VIRTUAL
-                |wx.NO_FULL_REPAINT_ON_RESIZE
-                |wx.HSCROLL
-                |wx.CLIP_CHILDREN
-                |wx.LC_NO_HEADER
+                wx.LC_REPORT |
+                wx.LC_VIRTUAL |
+                wx.NO_FULL_REPAINT_ON_RESIZE |
+                wx.HSCROLL |
+                wx.CLIP_CHILDREN |
+                wx.LC_NO_HEADER
             )
         )
         if eg.config.useFixedFont:
@@ -105,80 +105,42 @@ class LogCtrl(wx.ListCtrl):
         eg.log.SetCtrl(self)
         self.SetData(eg.log.GetData())
 
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
+
+    def CanCut(self):
+        return False
+
+    def CanCopy(self):
+        return self.GetSelectedItemCount() > 0
+
+    def CanPaste(self):
+        return False
 
     @eg.LogIt
     def Destroy(self):
         eg.log.SetCtrl(None)
 
+    def FocusLastItem(self):
+        if self.GetFocusedItem() == -1:
+            item = len(self.data) - 1
+            self.Focus(item)
+            self.SetItemState(item, 0, wx.LIST_STATE_SELECTED)
 
-    def OnSetFocus(self, event):
+    def GetItemData(self, item):
+        return self.data[item]
+
+    def OnCmdClearLog(self, dummyEvent=None):
+        self.SetItemCount(0)
+        self.DeleteAllItems()
+        self.data.clear()
+        eg.log.data.clear()
+        eg.Print(eg.text.MainFrame.Logger.welcomeText)
         self.FocusLastItem()
-        eg.Notify("FocusChange", self)
-        event.Skip()
-
-
-    def OnKillFocus(self, event):
-        eg.Notify("FocusChange", None)
-        event.Skip()
-
-
-    @eg.AssertInMainThread
-    def SetData(self, data):
-        #self.Freeze()
-        self.data = collections.deque(data)
-        self.SetItemCount(len(data))
-        #self.Thaw()
         self.ScrollList(0, 1000000)
-
-
-    def SetTimeLogging(self, flag):
-        self.logTimes = flag
-        if flag:
-            self.OnGetItemText = self.OnGetItemTextWithTime
-        else:
-            self.OnGetItemText = self.OnGetItemTextNormal
         self.Refresh()
-
-
-    def SetIndent(self, shouldIndent):
-        if shouldIndent:
-            self.indent = "   "
-        else:
-            self.indent = ""
-        self.Refresh()
-
-
-    def OnStartDrag(self, event):
-        idx = event.GetIndex()
-        itemData = self.GetItemData(idx)
-        if itemData[1] != EVENT_ICON:
-            return
-        text = itemData[2]
-        # create our own data format and use it in a
-        # custom data object
-        customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
-        customData.SetData(text.encode("utf-8"))
-
-        # And finally, create the drop source and begin the drag
-        # and drop operation
-        dropSource = wx.DropSource(self)
-        dropSource.SetData(customData)
-        result = dropSource.DoDragDrop(wx.Drag_AllowMove)
-        if result == wx.DragMove:
-            self.Refresh()
-
-
-    def CanCut(self):
-        return False
-
-
-    def CanCopy(self):
-        return self.GetSelectedItemCount() > 0
-
-
-    def CanPaste(self):
-        return False
-
 
     def OnCmdCopy(self, dummyEvent=None):
         text = ""
@@ -218,18 +180,6 @@ class LogCtrl(wx.ListCtrl):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
 
-
-    def OnCmdClearLog(self, dummyEvent=None):
-        self.SetItemCount(0)
-        self.DeleteAllItems()
-        self.data.clear()
-        eg.log.data.clear()
-        eg.Print(eg.text.MainFrame.Logger.welcomeText)
-        self.FocusLastItem()
-        self.ScrollList(0, 1000000)
-        self.Refresh()
-
-
     def OnCmdReplay(self, dummyEvent=None):
         item = self.GetFirstSelected()
         while item != -1:
@@ -242,11 +192,6 @@ class LogCtrl(wx.ListCtrl):
                 eg.TriggerEvent(suffix, payload, prefix)
             item = self.GetNextSelected(item)
 
-
-    def OnRightUp(self, dummyEvent):
-        self.PopupMenu(self.contextMenu)
-
-
     def OnDoubleClick(self, event):
         item, flags = self.HitTest(event.GetPosition())
         if flags & wx.LIST_HITTEST_ONITEM:
@@ -255,30 +200,6 @@ class LogCtrl(wx.ListCtrl):
                 node = wref()
                 if node is not None and not node.isDeleted:
                     node.Select()
-
-
-    def GetItemData(self, item):
-        return self.data[item]
-
-
-    def OnGetItemText(self, item, column):
-        return ""
-
-
-    def OnGetItemTextNormal(self, item, dummyColumn):
-        line, _, _, _, indent = self.data[item]
-        return " " + indent * self.indent + line
-
-
-    def OnGetItemTextWithTime(self, item, dummyColumn):
-        line, _, _, when, indent = self.data[item]
-        return (
-            #strftime(" %X   ", localtime(when))
-            strftime(" %H:%M:%S   ", localtime(when))
-            + indent * self.indent
-            + line
-        )
-
 
     def OnGetItemAttr(self, item):
         if item % 2 == 0:
@@ -292,10 +213,78 @@ class LogCtrl(wx.ListCtrl):
             else:
                 return self.attr4
 
-
     def OnGetItemImage(self, item):
         return self.data[item][1].index
 
+    def OnGetItemText(self, item, column):
+        return ""
+
+    def OnGetItemTextNormal(self, item, dummyColumn):
+        line, _, _, _, indent = self.data[item]
+        return " " + indent * self.indent + line
+
+    def OnGetItemTextWithTime(self, item, dummyColumn):
+        line, _, _, when, indent = self.data[item]
+        return (
+            #strftime(" %X   ", localtime(when))
+            strftime(" %H:%M:%S   ", localtime(when)) +
+            indent * self.indent +
+            line
+        )
+
+    def OnKillFocus(self, event):
+        eg.Notify("FocusChange", None)
+        event.Skip()
+
+    def OnRightUp(self, dummyEvent):
+        self.PopupMenu(self.contextMenu)
+
+    def OnSetFocus(self, event):
+        self.FocusLastItem()
+        eg.Notify("FocusChange", self)
+        event.Skip()
+
+    def OnStartDrag(self, event):
+        idx = event.GetIndex()
+        itemData = self.GetItemData(idx)
+        if itemData[1] != EVENT_ICON:
+            return
+        text = itemData[2]
+        # create our own data format and use it in a
+        # custom data object
+        customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
+        customData.SetData(text.encode("utf-8"))
+
+        # And finally, create the drop source and begin the drag
+        # and drop operation
+        dropSource = wx.DropSource(self)
+        dropSource.SetData(customData)
+        result = dropSource.DoDragDrop(wx.Drag_AllowMove)
+        if result == wx.DragMove:
+            self.Refresh()
+
+    @eg.AssertInMainThread
+    def SetData(self, data):
+        #self.Freeze()
+        self.data = collections.deque(data)
+        self.SetItemCount(len(data))
+        #self.Thaw()
+        self.ScrollList(0, 1000000)
+
+    def SetIndent(self, shouldIndent):
+        if shouldIndent:
+            self.indent = "   "
+        else:
+            self.indent = ""
+        self.Refresh()
+
+    def SetTimeLogging(self, flag):
+        self.logTimes = flag
+        if flag:
+            self.OnGetItemText = self.OnGetItemTextWithTime
+        else:
+            self.OnGetItemText = self.OnGetItemTextNormal
+        self.Refresh()
 
     @eg.AssertInMainThread
     def WriteLine(self, line, icon, wRef, when, indent):
@@ -311,17 +300,3 @@ class LogCtrl(wx.ListCtrl):
         if eg.config.scrollLog:
             self.ScrollList(0, 1000000)
         self.Update()
-
-
-    def FocusLastItem(self):
-        if self.GetFocusedItem() == -1:
-            item = len(self.data) - 1
-            self.Focus(item)
-            self.SetItemState(item, 0, wx.LIST_STATE_SELECTED)
-
-
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-

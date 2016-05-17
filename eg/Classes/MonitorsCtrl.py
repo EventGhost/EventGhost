@@ -19,40 +19,10 @@
 import wx
 from win32api import EnumDisplayMonitors as Edm
 
-class MonsListCtrl(wx.ListCtrl):
-
-    def __init__(self, parent, pos, size = wx.DefaultSize):
-        ID = wx.NewId()
-        style = wx.LC_REPORT| wx.LC_VRULES| wx.LC_HRULES| wx.LC_SINGLE_SEL
-        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
-        mons = [(i[0],i[1],i[2]-i[0],i[3]-i[1]) for i in [j[2] for j in Edm()]]
-        for j, header in enumerate(eg.text.General.monitorsHeader):
-            self.InsertColumn(j, header, wx.LIST_FORMAT_RIGHT)
-            self.SetColumnWidth(j, wx.LIST_AUTOSIZE_USEHEADER)
-        for i, mon in enumerate(mons):
-            self.InsertStringItem(i, str(i + 1 ))
-            self.SetStringItem(i, 1, str(mon[0]))
-            self.SetStringItem(i, 2, str(mon[1]))
-            self.SetStringItem(i, 3, str(mon[2]))
-            self.SetStringItem(i, 4, str(mon[3]))
-        rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
-        self.hh = rect[1] #header height
-        self.ih = rect[3] #item height
-        size = self.GetRealSize()
-        self.SetMinSize(size)
-        self.SetSize(size)
-
-    def GetRealSize(self):
-        w = 0
-        for i in range(self.GetColumnCount()):
-            w += self.GetColumnWidth(i)
-        border = self.GetWindowBorderSize()
-        w += border[0]
-        return (w, self.hh + border[1] + self.GetItemCount() * self.ih)
-
+# Local imports
+import eg
 
 class MonitorsCtrl(wx.Panel):
-
     def __init__(
         self,
         parent = None,
@@ -82,3 +52,33 @@ class MonitorsCtrl(wx.Panel):
     def OnSize(self, dummyEvent):
         self.SetSize(self.size)
 
+
+class MonsListCtrl(wx.ListCtrl):
+    def __init__(self, parent, pos, size = wx.DefaultSize):
+        ID = wx.NewId()
+        style = wx.LC_REPORT | wx.LC_VRULES | wx.LC_HRULES | wx.LC_SINGLE_SEL
+        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
+        mons = [(i[0], i[1], i[2] - i[0], i[3] - i[1]) for i in [j[2] for j in Edm()]]
+        for j, header in enumerate(eg.text.General.monitorsHeader):
+            self.InsertColumn(j, header, wx.LIST_FORMAT_RIGHT)
+            self.SetColumnWidth(j, wx.LIST_AUTOSIZE_USEHEADER)
+        for i, mon in enumerate(mons):
+            self.InsertStringItem(i, str(i + 1))
+            self.SetStringItem(i, 1, str(mon[0]))
+            self.SetStringItem(i, 2, str(mon[1]))
+            self.SetStringItem(i, 3, str(mon[2]))
+            self.SetStringItem(i, 4, str(mon[3]))
+        rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
+        self.hh = rect[1]  #header height
+        self.ih = rect[3]  #item height
+        size = self.GetRealSize()
+        self.SetMinSize(size)
+        self.SetSize(size)
+
+    def GetRealSize(self):
+        w = 0
+        for i in range(self.GetColumnCount()):
+            w += self.GetColumnWidth(i)
+        border = self.GetWindowBorderSize()
+        w += border[0]
+        return (w, self.hh + border[1] + self.GetItemCount() * self.ih)

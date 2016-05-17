@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from NewItem import NewItem
-
 
 class NewMacro(NewItem):
     """
@@ -30,6 +30,7 @@ class NewMacro(NewItem):
     @eg.AssertInMainThread
     def Do(self, selection):
         document = self.document
+
         def ProcessInActionThread():
             if isinstance(
                 selection,
@@ -55,6 +56,7 @@ class NewMacro(NewItem):
                 pos,
                 name=eg.text.General.unnamedMacro
             )
+
         macroItem = eg.actionThread.Func(ProcessInActionThread)()
         macroItem.Select()
         self.StoreItem(macroItem)
@@ -64,4 +66,3 @@ class NewMacro(NewItem):
             eg.actionThread.Func(macroItem.RenameTo)(label)
             macroItem.Select()
         return macroItem
-

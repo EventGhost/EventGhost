@@ -27,6 +27,8 @@ bad for user accounts with limited priviliges).
 So we redirect the sys.stderr to a log file in the applications data folder.
 """
 
+import linecache
+import sys
 
 class StdErrReplacement(object):
     softspace = 0
@@ -40,7 +42,7 @@ class StdErrReplacement(object):
         if self._file is None and self._error is None:
             if self._logFilePath is None:
                 import os
-                prgName = os.path.splitext(os.path.basename(sys.executable))[0]
+                prgName = os.path.splitext(os.path.basename(sys.executable))[0]  # NOQA
                 prgAppDataPath = os.path.join(os.environ["APPDATA"], prgName)
                 self._logFilePath = os.path.join(prgAppDataPath, "Log.txt")
             try:
@@ -49,7 +51,7 @@ class StdErrReplacement(object):
                 self._file = open(self._logFilePath, 'a')
             except Exception, details:
                 self._error = details
-                if "-q" not in sys.argv and "-quiet" not in sys.argv:
+                if "-q" not in sys.argv and "-quiet" not in sys.argv:  # NOQA
                     import atexit
                     import ctypes
                     atexit.register(
@@ -63,18 +65,16 @@ class StdErrReplacement(object):
                         0
                     )
             else:
-                if "-q" not in sys.argv and "-quiet" not in sys.argv:
+                if "-q" not in sys.argv and "-quiet" not in sys.argv:  # NOQA
                     import atexit
                     atexit.register(self.__DisplayMessage)
         if self._file is not None:
             self._file.write(text)
             self._file.flush()
 
-
     def flush(self):
         if self._file is not None:
             self._file.flush()
-
 
     def __DisplayMessage(self):
         if not self._displayMessage:
@@ -94,18 +94,17 @@ class StdErrReplacement(object):
             subprocess.Popen('Notepad.exe "%s"' % self._logFilePath)
 
 
-
-import sys
+# Replace stderr.
 sys.stderr = StdErrReplacement()
-del StdErrReplacement
-del sys
 
 # py2exe disables linecache.getline() in boot_common.py.
 # py2exe disabls linecache.getline() which is called by
 # traceback.extract_stack() when an exception occurs to try and read
 # the filenames embedded in the packaged python code.
 # We re-enable it here.
-import linecache
 linecache.getline = linecache.orig_getline
-del linecache
 
+# Clean up.
+del linecache
+del sys
+del StdErrReplacement

@@ -17,15 +17,15 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-import eg
 
+# Local imports
+import eg
 
 class DirBrowseButton(eg.FileBrowseButton):
     """
     A control to allow the user to type in a filename or browse with the
     standard file dialog to select a directory.
     """
-
     def __init__(
         self,
         parent,
@@ -43,14 +43,23 @@ class DirBrowseButton(eg.FileBrowseButton):
         newDirectory = False,
         name = 'dirBrowseButton'
     ):
-        eg.FileBrowseButton.__init__(self, parent, id, pos, size, style,
-                                  labelText, buttonText, toolTip,
-                                  dialogTitle, startDirectory,
-                                  changeCallback = changeCallback,
-                                  name = name)
+        eg.FileBrowseButton.__init__(
+            self,
+            parent,
+            id,
+            pos,
+            size,
+            style,
+            labelText,
+            buttonText,
+            toolTip,
+            dialogTitle,
+            startDirectory,
+            changeCallback = changeCallback,
+            name = name
+        )
         self.dialogClass = dialogClass
         self.newDirectory = newDirectory
-
 
     def OnBrowse(self, event=None):
         style = 0
@@ -66,4 +75,3 @@ class DirBrowseButton(eg.FileBrowseButton):
         if dialog.ShowModal() == wx.ID_OK:
             self.SetValue(dialog.GetPath())
         dialog.Destroy()
-

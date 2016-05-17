@@ -20,25 +20,10 @@ import wx
 import wx.lib.masked
 
 class TimeCtrl(wx.lib.masked.TimeCtrl):
-
-    '''Work-around of wx.lib.masked.TimeCtrl bug.
-       See http://trac.wxwidgets.org/ticket/11171'''
-
-    def _TimeCtrl__validateValue(self, value):
-        if not value:
-            raise ValueError('%s not a valid time value' % repr(value))
-        try:
-            #value = self.GetWxDateTime(value) - THIS CAUSES THE PROBLEM !!!!!!!
-            args = [int(slice) for slice in value.split(":")]
-            value = wx.DateTimeFromHMS(*args)
-        except:
-            raise
-        if self.IsLimited() and not self.IsInBounds(value):
-            raise ValueError (
-                'value %s is not within the bounds of the control' % str(value) )
-        return value
-
-
+    """
+    Work-around of wx.lib.masked.TimeCtrl bug.
+    See http://trac.wxwidgets.org/ticket/11171
+    """
     def _TimeCtrl__IncrementValue(self, key, pos):
         text = self.GetValue()
         field = self._FindField(pos)
@@ -59,3 +44,17 @@ class TimeCtrl(wx.lib.masked.TimeCtrl):
             if not wx.Validator_IsSilent():
                 wx.Bell()
 
+    def _TimeCtrl__validateValue(self, value):
+        if not value:
+            raise ValueError('%s not a valid time value' % repr(value))
+        try:
+            #value = self.GetWxDateTime(value) - THIS CAUSES THE PROBLEM !!!!!!!
+            args = [int(slice) for slice in value.split(":")]
+            value = wx.DateTimeFromHMS(*args)
+        except:
+            raise
+        if self.IsLimited() and not self.IsInBounds(value):
+            raise ValueError(
+                'value %s is not within the bounds of the control' % str(value)
+            )
+        return value

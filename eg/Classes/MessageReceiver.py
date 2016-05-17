@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.WinApi.Dynamic import (
-    cast, WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle,
-    WNDCLASS, RegisterClass, CreateWindowEx, byref, WNDPROC, WinError,
-    DefWindowProc, WM_USER, UnregisterClass, DestroyWindow, LPCTSTR
+    byref, cast, CreateWindowEx, CW_USEDEFAULT, DefWindowProc, DestroyWindow,
+    GetModuleHandle, LPCTSTR, RegisterClass, UnregisterClass, WinError,
+    WM_SIZE, WM_USER, WNDCLASS, WNDPROC, WS_OVERLAPPEDWINDOW,
 )
-
 
 class MessageReceiver(eg.ThreadWorker):
     """
@@ -50,6 +50,43 @@ class MessageReceiver(eg.ThreadWorker):
         self.wmUserHandlers = {}
         self.freeWmUserMsgs = []
 
+    def AddHandler(self, mesg, handler):
+        if mesg not in self.messageProcs:
+            self.messageProcs[mesg] = [handler]
+        else:
+            self.messageProcs[mesg].append(handler)
+
+    def AddWmUserHandler(self, handler):
+        if len(self.freeWmUserMsgs):
+            msg = self.freeWmUserMsgs.pop()
+        else:
+            msg = self.nextWmUserMsg
+            self.nextWmUserMsg += 1
+            if self.nextWmUserMsg > 0x7FFF:
+                raise Exception("Running out of WM_USER messages")
+        self.wmUserHandlers[handler] = msg
+        self.AddHandler(msg, handler)
+        return msg
+
+    def Finish(self):
+        """
+        Overrides eg.ThreadWorker.Finish to destroy the window instance.
+        """
+        if not DestroyWindow(self.hwnd):
+            raise WinError()
+        self.hwnd = None
+
+    def RemoveHandler(self, mesg, handler):
+        self.messageProcs[mesg].remove(handler)
+        if len(self.messageProcs[mesg]) == 0:
+            del self.messageProcs[mesg]
+
+    def RemoveWmUserHandler(self, handler):
+        msg = self.wmUserHandlers[handler]
+        del self.wmUserHandlers[handler]
+        self.freeWmUserMsgs.append(msg)
+        self.RemoveHandler(msg, handler)
+        return msg
 
     @eg.LogIt
     def Setup(self):
@@ -73,16 +110,6 @@ class MessageReceiver(eg.ThreadWorker):
         if not self.hwnd:
             raise WinError()
 
-
-    def Finish(self):
-        """
-        Overrides eg.ThreadWorker.Finish to destroy the window instance.
-        """
-        if not DestroyWindow(self.hwnd):
-            raise WinError()
-        self.hwnd = None
-
-
     @eg.LogIt
     def Stop(self):
         self.messageProcs.clear()
@@ -93,48 +120,8 @@ class MessageReceiver(eg.ThreadWorker):
         ):
             raise WinError()
 
-
-    def AddHandler(self, mesg, handler):
-        if mesg not in self.messageProcs:
-            self.messageProcs[mesg] = [handler]
-        else:
-            self.messageProcs[mesg].append(handler)
-
-
-    def RemoveHandler(self, mesg, handler):
-        self.messageProcs[mesg].remove(handler)
-        if len(self.messageProcs[mesg]) == 0:
-            del self.messageProcs[mesg]
-
-
-    def AddWmUserHandler(self, handler):
-        if len(self.freeWmUserMsgs):
-            msg = self.freeWmUserMsgs.pop()
-        else:
-            msg = self.nextWmUserMsg
-            self.nextWmUserMsg += 1
-            if self.nextWmUserMsg > 0x7FFF:
-                raise Exception("Running out of WM_USER messages")
-        self.wmUserHandlers[handler] = msg
-        self.AddHandler(msg, handler)
-        return msg
-
-
-    def RemoveWmUserHandler(self, handler):
-        msg = self.wmUserHandlers[handler]
-        del self.wmUserHandlers[handler]
-        self.freeWmUserMsgs.append(msg)
-        self.RemoveHandler(msg, handler)
-        return msg
-
-
-    def WmSizeHandler(self, hwnd, mesg, wParam, lParam):
-        #print "MessageReceiver sized"
-        return 0
-
-
     def WindowProc(self, hwnd, mesg, wParam, lParam):
-        if not mesg in self.messageProcs:
+        if mesg not in self.messageProcs:
             return DefWindowProc(hwnd, mesg, wParam, lParam)
         for handler in self.messageProcs[mesg]:
             res = handler(hwnd, mesg, wParam, lParam)
@@ -142,3 +129,6 @@ class MessageReceiver(eg.ThreadWorker):
                 return 0
         return 1
 
+    def WmSizeHandler(self, hwnd, mesg, wParam, lParam):
+        #print "MessageReceiver sized"
+        return 0

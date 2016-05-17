@@ -16,33 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import base64
 import pickle
+import wx
 
+# Local imports
+import eg
 from ActionItem import ActionItem
 from TreeItem import TreeItem
-
-
 
 class PluginItem(ActionItem):
     xmlTag = "Plugin"
     icon = eg.Icons.PLUGIN_ICON
     isRenameable = False
     info = None
-
-    def GetData(self):
-        attr, text = TreeItem.GetData(self)
-        del attr[0]
-        attr.append(('Identifier', self.executable.info.evalName))
-        guid = self.executable.info.guid
-        if guid:
-            attr.append(('Guid', guid))
-        attr.append(('File', self.pluginName))
-        text = base64.b64encode(pickle.dumps(self.info.args, 2))
-        return attr, text
-
 
     @eg.AssertInActionThread
     def __init__(self, parent, node):
@@ -67,28 +54,45 @@ class PluginItem(ActionItem):
         if info.icon != self.icon:
             self.icon = eg.Icons.PluginSubIcon(info.icon)
         #self.icon = info.icon
-        self.url = info.url ##########################################################################
+        self.url = info.url
         self.executable = info.instance
 
+    def AskCut(self):
+        return self.AskDelete()
 
-    def GetLabel(self):
-        return self.name
+    def AskDelete(self):
+        actionItemCls = self.document.ActionItem
 
+        def SearchFunc(obj):
+            if obj.__class__ == actionItemCls:
+                if obj.executable and obj.executable.plugin == self.executable:
+                    return True
+            return None
 
-    def GetTypeName(self):
-        return self.executable.info.name
+        if self.root.Traverse(SearchFunc) is not None:
+            eg.MessageBox(
+                eg.text.General.deletePlugin,
+                eg.APP_NAME,
+                wx.NO_DEFAULT | wx.OK | wx.ICON_EXCLAMATION
+            )
+            return False
+        if not TreeItem.AskDelete(self):
+            return False
+        return True
 
+    @eg.AssertInActionThread
+    def Delete(self):
+        info = self.info
 
-    @eg.LogIt
-    def RestoreState(self):
-        if self.isEnabled:
-            eg.actionThread.Call(self.info.Start)
+        def DoIt():
+            info.Close()
+            info.instance.OnDelete()
+            info.RemovePluginInstance()
+        eg.actionThread.Call(DoIt)
 
-
-    def SetAttributes(self, tree, itemId):
-        if self.info.lastException or self.info.initFailed:
-            tree.SetItemTextColour(itemId, eg.colour.pluginError)
-
+        ActionItem.Delete(self)
+        self.executable = None
+        self.info = None
 
     @eg.AssertInActionThread
     def Execute(self):
@@ -104,65 +108,11 @@ class PluginItem(ActionItem):
         eg.result = self.executable
         return None, None
 
-
-    @eg.AssertInActionThread
-    def SetEnable(self, flag=True):
-        ActionItem.SetEnable(self, flag)
-        if flag:
-            self.info.Start()
-        else:
-            self.info.Stop()
-
-
-    @eg.AssertInActionThread
-    def Delete(self):
-        info = self.info
-        def DoIt():
-            info.Close()
-            info.instance.OnDelete()
-            info.RemovePluginInstance()
-        eg.actionThread.Call(DoIt)
-        ActionItem.Delete(self)
-        self.executable = None
-        self.info = None
-
-
-    def AskDelete(self):
-        actionItemCls = self.document.ActionItem
-        def SearchFunc(obj):
-            if obj.__class__ == actionItemCls:
-                if obj.executable and obj.executable.plugin == self.executable:
-                    return True
-            return None
-        if self.root.Traverse(SearchFunc) is not None:
-            eg.MessageBox(
-                eg.text.General.deletePlugin,
-                eg.APP_NAME,
-                wx.NO_DEFAULT|wx.OK|wx.ICON_EXCLAMATION
-            )
-            return False
-        if not TreeItem.AskDelete(self):
-            return False
-        return True
-
-
-    def AskCut(self):
-        return self.AskDelete()
-
-
-    def NeedsStartupConfiguration(self):
-        """
-        Returns True if the item wants to be configured after creation.
-
-        Overrides ActionItem.NeedsStartupConfiguration()
-        """
-        # if the Configure method of the executable is overriden, we assume
-        # the item wants to be configured after creation
-        return (
-            self.executable.Configure.im_func
-            != eg.PluginBase.Configure.im_func
-        )
-
+    # The Find function calls this from MainThread, so we can't restrict this
+    # to the ActionThread
+    #@eg.AssertInActionThread
+    def GetArguments(self):
+        return self.info.args
 
     def GetBasePath(self):
         """
@@ -173,13 +123,58 @@ class PluginItem(ActionItem):
         """
         return self.info.path
 
+    def GetData(self):
+        attr, text = TreeItem.GetData(self)
+        del attr[0]
+        attr.append(('Identifier', self.executable.info.evalName))
+        guid = self.executable.info.guid
+        if guid:
+            attr.append(('Guid', guid))
+        attr.append(('File', self.pluginName))
+        text = base64.b64encode(pickle.dumps(self.info.args, 2))
+        return attr, text
 
-    # The Find function calls this from MainThread, so we can't restrict this
-    # to the ActionThread
-    #@eg.AssertInActionThread
-    def GetArguments(self):
-        return self.info.args
+    def GetLabel(self):
+        return self.name
 
+    def GetTypeName(self):
+        return self.executable.info.name
+
+    def NeedsStartupConfiguration(self):
+        """
+        Returns True if the item wants to be configured after creation.
+
+        Overrides ActionItem.NeedsStartupConfiguration()
+        """
+        # if the Configure method of the executable is overriden, we assume
+        # the item wants to be configured after creation
+        return (
+            self.executable.Configure.im_func !=
+            eg.PluginBase.Configure.im_func
+        )
+
+    def RefreshAllVisibleActions(self):
+        """
+        Calls Refresh() for all currently visible actions of this plugin.
+        """
+        actionItemCls = self.document.ActionItem
+        plugin = self.info.instance
+
+        def Traverse(item):
+            if item.__class__ == actionItemCls:
+                if item.executable.plugin == plugin:
+                    pass
+                    #eg.Notify("NodeChanged", item)
+            else:
+                if item.childs and item in item.document.expandedNodes:
+                    for child in item.childs:
+                        Traverse(child)
+        Traverse(self.root)
+
+    @eg.LogIt
+    def RestoreState(self):
+        if self.isEnabled:
+            eg.actionThread.Call(self.info.Start)
 
     @eg.LogIt
     @eg.AssertInActionThread
@@ -198,21 +193,14 @@ class PluginItem(ActionItem):
             eg.actionThread.Call(self.info.Stop)
             eg.actionThread.Call(self.info.Start)
 
+    def SetAttributes(self, tree, itemId):
+        if self.info.lastException or self.info.initFailed:
+            tree.SetItemTextColour(itemId, eg.colour.pluginError)
 
-    def RefreshAllVisibleActions(self):
-        """
-        Calls Refresh() for all currently visible actions of this plugin.
-        """
-        actionItemCls = self.document.ActionItem
-        plugin = self.info.instance
-        def Traverse(item):
-            if item.__class__ == actionItemCls:
-                if item.executable.plugin == plugin:
-                    pass
-                    #eg.Notify("NodeChanged", item)
-            else:
-                if item.childs and item in item.document.expandedNodes:
-                    for child in item.childs:
-                        Traverse(child)
-        Traverse(self.root)
-
+    @eg.AssertInActionThread
+    def SetEnable(self, flag=True):
+        ActionItem.SetEnable(self, flag)
+        if flag:
+            self.info.Start()
+        else:
+            self.info.Stop()

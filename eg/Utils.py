@@ -16,27 +16,30 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
-    "TimeIt", "AssertInMainThread", "AssertInActionThread", "ParseString",
-    "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
-    "AsTasklet", "ExecFile", "GetTopLevelWindow",
-]
-
-import eg
-import wx
+import inspect
 import os
 import sys
 import threading
 import time
-import inspect
-from types import ClassType
-from ctypes import windll, c_ulonglong
-from functools import update_wrapper
+import wx
+from ctypes import c_ulonglong, windll
+from datetime import datetime as dt, timedelta as td
 from docutils.core import publish_parts as ReSTPublishParts
 from docutils.writers.html4css1 import Writer
-from datetime import datetime as dt, timedelta as td
+from functools import update_wrapper
+from types import ClassType
 
+# Local imports
+import eg
 
+__all__ = [
+    "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
+    "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
+    "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
+    "ExecFile", "GetTopLevelWindow",
+]
+
+USER_CLASSES = (type, ClassType)
 
 class Bunch(object):
     """
@@ -65,6 +68,27 @@ class Bunch(object):
         self.__dict__.update(kwargs)
 
 
+class HBoxSizer(wx.BoxSizer):  #IGNORE:R0904
+    def __init__(self, *items):
+        wx.BoxSizer.__init__(self, wx.HORIZONTAL)
+        self.AddMany(items)
+
+
+class MyHtmlDocWriter(Writer):
+    def apply_template(self):
+        return """\
+%(head_prefix)s
+%(head)s
+%(stylesheet)s
+%(body_prefix)s
+%(body_pre_docinfo)s
+%(docinfo)s
+%(body)s
+%(body_suffix)s
+""" % self.interpolation_dict()
+
+HTML_DOC_WRITER = MyHtmlDocWriter()
+
 
 class NotificationHandler(object):
     __slots__ = ["listeners"]
@@ -73,172 +97,70 @@ class NotificationHandler(object):
         self.listeners = []
 
 
-
-def GetMyRepresentation(value):
-    """
-    Give a shorter representation of some wx-objects. Returns normal repr()
-    for everything else. Also adds a "=" sign at the beginning to make it
-    useful as a "formatvalue" function for inspect.formatargvalues().
-    """
-    typeString = repr(type(value))
-    if typeString.startswith("<class 'wx._core."):
-        return "=<wx.%s>" % typeString[len("<class 'wx._core."): -2]
-    if typeString.startswith("<class 'wx._controls."):
-        return "=<wx.%s>" % typeString[len("<class 'wx._controls."): -2]
-    return "=" + repr(value)
+class VBoxSizer(wx.BoxSizer):  #IGNORE:R0904
+    def __init__(self, *items):
+        wx.BoxSizer.__init__(self, wx.VERTICAL)
+        self.AddMany(items)
 
 
-def GetFuncArgString(func, args, kwargs):
-    classname = ""
-    argnames = inspect.getargspec(func)[0]
-    start = 0
-    if argnames:
-        if argnames[0] == "self":
-            classname = args[0].__class__.__name__ + "."
-            start = 1
-    res = []
-    append = res.append
-    for key, value in zip(argnames, args)[start:]:
-        append(str(key) + GetMyRepresentation(value))
-    for key, value in kwargs.items():
-        append(str(key) + GetMyRepresentation(value))
-    fname = classname + func.__name__
-    return fname, "(" + ", ".join(res) + ")"
-
-
-def LogIt(func):
-    """Logs the function call, if eg.debugLevel is set."""
-    if not eg.debugLevel:
-        return func
-
-    if func.func_code.co_flags & 0x20:
-        raise TypeError("Can't wrap generator function")
-
-    def LogItWrapper(*args, **kwargs):
-        funcName, argString = GetFuncArgString(func, args, kwargs)
-        eg.PrintDebugNotice(funcName + argString)
-        return func(*args, **kwargs)
-    return update_wrapper(LogItWrapper, func)
-
-
-def LogItWithReturn(func):
-    """Logs the function call and return, if eg.debugLevel is set."""
-    if not eg.debugLevel:
-        return func
-
-    def LogItWithReturnWrapper(*args, **kwargs):
-        funcName, argString = GetFuncArgString(func, args, kwargs)
-        eg.PrintDebugNotice(funcName + argString)
-        result = func(*args, **kwargs)
-        eg.PrintDebugNotice(funcName + " => " + repr(result))
-        return result
-    return update_wrapper(LogItWithReturnWrapper, func)
-
-
-def TimeIt(func):
-    """ Decorator to measure the execution time of a function.
-
-    Will print the time to the log.
-    """
-    if not eg.debugLevel:
-        return func
-    def TimeItWrapper(*args, **kwargs):
-        startTime = time.clock()
-        funcName, _ = GetFuncArgString(func, args, kwargs)
-        res = func(*args, **kwargs)
-        eg.PrintDebugNotice(funcName + " :" + repr(time.clock() - startTime))
-        return res
-    return update_wrapper(TimeItWrapper, func)
-
-
-def AssertInMainThread(func):
-    if not eg.debugLevel:
-        return func
-    def AssertWrapper(*args, **kwargs):
-        if eg.mainThread != threading.currentThread():
-            raise AssertionError("Called outside MainThread: %s in %s" %
-                (func.__name__, func.__module__)
-            )
-        return func(*args, **kwargs)
-    return update_wrapper(AssertWrapper, func)
-
+def AppUrl(description, url):
+    if url:
+        txt = '<p><div align=right><i><font color="#999999" size=-1>%s <a href="%s">%s</a>.</font></i></div></p>' % (
+            eg.text.General.supportSentence,
+            url,
+            eg.text.General.supportLink
+        )
+    else:
+        return description
+    pos = description.find("<rst>")
+    if pos != -1:
+        description = description[pos + 5:]
+        description = DecodeReST(description)
+    return description + txt
 
 def AssertInActionThread(func):
     if not eg.debugLevel:
         return func
+
     def AssertWrapper(*args, **kwargs):
         if eg.actionThread._ThreadWorker__thread != threading.currentThread():
-            raise AssertionError("Called outside ActionThread: %s() in %s" %
+            raise AssertionError(
+                "Called outside ActionThread: %s() in %s" %
                 (func.__name__, func.__module__)
             )
         return func(*args, **kwargs)
         return func(*args, **kwargs)
+
     return update_wrapper(AssertWrapper, func)
 
+def AssertInMainThread(func):
+    if not eg.debugLevel:
+        return func
+
+    def AssertWrapper(*args, **kwargs):
+        if eg.mainThread != threading.currentThread():
+            raise AssertionError(
+                "Called outside MainThread: %s in %s" %
+                (func.__name__, func.__module__)
+            )
+        return func(*args, **kwargs)
+
+    return update_wrapper(AssertWrapper, func)
 
 def AsTasklet(func):
     def Wrapper(*args, **kwargs):
         eg.Tasklet(func)(*args, **kwargs).run()
     return update_wrapper(Wrapper, func)
 
-
-def ParseString(text, filterFunc=None):
-    start = 0
-    chunks = []
-    last = len(text) - 1
-    while 1:
-        pos = text.find('{', start)
-        if pos < 0:
-            break
-        if pos == last:
-            break
-        chunks.append(text[start:pos])
-        if text[pos+1] == '{':
-            chunks.append('{')
-            start = pos + 2
-        else:
-            start = pos + 1
-            end = text.find('}', start)
-            if end == -1:
-                raise SyntaxError("unmatched bracket")
-            word = text[start:end]
-            res = None
-            if filterFunc:
-                res = filterFunc(word)
-            if res is None:
-                res = eval(word, {}, eg.globals.__dict__)
-            chunks.append(unicode(res))
-            start = end + 1
-    chunks.append(text[start:])
-    return "".join(chunks)
-
-
-
-USER_CLASSES = (type, ClassType)
-
-def SetDefault(targetCls, defaultCls):
-    targetDict = targetCls.__dict__
-    for defaultKey, defaultValue in defaultCls.__dict__.iteritems():
-        if defaultKey not in targetDict:
-            setattr(targetCls, defaultKey, defaultValue)
-        elif type(defaultValue) in USER_CLASSES:
-            SetDefault(targetDict[defaultKey], defaultValue)
-
-
-def GetTopLevelWindow(window):
-    """
-    Returns the top level parent window of a wx.Window. This is in most
-    cases a wx.Dialog or wx.Frame.
-    """
-    result = window
-    while True:
-        parent = result.GetParent()
-        if parent is None:
-            return result
-        elif isinstance(parent, wx.TopLevelWindow):
-            return parent
-        result = parent
-
+def DecodeReST(source):
+    #print repr(source)
+    res = ReSTPublishParts(
+        source=PrepareDocstring(source),
+        writer=HTML_DOC_WRITER,
+        settings_overrides={"stylesheet_path": ""}
+    )
+    #print repr(res)
+    return res['body']
 
 def EnsureVisible(window):
     """
@@ -301,58 +223,171 @@ def EnsureVisible(window):
     # set the new position and size
     window.SetRect((left, top, right - left, bottom - top))
 
-
-class VBoxSizer(wx.BoxSizer): #IGNORE:R0904
-
-    def __init__(self, *items):
-        wx.BoxSizer.__init__(self, wx.VERTICAL)
-        self.AddMany(items)
-
-
-
-class HBoxSizer(wx.BoxSizer): #IGNORE:R0904
-
-    def __init__(self, *items):
-        wx.BoxSizer.__init__(self, wx.HORIZONTAL)
-        self.AddMany(items)
-
-
 def EqualizeWidths(ctrls):
     maxWidth = max((ctrl.GetBestSize()[0] for ctrl in ctrls))
     for ctrl in ctrls:
         ctrl.SetMinSize((maxWidth, -1))
 
+def ExecFile(filename, globals=None, locals=None):
+    """
+    Replacement for the Python built-in execfile() function, but handles
+    unicode filenames right.
+    """
+    FSE = sys.getfilesystemencoding()
+    flnm = filename.encode(FSE) if isinstance(filename, unicode) else filename
+    return execfile(flnm, globals, locals)
 
-DOC_WRITER_TEMPLATE = """\
-%(head_prefix)s
-%(head)s
-%(stylesheet)s
-%(body_prefix)s
-%(body_pre_docinfo)s
-%(docinfo)s
-%(body)s
-%(body_suffix)s
-"""
+def GetBootTimestamp(unix_timestamp = True):
+    """
+    Returns the time of the last system boot.
+    If unix_timestamp == True, result is a unix temestamp.
+    Otherwise it is in human readable form.
+    """
+    now = time.time()
+    GetTickCount64 = windll.kernel32.GetTickCount64
+    GetTickCount64.restype = c_ulonglong
+    up = GetTickCount64() / 1000.0
+    st = str(dt.fromtimestamp(now - up))
+    return now - up if unix_timestamp else st[:st.index(".")]
 
-class MyHtmlDocWriter(Writer):
+def GetFirstParagraph(text):
+    """
+    Return the first paragraph of a description string.
 
-    def apply_template(self):
-        return DOC_WRITER_TEMPLATE % self.interpolation_dict()
+    The string can be encoded in HTML or reStructuredText.
+    The paragraph is returned as HTML.
+    """
+    text = text.lstrip()
+    pos = text.find("<rst>")
+    if pos != -1:
+        text = text[pos + 5:]
+        text = DecodeReST(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return text[start + 3:end].replace("\n", " ")
+    else:
+        result = ""
+        for line in text.splitlines():
+            if line == "":
+                break
+            result += " " + line
+        return ' '.join(result.split())
 
+def GetFuncArgString(func, args, kwargs):
+    classname = ""
+    argnames = inspect.getargspec(func)[0]
+    start = 0
+    if argnames:
+        if argnames[0] == "self":
+            classname = args[0].__class__.__name__ + "."
+            start = 1
+    res = []
+    append = res.append
+    for key, value in zip(argnames, args)[start:]:
+        append(str(key) + GetMyRepresentation(value))
+    for key, value in kwargs.items():
+        append(str(key) + GetMyRepresentation(value))
+    fname = classname + func.__name__
+    return fname, "(" + ", ".join(res) + ")"
 
-HTML_DOC_WRITER = MyHtmlDocWriter()
+def GetMyRepresentation(value):
+    """
+    Give a shorter representation of some wx-objects. Returns normal repr()
+    for everything else. Also adds a "=" sign at the beginning to make it
+    useful as a "formatvalue" function for inspect.formatargvalues().
+    """
+    typeString = repr(type(value))
+    if typeString.startswith("<class 'wx._core."):
+        return "=<wx.%s>" % typeString[len("<class 'wx._core."): -2]
+    if typeString.startswith("<class 'wx._controls."):
+        return "=<wx.%s>" % typeString[len("<class 'wx._controls."): -2]
+    return "=" + repr(value)
 
+def GetTopLevelWindow(window):
+    """
+    Returns the top level parent window of a wx.Window. This is in most
+    cases a wx.Dialog or wx.Frame.
+    """
+    result = window
+    while True:
+        parent = result.GetParent()
+        if parent is None:
+            return result
+        elif isinstance(parent, wx.TopLevelWindow):
+            return parent
+        result = parent
 
-def DecodeReST(source):
-    #print repr(source)
-    res = ReSTPublishParts(
-        source=PrepareDocstring(source),
-        writer=HTML_DOC_WRITER,
-        settings_overrides={"stylesheet_path": ""}
-    )
-    #print repr(res)
-    return res['body']
+def GetUpTime(seconds = True):
+    """
+    Returns a runtime of system in seconds.
+    If seconds == False, returns the number of days, hours, minutes and seconds.
+    """
+    GetTickCount64 = windll.kernel32.GetTickCount64
+    GetTickCount64.restype = c_ulonglong
+    ticks = GetTickCount64() / 1000.0
+    delta = str(td(seconds = ticks))
+    return ticks if seconds else delta[:delta.index(".")]
 
+def LogIt(func):
+    """
+    Logs the function call, if eg.debugLevel is set.
+    """
+    if not eg.debugLevel:
+        return func
+
+    if func.func_code.co_flags & 0x20:
+        raise TypeError("Can't wrap generator function")
+
+    def LogItWrapper(*args, **kwargs):
+        funcName, argString = GetFuncArgString(func, args, kwargs)
+        eg.PrintDebugNotice(funcName + argString)
+        return func(*args, **kwargs)
+    return update_wrapper(LogItWrapper, func)
+
+def LogItWithReturn(func):
+    """
+    Logs the function call and return, if eg.debugLevel is set.
+    """
+    if not eg.debugLevel:
+        return func
+
+    def LogItWithReturnWrapper(*args, **kwargs):
+        funcName, argString = GetFuncArgString(func, args, kwargs)
+        eg.PrintDebugNotice(funcName + argString)
+        result = func(*args, **kwargs)
+        eg.PrintDebugNotice(funcName + " => " + repr(result))
+        return result
+    return update_wrapper(LogItWithReturnWrapper, func)
+
+def ParseString(text, filterFunc=None):
+    start = 0
+    chunks = []
+    last = len(text) - 1
+    while 1:
+        pos = text.find('{', start)
+        if pos < 0:
+            break
+        if pos == last:
+            break
+        chunks.append(text[start:pos])
+        if text[pos + 1] == '{':
+            chunks.append('{')
+            start = pos + 2
+        else:
+            start = pos + 1
+            end = text.find('}', start)
+            if end == -1:
+                raise SyntaxError("unmatched bracket")
+            word = text[start:end]
+            res = None
+            if filterFunc:
+                res = filterFunc(word)
+            if res is None:
+                res = eval(word, {}, eg.globals.__dict__)
+            chunks.append(unicode(res))
+            start = end + 1
+    chunks.append(text[start:])
+    return "".join(chunks)
 
 def PrepareDocstring(docstring):
     """
@@ -383,30 +418,13 @@ def PrepareDocstring(docstring):
         lines.append('')
     return "\n".join(lines)
 
-
-def GetFirstParagraph(text):
-    """
-    Return the first paragraph of a description string.
-
-    The string can be encoded in HTML or reStructuredText.
-    The paragraph is returned as HTML.
-    """
-    text = text.lstrip()
-    pos = text.find("<rst>")
-    if pos != -1:
-        text = text[pos+5:]
-        text = DecodeReST(text)
-        start = text.find("<p>")
-        end = text.find("</p>")
-        return text[start+3:end].replace("\n", " ")
-    else:
-        result = ""
-        for line in text.splitlines():
-            if line == "":
-                break
-            result += " " + line
-        return ' '.join(result.split())
-
+def SetDefault(targetCls, defaultCls):
+    targetDict = targetCls.__dict__
+    for defaultKey, defaultValue in defaultCls.__dict__.iteritems():
+        if defaultKey not in targetDict:
+            setattr(targetCls, defaultKey, defaultValue)
+        elif type(defaultValue) in USER_CLASSES:
+            SetDefault(targetDict[defaultKey], defaultValue)
 
 def SplitFirstParagraph(text):
     """
@@ -418,15 +436,17 @@ def SplitFirstParagraph(text):
     text = text.lstrip()
     pos = text.find("<rst>")
     if pos != -1:
-        text = text[pos+5:]
+        text = text[pos + 5:]
         text = DecodeReST(text)
         start = text.find("<p>")
         end = text.find("</p>")
-        return text[start+3:end].replace("\n", " "), text[end+4:].replace("\n", " ")
+        return (
+            text[start + 3:end].replace("\n", " "),
+            text[end + 4:].replace("\n", " ")
+        )
     else:
         result = ""
         remaining = ""
-        firstLine = []
         lines = text.splitlines()
         for i, line in enumerate(lines):
             if line.strip() == "":
@@ -435,59 +455,22 @@ def SplitFirstParagraph(text):
             result += " " + line
         return ' '.join(result.split()), remaining
 
+def TimeIt(func):
+    """ Decorator to measure the execution time of a function.
 
-def AppUrl(description, url):
-    if url:
-        txt = '<p><div align=right><i><font color="#999999" size=-1>%s <a href="%s">%s</a>.</font></i></div></p>' % (
-            eg.text.General.supportSentence,
-            url,
-            eg.text.General.supportLink
-        )
-    else:
-        return description
-    pos = description.find("<rst>")
-    if pos != -1:
-        description = description[pos + 5:]
-        description = DecodeReST(description)
-    return description + txt
-
-
-def ExecFile(filename, globals=None, locals=None):
+    Will print the time to the log.
     """
-    Replacement for the Python built-in execfile() function, but handles
-    unicode filenames right.
-    """
-    FSE = sys.getfilesystemencoding()
-    flnm = filename.encode(FSE) if isinstance(filename, unicode) else filename
-    return execfile(flnm, globals, locals)
+    if not eg.debugLevel:
+        return func
 
+    def TimeItWrapper(*args, **kwargs):
+        startTime = time.clock()
+        funcName, _ = GetFuncArgString(func, args, kwargs)
+        res = func(*args, **kwargs)
+        eg.PrintDebugNotice(funcName + " :" + repr(time.clock() - startTime))
+        return res
 
-
-def GetBootTimestamp(unix_timestamp = True):
-    """
-    Returns the time of the last system boot.
-    If unix_timestamp == True, result is a unix temestamp.
-    Otherwise it is in human readable form.
-    """
-    now = time.time()
-    GetTickCount64 = windll.kernel32.GetTickCount64
-    GetTickCount64.restype = c_ulonglong
-    up = GetTickCount64() / 1000.0
-    st = str(dt.fromtimestamp(now - up))
-    return now-up if unix_timestamp else st[:st.index(".")]
-
-
-def GetUpTime(seconds = True):
-    """
-    Returns a runtime of system in seconds.
-    If seconds == False, returns the number of days, hours, minutes and seconds.
-    """
-    GetTickCount64 = windll.kernel32.GetTickCount64
-    GetTickCount64.restype = c_ulonglong
-    ticks = GetTickCount64()/1000.0
-    delta = str(td(seconds = ticks))
-    return ticks if seconds else delta[:delta.index(".")]
-
+    return update_wrapper(TimeItWrapper, func)
 
 def UpdateStartupShortcut(create):
     from eg import Shortcut
@@ -506,4 +489,3 @@ def UpdateStartupShortcut(create):
             target=os.path.abspath(sys.executable),
             arguments="-h -e OnInitAfterBoot"
         )
-

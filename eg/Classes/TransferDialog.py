@@ -17,113 +17,19 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import locale
-import urllib2
-import urllib
-import urlparse
 import os
+import urllib
+import urllib2
+import urlparse
+import wx
 from os.path import basename, dirname
 from threading import Thread
 from time import clock
 
-import wx
-
-def FormatBytes(numBytes):
-    """ Returns a formatted string of a byte count value. """
-    return locale.format("%d", numBytes, grouping=True)
-
-
-def GetTimeStr(seconds):
-    """ Returns a nicely formatted time string. """
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    return "%d:%0.2d:%0.2d" % (hours, minutes, seconds)
-
-
-class ProgressFile(object):
-    """
-    A proxy to a file, that also holds progress information.
-    """
-
-    def __init__(self, fileObject, size, progressCallback=None, initialSpeed=0):
-        self.progressCallback = progressCallback
-        self.period = 15
-        self.start = 0
-        self.lastSecond = 0
-        self.lastBytes = 0
-        self.Reset()
-        self.rate = initialSpeed
-
-        self.size = size
-        self.fileObject = fileObject
-        self.pos = 0
-        self.startTime = clock()
-
-
-    def Reset(self):
-        now = clock()
-        self.start = now
-        self.lastSecond = now
-        self.rate = 0
-        self.lastBytes = 0
-
-
-    def read(self, size): #IGNORE:C0103 Invalid name "read"
-        """
-        Implements a file-like read() but also updates the progress variables.
-        """
-        data = self.fileObject.read(size)
-        numBytes = len(data)
-        self.pos += numBytes
-        self.Add(numBytes)
-        if self.progressCallback:
-            if self.progressCallback(self.rate, self.pos, self.size) is False:
-                return ""
-        return data
-
-
-    def close(self): #IGNORE:C0103 Invalid name "read"
-        """
-        Implements a file-like close()
-        """
-        self.fileObject.close()
-        elapsed = (clock() - self.startTime)
-
-
-    def Add(self, numBytes):
-        now = clock()
-        if numBytes == 0 and (now - self.lastSecond) < 0.1:
-            return
-
-        if self.rate == 0:
-            self.Reset()
-
-        div = self.period * 1.0
-        if self.start > now:
-            self.start = now
-        if now < self.lastSecond:
-            self.lastSecond = now
-
-        timePassedSinceStart = now - self.start
-        timePassed = now - self.lastSecond
-        if timePassedSinceStart < div:
-            div = timePassedSinceStart
-        if div < 1:
-            div = 1.0
-
-        self.rate *= 1 - timePassed / div
-        self.rate += numBytes / div
-
-        self.lastSecond = now
-        if numBytes > 0:
-            self.lastBytes = now
-        if self.rate < 0:
-            self.rate = 0
-
-
-
 class TransferDialog(wx.Dialog):
-    """ The progress dialog that is shown while the file is transfered. """
-
+    """
+    The progress dialog that is shown while the file is transfered.
+    """
     def __init__(self, parent, transfers, stopEvent=None):
         self.stopEvent = stopEvent
         self.abort = False
@@ -133,12 +39,14 @@ class TransferDialog(wx.Dialog):
         self.messageCtrl = wx.StaticText(
             self,
             label="",
-            style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
+            style=wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
         )
-        style = wx.ALIGN_RIGHT|wx.ST_NO_AUTORESIZE
+        style = wx.ALIGN_RIGHT | wx.ST_NO_AUTORESIZE
 
         def SText(label, *args, **kwargs):
-            """Simpler creation of a wx.StaticText"""
+            """
+            Simpler creation of a wx.StaticText
+            """
             return wx.StaticText(self, -1, label, *args, **kwargs)
 
         x = 70
@@ -154,7 +62,7 @@ class TransferDialog(wx.Dialog):
         self.gauge = wx.Gauge(
             self,
             range=1000,
-            style=wx.GA_HORIZONTAL|wx.GA_SMOOTH,
+            style=wx.GA_HORIZONTAL | wx.GA_SMOOTH,
             size=(-1, 15)
         )
         overallStaticBox = wx.StaticBox(self, label="Overall")
@@ -163,7 +71,7 @@ class TransferDialog(wx.Dialog):
         self.allGauge = wx.Gauge(
             self,
             range=1000,
-            style=wx.GA_HORIZONTAL|wx.GA_SMOOTH,
+            style=wx.GA_HORIZONTAL | wx.GA_SMOOTH,
             size=(-1, 15)
         )
 
@@ -177,7 +85,7 @@ class TransferDialog(wx.Dialog):
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add((0, 0), 1, wx.EXPAND)
         sizer2.Add(SText("Transfer speed: "), 0, wx.ALIGN_RIGHT)
-        sizer2.Add(self.speedCtrl, 0, wx.EXPAND|wx.ALIGN_RIGHT)
+        sizer2.Add(self.speedCtrl, 0, wx.EXPAND | wx.ALIGN_RIGHT)
 
         sizer3 = wx.StaticBoxSizer(currentStaticBox, wx.VERTICAL)
         sizer3.Add(sizer1, 0, wx.EXPAND)
@@ -211,11 +119,11 @@ class TransferDialog(wx.Dialog):
         sizer6.Add(sizer5, 0, wx.EXPAND)
 
         sizer0 = wx.BoxSizer(wx.VERTICAL)
-        sizer0.Add(self.messageCtrl, 0, wx.EXPAND|wx.ALL, 5)
-        sizer0.Add(sizer3, 0, wx.EXPAND|wx.ALL, 5)
-        sizer0.Add(sizer6, 0, wx.EXPAND|wx.ALL, 5)
+        sizer0.Add(self.messageCtrl, 0, wx.EXPAND | wx.ALL, 5)
+        sizer0.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+        sizer0.Add(sizer6, 0, wx.EXPAND | wx.ALL, 5)
         sizer0.Add((10, 10))
-        sizer0.Add(self.cancelButton, 0, wx.ALIGN_RIGHT|wx.RIGHT|wx.BOTTOM, 10)
+        sizer0.Add(self.cancelButton, 0, wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.SetSizerAndFit(sizer0)
         self.SetSize((400, -1))
@@ -227,13 +135,6 @@ class TransferDialog(wx.Dialog):
         self.timer.Start(100)
         Thread(target=self.ThreadRun).start()
         self.Show()
-
-
-    def OnTimer(self, dummyEvent):
-        """ Called every second to update the progress dialog. """
-        elapsedTime = clock() - self.startTime
-        self.elapsedCtrl.SetLabel(GetTimeStr(elapsedTime))
-
 
     def CreateActions(self):
         self.overallSize = 0
@@ -254,62 +155,6 @@ class TransferDialog(wx.Dialog):
             self.overallSize += size
         return todo
 
-
-    def ThreadRun(self):
-        """ Transfers the files in a separate thread. """
-        try:
-            self.overallSize = 0
-            self.transferedSize = 0
-            todo = self.CreateActions()
-            for i, (action, src, dest, size, transferedSize) in enumerate(todo):
-                self.transferedSize = transferedSize
-                self.currentFileCtrl.SetLabel(basename(dest))
-                self.overallFileCtrl.SetLabel("File %d of %d" % (i+1, len(todo)))
-                action(src, dest, size)
-        finally:
-            if self.stopEvent:
-                self.stopEvent.set()
-            wx.CallAfter(self.Destroy)
-
-
-    def OnCancel(self, dummyEvent):
-        """ Handles a click on the cancel button. """
-        self.abort = True
-        self.cancelButton.Enable(False)
-        self.messageCtrl.SetLabel("Closing connection. Please wait...")
-
-
-    def SetProgress(self, *args, **kwargs):
-        wx.CallAfter(self._SetProgress, *args, **kwargs)
-        if self.abort:
-            return False
-
-
-    def _SetProgress(self, speed, pos, size):
-        self.speed = speed
-        overallPos = self.transferedSize + pos
-        if speed:
-            remainingTime = (self.overallSize - overallPos) / speed
-        else:
-            remeiningTime = 1000
-        percent = int((pos * 100.0) / size)
-        allPercent = int(overallPos * 100.0 / self.overallSize)
-        self.gauge.SetValue(percent * 10)
-        self.allGauge.SetValue(allPercent * 10)
-        self.SetTitle("%d%% Transfer Progress" % allPercent)
-        self.currentProgressCtrl.SetLabel("%d%%" % percent)
-        self.overallProgressCtrl.SetLabel("%d%%" % allPercent)
-        self.speedCtrl.SetLabel("%0.2f KiB/s" % (speed / 1024))
-        self.remainingCtrl.SetLabel(GetTimeStr(remainingTime + 1))
-        self.remainingSizeCtrl.SetLabel(FormatBytes(self.overallSize - overallPos))
-        self.totalSizeCtrl.SetLabel(FormatBytes(self.overallSize))
-
-
-    def HttpGetSize(self, path):
-        testFile = urllib2.urlopen(path)
-        return int(testFile.info()["Content-Length"])
-
-
     def HttpDownload(self, src, dest, size):
         testFile = urllib2.urlopen(src)
         infile = ProgressFile(testFile, size, self.SetProgress, self.speed)
@@ -326,10 +171,32 @@ class TransferDialog(wx.Dialog):
         infile.close()
         outfile.close()
 
+    def HttpGetSize(self, path):
+        testFile = urllib2.urlopen(path)
+        return int(testFile.info()["Content-Length"])
 
     def LocalGetSize(self, path):
         return os.stat(path).st_size
 
+    def OnCancel(self, dummyEvent):
+        """
+        Handles a click on the cancel button.
+        """
+        self.abort = True
+        self.cancelButton.Enable(False)
+        self.messageCtrl.SetLabel("Closing connection. Please wait...")
+
+    def OnTimer(self, dummyEvent):
+        """
+        Called every second to update the progress dialog.
+        """
+        elapsedTime = clock() - self.startTime
+        self.elapsedCtrl.SetLabel(GetTimeStr(elapsedTime))
+
+    def SetProgress(self, *args, **kwargs):
+        wx.CallAfter(self._SetProgress, *args, **kwargs)
+        if self.abort:
+            return False
 
     def SftpUpload(self, src, dest, size):
         log = self.messageCtrl.SetLabel
@@ -363,7 +230,7 @@ class TransferDialog(wx.Dialog):
             client = sshClient.open_sftp()
         except:
             exit("Error: Can't create SFTP client")
-        destPath = urlParts.path #IGNORE:E1101
+        destPath = urlParts.path  #IGNORE:E1101
         destDir = dirname(destPath)
 #        log("Changing path to: %s" % destDir)
 #        client.chdir(destDir)
@@ -404,3 +271,130 @@ class TransferDialog(wx.Dialog):
             log("Upload done!")
         client.close()
 
+    def ThreadRun(self):
+        """
+        Transfers the files in a separate thread.
+        """
+        try:
+            self.overallSize = 0
+            self.transferedSize = 0
+            todo = self.CreateActions()
+            for i, (action, src, dest, size, transferedSize) in enumerate(todo):
+                self.transferedSize = transferedSize
+                self.currentFileCtrl.SetLabel(basename(dest))
+                self.overallFileCtrl.SetLabel("File %d of %d" % (i + 1, len(todo)))
+                action(src, dest, size)
+        finally:
+            if self.stopEvent:
+                self.stopEvent.set()
+            wx.CallAfter(self.Destroy)
+
+    def _SetProgress(self, speed, pos, size):
+        self.speed = speed
+        overallPos = self.transferedSize + pos
+        if speed:
+            remainingTime = (self.overallSize - overallPos) / speed
+        else:
+            remainingTime = 1000
+        percent = int((pos * 100.0) / size)
+        allPercent = int(overallPos * 100.0 / self.overallSize)
+        self.gauge.SetValue(percent * 10)
+        self.allGauge.SetValue(allPercent * 10)
+        self.SetTitle("%d%% Transfer Progress" % allPercent)
+        self.currentProgressCtrl.SetLabel("%d%%" % percent)
+        self.overallProgressCtrl.SetLabel("%d%%" % allPercent)
+        self.speedCtrl.SetLabel("%0.2f KiB/s" % (speed / 1024))
+        self.remainingCtrl.SetLabel(GetTimeStr(remainingTime + 1))
+        self.remainingSizeCtrl.SetLabel(FormatBytes(self.overallSize - overallPos))
+        self.totalSizeCtrl.SetLabel(FormatBytes(self.overallSize))
+
+
+class ProgressFile(object):
+    """
+    A proxy to a file, that also holds progress information.
+    """
+    def __init__(self, fileObject, size, progressCallback=None, initialSpeed=0):
+        self.progressCallback = progressCallback
+        self.period = 15
+        self.start = 0
+        self.lastSecond = 0
+        self.lastBytes = 0
+        self.Reset()
+        self.rate = initialSpeed
+
+        self.size = size
+        self.fileObject = fileObject
+        self.pos = 0
+        self.startTime = clock()
+
+    def Add(self, numBytes):
+        now = clock()
+        if numBytes == 0 and (now - self.lastSecond) < 0.1:
+            return
+
+        if self.rate == 0:
+            self.Reset()
+
+        div = self.period * 1.0
+        if self.start > now:
+            self.start = now
+        if now < self.lastSecond:
+            self.lastSecond = now
+
+        timePassedSinceStart = now - self.start
+        timePassed = now - self.lastSecond
+        if timePassedSinceStart < div:
+            div = timePassedSinceStart
+        if div < 1:
+            div = 1.0
+
+        self.rate *= 1 - timePassed / div
+        self.rate += numBytes / div
+
+        self.lastSecond = now
+        if numBytes > 0:
+            self.lastBytes = now
+        if self.rate < 0:
+            self.rate = 0
+
+    def close(self):  #IGNORE:C0103 Invalid name "read"
+        """
+        Implements a file-like close()
+        """
+        self.fileObject.close()
+        elapsed = (clock() - self.startTime)  # NOQA
+
+    def read(self, size):  #IGNORE:C0103 Invalid name "read"
+        """
+        Implements a file-like read() but also updates the progress variables.
+        """
+        data = self.fileObject.read(size)
+        numBytes = len(data)
+        self.pos += numBytes
+        self.Add(numBytes)
+        if self.progressCallback:
+            if self.progressCallback(self.rate, self.pos, self.size) is False:
+                return ""
+        return data
+
+    def Reset(self):
+        now = clock()
+        self.start = now
+        self.lastSecond = now
+        self.rate = 0
+        self.lastBytes = 0
+
+
+def FormatBytes(numBytes):
+    """
+    Returns a formatted string of a byte count value.
+    """
+    return locale.format("%d", numBytes, grouping=True)
+
+def GetTimeStr(seconds):
+    """
+    Returns a nicely formatted time string.
+    """
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return "%d:%0.2d:%0.2d" % (hours, minutes, seconds)

@@ -16,14 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, ManchesterCoding1
 
 class Motorola(ManchesterCoding1):
-
     def __init__(self, controller):
         ManchesterCoding1.__init__(self, controller, 500)
-
 
     def Decode(self, data):
         # Check the header pulse
@@ -49,4 +47,3 @@ class Motorola(ManchesterCoding1):
 #        if buf == 0x7D:
 #            return ""
         return "Motorola%d.%04X" % (i, buf >> 1)
-

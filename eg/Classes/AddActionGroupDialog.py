@@ -16,9 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
-import wx
-
 
 class Text(eg.TranslatableStrings):
     caption = "Add Actions?"
@@ -30,9 +29,7 @@ class Text(eg.TranslatableStrings):
     )
 
 
-
 class AddActionGroupDialog(eg.TreeItemBrowseDialog):
-
     def Configure(self, parent=None):
         eg.TreeItemBrowseDialog.Configure(
             self,
@@ -43,4 +40,3 @@ class AddActionGroupDialog(eg.TreeItemBrowseDialog):
             filterClasses=(eg.FolderItem, ),
             parent=parent,
         )
-

@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 MODES = {
     1: "Mouse",
@@ -25,32 +26,6 @@ MODES = {
 }
 
 class Rcmm(IrProtocolBase):
-
-    def GetBits(self):
-        if 66 > self.data[self.pos] > 266:
-            raise DecodeError("wrong pulse")
-        pause = self.data[self.pos + 1]
-        self.pos += 2
-        if pause < 366:
-            return 0 # binary 00
-        elif pause < 528:
-            return 1 # binary 01
-        elif pause < 694:
-            return 2 # binary 10
-        elif pause < 861:
-            return 3 # binary 11
-        else:
-            raise DecodeError("pause too long")
-
-
-    def ShiftInBits(self, numBits):
-        data = 0
-        for dummyCounter in xrange(numBits):
-            data <<= 2
-            data |= self.GetBits()
-        return data
-
-
     def Decode(self, data):
         raise DecodeError("not implemented")
         if not (200 < data[0] < 600):
@@ -75,3 +50,25 @@ class Rcmm(IrProtocolBase):
         data = self.ShiftInBits(6)
         return "RC-MM.Oem%02X.%04X" % (customerId, data)
 
+    def GetBits(self):
+        if 66 > self.data[self.pos] > 266:
+            raise DecodeError("wrong pulse")
+        pause = self.data[self.pos + 1]
+        self.pos += 2
+        if pause < 366:
+            return 0  # binary 00
+        elif pause < 528:
+            return 1  # binary 01
+        elif pause < 694:
+            return 2  # binary 10
+        elif pause < 861:
+            return 3  # binary 11
+        else:
+            raise DecodeError("pause too long")
+
+    def ShiftInBits(self, numBits):
+        data = 0
+        for dummyCounter in xrange(numBits):
+            data <<= 2
+            data |= self.GetBits()
+        return data

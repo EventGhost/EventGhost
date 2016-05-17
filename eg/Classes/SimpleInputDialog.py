@@ -16,26 +16,26 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import threading
+import wx
 
+# Local imports
+import eg
 
 PROMPT = "Please type your input..."
 
 class SimpleInputDialog(eg.TaskletDialog):
-
     def Configure(self, prompt=None, initialValue=""):
         if prompt is None:
             prompt = PROMPT
         eg.TaskletDialog.__init__(
-            self, None, -1, PROMPT, style=wx.RESIZE_BORDER|wx.CAPTION
+            self, None, -1, PROMPT, style=wx.RESIZE_BORDER | wx.CAPTION
         )
         textCtrl = self.TextCtrl(initialValue, size=(300, -1))
         buttonRow = eg.ButtonRow(self, [wx.ID_OK])
         mainSizer = eg.VBoxSizer(
-            (self.StaticText(prompt), 0, wx.EXPAND|wx.ALL, 5),
-            (textCtrl, 0, wx.EXPAND|wx.ALL, 5),
+            (self.StaticText(prompt), 0, wx.EXPAND | wx.ALL, 5),
+            (textCtrl, 0, wx.EXPAND | wx.ALL, 5),
             ((5, 5), 1, wx.EXPAND),
             (wx.StaticLine(self), 0, wx.EXPAND),
             (buttonRow.sizer, 0, wx.EXPAND),
@@ -45,11 +45,11 @@ class SimpleInputDialog(eg.TaskletDialog):
         while self.Affirmed():
             self.SetResult(textCtrl.GetValue())
 
-
     @classmethod
     def RawInput(cls, prompt):
         returnValue = []
         event = threading.Event()
+
         @eg.AsTasklet
         def Task():
             result = cls.GetResult(prompt)
@@ -59,4 +59,3 @@ class SimpleInputDialog(eg.TaskletDialog):
         wx.CallAfter(Task)
         event.wait()
         return returnValue[0]
-

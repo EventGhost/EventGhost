@@ -19,13 +19,13 @@
 """
 This script creates the EventGhost setup installer.
 """
-from os.path import dirname, join
-from glob import glob
 
-# local imports
+from glob import glob
+from os.path import dirname, join
+
+# Local imports
 import builder
 from builder.Utils import ListDir
-
 
 EXCLUDE_DIRS = [
     # Files and folders beginning with "." and "_" are excluded automatically.
@@ -44,7 +44,6 @@ INCLUDE_FILES = [
     "pyw.exe",
     "python27.dll",
 ]
-
 
 class MyBuilder(builder.Builder):
     name = "EventGhost"
@@ -65,6 +64,7 @@ class MyBuilder(builder.Builder):
         "Crypto",
         "jinja2",
     ]
+
     excludeModules = [
         "lib2to3",
         "idlelib",
@@ -76,23 +76,23 @@ class MyBuilder(builder.Builder):
         "Tkconstants",
         "FixTk",
         "tcl",
-        "turtle", # another Tkinter module
+        "turtle",  # another Tkinter module
 
         "distutils.command.bdist_packager",
         "distutils.mwerkscompiler",
         "curses",
-        #"ctypes.macholib", # seems to be for Apple
+        #"ctypes.macholib",  # seems to be for Apple
 
         "wx.lib.vtk",
         "wx.tools.Editra",
         "wx.tools.XRCed",
-        "wx.lib.plot", # needs NumPy
-        "wx.lib.floatcanvas", # needs NumPy
+        "wx.lib.plot",  # needs NumPy
+        "wx.lib.floatcanvas",  # needs NumPy
 
-        "ImageTk", # py2exe seems to hang if not removed
+        "ImageTk",  # py2exe seems to hang if not removed
         "ImageGL",
         "ImageQt",
-        "WalImageFile", # odd syntax error in file
+        "WalImageFile",  # odd syntax error in file
         # and no TCL through PIL
         "_imagingtk",
         "PIL._imagingtk",
@@ -108,6 +108,54 @@ class MyBuilder(builder.Builder):
         "eg",
     ]
 
+    def CreateInstaller(self):
+        """
+        Create and compile the Inno Setup installer script.
+        """
+        from builder.InnoSetup import InnoInstaller
+        inno = InnoInstaller(self)
+        plugins = {}
+        for filename, prefix in self.GetSetupFiles():
+            if filename.startswith("plugins\\"):
+                pluginFolder = filename.split("\\")[1]
+                plugins[pluginFolder] = True
+            if (
+                filename.startswith("lib") and
+                not filename.startswith("lib%s\\" % self.pyVersionStr)
+            ) or (
+                len(filename) < 10 and
+                filename.startswith("py") and
+                filename.endswith(".exe")
+            ):
+                continue
+            inno.AddFile(join(self.sourceDir, filename), dirname(filename), prefix=prefix)
+        for filename in glob(join(self.libraryDir, '*.*')):
+            inno.AddFile(filename, self.libraryName)
+        inno.AddFile(
+            join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
+            destName="py.exe"
+        )
+        inno.AddFile(
+            join(self.sourceDir, "pyw%s.exe" % self.pyVersionStr),
+            destName="pyw.exe"
+        )
+        inno.AddFile(
+            join(self.tmpDir, "VersionInfo.py"),
+            destDir="eg\\Classes"
+        )
+        # create entries in the [InstallDelete] section of the Inno script to
+        # remove all known plugin directories before installing the new
+        # plugins.
+        for plugin in plugins.keys():
+            inno.Add(
+                "InstallDelete",
+                'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
+            )
+        inno.Add(
+            "InstallDelete",
+            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersionStr
+        )
+        inno.ExecuteInnoSetup()
 
     def GetSetupFiles(self):
         """
@@ -140,62 +188,11 @@ class MyBuilder(builder.Builder):
                     #if f.startswith(tuple(coreplugins)):
                     installFiles.append([f, "{app}"])
                     #else:
-                        # Install to ProgramData\EventGhost\plugins
-                        #installFiles.append([f,
-                            #"{commonappdata}\\%s" % self.appName])
+                    #    # Install to ProgramData\EventGhost\plugins
+                    #    installFiles.append([f,
+                    #        "{commonappdata}\\%s" % self.appName])
 
         return installFiles
 
 
-    def CreateInstaller(self):
-        """
-        Create and compile the Inno Setup installer script.
-        """
-        from builder.InnoSetup import InnoInstaller
-        inno = InnoInstaller(self)
-        plugins = {}
-        for filename, prefix in self.GetSetupFiles():
-            if filename.startswith("plugins\\"):
-                pluginFolder = filename.split("\\")[1]
-                plugins[pluginFolder] = True
-            if (
-                filename.startswith("lib")
-                and not filename.startswith("lib%s\\" % self.pyVersionStr)
-            ) or (
-                len(filename) < 10
-                and filename.startswith("py")
-                and filename.endswith(".exe")
-            ):
-                continue
-            inno.AddFile(join(self.sourceDir, filename), dirname(filename), prefix=prefix)
-        for filename in glob(join(self.libraryDir, '*.*')):
-            inno.AddFile(filename, self.libraryName)
-        inno.AddFile(
-            join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
-            destName="py.exe"
-        )
-        inno.AddFile(
-            join(self.sourceDir, "pyw%s.exe" % self.pyVersionStr),
-            destName="pyw.exe"
-        )
-        inno.AddFile(
-            join(self.tmpDir, "VersionInfo.py"),
-            destDir="eg\\Classes"
-        )
-        # create entries in the [InstallDelete] section of the Inno script to
-        # remove all known plugin directories before installing the new
-        # plugins.
-        for plugin in plugins.keys():
-            inno.Add(
-                "InstallDelete",
-                'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
-            )
-        inno.Add(
-            "InstallDelete",
-            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersionStr
-        )
-        inno.ExecuteInnoSetup()
-
-
 MyBuilder().Start()
-

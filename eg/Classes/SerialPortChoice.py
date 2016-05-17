@@ -16,15 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class SerialPortChoice(wx.Choice):
     """
     A wx.Choice control that shows all available serial ports on the system.
     """
-
     def __init__(
         self,
         parent,
@@ -43,7 +43,6 @@ class SerialPortChoice(wx.Choice):
                 port will be selected if the given port does not exist or
                 no value is given.
         """
-
         ports = eg.SerialThread.GetAllPorts()
         self.ports = ports
         choices = [("COM%d" % (portnum + 1)) for portnum in ports]
@@ -55,7 +54,6 @@ class SerialPortChoice(wx.Choice):
         except ValueError:
             portPos = 0
         self.SetSelection(portPos)
-
 
     def GetValue(self):
         """
@@ -69,4 +67,3 @@ class SerialPortChoice(wx.Choice):
         except:
             port = 0
         return port
-

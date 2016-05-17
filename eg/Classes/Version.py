@@ -23,4 +23,3 @@ class Version:
     except ImportError:
         base = string = "WIP"
         major = minor = patch = alpha = beta = rc = buildTime = 0
-

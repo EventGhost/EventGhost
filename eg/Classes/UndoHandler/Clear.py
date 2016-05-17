@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
 
 class Clear(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Delete.replace("&", "")
@@ -33,14 +33,11 @@ class Clear(UndoHandlerBase):
         eg.actionThread.Func(item.Delete)()
         self.document.AppendUndoHandler(self)
 
+    @eg.AssertInActionThread
+    def Redo(self):
+        self.treePosition.GetItem().Delete()
 
     @eg.AssertInActionThread
     def Undo(self):
         item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
-
-
-    @eg.AssertInActionThread
-    def Redo(self):
-        self.treePosition.GetItem().Delete()
-

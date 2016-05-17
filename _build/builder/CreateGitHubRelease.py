@@ -16,17 +16,17 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
+import base64
 import sys
 import wx
-from os.path import join
-import base64
 from agithub.GitHub import GitHub
+from os.path import join
+
+# Local imports
 import builder
-from .Utils import NextPage
+from builder.Utils import NextPage
 
-
-if sys.version_info[0:2] > (3,0):
+if sys.version_info[0:2] > (3, 0):
     import http.client
     import urllib.parse
 else:
@@ -34,7 +34,6 @@ else:
     http.client = http
     import urllib as urllib
     urllib.parse = urllib
-
 
 class CreateGitHubRelease(builder.Task):
     description = "Release to GitHub"
@@ -87,18 +86,24 @@ class CreateGitHubRelease(builder.Task):
         releaseExists = False
         page = 1
         while page > 0:
-            rc, data = gh.repos[user][repo].releases.get(sha=branch,
-                                                    per_page=100, page=page)
+            rc, data = gh.repos[user][repo].releases.get(
+                sha=branch,
+                per_page=100,
+                page=page
+            )
             page = NextPage(gh)
             if rc == 200:
                 for rel in data:
                     if rel['name'][1:] == appVer:
                         app = wx.GetApp()
                         win = app.GetTopWindow()
-                        dlg = wx.MessageDialog(win, caption="Information",
-                           message="Found an existing GitHub release"
-                           " matching 'v{0}'\nOverwrite it?".format(appVer),
-                           style=wx.YES_NO)
+                        dlg = wx.MessageDialog(
+                            win,
+                            caption="Information",
+                            message="Found an existing GitHub release matching"
+                            " 'v{0}'\nOverwrite it?".format(appVer),
+                            style=wx.YES_NO
+                        )
                         if dlg.ShowModal() == wx.ID_NO:
                             return
                         releaseId = rel["id"]
@@ -133,28 +138,34 @@ class CreateGitHubRelease(builder.Task):
             blob = None
             print "getting blob for {0}".format(chglogFile)
             for entry in data['tree']:
-                if entry['path'] == chglogFile and entry['type']=='blob':
+                if entry['path'] == chglogFile and entry['type'] == 'blob':
                     blob = entry
                     break
-            if blob == None:
+            if blob is None:
                 print "ERROR: couldn't get blob info."
                 return
 
             print "posting new changelog"
-            body = {'content': changelog,
-                   'encoding': 'utf-8'}
+            body = {
+                'content': changelog,
+                'encoding': 'utf-8'
+            }
             rc, data = gh.repos[user][repo].git.blobs.post(body=body)
             if rc != 201:
                 print "ERROR: couldn't post new changelog contents."
                 return
 
             print "posting tree"
-            newblob = {'path': blob['path'],
+            newblob = {
+                'path': blob['path'],
                 'mode': blob['mode'],
                 'type': blob['type'],
-                'sha' : data['sha']}
-            body = {'tree': [newblob],
-                'base_tree': treeSha}
+                'sha': data['sha']
+            }
+            body = {
+                'tree': [newblob],
+                'base_tree': treeSha
+            }
             rc, data = gh.repos[user][repo].git.trees.post(body=body)
             if rc != 201:
                 print "ERROR: couldn't post new tree."
@@ -162,9 +173,11 @@ class CreateGitHubRelease(builder.Task):
             newTreeSha = data['sha']
 
             print "creating commit for changelog update"
-            body = {'message': "Add changelog for v{0}".format(appVer),
+            body = {
+                'message': "Add changelog for v{0}".format(appVer),
                 'tree': newTreeSha,
-                'parents': [commitSha]}
+                'parents': [commitSha]
+            }
             rc, data = gh.repos[user][repo].git.commits.post(body=body)
             if rc != 201:
                 print "ERROR: couldn't create commit for changelog update."
@@ -210,8 +223,8 @@ class CreateGitHubRelease(builder.Task):
             if rc == 200:
                 for asset in data:
                     if asset["name"] == setupFile:
-                        rc, data = gh.repos[user][repo].releases. \
-                                            assets[asset["id"]].delete()
+                        rc, data = gh.repos[user][repo].releases.\
+                            assets[asset["id"]].delete()
                         if rc != 204:
                             print "ERROR: couldn't delete existing asset."
                             return
@@ -231,4 +244,3 @@ class CreateGitHubRelease(builder.Task):
         if status != 201:
             print "ERROR: couldn't upload installer file to GitHub."
             return
-

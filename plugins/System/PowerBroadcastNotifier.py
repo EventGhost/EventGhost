@@ -16,23 +16,24 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.WinApi.Dynamic import (
-    WM_POWERBROADCAST, PBT_APMSUSPEND, PBT_APMRESUMEAUTOMATIC,
     PBT_APMBATTERYLOW, PBT_APMOEMEVENT, PBT_APMPOWERSTATUSCHANGE,
-    PBT_APMQUERYSUSPEND, PBT_APMQUERYSUSPENDFAILED, PBT_APMRESUMECRITICAL,
-    PBT_APMRESUMESUSPEND,
+    PBT_APMQUERYSUSPEND, PBT_APMQUERYSUSPENDFAILED, PBT_APMRESUMEAUTOMATIC,
+    PBT_APMRESUMECRITICAL, PBT_APMRESUMESUSPEND, PBT_APMSUSPEND,
+    WM_POWERBROADCAST,
 )
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
 PBT_MESSAGES = {
-    PBT_APMBATTERYLOW: "BatteryLow", # not in vista, use
-                                     # PBT_APMPOWERSTATUSCHANGE instead
+    PBT_APMBATTERYLOW: "BatteryLow",  # not in vista, use
+                                      # PBT_APMPOWERSTATUSCHANGE instead
     PBT_APMOEMEVENT: "OemEvent",
     PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
-    PBT_APMQUERYSUSPEND: "QuerySuspend", # removed in Vista
-    PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed", # removed in Vista
+    PBT_APMQUERYSUSPEND: "QuerySuspend",  # removed in Vista
+    PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed",  # removed in Vista
     PBT_APMRESUMEAUTOMATIC: "ResumeAutomatic",
     PBT_APMRESUMECRITICAL: "ResumeCritical",
     PBT_APMRESUMESUSPEND: "Resume",
@@ -40,9 +41,7 @@ PBT_MESSAGES = {
     PBT_POWERSETTINGCHANGE: "PowerSettingsChange",
 }
 
-
 class PowerBroadcastNotifier:
-
     def __init__(self, plugin):
         self.plugin = plugin
         eg.messageReceiver.AddHandler(
@@ -50,13 +49,11 @@ class PowerBroadcastNotifier:
             self.OnPowerBroadcast
         )
 
-
     def Close(self):
         eg.messageReceiver.RemoveHandler(
             WM_POWERBROADCAST,
             self.OnPowerBroadcast
         )
-
 
     @eg.LogIt
     def OnPowerBroadcast(self, dummyHwnd, msg, wparam, dummyLParam):
@@ -72,4 +69,3 @@ class PowerBroadcastNotifier:
         if wparam == PBT_APMSUSPEND:
             eg.actionThread.Func(eg.actionThread.OnComputerSuspend)()
         return 1
-

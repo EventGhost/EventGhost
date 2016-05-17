@@ -16,24 +16,21 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
-from threading import currentThread
-from xml.sax.saxutils import quoteattr, escape
-from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
+from cStringIO import StringIO
+from xml.sax.saxutils import escape, quoteattr
 
+# Local imports
+import eg
 from TreeLink import TreeLink
 
-HINT_NO_DROP = 0              # item cannot be dropped on it
-HINT_MOVE_INSIDE = 1          # item would be dropped inside
-HINT_MOVE_BEFORE = 2          # item would move before
-HINT_MOVE_AFTER = 4           # item would move after
-HINT_MOVE_BEFORE_OR_AFTER = 6 # item can be inserted before or after
-HINT_MOVE_EVERYWHERE = 7      # item can be inserted before or after or dropped
-                              # inside
-
-
+HINT_NO_DROP = 0               # item cannot be dropped on it
+HINT_MOVE_INSIDE = 1           # item would be dropped inside
+HINT_MOVE_BEFORE = 2           # item would move before
+HINT_MOVE_AFTER = 4            # item would move after
+HINT_MOVE_BEFORE_OR_AFTER = 6  # item can be inserted before or after
+HINT_MOVE_EVERYWHERE = 7       # item can be inserted before or after or dropped inside
 
 class TreeItem(object):
     # name
@@ -56,18 +53,6 @@ class TreeItem(object):
     root = None
     icon = None
 
-    @classmethod
-    @eg.AssertInActionThread
-    def Create(cls, parent, pos=-1, text="", **kwargs):
-        node = ElementTree.Element(cls.xmlTag)
-        node.text = text
-        for key, value in kwargs.items():
-            node.attrib[key] = value
-        self = cls(parent, node)
-        parent.AddChild(self, pos)
-        return self
-
-
     @eg.AssertInActionThread
     def __init__(self, parent, node):
         self.parent = parent
@@ -75,132 +60,10 @@ class TreeItem(object):
         node.attrib = dict([(k.lower(), v) for k, v in node.attrib.items()])
         get = node.attrib.get
         self.name = get("name", "")
-        if type(self.name) == type(""):
+        if isinstance(self.name, str):
             self.name = unicode(self.name, "utf8")
         self.isEnabled = not get('enabled') == "False"
         self.xmlId = TreeLink.NewXmlId(int(get('id', -1)), self)
-
-
-    def RestoreState(self):
-        pass
-
-
-    def GetData(self):
-        """
-        This method returns the needed data to construct its XML
-        representation.
-
-        The return values should be:
-            1. a list of (name, value) tuples of the attributes
-            2. the text of the node
-        """
-        attr = []
-        if self.name:
-            attr.append(('Name', self.name))
-        if self.dependants or TreeLink.inUndo:
-            attr.append(('id', self.xmlId))
-        if not self.isEnabled:
-            attr.append(('Enabled', 'False'))
-        return attr, None
-
-
-    def GetTypeName(self):
-        raise NotImplementedError
-
-
-    def GetDescription(self):
-        raise NotImplementedError
-
-
-    def WriteXmlString(self, streamWriter, indent=""):
-        attr, text = self.GetData()
-        attribStrs = "".join(
-            ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8"))
-            for k, v in attr
-        )
-        streamWriter("%s<%s%s" % (indent, self.xmlTag, attribStrs))
-        if not text and len(self.childs) == 0:
-            streamWriter(" />\r\n")
-        else:
-            streamWriter(">\r\n")
-            newIndent = indent + "    "
-            if text is not None:
-                streamWriter(newIndent + escape(text).encode("UTF-8"))
-                streamWriter("\r\n")
-            self.WriteXmlChilds(streamWriter, newIndent)
-            streamWriter(indent + "</%s>\r\n" % self.xmlTag)
-
-
-    def WriteXmlChilds(self, streamWriter, indent):
-        for child in self.childs:
-            child.WriteXmlString(streamWriter, indent)
-
-
-    def GetFullXml(self):
-        TreeLink.StartUndo()
-        output = StringIO()
-        self.WriteXmlString(output.write)
-        xmlString = output.getvalue()
-        output.close()
-        TreeLink.StopUndo()
-        return xmlString
-
-
-    def GetXmlString(self):
-        stream = StringIO()
-        stream.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
-        if isinstance(self, eg.RootItem):
-            self.WriteXmlString(stream.write)
-        else:
-            stream.write('<EventGhost Version="%s">\r\n' % str(eg.Version.string))
-            self.WriteXmlString(stream.write, "    ")
-            stream.write('</EventGhost>')
-        xmlString = stream.getvalue()
-        stream.close()
-        return xmlString
-
-
-    @eg.AssertInActionThread
-    def Delete(self):
-        self.isDeleted = True
-        if self.dependants is not None:
-            TreeLink.RemoveDependants(self)
-        if self.xmlId in TreeLink.sessionId2target:
-            del TreeLink.sessionId2target[self.xmlId]
-        if self.xmlId in TreeLink.id2target:
-            del TreeLink.id2target[self.xmlId]
-        self.parent.RemoveChild(self)
-        self.parent = None
-
-
-    def GetAllItems(self):
-        """
-        Return a list of all nodes including self, by recursively traversing
-        the child nodes.
-        """
-        result = []
-        append = result.append
-        def RecurseChilds(item):
-            append(item)
-            for child in item.childs:
-                RecurseChilds(child)
-        RecurseChilds(self)
-        return result
-
-
-    def GetDependantsOutside(self, allItems):
-        result = []
-        append = result.append
-        def RecurseChilds(item):
-            if item.dependants is not None:
-                for link in item.dependants:
-                    if link.owner and link.owner not in allItems:
-                        append(link)
-            for child in item.childs:
-                RecurseChilds(child)
-        RecurseChilds(self)
-        return result
-
 
     def AskDelete(self):
         allItems = self.GetAllItems()
@@ -213,7 +76,7 @@ class TreeItem(object):
             answer = eg.MessageBox(
                 mesg,
                 eg.APP_NAME,
-                wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
+                wx.NO_DEFAULT | wx.YES_NO | wx.ICON_EXCLAMATION
             )
             if answer == wx.ID_NO:
                 return False
@@ -222,23 +85,19 @@ class TreeItem(object):
             answer = eg.MessageBox(
                 eg.text.General.deleteLinkedItems,
                 eg.APP_NAME,
-                wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
+                wx.NO_DEFAULT | wx.YES_NO | wx.ICON_EXCLAMATION
             )
             return answer == wx.ID_YES
         return True
 
+    def CanCopy(self):
+        return True
 
     def CanCut(self):
         return True
 
-
-    def CanCopy(self):
+    def CanDelete(self):
         return True
-
-
-    def CanPython(self):
-        return self.__class__ == self.document.ActionItem
-
 
     def CanPaste(self):
         if not wx.TheClipboard.Open():
@@ -275,80 +134,38 @@ class TreeItem(object):
             wx.TheClipboard.Close()
         return True
 
+    def CanPython(self):
+        return self.__class__ == self.document.ActionItem
 
-    def CanDelete(self):
-        return True
-
-
-    def OnCmdCopy(self):
-        data = self.GetXmlString()
-        if data and wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(wx.TextDataObject(data.decode("utf-8")))
-            wx.TheClipboard.Close()
-
-
-    def OnCmdPython(self):
-        data = self.GetXmlString()
-        if data and wx.TheClipboard.Open():
-            ix1 = data.find("<Action")
-            ix1 = 3 + data.find(">\r\n        ", ix1)
-            ix2 = data.find("\r\n    </Action>")
-            data = data[ix1:ix2].strip()
-            if data[:24] == "EventGhost.PythonScript(":
-                #data = data[24:-1]
-                data = data[26:-2].replace('\\n', '\n').rstrip() + '\n'
-            elif data[:25] == "EventGhost.PythonCommand(":
-                #data = data[25:-1]
-                data = data[27:-2].replace('\\n', '\n').strip()
-            else:
-                data = "eg.plugins." + data
-            wx.TheClipboard.SetData(wx.TextDataObject(data))
-            wx.TheClipboard.Close()
-
-
-    def GetLabel(self):
-        return self.name
-
+    @classmethod
+    @eg.AssertInActionThread
+    def Create(cls, parent, pos=-1, text="", **kwargs):
+        node = ElementTree.Element(cls.xmlTag)
+        node.text = text
+        for key, value in kwargs.items():
+            node.attrib[key] = value
+        self = cls(parent, node)
+        parent.AddChild(self, pos)
+        return self
 
     @eg.AssertInActionThread
-    def RenameTo(self, newName):
-        self.name = newName
-        if self.dependants:
-            for link in self.dependants:
-                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
-        wx.CallAfter(eg.Notify, "NodeChanged", self)
+    def Delete(self):
+        self.isDeleted = True
+        if self.dependants is not None:
+            TreeLink.RemoveDependants(self)
+        if self.xmlId in TreeLink.sessionId2target:
+            del TreeLink.sessionId2target[self.xmlId]
+        if self.xmlId in TreeLink.id2target:
+            del TreeLink.id2target[self.xmlId]
+        self.parent.RemoveChild(self)
+        self.parent = None
 
-
-    def SetAttributes(self, tree, treeId):
-        pass
-
-
-    @eg.AssertInActionThread
-    def MoveItemTo(self, newParentItem, pos):
-        wx.CallAfter(eg.Notify, "NodeMoveBegin")
-        oldPos = self.parent.RemoveChild(self)
-        newPos = pos
-        if newParentItem == self.parent:
-            if newPos > oldPos:
-                newPos -= 1
-        self.parent = newParentItem
-        newParentItem.AddChild(self, newPos)
-        wx.CallAfter(eg.Notify, "NodeMoveEnd")
-
+    def DropTest(self, dropNode):
+        return self.dropBehaviour.get(dropNode.xmlTag, HINT_NO_DROP)
 
     @eg.AssertInActionThread
-    def SetEnable(self, enable=True):
-        self.isEnabled = enable
-        self.Refresh()
-
-
-    def Refresh(self):
-        wx.CallAfter(eg.Notify, "NodeChanged", self)
-
-
-    def Select(self):
-        wx.CallAfter(eg.Notify, "NodeSelected", self)
-
+    def Execute(self):
+        return None, None
 
     @eg.AssertInMainThread
     def Expand(self):
@@ -357,11 +174,21 @@ class TreeItem(object):
             eg.Notify("NodeChanged", self)
         wx.CallAfter(Do)
 
+    def GetAllItems(self):
+        """
+        Return a list of all nodes including self, by recursively traversing
+        the child nodes.
+        """
+        result = []
+        append = result.append
 
-    @eg.AssertInActionThread
-    def Execute(self):
-        return None, None
+        def RecurseChilds(item):
+            append(item)
+            for child in item.childs:
+                RecurseChilds(child)
+        RecurseChilds(self)
 
+        return result
 
     def GetChildIndex(self, child):
         try:
@@ -369,52 +196,53 @@ class TreeItem(object):
         except ValueError:
             return None
 
+    def GetData(self):
+        """
+        This method returns the needed data to construct its XML
+        representation.
 
-    def GetPath(self):
-        item = self
-        root = self.root
-        path = []
-        while item is not root:
-            parent = item.parent
-            path.append(parent.childs.index(item))
-            item = parent
-        path.reverse()
-        return path
+        The return values should be:
+            1. a list of (name, value) tuples of the attributes
+            2. the text of the node
+        """
+        attr = []
+        if self.name:
+            attr.append(('Name', self.name))
+        if self.dependants or TreeLink.inUndo:
+            attr.append(('id', self.xmlId))
+        if not self.isEnabled:
+            attr.append(('Enabled', 'False'))
+        return attr, None
 
+    def GetDependantsOutside(self, allItems):
+        result = []
+        append = result.append
 
-    def Traverse(self, func):
-        result = func(self)
-        if result is not None:
-            return result
-        for child in self.childs:
-            result = child.Traverse(func)
-            if result is not None:
-                return result
-        return None
+        def RecurseChilds(item):
+            if item.dependants is not None:
+                for link in item.dependants:
+                    if link.owner and link.owner not in allItems:
+                        append(link)
+            for child in item.childs:
+                RecurseChilds(child)
+        RecurseChilds(self)
 
+        return result
 
-    def TraverseDeepthFirst(self, func):
-        for child in self.childs:
-            result = child.TraverseDeepthFirst(func)
-            if result is not None:
-                return result
-        return func(self)
+    def GetDescription(self):
+        raise NotImplementedError
 
+    def GetFullXml(self):
+        TreeLink.StartUndo()
+        output = StringIO()
+        self.WriteXmlString(output.write)
+        xmlString = output.getvalue()
+        output.close()
+        TreeLink.StopUndo()
+        return xmlString
 
-    def Print(self, *args, **kwargs):
-        kwargs.setdefault("source", self)
-        kwargs.setdefault("icon", self.icon)
-        eg.Print(*args, **kwargs)
-
-
-    def PrintError(self, *args, **kwargs):
-        kwargs.setdefault("source", self)
-        eg.PrintError(*args, **kwargs)
-
-
-    def DropTest(self, dropNode):
-        return self.dropBehaviour.get(dropNode.xmlTag, HINT_NO_DROP)
-
+    def GetLabel(self):
+        return self.name
 
     def GetNextItem(self):
         """
@@ -435,6 +263,16 @@ class TreeItem(object):
             if self.parent is None:
                 return self
 
+    def GetPath(self):
+        item = self
+        root = self.root
+        path = []
+        while item is not root:
+            parent = item.parent
+            path.append(parent.childs.index(item))
+            item = parent
+        path.reverse()
+        return path
 
     def GetPreviousItem(self):
         """
@@ -456,8 +294,131 @@ class TreeItem(object):
             self = self.childs[-1]
         return self
 
+    def GetTypeName(self):
+        raise NotImplementedError
+
+    def GetXmlString(self):
+        stream = StringIO()
+        stream.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
+        if isinstance(self, eg.RootItem):
+            self.WriteXmlString(stream.write)
+        else:
+            stream.write('<EventGhost Version="%s">\r\n' % str(eg.Version.string))
+            self.WriteXmlString(stream.write, "    ")
+            stream.write('</EventGhost>')
+        xmlString = stream.getvalue()
+        stream.close()
+        return xmlString
 
     @property
     def imageIndex(self):
         return self.icon.index if self.isEnabled else self.icon.disabledIndex
 
+    @eg.AssertInActionThread
+    def MoveItemTo(self, newParentItem, pos):
+        wx.CallAfter(eg.Notify, "NodeMoveBegin")
+        oldPos = self.parent.RemoveChild(self)
+        newPos = pos
+        if newParentItem == self.parent:
+            if newPos > oldPos:
+                newPos -= 1
+        self.parent = newParentItem
+        newParentItem.AddChild(self, newPos)
+        wx.CallAfter(eg.Notify, "NodeMoveEnd")
+
+    def OnCmdCopy(self):
+        data = self.GetXmlString()
+        if data and wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(data.decode("utf-8")))
+            wx.TheClipboard.Close()
+
+    def OnCmdPython(self):
+        data = self.GetXmlString()
+        if data and wx.TheClipboard.Open():
+            ix1 = data.find("<Action")
+            ix1 = 3 + data.find(">\r\n        ", ix1)
+            ix2 = data.find("\r\n    </Action>")
+            data = data[ix1:ix2].strip()
+            if data[:24] == "EventGhost.PythonScript(":
+                #data = data[24:-1]
+                data = data[26:-2].replace('\\n', '\n').rstrip() + '\n'
+            elif data[:25] == "EventGhost.PythonCommand(":
+                #data = data[25:-1]
+                data = data[27:-2].replace('\\n', '\n').strip()
+            else:
+                data = "eg.plugins." + data
+            wx.TheClipboard.SetData(wx.TextDataObject(data))
+            wx.TheClipboard.Close()
+
+    def Print(self, *args, **kwargs):
+        kwargs.setdefault("source", self)
+        kwargs.setdefault("icon", self.icon)
+        eg.Print(*args, **kwargs)
+
+    def PrintError(self, *args, **kwargs):
+        kwargs.setdefault("source", self)
+        eg.PrintError(*args, **kwargs)
+
+    def Refresh(self):
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
+
+    @eg.AssertInActionThread
+    def RenameTo(self, newName):
+        self.name = newName
+        if self.dependants:
+            for link in self.dependants:
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
+
+    def RestoreState(self):
+        pass
+
+    def Select(self):
+        wx.CallAfter(eg.Notify, "NodeSelected", self)
+
+    def SetAttributes(self, tree, treeId):
+        pass
+
+    @eg.AssertInActionThread
+    def SetEnable(self, enable=True):
+        self.isEnabled = enable
+        self.Refresh()
+
+    def Traverse(self, func):
+        result = func(self)
+        if result is not None:
+            return result
+        for child in self.childs:
+            result = child.Traverse(func)
+            if result is not None:
+                return result
+        return None
+
+    def TraverseDeepthFirst(self, func):
+        for child in self.childs:
+            result = child.TraverseDeepthFirst(func)
+            if result is not None:
+                return result
+        return func(self)
+
+    def WriteXmlChilds(self, streamWriter, indent):
+        for child in self.childs:
+            child.WriteXmlString(streamWriter, indent)
+
+    def WriteXmlString(self, streamWriter, indent=""):
+        attr, text = self.GetData()
+        attribStrs = "".join(
+            ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8"))
+            for k, v in attr
+        )
+        streamWriter("%s<%s%s" % (indent, self.xmlTag, attribStrs))
+        if not text and len(self.childs) == 0:
+            streamWriter(" />\r\n")
+        else:
+            streamWriter(">\r\n")
+            newIndent = indent + "    "
+            if text is not None:
+                streamWriter(newIndent + escape(text).encode("UTF-8"))
+                streamWriter("\r\n")
+            self.WriteXmlChilds(streamWriter, newIndent)
+            streamWriter(indent + "</%s>\r\n" % self.xmlTag)

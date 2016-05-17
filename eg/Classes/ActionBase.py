@@ -17,8 +17,9 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-import eg
 
+# Local imports
+import eg
 
 class ActionBase(object):
     """
@@ -58,7 +59,6 @@ class ActionBase(object):
         Internally used house keeping data. Don't try to manipulate
         this yourself.
     """
-
     name = None
     description = None
     iconFile = None
@@ -74,6 +74,10 @@ class ActionBase(object):
         "__call__, Configure, GetLabel, Compile, PrintError, Exception"
     )
 
+    # Exceptions
+    class Exception(eg.Exception):
+        pass
+
     def __call__(self, *args):
         """
         Do the actual work. Will in most cases be overwritten in subclasses.
@@ -87,66 +91,6 @@ class ActionBase(object):
             raise NotImplementedError(
                 "Action has no __call__ method implemented."
             )
-
-
-    def GetLabel(self, *args):
-        """
-        Returns the label that should be displayed in the configuration tree
-        with the current arguments.
-
-        The default method simply shows the action name and the first
-        parameter if there is any. If you want to have a different behaviour,
-        you can override it.
-
-        This method gets called with the same parameters as the
-        :meth:`!__call__` method.
-        """
-        label = self.name
-        if args:
-            label += ': ' + unicode(args[0])
-        return label
-
-
-    def PrintError(self, msg):
-        """
-        Print an error message to the logger.
-
-        Prefer to use :meth:`!self.PrintError`
-        instead of :meth:`eg.PrintError`, since this method gives the
-        user better information about the source of the error.
-        """
-        eg.PrintError(msg)
-
-
-    def Configure(self, *args):
-        """
-        This should be overridden in a subclass, if the plugin wants to have
-        a configuration dialog.
-
-        When the plugin is freshly added by the user to the configuration tree
-        there are no *\*args* and you must therefore supply sufficient
-        default arguments.
-        If the plugin is reconfigured by the user, this method will be called
-        with the same arguments as the :meth:`!__start__` method would receive.
-        """
-        panel = eg.ConfigPanel()
-        panel.dialog.buttonRow.applyButton.Enable(False)
-        label = panel.StaticText(
-            eg.text.General.noOptionsAction,
-            style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
-        )
-        panel.sizer.Add((0, 0), 1, wx.EXPAND)
-        panel.sizer.Add(label, 0, wx.ALIGN_CENTRE)
-        panel.sizer.Add((0, 0), 1, wx.EXPAND)
-        while panel.Affirmed():
-            panel.SetResult()
-
-
-    @classmethod
-    def OnAddAction(cls):
-        """test"""
-        pass
-
 
     def Compile(self, *args):
         """
@@ -172,7 +116,56 @@ class ActionBase(object):
             return self(*args)
         return CallWrapper
 
+    def Configure(self, *args):
+        """
+        This should be overridden in a subclass, if the plugin wants to have
+        a configuration dialog.
 
-    class Exception(eg.Exception):
+        When the plugin is freshly added by the user to the configuration tree
+        there are no *\*args* and you must therefore supply sufficient
+        default arguments.
+        If the plugin is reconfigured by the user, this method will be called
+        with the same arguments as the :meth:`!__start__` method would receive.
+        """
+        panel = eg.ConfigPanel()
+        panel.dialog.buttonRow.applyButton.Enable(False)
+        label = panel.StaticText(
+            eg.text.General.noOptionsAction,
+            style=wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
+        )
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
+        panel.sizer.Add(label, 0, wx.ALIGN_CENTRE)
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult()
+
+    def GetLabel(self, *args):
+        """
+        Returns the label that should be displayed in the configuration tree
+        with the current arguments.
+
+        The default method simply shows the action name and the first
+        parameter if there is any. If you want to have a different behaviour,
+        you can override it.
+
+        This method gets called with the same parameters as the
+        :meth:`!__call__` method.
+        """
+        label = self.name
+        if args:
+            label += ': ' + unicode(args[0])
+        return label
+
+    @classmethod
+    def OnAddAction(cls):
         pass
 
+    def PrintError(self, msg):
+        """
+        Print an error message to the logger.
+
+        Prefer to use :meth:`!self.PrintError`
+        instead of :meth:`eg.PrintError`, since this method gives the
+        user better information about the source of the error.
+        """
+        eg.PrintError(msg)

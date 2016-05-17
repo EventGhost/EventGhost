@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import time
-from os.path import join
 from agithub.GitHub import GitHub
-import builder
-from .Utils import NextPage
+from os.path import join
 
+# Local imports
+import builder
+from builder.Utils import NextPage
 
 class UpdateChangeLog(builder.Task):
     """
@@ -57,8 +57,11 @@ class UpdateChangeLog(builder.Task):
         # get commits since last release
         page = 1
         while page > 0:
-            rc, data = gh.repos[user][repo].commits.get(sha=branch,
-                                                    per_page=100, page=page)
+            rc, data = gh.repos[user][repo].commits.get(
+                sha=branch,
+                per_page=100,
+                page=page
+            )
             if rc != 200:
                 print "INFO: couldn't get commits."
                 return
@@ -78,7 +81,7 @@ class UpdateChangeLog(builder.Task):
             if item['sha'] == to_commit:
                 break
             hdr = gh.getheaders()
-            header = {item[0].strip(): item[1].strip() for item in hdr}
+            header = {item[0].strip(): item[1].strip() for item in hdr}  # NOQA
             page = NextPage(gh)
 
         # read the existing changelog...
@@ -99,7 +102,8 @@ class UpdateChangeLog(builder.Task):
             parent = wx.GetApp().GetTopWindow()
 
             msg = "CHANGELOG.TXT couldn't be written.\n({0})".format(
-                                                                sys.exc_value)
+                sys.exc_value
+            )
             dlg = wx.MessageDialog(parent, msg, caption="Error",
                                    style=wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
@@ -132,4 +136,3 @@ class UpdateChangeLog(builder.Task):
                         latestRelName = item['ref'][11:]
                         latestSha = item['object']['sha']
         return latestSha
-

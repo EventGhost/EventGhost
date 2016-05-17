@@ -16,18 +16,17 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class Config(eg.PersistentData):
     position = None
     size = (400, 300)
 
 
-
 class HtmlDialog(eg.Dialog):
-
     def __init__(
         self,
         parent=None,
@@ -42,7 +41,7 @@ class HtmlDialog(eg.Dialog):
             parent,
             -1,
             title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
         if icon:
             self.SetIcon(icon)
@@ -57,7 +56,7 @@ class HtmlDialog(eg.Dialog):
             buttonIds.append(wx.ID_CANCEL)
         self.buttonRow = eg.ButtonRow(self, buttonIds, True, True)
         mainSizer = eg.VBoxSizer(
-            (htmlCtrl, 1, wx.EXPAND|wx.ALL, 5),
+            (htmlCtrl, 1, wx.EXPAND | wx.ALL, 5),
             (self.buttonRow.sizer, 0, wx.EXPAND),
         )
         self.SetSizerAndFit(mainSizer)
@@ -65,9 +64,7 @@ class HtmlDialog(eg.Dialog):
             self.SetPosition(Config.position)
         self.SetSize(Config.size)
 
-
     def Destroy(self):
         Config.size = self.GetSizeTuple()
         Config.position = self.GetPositionTuple()
         eg.Dialog.Destroy(self)
-

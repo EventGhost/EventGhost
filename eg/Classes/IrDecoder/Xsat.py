@@ -16,13 +16,27 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 class Xsat(IrProtocolBase):
     """
     IR decoder for the X-Sat protocol.
     """
+    def Decode(self, data):
+        # Check the header pulse
+        if not (7000 < data[0] < 9000):
+            raise DecodeError("wrong header pulse")
+        if not (3000 < data[1] < 5000):
+            raise DecodeError("wrong header pause")
+        if not (3000 < data[19] < 5000):
+            raise DecodeError("wrong middle pause")
+
+        addr = self.GetByte(data, 2)
+        cmd = self.GetByte(data, 20)
+        if data[37] < 10000:
+            raise DecodeError("sequence too long")
+        return "XSAT.%0.2X%0.2X" % (addr, cmd)
 
     def GetByte(self, data, pos):
         buf = 0
@@ -47,20 +61,3 @@ class Xsat(IrProtocolBase):
         if 250 > pulse > 750:
             raise DecodeError("wrong byte end-pulse")
         return buf
-
-
-    def Decode(self, data):
-        # Check the header pulse
-        if not (7000 < data[0] < 9000):
-            raise DecodeError("wrong header pulse")
-        if not (3000 < data[1] < 5000):
-            raise DecodeError("wrong header pause")
-        if not (3000 < data[19] < 5000):
-            raise DecodeError("wrong middle pause")
-
-        addr = self.GetByte(data, 2)
-        cmd = self.GetByte(data, 20)
-        if data[37] < 10000:
-            raise DecodeError("sequence too long")
-        return "XSAT.%0.2X%0.2X" % (addr, cmd)
-

@@ -19,7 +19,6 @@
 MODULE_GLOBALS = globals()
 
 class UndoHandler:
-
     def __getattr__(self, name):
         mod = __import__(name, MODULE_GLOBALS)
         attr = getattr(mod, name)
@@ -30,16 +29,14 @@ UndoHandler = UndoHandler()
 
 
 class UndoHandlerBase(object):
-
     def __init__(self, document):
         self.document = document
 
     def Do(self, *args):
         raise NotImplementedError
 
-    def Undo(self):
-        raise NotImplementedError
-
     def Redo(self):
         raise NotImplementedError
 
+    def Undo(self):
+        raise NotImplementedError

@@ -21,13 +21,16 @@
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
 
-from eg.WinApi.Dynamic import *
-_psapi = WinDLL("Psapi")
 import sys
-if not hasattr(sys, "frozen"): # detect py2exe
+
+# Local imports
+from eg.WinApi.Dynamic import *
+
+_psapi = WinDLL("Psapi")
+if not hasattr(sys, "frozen"):  # detect py2exe
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
-    except ImportError :
+    except ImportError:
         print "ctypeslib is not installed!"
     else:
         try:
@@ -41,9 +44,10 @@ if not hasattr(sys, "frozen"): # detect py2exe
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
+
+#-----------------------------------------------------------------------------#
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
 EnumProcesses = _psapi.EnumProcesses
 EnumProcesses.restype = BOOL
 EnumProcesses.argtypes = [POINTER(DWORD), DWORD, LPDWORD]
-

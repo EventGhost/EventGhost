@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 
 class Panel(wx.Panel, eg.ControlProviderMixin):
     pass
-

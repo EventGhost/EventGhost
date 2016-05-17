@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
-
 
 class AddActionGroup(eg.UndoHandler.NewItem):
     name = "Add all actions of plugin"
@@ -51,6 +51,7 @@ class AddActionGroup(eg.UndoHandler.NewItem):
                         ),
                     )
             return folderItem
+
         folderItem = eg.actionThread.Func(Traverse)(
             parentItem,
             pluginItem.executable.info.actionGroup
@@ -58,4 +59,3 @@ class AddActionGroup(eg.UndoHandler.NewItem):
         self.StoreItem(folderItem)
         folderItem.Select()
         folderItem.Expand()
-

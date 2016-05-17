@@ -21,13 +21,16 @@
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
 
-from eg.WinApi.Dynamic import *
-_Mpr = WinDLL("Mpr")
 import sys
-if not hasattr(sys, "frozen"): # detect py2exe
+
+# Local imports
+from eg.WinApi.Dynamic import *
+
+_Mpr = WinDLL("Mpr")
+if not hasattr(sys, "frozen"):  # detect py2exe
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
-    except ImportError :
+    except ImportError:
         print "ctypeslib is not installed!"
     else:
         try:
@@ -41,13 +44,15 @@ if not hasattr(sys, "frozen"): # detect py2exe
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
+
+#-----------------------------------------------------------------------------#
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
 WNetGetUniversalNameW = _Mpr.WNetGetUniversalNameW
 WNetGetUniversalNameW.restype = DWORD
 WNetGetUniversalNameW.argtypes = [LPCWSTR, DWORD, LPVOID, LPDWORD]
-WNetGetUniversalName = WNetGetUniversalNameW # alias
-UNIVERSAL_NAME_INFO_LEVEL = 1 # Variable c_int '1'
+WNetGetUniversalName = WNetGetUniversalNameW  # alias
+UNIVERSAL_NAME_INFO_LEVEL = 1  # Variable c_int '1'
 class _UNIVERSAL_NAME_INFOW(Structure):
     pass
 UNIVERSAL_NAME_INFOW = _UNIVERSAL_NAME_INFOW
@@ -55,8 +60,7 @@ UNIVERSAL_NAME_INFO = UNIVERSAL_NAME_INFOW
 _UNIVERSAL_NAME_INFOW._fields_ = [
     ('lpUniversalName', LPWSTR),
 ]
-NO_ERROR = 0 # Variable c_long '0l'
-ERROR_NO_NET_OR_BAD_PATH = 1203 # Variable c_long '1203l'
-ERROR_BAD_DEVICE = 1200 # Variable c_long '1200l'
-ERROR_NOT_SUPPORTED = 50 # Variable c_long '50l'
-
+NO_ERROR = 0  # Variable c_long '0l'
+ERROR_NO_NET_OR_BAD_PATH = 1203  # Variable c_long '1203l'
+ERROR_BAD_DEVICE = 1200  # Variable c_long '1200l'
+ERROR_NOT_SUPPORTED = 50  # Variable c_long '50l'

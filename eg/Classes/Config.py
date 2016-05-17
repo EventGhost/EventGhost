@@ -16,19 +16,18 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import os
 import sys
+import wx
 from os.path import exists
 from types import ClassType, InstanceType
 
+# Local imports
+import eg
 
 LOCALE = wx.Locale()
 
-
 class Section:
-
     def __init__(self, defaults=None):
         if defaults:
             for key, value in defaults.__dict__.iteritems():
@@ -36,7 +35,6 @@ class Section:
                     setattr(self, key, Section(value))
                 elif not hasattr(self, key):
                     setattr(self, key, value)
-
 
     def SetDefault(self, key, default):
         if key not in self.__dict__:
@@ -47,37 +45,6 @@ class Section:
                 if not hasattr(section, key2):
                     setattr(section, key2, value)
         return getattr(self, key)
-
-
-
-def MakeSectionMetaClass(dummyName, dummyBases, dct):
-    section = Section()
-    section.__dict__ = dct
-    return section
-
-
-def RecursivePySave(obj, fileWriter, indent=""):
-    objDict = obj.__dict__
-    keys = objDict.keys()
-    keys.sort()
-    classKeys = []
-    for key in keys:
-        if key.startswith("_"):
-            continue
-        value = objDict[key]
-        if type(value) == ClassType:
-            classKeys.append(key)
-        elif type(value) == InstanceType:
-            classKeys.append(key)
-        else:
-            line = indent + key + " = " + repr(value) + "\n"
-            fileWriter(line)
-    for key in classKeys:
-        value = objDict[key]
-        fileWriter(indent + "class " + key + ":\n")
-        RecursivePySave(value, fileWriter, indent + "    ")
-
-
 
 
 class Config(Section):
@@ -106,9 +73,8 @@ class Config(Section):
     startWithWindows = True
     useFixedFont = False
 
-    class plugins: #pylint: disable-msg=C0103
+    class plugins:  #pylint: disable-msg=C0103
         pass
-
 
     def __init__(self):
         Section.__init__(self)
@@ -138,10 +104,35 @@ class Config(Section):
         if self.language == "Deutsch":
             self.language = "de_DE"
 
-
     def Save(self):
         self.version = eg.Version.string
         configFile = open(self._configFilePath, 'w+')
         RecursivePySave(self, configFile.write)
         configFile.close()
 
+
+def MakeSectionMetaClass(dummyName, dummyBases, dct):
+    section = Section()
+    section.__dict__ = dct
+    return section
+
+def RecursivePySave(obj, fileWriter, indent=""):
+    objDict = obj.__dict__
+    keys = objDict.keys()
+    keys.sort()
+    classKeys = []
+    for key in keys:
+        if key.startswith("_"):
+            continue
+        value = objDict[key]
+        if type(value) == ClassType:
+            classKeys.append(key)
+        elif type(value) == InstanceType:
+            classKeys.append(key)
+        else:
+            line = indent + key + " = " + repr(value) + "\n"
+            fileWriter(line)
+    for key in classKeys:
+        value = objDict[key]
+        fileWriter(indent + "class " + key + ":\n")
+        RecursivePySave(value, fileWriter, indent + "    ")

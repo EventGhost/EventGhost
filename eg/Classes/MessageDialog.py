@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class MessageDialog(wx.Dialog):
     """
@@ -30,7 +31,7 @@ class MessageDialog(wx.Dialog):
         parent,
         message,
         caption=eg.APP_NAME,
-        style=wx.OK|wx.CANCEL,
+        style=wx.OK | wx.CANCEL,
         pos=wx.DefaultPosition
     ):
         if parent is None and eg.document.frame:
@@ -60,14 +61,14 @@ class MessageDialog(wx.Dialog):
             sizer.Add(staticBitmap, 0, wx.ALL, 12)
         staticText = wx.StaticText(self, -1, message)
         staticText.Wrap(400)
-        sizer.Add(staticText, 0, wx.ALIGN_CENTER|wx.LEFT|wx.TOP|wx.RIGHT, 6)
+        sizer.Add(staticText, 0, wx.ALIGN_CENTER | wx.LEFT | wx.TOP | wx.RIGHT, 6)
         buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
         text = eg.text.General
         if wx.YES_NO & style:
             yesButton = wx.Button(self, wx.ID_YES, text.yes)
-            buttonSizer.Add(yesButton, 0, wx.LEFT|wx.RIGHT, 3)
+            buttonSizer.Add(yesButton, 0, wx.LEFT | wx.RIGHT, 3)
             noButton = wx.Button(self, wx.ID_NO, text.no)
-            buttonSizer.Add(noButton, 0, wx.LEFT|wx.RIGHT, 3)
+            buttonSizer.Add(noButton, 0, wx.LEFT | wx.RIGHT, 3)
             if wx.NO_DEFAULT & style:
                 self.SetDefaultItem(noButton)
                 noButton.SetFocus()
@@ -78,25 +79,22 @@ class MessageDialog(wx.Dialog):
             noButton.Bind(wx.EVT_BUTTON, self.OnNoButton)
         else:
             okButton = wx.Button(self, wx.ID_OK, text.ok)
-            buttonSizer.Add(okButton, 0, wx.LEFT|wx.RIGHT, 3)
+            buttonSizer.Add(okButton, 0, wx.LEFT | wx.RIGHT, 3)
         if wx.CANCEL & style:
             cancelButton = wx.Button(self, wx.ID_CANCEL, text.cancel)
-            buttonSizer.Add(cancelButton, 0, wx.LEFT|wx.RIGHT, 3)
+            buttonSizer.Add(cancelButton, 0, wx.LEFT | wx.RIGHT, 3)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(sizer)
-        mainSizer.Add(buttonSizer, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 12)
+        mainSizer.Add(buttonSizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 12)
         self.SetSizerAndFit(mainSizer)
         if parent and pos == wx.DefaultPosition:
             self.CenterOnParent()
-
-
-    def OnYesButton(self, event):
-        self.EndModal(wx.ID_YES)
-        event.Skip()
-
 
     def OnNoButton(self, event):
         self.EndModal(wx.ID_NO)
         event.Skip()
 
+    def OnYesButton(self, event):
+        self.EndModal(wx.ID_YES)
+        event.Skip()

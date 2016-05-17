@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class TreeItemBrowseDialog(eg.TaskletDialog):
-
     def Configure(
         self,
         title,
@@ -34,7 +34,7 @@ class TreeItemBrowseDialog(eg.TaskletDialog):
         self.resultData = searchItem
         self.resultClasses = resultClasses
         self.foundId = None
-        style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+        style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         eg.TaskletDialog.__init__(self, parent, -1, title=title, style=style)
         staticText = wx.StaticText(self, -1, text)
         staticText.Wrap(430)
@@ -48,19 +48,21 @@ class TreeItemBrowseDialog(eg.TaskletDialog):
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_CANCEL, wx.ID_OK), True)
         mainSizer = eg.VBoxSizer(
-            (staticText, 0, wx.EXPAND|wx.ALL, 5),
-            (tree, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 5),
+            (staticText, 0, wx.EXPAND | wx.ALL, 5),
+            (tree, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 5),
             (self.buttonRow.sizer, 0, wx.EXPAND),
         )
 
         self.SetSizerAndFit(mainSizer)
-        self.SetSize((450,400))
+        self.SetSize((450, 400))
 
         if not searchItem:
             self.buttonRow.okButton.Enable(False)
         while self.Affirmed():
             self.SetResult(self.resultData)
 
+    def GetValue(self):
+        return self.resultData
 
     def OnSelectionChanged(self, event):
         item = event.GetItem()
@@ -72,8 +74,3 @@ class TreeItemBrowseDialog(eg.TaskletDialog):
             else:
                 self.buttonRow.okButton.Enable(False)
         event.Skip()
-
-
-    def GetValue(self):
-        return self.resultData
-

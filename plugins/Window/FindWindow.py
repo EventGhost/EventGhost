@@ -15,28 +15,21 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-#
-# Changelog (in reverse chronological order):
-# -------------------------------------------
-# by Pako 2011-04-28 15:22 UTC+1
-#     - Added option "Stop macro if target found"
 
-import eg
 import wx
 from os.path import basename
 
-from eg.WinApi.Dynamic import (
-    GetAncestor,
-    GA_ROOT,
-)
+# Local imports
+import eg
 from eg.WinApi import (
-    GetProcessName,
-    GetWindowText,
     GetClassName,
-    GetWindowThreadProcessId,
+    GetProcessName,
     GetTopLevelWindowList,
     GetWindowChildsList,
+    GetWindowText,
+    GetWindowThreadProcessId,
 )
+from eg.WinApi.Dynamic import GA_ROOT, GetAncestor
 
 STOP_IF_NOT_FOUND = 0
 STOP_IF_FOUND = 1
@@ -46,44 +39,8 @@ class Config(eg.PersistentData):
     hideOnDrag = True
 
 
-
-class TestDialog(eg.Dialog):
-
-    def __init__(self, parent, hwnds):
-        eg.Dialog.__init__(
-            self,
-            parent,
-            title="Found Windows",
-            size=(500, 350),
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER,
-        )
-        windowList = eg.WindowList(self, hwnds)
-        okButton = wx.Button(self, wx.ID_OK)
-        btnSizer = eg.HBoxSizer(
-            ((0, 0), 1, wx.EXPAND),
-            (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
-            ((0, 0), 1, wx.EXPAND),
-            (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
-        )
-        mainSizer = eg.VBoxSizer(
-            (windowList, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
-            (btnSizer, 0, wx.EXPAND),
-        )
-        self.SetSizer(mainSizer)
-
-
-
-def UseForegroundWindowOnly():
-    """ Instruct EventGhost to use the active desktop window only, by
-        clearing eg.lastFoundWindows
-    """
-    del eg.lastFoundWindows[:]
-    return []
-
-
-
 class FindWindow(eg.ActionBase):
-    name = "Find a window"
+    name = "Find a Window"
     description = (
         'Searches for a window, which is afterwards used as a target for '
         'further window actions in the macro.\n\n<p>'
@@ -93,6 +50,7 @@ class FindWindow(eg.ActionBase):
         'any string sequence and {?} to match a single letter.'
     )
     iconFile = "icons/FindWindow"
+
     class text:
         label = "Find Window: %s"
         label2 = "Find frontmost window"
@@ -120,6 +78,10 @@ class FindWindow(eg.ActionBase):
             "Child Class:"
         )
 
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
 
     def Compile(
         self,
@@ -146,25 +108,17 @@ class FindWindow(eg.ActionBase):
             includeInvisible,
             timeout,
         )
+
         def Do():
             hwnds = matcher()
             if (
-                (stopMacro == STOP_IF_NOT_FOUND and not hwnds)
-                or (stopMacro == STOP_IF_FOUND and hwnds)
+                (stopMacro == STOP_IF_NOT_FOUND and not hwnds) or
+                (stopMacro == STOP_IF_FOUND and hwnds)
             ):
                 eg.programCounter = None
             eg.lastFoundWindows[:] = hwnds
             return hwnds
         return Do
-
-
-
-    def GetLabel(self, program, *args):
-        if args[7] is None:
-            return self.text.label2
-        else:
-            return self.text.label % basename(program or '')
-
 
     def Configure(
         self,
@@ -195,6 +149,7 @@ class FindWindow(eg.ActionBase):
 
         # the "only search for the frontmost" checkbox
         cbOnlyFrontmost = wx.CheckBox(panel, -1, text.onlyFrontmost)
+
         def OnSearchOnlyFrontmostCheckbox(event):
             flag = not cbOnlyFrontmost.IsChecked()
             cbIncludeInvisible.Enable(flag)
@@ -214,6 +169,7 @@ class FindWindow(eg.ActionBase):
 
         # the IncludeInvisible checkbox
         cbIncludeInvisible = wx.CheckBox(panel, -1, text.invisible_box)
+
         def OnIncludeInvisibleCheckbox(event):
             hwnd = self.lastHwnd
             self.tree.includeInvisible = cbIncludeInvisible.IsChecked()
@@ -263,6 +219,7 @@ class FindWindow(eg.ActionBase):
         # the HideOnDrag checkbox
         cbHideOnDrag = wx.CheckBox(panel, -1, text.hide_box)
         cbHideOnDrag.SetValue(Config.hideOnDrag)
+
         def OnHideOnDragCheckbox(dummyEvent):
             Config.hideOnDrag = cbHideOnDrag.IsChecked()
         cbHideOnDrag.Bind(wx.EVT_CHECKBOX, OnHideOnDragCheckbox)
@@ -273,6 +230,7 @@ class FindWindow(eg.ActionBase):
 
         # the refresh button
         refreshButton = wx.Button(panel, -1, text.refresh_btn)
+
         def OnButton(dummyEvent):
             hwnd = self.lastHwnd
             self.tree.Refresh()
@@ -284,7 +242,7 @@ class FindWindow(eg.ActionBase):
             wx.StaticBox(panel, -1, "Drag Finder"),
             wx.VERTICAL
         )
-        dragSizer.Add(finderTool, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 4)
+        dragSizer.Add(finderTool, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM, 4)
         dragSizer.Add(cbHideOnDrag)
 
         leftTopSizer = wx.BoxSizer(wx.VERTICAL)
@@ -300,7 +258,7 @@ class FindWindow(eg.ActionBase):
         sizer1 = wx.GridBagSizer(vgap=4, hgap=4)
         sizer1.SetEmptyCellSize((0, 0))
         sizer1.Add(self.tree, (0, 0), (1, 5), wx.EXPAND)
-        sizer1.Add(refreshButton, (1, 4), (2, 1), wx.ALIGN_TOP|wx.ALIGN_RIGHT)
+        sizer1.Add(refreshButton, (1, 4), (2, 1), wx.ALIGN_TOP | wx.ALIGN_RIGHT)
 
         self.options = options = []
 
@@ -339,7 +297,7 @@ class FindWindow(eg.ActionBase):
             wx.StaticText(panel, -1, text.matchNum2),
             (line, 2),
             (1, 3),
-            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT
         )
         numMatchCB.Bind(wx.EVT_CHECKBOX, Wrapper(numMatchCtrl, numMatchCB))
         options.append((numMatchCB, numMatchCtrl))
@@ -353,13 +311,13 @@ class FindWindow(eg.ActionBase):
             panel.StaticText(text.wait1),
             (line, 0),
             (1, 1),
-            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT
         )
         sizer1.Add(
             waitCtrl,
             (line, 1),
             (1, 1),
-            wx.ALIGN_CENTER_VERTICAL|wx.EXPAND
+            wx.ALIGN_CENTER_VERTICAL | wx.EXPAND
         )
         sizer1.Add(
             panel.StaticText(text.wait2),
@@ -379,10 +337,10 @@ class FindWindow(eg.ActionBase):
             ((5, 5), ),
             (sizer1, 1, wx.EXPAND),
         ])
+
         # re-assign the test button
         def OnTestButton(dummyEvent):
-            args = GetResult()[:-2] # we don't need timeout and stopMacro
-                                    # parameter
+            args = GetResult()[:-2]  # we don't need timeout and stopMacro
             hwnds = eg.WindowMatcher(*args)()
             dialog = TestDialog(panel.dialog, hwnds)
             dialog.ShowModal()
@@ -435,12 +393,31 @@ class FindWindow(eg.ActionBase):
             else:
                 panel.SetResult(*GetResult())
 
+    def GetLabel(self, program, *args):
+        if args[7] is None:
+            return self.text.label2
+        else:
+            return self.text.label % basename(program or '')
 
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
+    @eg.LogIt
+    def OnFinderTool(self, dummyEvent=None):
+        if Config.hideOnDrag:
+            eg.document.frame.SetPosition(self.oldFramePosition)
+            self.dialog.SetPosition(self.oldDialogPosition)
+        lastTarget = self.finderTool.GetValue()
+        if lastTarget is not None:
+            self.tree.Unselect()
+            self.tree.Refresh()
+            self.tree.SelectHwnd(lastTarget)
 
+    @eg.LogIt
+    def OnFinderToolLeftClick(self, dummyEvent=None):
+        self.oldFramePosition = eg.document.frame.GetPosition()
+        self.oldDialogPosition = self.dialog.GetPosition()
+        if Config.hideOnDrag:
+            eg.document.frame.SetPosition((-32000, -32000))
+            self.dialog.SetPosition((-32000, -32000))
+        #event.Skip()
 
     @eg.LogIt
     def OnSelectionChanged(self, event):
@@ -493,11 +470,10 @@ class FindWindow(eg.ActionBase):
                 for child in GetWindowChildsList(
                     rootHwnd,
                     tree.includeInvisible
+                ) if (
+                    GetClassName(child) == targetWinClass and
+                    GetWindowText(child) == targetWinName
                 )
-                    if (
-                        GetClassName(child) == targetWinClass and
-                        GetWindowText(child) == targetWinName
-                    )
             ]
             try:
                 count = data.index(searchHwnd) + 1
@@ -509,12 +485,12 @@ class FindWindow(eg.ActionBase):
             if rootHwnd is not None:
                 data = [
                     hwnd
-                    for hwnd in GetTopLevelWindowList(tree.includeInvisible)
-                        if (
-                            GetClassName(hwnd) == targetWinClass and
-                            GetWindowText(hwnd) != targetWinName and
-                            GetWindowThreadProcessId(hwnd)[1] == pid
-                        )
+                    for hwnd in GetTopLevelWindowList(tree.includeInvisible)  # NOQA
+                    if (
+                        GetClassName(hwnd) == targetWinClass and
+                        GetWindowText(hwnd) != targetWinName and
+                        GetWindowThreadProcessId(hwnd)[1] == pid
+                    )
                 ]
                 count = len(data)
             else:
@@ -522,24 +498,33 @@ class FindWindow(eg.ActionBase):
         SetOption(count > 0, options[5], count or 1)
 
 
-    @eg.LogIt
-    def OnFinderToolLeftClick(self, dummyEvent=None):
-        self.oldFramePosition = eg.document.frame.GetPosition()
-        self.oldDialogPosition = self.dialog.GetPosition()
-        if Config.hideOnDrag:
-            eg.document.frame.SetPosition((-32000, -32000))
-            self.dialog.SetPosition((-32000, -32000))
-        #event.Skip()
+class TestDialog(eg.Dialog):
+    def __init__(self, parent, hwnds):
+        eg.Dialog.__init__(
+            self,
+            parent,
+            title="Found Windows",
+            size=(500, 350),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        windowList = eg.WindowList(self, hwnds)
+        okButton = wx.Button(self, wx.ID_OK)
+        btnSizer = eg.HBoxSizer(
+            ((0, 0), 1, wx.EXPAND),
+            (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND | wx.ALL, 5),
+            ((0, 0), 1, wx.EXPAND),
+            (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT),
+        )
+        mainSizer = eg.VBoxSizer(
+            (windowList, 1, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, 5),
+            (btnSizer, 0, wx.EXPAND),
+        )
+        self.SetSizer(mainSizer)
 
 
-    @eg.LogIt
-    def OnFinderTool(self, dummyEvent=None):
-        if Config.hideOnDrag:
-            eg.document.frame.SetPosition(self.oldFramePosition)
-            self.dialog.SetPosition(self.oldDialogPosition)
-        lastTarget = self.finderTool.GetValue()
-        if lastTarget is not None:
-            self.tree.Unselect()
-            self.tree.Refresh()
-            self.tree.SelectHwnd(lastTarget)
-
+def UseForegroundWindowOnly():
+    """ Instruct EventGhost to use the active desktop window only, by
+        clearing eg.lastFoundWindows
+    """
+    del eg.lastFoundWindows[:]
+    return []

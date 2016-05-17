@@ -18,9 +18,7 @@
 
 import wx
 
-
 class Choice(wx.Choice):
-
     def __init__(
         self,
         parent,
@@ -36,11 +34,8 @@ class Choice(wx.Choice):
         )
         self.SetValue(value)
 
-
-    def SetValue(self, value):
-        self.SetSelection(value)
-
-
     def GetValue(self):
         return self.GetSelection()
 
+    def SetValue(self, value):
+        self.SetSelection(value)

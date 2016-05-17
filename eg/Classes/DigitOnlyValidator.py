@@ -16,43 +16,17 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 import string
-
+import wx
 
 class DigitOnlyValidator(wx.PyValidator):
-
     def __init__(self, choices=None):
         wx.PyValidator.__init__(self)
         self.choices = choices
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
-
     def Clone(self):
         return DigitOnlyValidator(self.choices)
-
-
-    def TransferToWindow(self):
-        return True
-
-
-    def Validate(self, win):
-        tc = self.GetWindow()
-        val = tc.GetValue()
-
-        if self.choices is not None:
-            try:
-                i = self.choices.index(val)
-                return True
-            except:
-                pass
-
-        for x in val:
-            if x not in string.digits:
-                return False
-
-        return True
-
 
     def OnChar(self, event):
         key = event.GetKeyCode()
@@ -72,3 +46,22 @@ class DigitOnlyValidator(wx.PyValidator):
         # gets to the text control
         return
 
+    def TransferToWindow(self):
+        return True
+
+    def Validate(self, win):
+        tc = self.GetWindow()
+        val = tc.GetValue()
+
+        if self.choices is not None:
+            try:
+                self.choices.index(val)
+                return True
+            except:
+                pass
+
+        for x in val:
+            if x not in string.digits:
+                return False
+
+        return True

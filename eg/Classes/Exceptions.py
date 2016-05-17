@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
-
 
 class Text(eg.TranslatableStrings):
     DriverNotFound = "Driver not found!"
@@ -44,49 +44,36 @@ class ProgramError(eg.Exception):
         return "\n".join(res)
 
 
-
 class Exceptions:
-
-    class DriverNotFound(ProgramError):
-        text = Text.DriverNotFound
-
-
-    class DriverNotOpen(ProgramError):
-        text = Text.DriverNotOpen
-
-
-    class InitFailed(ProgramError):
-        text = Text.InitFailed
-
-
     class DeviceInitFailed(ProgramError):
         text = Text.DeviceInitFailed
-
 
     class DeviceNotFound(ProgramError):
         text = Text.DeviceNotFound
 
-
     class DeviceNotReady(ProgramError):
         text = Text.DeviceNotReady
 
+    class DriverNotFound(ProgramError):
+        text = Text.DriverNotFound
 
-    class ProgramNotRunning(ProgramError):
-        text = Text.ProgramNotRunning
+    class DriverNotOpen(ProgramError):
+        text = Text.DriverNotOpen
 
-
-    class ProgramNotFound(ProgramError):
-        text = Text.ProgramNotFound
-
-
-    class SerialOpenFailed(ProgramError):
-        text = Text.SerialOpenFailed
-
-
-    class PluginNotFound(ProgramError):
-        text = Text.PluginNotFound
-
+    class InitFailed(ProgramError):
+        text = Text.InitFailed
 
     class PluginLoadError(ProgramError):
         text = Text.PluginLoadError
 
+    class PluginNotFound(ProgramError):
+        text = Text.PluginNotFound
+
+    class ProgramNotFound(ProgramError):
+        text = Text.ProgramNotFound
+
+    class ProgramNotRunning(ProgramError):
+        text = Text.ProgramNotRunning
+
+    class SerialOpenFailed(ProgramError):
+        text = Text.SerialOpenFailed

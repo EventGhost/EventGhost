@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, ManchesterCoding1
 
 MCE_REMOTE = {
     0x800F0400: "Num0",
@@ -75,7 +75,6 @@ MCE_REMOTE = {
     0x800F045E: "Blue",
 }
 
-
 class Rc6(ManchesterCoding1):
     """
     IR decoder for the Philips RC-6 protocol.
@@ -84,22 +83,6 @@ class Rc6(ManchesterCoding1):
 
     def __init__(self, controller):
         ManchesterCoding1.__init__(self, controller, 444)
-
-
-    def GetTrailerBit(self):
-        sample = (
-            self.GetSample() * 8
-            + self.GetSample() * 4
-            + self.GetSample() * 2
-            + self.GetSample()
-        )
-        if sample == 3: # binary 0011
-            return 0
-        elif sample == 12: # binary 1100
-            return 1
-        else:
-            raise DecodeError("wrong trailer bit transition")
-
 
     def Decode(self, data):
         # Check the leader pulse
@@ -128,3 +111,16 @@ class Rc6(ManchesterCoding1):
 
         return "RC6mode%X_%d_%08X" % (mode, trailerBit, value)
 
+    def GetTrailerBit(self):
+        sample = (
+            self.GetSample() * 8 +
+            self.GetSample() * 4 +
+            self.GetSample() * 2 +
+            self.GetSample()
+        )
+        if sample == 3:  # binary 0011
+            return 0
+        elif sample == 12:  # binary 1100
+            return 1
+        else:
+            raise DecodeError("wrong trailer bit transition")

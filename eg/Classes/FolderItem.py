@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from ContainerItem import ContainerItem
 from TreeItem import HINT_MOVE_EVERYWHERE
@@ -27,4 +28,3 @@ class FolderItem(ContainerItem):
         "Macro": HINT_MOVE_EVERYWHERE,
         "Folder": HINT_MOVE_EVERYWHERE,
     }
-

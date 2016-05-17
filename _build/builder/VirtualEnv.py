@@ -16,11 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import os
 import sys
 from os.path import exists, expandvars, join
-
 
 _CODE_DEACTIVATE = 5000
 _CODE_RESTART = 6000
@@ -39,7 +37,6 @@ else:
     PATH = join(HOME, NAME)
 PATH_ACTIVATE = join(PATH, "Scripts", "activate.bat")
 PATH_EXECUTABLE = join(PATH, "Scripts", "python.exe")
-
 
 def Activate():
     """
@@ -62,7 +59,6 @@ def Activate():
             else:
                 sys.exit(exitCode)
 
-
 def Deactivate():
     """
     Deactivate the running virtualenv.
@@ -70,13 +66,11 @@ def Deactivate():
     if Running():
         sys.exit(_CODE_DEACTIVATE)
 
-
 def Exists():
     """
     Check if the virtualenv for our Python version exists.
     """
     return exists(PATH_ACTIVATE)
-
 
 def Restart():
     """
@@ -85,10 +79,8 @@ def Restart():
     if Running():
         sys.exit(_CODE_RESTART)
 
-
 def Running():
     """
     Check if we're running inside a virtualenv.
     """
     return (sys.executable.lower() == PATH_EXECUTABLE.lower())
-

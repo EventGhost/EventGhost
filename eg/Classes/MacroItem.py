@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 from ContainerItem import ContainerItem
 from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_BEFORE_OR_AFTER
-
 
 class MacroItem(ContainerItem):
     xmlTag = "Macro"
@@ -33,15 +34,6 @@ class MacroItem(ContainerItem):
         "Folder": HINT_MOVE_BEFORE_OR_AFTER,
         "Action": HINT_MOVE_INSIDE,
     }
-
-
-    def GetNextChild(self, index):
-        index += 1
-        if len(self.childs) > index:
-            return self.childs[index], index
-        else:
-            return None
-
 
     def Execute(self):
         if self.isEnabled:
@@ -57,3 +49,9 @@ class MacroItem(ContainerItem):
             else:
                 eg.programCounter = None
 
+    def GetNextChild(self, index):
+        index += 1
+        if len(self.childs) > index:
+            return self.childs[index], index
+        else:
+            return None

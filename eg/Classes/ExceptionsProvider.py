@@ -16,20 +16,19 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 
-
 class ExceptionsProvider(object):
-
     def __init__(self, source):
         self.source = source
 
-
     def __getattr__(self, name):
         exception = getattr(eg.Exceptions, name)
+
         class SubException(exception):
             source = self.source
+
         SubException.__name__ = "Sub" + name
         setattr(self, name, SubException)
         return SubException
-

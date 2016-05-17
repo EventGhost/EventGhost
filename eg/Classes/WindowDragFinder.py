@@ -16,19 +16,19 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 from eg.Icons import GetInternalBitmap, GetInternalImage
 from eg.WinApi import (
-    HighlightWindow,
     BestWindowFromPoint,
-    GetWindowThreadProcessId,
     GetCursorPos,
+    GetWindowThreadProcessId,
+    HighlightWindow,
 )
 
-
 class WindowDragFinder(wx.PyWindow):
-
     def __init__(self, parent, startFunc, endFunc):
         self.startFunc = startFunc
         self.endFunc = endFunc
@@ -85,20 +85,30 @@ class WindowDragFinder(wx.PyWindow):
         self.SetMinSize(self.GetSize())
         wx.CallAfter(self.dragBoxImage.SetBitmap, self.dragBoxBitmap)
 
-
-    def OnSize(self, dummyEvent):
-        """
-        Handles the wx.EVT_SIZE events.
-        """
-        if self.GetAutoLayout():
-            self.Layout()
-            self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
-
-
     @eg.LogIt
     def AcceptsFocusFromKeyboard(self):
         return False
 
+    def GetValue(self):
+        return self.lastTarget
+
+    def OnDrag(self, event):
+        # get the mouse coordinates
+        point = GetCursorPos()
+        # find the window under cursor
+        hwnd = BestWindowFromPoint(point)
+        # do we have targeted a new window?
+        if hwnd != self.lastTarget:
+            if self.lastTarget is not None:
+                # unhighlight previous window
+                HighlightWindow(self.lastTarget)
+            _, pid = GetWindowThreadProcessId(hwnd)
+            if pid == eg.processId:
+                self.lastTarget = None
+            else:
+                HighlightWindow(hwnd)
+                self.lastTarget = hwnd
+        event.Skip()
 
     @eg.LogIt
     def OnDragboxClick(self, event):
@@ -130,26 +140,6 @@ class WindowDragFinder(wx.PyWindow):
         # start capturing the mouse exclusivly
         self.CaptureMouse()
 
-
-    def OnDrag(self, event):
-        # get the mouse coordinates
-        point = GetCursorPos()
-        # find the window under cursor
-        hwnd = BestWindowFromPoint(point)
-        # do we have targeted a new window?
-        if hwnd != self.lastTarget:
-            if self.lastTarget is not None:
-                # unhighlight previous window
-                HighlightWindow(self.lastTarget)
-            _, pid = GetWindowThreadProcessId(hwnd)
-            if pid == eg.processId:
-                self.lastTarget = None
-            else:
-                HighlightWindow(hwnd)
-                self.lastTarget = hwnd
-        event.Skip()
-
-
     def OnDragEnd(self, dummyEvent):
         # unbind the unneeded events
         self.Unbind(wx.EVT_MOTION)
@@ -170,8 +160,10 @@ class WindowDragFinder(wx.PyWindow):
         self.Layout()
         self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
 
-
-
-    def GetValue(self):
-        return self.lastTarget
-
+    def OnSize(self, dummyEvent):
+        """
+        Handles the wx.EVT_SIZE events.
+        """
+        if self.GetAutoLayout():
+            self.Layout()
+            self.dragBoxImage.SetBitmap(self.dragBoxBitmap)

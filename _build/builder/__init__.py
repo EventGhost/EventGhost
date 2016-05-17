@@ -16,18 +16,17 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import argparse
 import os
 import sys
 import tempfile
 from os.path import abspath, dirname, exists, join
 
+# Local imports
 import builder
 from builder import VirtualEnv
 from builder.Logging import LogToFile
-from builder.Utils import GetVersion, GetGitHubConfig
-
+from builder.Utils import GetGitHubConfig, GetVersion
 
 class Task(object):
     value = None
@@ -41,12 +40,12 @@ class Task(object):
     def Setup(self):
         pass
 
+    def DoTask(self):
+        raise NotImplementedError
+
     @classmethod
     def GetId(cls):
         return cls.__module__ + "." + cls.__name__
-
-    def DoTask(self):
-        raise NotImplementedError
 
 
 class Builder(object):
@@ -58,15 +57,17 @@ class Builder(object):
         Task.buildSetup = self
         buildSetup = self
 
+        self.pyVersionStr = "%d%d" % sys.version_info[:2]
         self.buildDir = abspath(join(dirname(__file__), ".."))
         self.sourceDir = abspath(join(self.buildDir, ".."))
-        self.dataDir = join(self.buildDir, "data")
-        self.outputDir = join(self.buildDir, "output")
-        self.websiteDir = join(self.outputDir, "website")
-        self.pyVersionStr = "%d%d" % sys.version_info[:2]
-        self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
+        sys.path.append(self.sourceDir)
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
+        self.dataDir = join(self.buildDir, "data")
+        self.docsDir = join(self.dataDir, "docs")
+        self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
+        self.outputDir = join(self.buildDir, "output")
+        self.websiteDir = join(self.outputDir, "website")
 
         self.args = self.ParseArgs()
         self.showGui = not (
@@ -170,4 +171,3 @@ class Builder(object):
             Gui.Main(self)
         else:
             builder.Tasks.Main(self)
-

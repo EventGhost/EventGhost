@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class TreeItemBrowseCtrl(wx.TreeCtrl):
-
     def __init__(
         self,
         parent,
@@ -36,9 +36,9 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         self.filterFunc = filterFunc
         self.searchFunc = searchFunc
         style = (
-            wx.TR_HAS_BUTTONS
-            |wx.CLIP_CHILDREN
-            |wx.NO_FULL_REPAINT_ON_RESIZE
+            wx.TR_HAS_BUTTONS |
+            wx.CLIP_CHILDREN |
+            wx.NO_FULL_REPAINT_ON_RESIZE
         )
         if multiSelect:
             style |= wx.TR_MULTIPLE
@@ -86,7 +86,6 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         self.EnsureVisible(root)
         self.SelectItem(treeId)
 
-
     def OnCollapsing(self, event):
         # Be prepared, self.CollapseAndReset below may cause
         # another wx.EVT_TREE_ITEM_COLLAPSING event being triggered.
@@ -98,7 +97,6 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             self.CollapseAndReset(treeId)
             self.SetItemHasChildren(treeId)
             self.__collapsing = False
-
 
     @eg.LogIt
     def OnExpanding(self, event):
@@ -112,7 +110,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
                 child.GetLabel(),
                 (
                     child.icon.index if child.isEnabled
-                        else child.icon.disabledIndex
+                    else child.icon.disabledIndex
                 ),
                 -1,
                 wx.TreeItemData(child)
@@ -122,4 +120,3 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
                     self.SetItemHasChildren(tmp, True)
             child.SetAttributes(self, tmp)
             self.searchFunc(child, tmp)
-

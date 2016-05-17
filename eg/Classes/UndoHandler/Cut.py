@@ -17,9 +17,10 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
 
 class Cut(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Cut.replace("&", "")
@@ -28,26 +29,25 @@ class Cut(UndoHandlerBase):
     def Do(self, selection):
         if not selection.CanDelete() or not selection.AskDelete():
             return
+
         def ProcessInActionThread():
             self.data = selection.GetFullXml()
             self.treePosition = eg.TreePosition(selection)
             data = selection.GetXmlString()
             selection.Delete()
             return data.decode("utf-8")
+
         data = eg.actionThread.Func(ProcessInActionThread)()
         self.document.AppendUndoHandler(self)
         if data and wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(data))
             wx.TheClipboard.Close()
 
+    @eg.AssertInActionThread
+    def Redo(self):
+        self.treePosition.GetItem().Delete()
 
     @eg.AssertInActionThread
     def Undo(self):
         item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
-
-
-    @eg.AssertInActionThread
-    def Redo(self):
-        self.treePosition.GetItem().Delete()
-
