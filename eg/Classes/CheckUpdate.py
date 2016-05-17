@@ -121,12 +121,14 @@ def ShowWaitDialog():
 
 
 def _checkUpdate(manually=False):
+    if eg.Version.string == "WIP":
+        if manually:
+            wx.MessageBox(Text.wipUpdateMsg, eg.APP_NAME)
+        return
+
     dialog = None
     try:
         if manually:
-            if eg.Version.string == "WIP":
-                wx.MessageBox(Text.wipUpdateMsg, eg.APP_NAME)
-                return
             dialog = ShowWaitDialog()
 
         gh = GitHub()
