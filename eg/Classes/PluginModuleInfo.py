@@ -18,18 +18,10 @@
 
 import os
 import sys
-from os.path import join, exists
+from os.path import exists, join
+
+# Local imports
 import eg
-
-
-class RegisterPluginException(Exception):
-    """
-    RegisterPlugin will raise this exception to interrupt the loading
-    of the plugin module file.
-    """
-    pass
-
-
 
 class PluginModuleInfo(object):
     """
@@ -54,7 +46,6 @@ class PluginModuleInfo(object):
     path = None
     pluginName = None
     hardwareId = ""
-
 
     def __init__(self, path):
         self.path = path
@@ -81,7 +72,6 @@ class PluginModuleInfo(object):
             del sys.path[0]
             eg.RegisterPlugin = originalRegisterPlugin
 
-
     if eg.debugLevel:
         def __setattr__(self, name, value):
             if not hasattr(self.__class__, name):
@@ -89,7 +79,6 @@ class PluginModuleInfo(object):
                     "%s has no attribute %s" % (self.__class__.__name__, name)
                 )
             object.__setattr__(self, name, value)
-
 
     def RegisterPlugin(
         self,
@@ -125,7 +114,7 @@ class PluginModuleInfo(object):
         self.version = unicode(version)
         self.canMultiLoad = canMultiLoad
         self.createMacrosOnAdd = createMacrosOnAdd
-        self.url = unicode(url) if url else url # Added by Pako
+        self.url = unicode(url) if url else url  # Added by Pako
         self.guid = guid.upper()
         if not guid:
             eg.PrintDebugNotice("missing guid in plugin: %s" % self.path)
@@ -149,3 +138,10 @@ class PluginModuleInfo(object):
         # processing by raising RegisterPluginException
         raise RegisterPluginException
 
+
+class RegisterPluginException(Exception):
+    """
+    RegisterPlugin will raise this exception to interrupt the loading
+    of the plugin module file.
+    """
+    pass

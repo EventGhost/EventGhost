@@ -157,4 +157,3 @@ class Translation:
         "zh_ZH": "Chinese",
         "zu_ZU": "Zulu",
     }
-

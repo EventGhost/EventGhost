@@ -1,18 +1,35 @@
-import time
-import binascii
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+#
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+
 import ctypes
-import _winreg
-import sys
+import pywintypes
+import re
 import threading
 import win32con
 import win32event
 import win32file
-import pywintypes
-import re
+import _winreg
+from ctypes import c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar, Structure, Union
+from ctypes import byref, sizeof, pointer, POINTER
+from ctypes.wintypes import BOOLEAN, ULONG
 
-from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
-from ctypes import pointer, byref, sizeof, POINTER
-from ctypes.wintypes import ULONG, BOOLEAN
+# Local imports
+import eg
 
 DeviceRegEx = re.compile(r"\\\\\?\\(\w+)#VID_([0-9a-fA-F]+)\&PID_([0-9a-fA-F]+)#", re.IGNORECASE)
 
@@ -27,149 +44,6 @@ class Text:
     errorReportLength = "Report length must not be zero for device "
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
     vendorID = "Vendor ID "
-
-#structures for ctypes
-class GUID(Structure):
-    _fields_ = [
-        ("Data1", c_ulong),
-        ("Data2", c_ushort),
-        ("Data3", c_ushort),
-        ("Data4", c_byte * 8)
-    ]
-
-class SP_DEVICE_INTERFACE_DATA(Structure):
-    _fields_ = [("cbSize", c_ulong),
-        ("InterfaceClassGuid", GUID),
-        ("Flags", c_ulong),
-        ("Reserved", POINTER(ULONG))
-    ]
-
-class SP_DEVICE_INTERFACE_DETAIL_DATA_A(Structure):
-    _fields_ = [("cbSize", c_ulong),
-        ("DevicePath", c_char * 255)
-    ]
-
-class HIDD_ATTRIBUTES(Structure):
-    _fields_ = [("cbSize", c_ulong),
-        ("VendorID", c_ushort),
-        ("ProductID", c_ushort),
-        ("VersionNumber", c_ushort)
-    ]
-
-class HIDP_CAPS(Structure):
-    _fields_ = [
-        ("Usage", c_ushort),
-        ("UsagePage", c_ushort),
-        ("InputReportByteLength", c_ushort),
-        ("OutputReportByteLength", c_ushort),
-        ("FeatureReportByteLength", c_ushort),
-        ("Reserved", c_ushort * 17),
-        ("NumberLinkCollectionNodes", c_ushort),
-        ("NumberInputButtonCaps", c_ushort),
-        ("NumberInputValueCaps", c_ushort),
-        ("NumberInputDataIndices", c_ushort),
-        ("NumberOutputButtonCaps", c_ushort),
-        ("NumberOutputValueCaps", c_ushort),
-        ("NumberOutputDataIndices", c_ushort),
-        ("NumberFeatureButtonCaps", c_ushort),
-        ("NumberFeatureValueCaps", c_ushort),
-        ("NumberFeatureDataIndices", c_ushort)
-    ]
-
-class HIDP_CAPS_UNION(Union):
-    class HIDP_BUTTON_CAPS_RANGE(Structure):
-        _fields_ = [
-            ("UsageMin", c_ushort),
-            ("UsageMax", c_ushort),
-            ("StringMin", c_ushort),
-            ("StringMax", c_ushort),
-            ("DesignatorMin", c_ushort),
-            ("DesignatorMax", c_ushort),
-            ("DataIndexMin", c_ushort),
-            ("DataIndexMax", c_ushort)
-        ]
-
-    class HIDP_BUTTON_CAPS_NOT_RANGE(Structure):
-        _fields_ = [
-            ("Usage", c_ushort),
-            ("Reserved1", c_ushort),
-            ("StringIndex", c_ushort),
-            ("Reserved2", c_ushort),
-            ("DesignatorIndex", c_ushort),
-            ("Reserved3", c_ushort),
-            ("DataIndex", c_ushort),
-            ("Reserved4", c_ushort)
-        ]
-
-    _fields_ = [
-        ("Range", HIDP_BUTTON_CAPS_RANGE),
-        ("NotRange", HIDP_BUTTON_CAPS_NOT_RANGE)
-    ]
-
-class HIDP_BUTTON_CAPS(Structure):
-    _fields_ = [
-        ("UsagePage", c_ushort),
-        ("ReportID", c_char),
-        ("IsAlias", BOOLEAN),
-        ("BitField", c_ushort),
-        ("LinkCollection", c_ushort),
-        ("LinkUsage", c_ushort),
-        ("LinkUsagePage", c_ushort),
-        ("IsRange", BOOLEAN),
-        ("IsStringRange", BOOLEAN),
-        ("IsDesignatorRange", BOOLEAN),
-        ("IsAbsolute", BOOLEAN),
-        ("Reserved", c_ulong * 10),
-        ("Info", HIDP_CAPS_UNION)
-    ]
-
-class HIDP_VALUE_CAPS(Structure):
-    _fields_ = [
-        ("UsagePage", c_ushort),
-        ("ReportID", c_char),
-        ("IsAlias", BOOLEAN),
-        ("BitField", c_ushort),
-        ("LinkCollection", c_ushort),
-        ("LinkUsage", c_ushort),
-        ("LinkUsagePage", c_ushort),
-        ("IsRange", BOOLEAN),
-        ("IsStringRange", BOOLEAN),
-        ("IsDesignatorRange", BOOLEAN),
-        ("IsAbsolute", BOOLEAN),
-        ("HasNull", BOOLEAN),
-        ("Reserved", c_char),
-        ("BitSize", c_ushort),
-        ("ReportCount", c_ushort),
-        ("Reserved2", c_ushort * 5),
-        ("UnitsExp", c_ulong),
-        ("Units", c_ulong),
-        ("LogicalMin", c_long),
-        ("LogicalMax", c_long),
-        ("PhysicalMin", c_long),
-        ("PhysicalMax", c_long),
-        ("Info", HIDP_CAPS_UNION)
-    ]
-
-class HIDP_DATA(Structure):
-    class HIDP_DATA_VALUE(Union):
-        _fields_ = [
-            ("RawValue", c_ulong),
-            ("On", BOOLEAN),
-        ]
-
-    _fields_ = [
-        ("DataIndex", c_ushort),
-        ("Reserved", c_ushort),
-        ("Data", HIDP_DATA_VALUE)
-    ]
-
-# Flags controlling what is included in the device information set built
-# by SetupDiGetClassDevs
-DIGCF_DEFAULT         = 0x00000001  # only valid with DIGCF_DEVICEINTERFACE
-DIGCF_PRESENT         = 0x00000002
-DIGCF_ALLCLASSES      = 0x00000004
-DIGCF_PROFILE         = 0x00000008
-DIGCF_DEVICEINTERFACE = 0x00000010
 
 class HIDThread(threading.Thread):
     def __init__(self, deviceName, devicePath, threadName = None):
@@ -197,75 +71,14 @@ class HIDThread(threading.Thread):
             win32event.SetEvent(self._overlappedWrite.hEvent)
         win32event.SetEvent(self._overlappedRead.hEvent)
 
-    def SetRawCallback(self, callback):
-        self.RawCallback = callback;
-
-    def SetButtonCallback(self, callback):
-        self.ButtonCallback = callback
-
-    def SetValueCallback(self, callback):
-        self.ValueCallback = callback
-
-    def SetStopCallback(self, callback):
-        self.StopCallback = callback
-
-    @eg.LogIt
-    def WaitForInit(self):
-        try:
-            self.lockObject.acquire()
-            if not self.initialized:
-                if eg.debugLevel:
-                    print "waiting for init of HID-Thread " + self.getName()
-        finally:
-            self.lockObject.release()
-            if eg.debugLevel:
-                print "finished waiting for init of HID-Thread " + self.getName()
-
-
-    @eg.LogIt
-    def SetFeature(self, buffer):
-        if self.handle:
-            bufferLength = ULONG(len(buffer))
-            result = ctypes.windll.hid.HidD_SetFeature(int(self.handle), ctypes.create_string_buffer(buffer), bufferLength)
-            if not result:
-                raise Exception("could not set feature")
-
-    @eg.LogIt
-    def Write(self, data, timeout):
-        if self.handle:
-            try:
-                self.lockObject.acquire()
-                if eg.debugLevel:
-                    print "writing " + str(len(data)) + " bytes to " + self.getName()
-                if not self._overlappedWrite:
-                    self._overlappedWrite = win32file.OVERLAPPED()
-                err, n = win32file.WriteFile(self.handle, data, self._overlappedWrite)
-                if err: #will be ERROR_IO_PENDING:
-                    # Wait for the write to complete.
-                    n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
-                    if n != len(data):
-                        raise Exception("could not write full data")
-                elif n != len(data):
-                    raise Exception("could not write full data")
-                if timeout:#waits for response from device
-                    win32event.ResetEvent(self._overlappedRead.hEvent)
-                    res = win32event.WaitForSingleObject(self._overlappedRead.hEvent, timeout)
-                    if res == win32event.WAIT_TIMEOUT:
-                        raise Exception("no response from device within timeout")
-            finally:
-                self.lockObject.release()
-        else:
-            raise Exception("invalid handle")
-            return
-
     def run(self):
         #open file/device
         try:
             handle = win32file.CreateFile(
                 self.devicePath,
-                    win32con.GENERIC_READ | win32con.GENERIC_WRITE,
-                    win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
-                None, # no security
+                win32con.GENERIC_READ | win32con.GENERIC_WRITE,
+                win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
+                None,  # no security
                 win32con.OPEN_EXISTING,
                 win32con.FILE_ATTRIBUTE_NORMAL | win32con.FILE_FLAG_OVERLAPPED,
                 0
@@ -276,19 +89,19 @@ class HIDThread(threading.Thread):
             return
 
 
-        hidDLL =  ctypes.windll.hid
-        setupapiDLL = ctypes.windll.setupapi
+        hidDLL = ctypes.windll.hid
+        #setupapiDLL = ctypes.windll.setupapi
 
         #get preparsed data
         preparsedData = c_ulong()
-        result = hidDLL.HidD_GetPreparsedData(
+        hidDLL.HidD_GetPreparsedData(
             int(handle),
             ctypes.byref(preparsedData)
         )
 
         #getCaps
         hidpCaps = HIDP_CAPS()
-        result = hidDLL.HidP_GetCaps(preparsedData, ctypes.byref(hidpCaps))
+        hidDLL.HidP_GetCaps(preparsedData, ctypes.byref(hidpCaps))
 
         n = hidpCaps.InputReportByteLength
         if n == 0:
@@ -358,7 +171,7 @@ class HIDThread(threading.Thread):
 
         #initializing finished
         try:
-            self.handle = handle;
+            self.handle = handle
             self.initialized = True
             rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
             if eg.debugLevel:
@@ -367,14 +180,13 @@ class HIDThread(threading.Thread):
             self.lockObject.release()
 
             while not self.abort:
-                if rc == 997: #error_io_pending
+                if rc == 997:  #error_io_pending
                     win32event.WaitForSingleObject(
                        self._overlappedRead.hEvent,
                        win32event.INFINITE)
 
                 buf = newBuf
                 try:
-
                     win32event.ResetEvent(self._overlappedRead.hEvent)
                     rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
                 except pywintypes.error as (errno, function, strerror):
@@ -397,7 +209,7 @@ class HIDThread(threading.Thread):
                     #handling button presses and values
                     if maxDataL != 0:
                         dataL = c_ulong(maxDataL)
-                        result = hidDLL.HidP_GetData(
+                        hidDLL.HidP_GetData(
                             rt,
                             ctypes.byref(data),
                             ctypes.byref(dataL),
@@ -410,10 +222,10 @@ class HIDThread(threading.Thread):
                         values = {}
                         for i in range(dataL.value):
                             tmpIndex = data[i].DataIndex
-                            if tmpIndex >= len(dataIndexType) or dataIndexType[tmpIndex] == 1:#button
+                            if tmpIndex >= len(dataIndexType) or dataIndexType[tmpIndex] == 1:  #button
                                 #collect buttons pressed
                                 btnPressed.append(tmpIndex)
-                            elif dataIndexType[tmpIndex] == 2:#control value
+                            elif dataIndexType[tmpIndex] == 2:  #control value
                                 values[tmpIndex] = int(data[i].Data.RawValue)
                             else:
                                 eg.PrintError(self.text.errorInvalidDataIndex)
@@ -450,6 +262,67 @@ class HIDThread(threading.Thread):
 
             self.handle = None
 
+    def SetButtonCallback(self, callback):
+        self.ButtonCallback = callback
+
+    @eg.LogIt
+    def SetFeature(self, buffer):
+        if self.handle:
+            bufferLength = ULONG(len(buffer))
+            result = ctypes.windll.hid.HidD_SetFeature(int(self.handle), ctypes.create_string_buffer(buffer), bufferLength)
+            if not result:
+                raise Exception("could not set feature")
+
+    def SetRawCallback(self, callback):
+        self.RawCallback = callback
+
+    def SetStopCallback(self, callback):
+        self.StopCallback = callback
+
+    def SetValueCallback(self, callback):
+        self.ValueCallback = callback
+
+    @eg.LogIt
+    def WaitForInit(self):
+        try:
+            self.lockObject.acquire()
+            if not self.initialized:
+                if eg.debugLevel:
+                    print "waiting for init of HID-Thread " + self.getName()
+        finally:
+            self.lockObject.release()
+            if eg.debugLevel:
+                print "finished waiting for init of HID-Thread " + self.getName()
+
+    @eg.LogIt
+    def Write(self, data, timeout):
+        if self.handle:
+            try:
+                self.lockObject.acquire()
+                if eg.debugLevel:
+                    print "writing " + str(len(data)) + " bytes to " + self.getName()
+                if not self._overlappedWrite:
+                    self._overlappedWrite = win32file.OVERLAPPED()
+                err, n = win32file.WriteFile(self.handle, data, self._overlappedWrite)
+                if err:  #will be ERROR_IO_PENDING:
+                    # Wait for the write to complete.
+                    n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
+                    if n != len(data):
+                        raise Exception("could not write full data")
+                elif n != len(data):
+                    raise Exception("could not write full data")
+                if timeout:  #waits for response from device
+                    win32event.ResetEvent(self._overlappedRead.hEvent)
+                    res = win32event.WaitForSingleObject(self._overlappedRead.hEvent, timeout)
+                    if res == win32event.WAIT_TIMEOUT:
+                        raise Exception("no response from device within timeout")
+            finally:
+                self.lockObject.release()
+        else:
+            raise Exception("invalid handle")
+            return
+
+
 class DeviceDescription():
     def __init__(self, devicePath, vendorId, vendorString, productId, productString, versionNumber):
         self.devicePath = devicePath
@@ -459,6 +332,7 @@ class DeviceDescription():
         self.productString = productString
         self.versionNumber = versionNumber
 
+
 def GetDeviceDescriptions():
     """
     gets inforamtions about the available HID as a list of DeviceDescription objects
@@ -467,7 +341,7 @@ def GetDeviceDescriptions():
 
     #dll references
     setupapiDLL = ctypes.windll.setupapi
-    hidDLL =  ctypes.windll.hid
+    hidDLL = ctypes.windll.hid
 
     #prepare Interfacedata
     interfaceInfo = SP_DEVICE_INTERFACE_DATA()
@@ -486,22 +360,37 @@ def GetDeviceDescriptions():
     hidDLL.HidD_GetHidGuid(byref(g))
 
     #get handle to the device information set
-    hinfo = setupapiDLL.SetupDiGetClassDevsA(byref(g), None, None,
-        DIGCF_PRESENT + DIGCF_DEVICEINTERFACE)
+    hinfo = setupapiDLL.SetupDiGetClassDevsA(
+        byref(g),
+        None,
+        None,
+        DIGCF_PRESENT + DIGCF_DEVICEINTERFACE
+    )
 
     #enumerate devices
     i = 0
-    while setupapiDLL.SetupDiEnumDeviceInterfaces(hinfo,
-        None, byref(g), i, byref(interfaceInfo)):
+    while setupapiDLL.SetupDiEnumDeviceInterfaces(
+        hinfo,
+        None,
+        byref(g),
+        i,
+        byref(interfaceInfo)
+    ):
         i += 1
 
         #get the required size
         requiredSize = c_ulong()
-        setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
-            byref(interfaceInfo), None, 0, byref(requiredSize), None)
+        setupapiDLL.SetupDiGetDeviceInterfaceDetailA(
+            hinfo,
+            byref(interfaceInfo),
+            None,
+            0,
+            byref(requiredSize),
+            None
+        )
         if requiredSize.value > 250:
             eg.PrintError(Text.errorRetrieval)
-            continue #prevent a buffer overflow
+            continue  #prevent a buffer overflow
 
         #get the actual info
         setupapiDLL.SetupDiGetDeviceInterfaceDetailA(
@@ -556,7 +445,7 @@ def GetDeviceDescriptions():
             devicePathSplit = devicePath[4:].split("#")
             regHandle = _winreg.OpenKey(
                 _winreg.HKEY_LOCAL_MACHINE,
-                "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
+                "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] +
                 "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2])
             productString, regType = _winreg.QueryValueEx(regHandle, "DeviceDesc")
             _winreg.CloseKey(regHandle)
@@ -582,30 +471,16 @@ def GetDeviceDescriptions():
     #end loop
     #destroy deviceinfolist
     setupapiDLL.SetupDiDestroyDeviceInfoList(hinfo)
-    return deviceList;
-
-
-def IsDeviceName(deviceNameList, vid, pid):
-    """
-    checks if the given vid and pid are match in the deviceNameList from System.DeviceAttached
-    """
-    if not deviceNameList:
-        return False
-    match = DeviceRegEx.match(deviceNameList[0])
-    if not match:
-        return False
-    deviceClass, vidStr, pidStr = match.groups()
-    return deviceClass == "HID" and pid == int(pidStr, 16)  and vid == int(vidStr, 16)
-
+    return deviceList
 
 def GetDevicePath(
     devicePath,
     vendorId,
     productId,
-    versionNumber, #pass None to ignore
-    useDeviceIndex, #use True to get a specific device
-    deviceIndex, #use -1 to require the same devicePath if multiple found
-    noOtherPort, #if True the devicePath has to be the same
+    versionNumber,   # pass None to ignore
+    useDeviceIndex,  # use True to get a specific device
+    deviceIndex,     # use -1 to require the same devicePath if multiple found
+    noOtherPort,     # if True the devicePath has to be the same
     deviceList = None
 ):
     """
@@ -626,7 +501,7 @@ def GetDevicePath(
             #find the right device by vendor and product ids
             validVendorId = item.vendorId == vendorId
             validProductId = item.productId == productId
-            if versionNumber == None:
+            if versionNumber is None:
                 validVersionNumber = True
             else:
                 validVersionNumber = item.versionNumber == versionNumber
@@ -647,3 +522,169 @@ def GetDevicePath(
 
     return None
 
+def IsDeviceName(deviceNameList, vid, pid):
+    """
+    checks if the given vid and pid are match in the deviceNameList from System.DeviceAttached
+    """
+    if not deviceNameList:
+        return False
+    match = DeviceRegEx.match(deviceNameList[0])
+    if not match:
+        return False
+    deviceClass, vidStr, pidStr = match.groups()
+    return deviceClass == "HID" and pid == int(pidStr, 16) and vid == int(vidStr, 16)
+
+#structures for ctypes
+class GUID(Structure):
+    _fields_ = [
+        ("Data1", c_ulong),
+        ("Data2", c_ushort),
+        ("Data3", c_ushort),
+        ("Data4", c_byte * 8)
+    ]
+
+
+class SP_DEVICE_INTERFACE_DATA(Structure):
+    _fields_ = [
+        ("cbSize", c_ulong),
+        ("InterfaceClassGuid", GUID),
+        ("Flags", c_ulong),
+        ("Reserved", POINTER(ULONG))
+    ]
+
+
+class SP_DEVICE_INTERFACE_DETAIL_DATA_A(Structure):
+    _fields_ = [
+        ("cbSize", c_ulong),
+        ("DevicePath", c_char * 255)
+    ]
+
+
+class HIDD_ATTRIBUTES(Structure):
+    _fields_ = [
+        ("cbSize", c_ulong),
+        ("VendorID", c_ushort),
+        ("ProductID", c_ushort),
+        ("VersionNumber", c_ushort)
+    ]
+
+
+class HIDP_CAPS(Structure):
+    _fields_ = [
+        ("Usage", c_ushort),
+        ("UsagePage", c_ushort),
+        ("InputReportByteLength", c_ushort),
+        ("OutputReportByteLength", c_ushort),
+        ("FeatureReportByteLength", c_ushort),
+        ("Reserved", c_ushort * 17),
+        ("NumberLinkCollectionNodes", c_ushort),
+        ("NumberInputButtonCaps", c_ushort),
+        ("NumberInputValueCaps", c_ushort),
+        ("NumberInputDataIndices", c_ushort),
+        ("NumberOutputButtonCaps", c_ushort),
+        ("NumberOutputValueCaps", c_ushort),
+        ("NumberOutputDataIndices", c_ushort),
+        ("NumberFeatureButtonCaps", c_ushort),
+        ("NumberFeatureValueCaps", c_ushort),
+        ("NumberFeatureDataIndices", c_ushort)
+    ]
+
+
+class HIDP_CAPS_UNION(Union):
+    class HIDP_BUTTON_CAPS_RANGE(Structure):
+        _fields_ = [
+            ("UsageMin", c_ushort),
+            ("UsageMax", c_ushort),
+            ("StringMin", c_ushort),
+            ("StringMax", c_ushort),
+            ("DesignatorMin", c_ushort),
+            ("DesignatorMax", c_ushort),
+            ("DataIndexMin", c_ushort),
+            ("DataIndexMax", c_ushort)
+        ]
+
+    class HIDP_BUTTON_CAPS_NOT_RANGE(Structure):
+        _fields_ = [
+            ("Usage", c_ushort),
+            ("Reserved1", c_ushort),
+            ("StringIndex", c_ushort),
+            ("Reserved2", c_ushort),
+            ("DesignatorIndex", c_ushort),
+            ("Reserved3", c_ushort),
+            ("DataIndex", c_ushort),
+            ("Reserved4", c_ushort)
+        ]
+
+    _fields_ = [
+        ("Range", HIDP_BUTTON_CAPS_RANGE),
+        ("NotRange", HIDP_BUTTON_CAPS_NOT_RANGE)
+    ]
+
+
+class HIDP_BUTTON_CAPS(Structure):
+    _fields_ = [
+        ("UsagePage", c_ushort),
+        ("ReportID", c_char),
+        ("IsAlias", BOOLEAN),
+        ("BitField", c_ushort),
+        ("LinkCollection", c_ushort),
+        ("LinkUsage", c_ushort),
+        ("LinkUsagePage", c_ushort),
+        ("IsRange", BOOLEAN),
+        ("IsStringRange", BOOLEAN),
+        ("IsDesignatorRange", BOOLEAN),
+        ("IsAbsolute", BOOLEAN),
+        ("Reserved", c_ulong * 10),
+        ("Info", HIDP_CAPS_UNION)
+    ]
+
+
+class HIDP_VALUE_CAPS(Structure):
+    _fields_ = [
+        ("UsagePage", c_ushort),
+        ("ReportID", c_char),
+        ("IsAlias", BOOLEAN),
+        ("BitField", c_ushort),
+        ("LinkCollection", c_ushort),
+        ("LinkUsage", c_ushort),
+        ("LinkUsagePage", c_ushort),
+        ("IsRange", BOOLEAN),
+        ("IsStringRange", BOOLEAN),
+        ("IsDesignatorRange", BOOLEAN),
+        ("IsAbsolute", BOOLEAN),
+        ("HasNull", BOOLEAN),
+        ("Reserved", c_char),
+        ("BitSize", c_ushort),
+        ("ReportCount", c_ushort),
+        ("Reserved2", c_ushort * 5),
+        ("UnitsExp", c_ulong),
+        ("Units", c_ulong),
+        ("LogicalMin", c_long),
+        ("LogicalMax", c_long),
+        ("PhysicalMin", c_long),
+        ("PhysicalMax", c_long),
+        ("Info", HIDP_CAPS_UNION)
+    ]
+
+
+class HIDP_DATA(Structure):
+    class HIDP_DATA_VALUE(Union):
+        _fields_ = [
+            ("RawValue", c_ulong),
+            ("On", BOOLEAN),
+        ]
+
+    _fields_ = [
+        ("DataIndex", c_ushort),
+        ("Reserved", c_ushort),
+        ("Data", HIDP_DATA_VALUE)
+    ]
+
+
+# Flags controlling what is included in the device information set built
+# by SetupDiGetClassDevs
+DIGCF_DEFAULT         = 0x00000001  # only valid with DIGCF_DEVICEINTERFACE
+DIGCF_PRESENT         = 0x00000002
+DIGCF_ALLCLASSES      = 0x00000004
+DIGCF_PROFILE         = 0x00000008
+DIGCF_DEVICEINTERFACE = 0x00000010

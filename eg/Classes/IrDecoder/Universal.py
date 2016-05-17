@@ -16,18 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 from eg.Classes.IrDecoder import IrProtocolBase
-
 
 class Universal(IrProtocolBase):
     """
     IR decoder for unknown protocols.
     """
-
     def __init__(self, controller):
         IrProtocolBase.__init__(self, controller)
         self.diffTime = controller.sampleTime * 3
-
 
 #    def Decode(self, data):
 #        print len(data), data
@@ -76,4 +74,3 @@ class Universal(IrProtocolBase):
             mask <<= 1
         code |= mask
         return "Unknown.%X" % code
-

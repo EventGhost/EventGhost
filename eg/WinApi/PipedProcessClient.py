@@ -16,35 +16,34 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import codecs
 import imp
-from traceback import extract_tb, format_exception_only
-from os.path import dirname, splitext, basename
+import sys
 from cPickle import dumps, loads
+from os.path import basename, dirname, splitext
+from traceback import extract_tb, format_exception_only
 
+# Local imports
 from Dynamic import (
     byref,
-    create_string_buffer,
-    WinError,
-    DWORD,
-
-    ReadFile,
-    WriteFile,
-    SetNamedPipeHandleState,
-    WaitNamedPipe,
     CloseHandle,
-    GetLastError,
+    create_string_buffer,
     CreateFile,
-
-    GENERIC_READ,
-    GENERIC_WRITE,
+    DWORD,
+    ERROR_MORE_DATA,
     FILE_SHARE_READ,
     FILE_SHARE_WRITE,
+    GENERIC_READ,
+    GENERIC_WRITE,
+    GetLastError,
+    INVALID_HANDLE_VALUE,
     OPEN_EXISTING,
     PIPE_READMODE_MESSAGE,
-    ERROR_MORE_DATA,
-    INVALID_HANDLE_VALUE,
+    ReadFile,
+    SetNamedPipeHandleState,
+    WaitNamedPipe,
+    WinError,
+    WriteFile,
 )
 
 BUFSIZE = 4096
@@ -54,53 +53,13 @@ MESSAGE_STDERR = 2
 MESSAGE_RESULT = 3
 MESSAGE_EXCEPTION = 4
 
-
-
 class PipeStream(object):
-
     def __init__(self, hPipe, code):
         self.hPipe = hPipe
         self.code = code
 
     def write(self, data):
         WritePipeMessage(self.hPipe, self.code, data)
-
-
-
-def WritePipeMessage(hPipe, code, data):
-    message = dumps((code, data))
-    cbWritten = DWORD(0)
-    fSuccess = WriteFile(
-        hPipe,
-        message,
-        len(message),
-        byref(cbWritten),
-        None
-    )
-    if (not fSuccess) or (len(message) != cbWritten.value):
-        raise Exception("WritePipeMessage failed")
-
-
-def ReadPipeMessage(hPipe):
-    data = ""
-    fSuccess = 0
-    chBuf = create_string_buffer(BUFSIZE)
-    cbRead = DWORD(0)
-    while not fSuccess: # repeat loop if ERROR_MORE_DATA
-        fSuccess = ReadFile(
-            hPipe,
-            chBuf,
-            BUFSIZE,
-            byref(cbRead),
-            None
-        )
-        if fSuccess == 1:
-            data += chBuf.value
-            break
-        elif GetLastError() != ERROR_MORE_DATA:
-            break
-        data += chBuf.value
-    return loads(data)
 
 
 def FormatException(excInfo):
@@ -119,6 +78,39 @@ def FormatException(excInfo):
     lines += format_exception_only(excType, excValue)
     return u"".join(lines)
 
+def ReadPipeMessage(hPipe):
+    data = ""
+    fSuccess = 0
+    chBuf = create_string_buffer(BUFSIZE)
+    cbRead = DWORD(0)
+    while not fSuccess:  # repeat loop if ERROR_MORE_DATA
+        fSuccess = ReadFile(
+            hPipe,
+            chBuf,
+            BUFSIZE,
+            byref(cbRead),
+            None
+        )
+        if fSuccess == 1:
+            data += chBuf.value
+            break
+        elif GetLastError() != ERROR_MORE_DATA:
+            break
+        data += chBuf.value
+    return loads(data)
+
+def WritePipeMessage(hPipe, code, data):
+    message = dumps((code, data))
+    cbWritten = DWORD(0)
+    fSuccess = WriteFile(
+        hPipe,
+        message,
+        len(message),
+        byref(cbWritten),
+        None
+    )
+    if (not fSuccess) or (len(message) != cbWritten.value):
+        raise Exception("WritePipeMessage failed")
 
 def Main(pipeName, debugLevel):
     if debugLevel:
@@ -155,8 +147,7 @@ def Main(pipeName, debugLevel):
             "  path: %r\n"
             "  funcName: %r\n"
             "  args: %r\n"
-            "  kwargs: %r" %
-                (scriptPath, funcName, args, kwargs)
+            "  kwargs: %r" % (scriptPath, funcName, args, kwargs)
         )
         if code != MESSAGE_ARGS:
             raise Exception("Unexpected message type")
@@ -189,7 +180,5 @@ def Main(pipeName, debugLevel):
     finally:
         CloseHandle(hPipe)
 
-
 if __name__ == "__main__":
     Main(sys.argv[1], int(sys.argv[2]))
-

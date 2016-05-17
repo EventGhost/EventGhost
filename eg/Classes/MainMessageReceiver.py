@@ -17,26 +17,18 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
 import eg
 from eg.WinApi.Dynamic import (
-        SetClipboardViewer, ChangeClipboardChain, WM_CHANGECBCHAIN,
-    WM_DRAWCLIPBOARD, SendMessage
+    ChangeClipboardChain, SendMessage, SetClipboardViewer, WM_CHANGECBCHAIN,
+    WM_DRAWCLIPBOARD,
 )
 
-
 class MainMessageReceiver(eg.MessageReceiver):
-
     def __init__(self):
         self.hwndNextViewer = None
         eg.MessageReceiver.__init__(self, "EventGhost Message Receiver")
-
-
-    def Setup(self):
-        eg.MessageReceiver.Setup(self)
-        self.AddHandler(WM_CHANGECBCHAIN, self.OnChangeClipboardChain)
-        self.hwndNextViewer = SetClipboardViewer(self.hwnd)
-        self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
-
 
     @eg.LogIt
     def OnChangeClipboardChain(self, dummyHwnd, mesg, wParam, lParam):
@@ -49,15 +41,18 @@ class MainMessageReceiver(eg.MessageReceiver):
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
         return 0
 
-
     def OnDrawClipboard(self, dummyHwnd, mesg, wParam, lParam):
         wx.CallAfter(eg.Notify, "ClipboardChange")
         # pass the message to the next window in the clipboard viewer chain
         if self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
 
+    def Setup(self):
+        eg.MessageReceiver.Setup(self)
+        self.AddHandler(WM_CHANGECBCHAIN, self.OnChangeClipboardChain)
+        self.hwndNextViewer = SetClipboardViewer(self.hwnd)
+        self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
 
     def Stop(self):
         ChangeClipboardChain(self.hwnd, self.hwndNextViewer)
         eg.MessageReceiver.Stop(self)
-

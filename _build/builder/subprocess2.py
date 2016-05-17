@@ -1,10 +1,8 @@
+import errno
 import os
 import subprocess
-import errno
-import time
 import sys
-
-PIPE = subprocess.PIPE
+import time
 
 if subprocess.mswindows:
     from msvcrt import get_osfhandle
@@ -13,6 +11,9 @@ if subprocess.mswindows:
 else:
     import select
     import fcntl
+
+PIPE = subprocess.PIPE
+MESSAGE = "Other end disconnected!"
 
 class Popen(subprocess.Popen):
     def recv(self, maxsize=None):
@@ -89,7 +90,7 @@ class Popen(subprocess.Popen):
             try:
                 written = os.write(self.stdin.fileno(), input)
             except OSError, why:
-                if why[0] == errno.EPIPE: #broken pipe
+                if why[0] == errno.EPIPE:  # broken pipe
                     return self._close('stdin')
                 raise
 
@@ -102,7 +103,7 @@ class Popen(subprocess.Popen):
 
             flags = fcntl.fcntl(conn, fcntl.F_GETFL)
             if not conn.closed:
-                fcntl.fcntl(conn, fcntl.F_SETFL, flags| os.O_NONBLOCK)
+                fcntl.fcntl(conn, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
             try:
                 if not select.select([conn], [], [], 0)[0]:
@@ -119,12 +120,11 @@ class Popen(subprocess.Popen):
                 if not conn.closed:
                     fcntl.fcntl(conn, fcntl.F_SETFL, flags)
 
-message = "Other end disconnected!"
 
 def recv_some(p, t=.1, e=1, tr=5, stderr=0):
     if tr < 1:
         tr = 1
-    x = time.time()+t
+    x = time.time() + t
     y = []
     r = ''
     pr = p.recv
@@ -134,20 +134,20 @@ def recv_some(p, t=.1, e=1, tr=5, stderr=0):
         r = pr()
         if r is None:
             if e:
-                raise Exception(message)
+                raise Exception(MESSAGE)
             else:
                 break
         elif r:
             y.append(r)
         else:
-            time.sleep(max((x-time.time())/tr, 0))
+            time.sleep(max((x - time.time()) / tr, 0))
     return ''.join(y)
 
 def send_all(p, data):
     while len(data):
         sent = p.send(data)
         if sent is None:
-            raise Exception(message)
+            raise Exception(MESSAGE)
         data = buffer(data, sent)
 
 if __name__ == '__main__':
@@ -164,4 +164,3 @@ if __name__ == '__main__':
     send_all(a, 'exit' + tail)
     print recv_some(a, e=0)
     a.wait()
-

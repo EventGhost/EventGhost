@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
 
@@ -30,17 +31,14 @@ class Rename(UndoHandlerBase):
         eg.actionThread.Func(item.RenameTo)(newName)
         self.document.AppendUndoHandler(self)
 
-
-    @eg.AssertInActionThread
-    def Undo(self):
-        item = self.treePosition.GetItem()
-        item.RenameTo(self.oldName)
-        item.Select()
-
-
     @eg.AssertInActionThread
     def Redo(self):
         item = self.treePosition.GetItem()
         item.RenameTo(self.newName)
         item.Select()
 
+    @eg.AssertInActionThread
+    def Undo(self):
+        item = self.treePosition.GetItem()
+        item.RenameTo(self.oldName)
+        item.Select()

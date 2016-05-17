@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Utils import SetDefault
 
-
 class TranslatableStringsMeta(type):
-
     def __new__(mcs, name, bases, dct):
         defaultText = type.__new__(mcs, name, bases, dct)
         if len(bases):
@@ -36,7 +35,5 @@ class TranslatableStringsMeta(type):
         return defaultText
 
 
-
 class TranslatableStrings:
     __metaclass__ = TranslatableStringsMeta
-

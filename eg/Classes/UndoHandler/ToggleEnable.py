@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
 
 class ToggleEnable(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
@@ -26,20 +26,14 @@ class ToggleEnable(UndoHandlerBase):
     @eg.AssertInMainThread
     def Do(self, node):
         self.treePosition = eg.TreePosition(node)
+
         def ProcessInActionThread():
             state = not node.isEnabled
             node.SetEnable(state)
             return state
+
         self.state = eg.actionThread.Func(ProcessInActionThread)()
         self.document.AppendUndoHandler(self)
-
-
-    @eg.AssertInActionThread
-    def Undo(self):
-        node = self.treePosition.GetItem()
-        node.SetEnable(not self.state)
-        node.Select()
-
 
     @eg.AssertInActionThread
     def Redo(self):
@@ -47,3 +41,8 @@ class ToggleEnable(UndoHandlerBase):
         node.SetEnable(self.state)
         node.Select()
 
+    @eg.AssertInActionThread
+    def Undo(self):
+        node = self.treePosition.GetItem()
+        node.SetEnable(not self.state)
+        node.Select()

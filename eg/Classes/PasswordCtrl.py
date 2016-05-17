@@ -17,11 +17,11 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
 import eg
 
-
 class PasswordCtrl(wx.TextCtrl):
-
     def __init__(
         self,
         parent,
@@ -44,10 +44,8 @@ class PasswordCtrl(wx.TextCtrl):
             style=wx.TE_PASSWORD,
         )
 
-
     def GetValue(self):
         value = wx.TextCtrl.GetValue(self)
         if value == self.password.Get():
             return self.password
         return eg.Password(content=value)
-

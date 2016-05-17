@@ -16,43 +16,24 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import sys
 import traceback
 import weakref
+import wx
 from types import ModuleType
 
+# Local imports
+import eg
 
 class Config(eg.PersistentData):
     size = (600, 420)
     position = (10, 10)
 
 
-
 class PythonScript(eg.ActionBase):
     name = "Python Script"
-    description = "Full featured Python script."
+    description = "Executes a Python script."
     iconFile = "icons/PythonScript"
-
-    def GetLabel(self, dummySourceCode=""):
-        return self.name
-
-
-    def Configure(self, sourceCode=""):
-        panel = eg.ConfigPanel(resizable=True)
-        editCtrl = eg.PythonEditorCtrl(panel, value=sourceCode)
-        panel.sizer.Add(editCtrl, 1, wx.EXPAND)
-        panel.dialog.FinishSetup()
-        panel.dialog.SetPosition(Config.position)
-        panel.dialog.SetSize(Config.size)
-        eg.Utils.EnsureVisible(panel.dialog)
-        while panel.Affirmed():
-            panel.SetResult(editCtrl.GetValue())
-        if not panel.dialog.IsMaximized():
-            Config.size = panel.dialog.GetSizeTuple()
-            Config.position = panel.dialog.GetPositionTuple()
-
 
     class Compile:
         idCounter = 0
@@ -73,7 +54,6 @@ class PythonScript(eg.ActionBase):
                 self.PrintTraceback()
             self.scriptDict[idCounter] = self
 
-
         def __call__(self):
             if self.code is None:
                 self.__init__(self.sourceCode)
@@ -83,7 +63,7 @@ class PythonScript(eg.ActionBase):
             oldResult = eg.result
             mod.result = oldResult
             try:
-                exec(self.code, mod.__dict__) # pylint: disable-msg=W0122
+                exec(self.code, mod.__dict__)  # pylint: disable-msg=W0122
             except SystemExit:
                 pass
             except:
@@ -93,6 +73,9 @@ class PythonScript(eg.ActionBase):
             else:
                 return mod.result
 
+        @eg.LogIt
+        def __del__(self):
+            pass
 
         def PrintTraceback(self):
             treeItem = eg.currentItem
@@ -113,7 +96,7 @@ class PythonScript(eg.ActionBase):
                         )
                     )
                     lines = self.scriptDict[filenum].sourceCode.splitlines()
-                    treeItem.PrintError('    ' + lines[linenum-1].lstrip())
+                    treeItem.PrintError('    ' + lines[linenum - 1].lstrip())
                 else:
                     treeItem.PrintError(
                         '  File "%s", line %d, in %s' % (
@@ -122,11 +105,22 @@ class PythonScript(eg.ActionBase):
                     )
                     if source is not None:
                         treeItem.PrintError('    ' + source.lstrip())
-            name = tbType if type(tbType) == type("") else tbType.__name__
+            name = tbType if isinstance(tbType, str) else tbType.__name__
             treeItem.PrintError(str(name) + ': ' + str(tbValue))
 
+    def Configure(self, sourceCode=""):
+        panel = eg.ConfigPanel(resizable=True)
+        editCtrl = eg.PythonEditorCtrl(panel, value=sourceCode)
+        panel.sizer.Add(editCtrl, 1, wx.EXPAND)
+        panel.dialog.FinishSetup()
+        panel.dialog.SetPosition(Config.position)
+        panel.dialog.SetSize(Config.size)
+        eg.Utils.EnsureVisible(panel.dialog)
+        while panel.Affirmed():
+            panel.SetResult(editCtrl.GetValue())
+        if not panel.dialog.IsMaximized():
+            Config.size = panel.dialog.GetSizeTuple()
+            Config.position = panel.dialog.GetPositionTuple()
 
-        @eg.LogIt
-        def __del__(self):
-            pass
-
+    def GetLabel(self, dummySourceCode=""):
+        return self.name

@@ -16,33 +16,170 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 import os
-import sys
 import re
 import shutil
-import codecs
-import warnings
+import sphinx
 from os.path import join
 
-import sphinx
-
+# Local imports
 import builder
-from builder.Utils import StartProcess, GetHtmlHelpCompilerPath, EncodePath
+from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
 
-
-MAIN_DIR = builder.buildSetup.sourceDir
-DOCS_SOURCE_DIR = join(builder.buildSetup.dataDir, "docs")
-
-sys.path.append(EncodePath(MAIN_DIR))
 import eg
 from eg.Utils import GetFirstParagraph
 
+DOCS_SOURCE_DIR = ""
 
+GUI_CLASSES = [
+    "SpinIntCtrl",
+    "SpinNumCtrl",
+    "MessageDialog",
+    "DisplayChoice",
+    "SerialPortChoice",
+    "FileBrowseButton",
+    "DirBrowseButton",
+    "FontSelectButton",
+]
+
+MAIN_CLASSES = [
+    "PluginBase",
+    "ActionBase",
+    "SerialThread",
+    "ThreadWorker",
+    "ConfigPanel",
+    "Bunch",
+    "WindowMatcher",
+    "-EventGhostEvent",
+    "-Scheduler",
+    "-ControlProviderMixin",
+]
+
+class CreateChmDocs(builder.Task):
+    description = "Build CHM docs"
+
+    def Setup(self):
+        global DOCS_SOURCE_DIR
+        DOCS_SOURCE_DIR = self.buildSetup.docsDir
+        if self.buildSetup.showGui:
+            if os.path.exists(
+                join(self.buildSetup.sourceDir, "EventGhost.chm")
+            ):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.package)
+
+    def DoTask(self):
+        tmpDir = join(self.buildSetup.tmpDir, "chm")
+        Prepare()
+        #warnings.simplefilter('ignore', DeprecationWarning)
+        sphinx.build_main([
+            None,
+            "-a",  # always write all output files
+            "-b", "htmlhelp",
+            "-E",  # Don’t use a saved environment (the structure
+                   # caching all cross-references),
+            "-N",  # Prevent colored output.
+            "-P",  # (Useful for debugging only.) Run the Python debugger,
+                   # pdb, if an unhandled exception occurs while building.
+            "-D", "release=%s" % self.buildSetup.appVersion,
+            "-D", "templates_path=[]",
+            "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
+            EncodePath(DOCS_SOURCE_DIR),
+            tmpDir,
+        ])
+
+        print "calling HTML Help Workshop compiler"
+        htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
+        if htmlHelpCompilerPath is None:
+            raise Exception(
+                "HTML Help Workshop command line compiler not found"
+            )
+        hhpPath = join(tmpDir, "EventGhost.hhp")
+        StartProcess(htmlHelpCompilerPath, hhpPath)
+        shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
+
+
+class CreateHtmlDocs(builder.Task):
+    description = "Build HTML docs"
+
+    def Setup(self):
+        if self.buildSetup.showGui:
+            self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.sync)
+
+    def DoTask(self):
+        Prepare()
+        sphinx.build_main([
+            None,
+            "-a",
+            "-b", "html",
+            "-E",
+            "-N",
+            "-P",
+            "-D", "release=%s" % self.buildSetup.appVersion,
+            "-d", join(self.buildSetup.tmpDir, ".doctree"),
+            DOCS_SOURCE_DIR,
+            join(self.buildSetup.websiteDir, "docs"),
+        ])
+
+
+def CreateClsDocs(clsNames):
+    res = []
+    for clsName in clsNames:
+        if clsName.startswith("-"):
+            clsName = clsName[1:]
+            addCls = False
+        else:
+            addCls = True
+        fullClsName = "eg." + clsName
+        cls = getattr(eg, clsName)
+        if addCls:
+            res.append("\nclass :class:`%s`" % fullClsName)
+            if cls.__doc__:
+                res.append("   %s" % GetFirstTextParagraph(cls.__doc__))
+        filepath = join(DOCS_SOURCE_DIR, "eg", "%s.rst" % fullClsName)
+        outfile = open(filepath, "wt")
+        outfile.write("=" * len(fullClsName) + "\n")
+        outfile.write(fullClsName + "\n")
+        outfile.write("=" * len(fullClsName) + "\n")
+        outfile.write("\n")
+        outfile.write(".. currentmodule:: eg\n")
+        outfile.write(".. autoclass:: %s\n" % fullClsName)
+        outfile.write("   :members:\n")
+        if hasattr(cls, "__docsort__"):
+            outfile.write("      " + cls.__docsort__)
+        outfile.write("\n")
+    return "\n".join(res)
+
+def GetFirstTextParagraph(text):
+    res = []
+    for line in text.lstrip().splitlines():
+        line = line.strip()
+        if line == "":
+            break
+        res.append(line)
+    return " ".join(res)
+
+def Prepare():
+    WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
+
+    filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
+    outfile = open(filepath, "wt")
+    outfile.write(CreateClsDocs(MAIN_CLASSES))
+    outfile.close()
+
+    filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
+    outfile = open(filepath, "wt")
+    outfile.write(CreateClsDocs(GUI_CLASSES))
+    outfile.close()
 
 def WritePluginList(filepath):
     kindList = [
         ("core", "Essential (always loaded)"),
-        ("remote",  "Remote Receiver"),
+        ("remote", "Remote Receiver"),
         ("program", "Program Control"),
         ("external", "External Hardware Equipment"),
         ("other", "Other"),
@@ -83,159 +220,12 @@ def WritePluginList(filepath):
                 outfile.write("**%s**\n" % info.name)
             outfile.write(u"   %s\n\n" % description)
             if info.url:
-                outfile.write(".. |%s Plugin| replace:: **%s**\n" %
+                outfile.write(
+                    ".. |%s Plugin| replace:: **%s**\n" %
                     (info.name, info.name)
                 )
-                outfile.write(".. _%s Plugin: %s\n\n" %
+                outfile.write(
+                    ".. _%s Plugin: %s\n\n" %
                     (info.name, info.url)
                 )
     outfile.close()
-
-
-def GetFirstTextParagraph(text):
-    res = []
-    for line in text.lstrip().splitlines():
-        line = line.strip()
-        if line == "":
-            break
-        res.append(line)
-    return " ".join(res)
-
-
-def CreateClsDocs(clsNames):
-    res = []
-    for clsName in clsNames:
-        if clsName.startswith("-"):
-            clsName = clsName[1:]
-            addCls = False
-        else:
-            addCls = True
-        fullClsName = "eg." + clsName
-        cls = getattr(eg, clsName)
-        if addCls:
-            res.append("\nclass :class:`%s`" % fullClsName)
-            if cls.__doc__:
-                res.append("   %s" % GetFirstTextParagraph(cls.__doc__))
-        filepath = join(DOCS_SOURCE_DIR, "eg", "%s.rst" % fullClsName)
-        outfile = open(filepath, "wt")
-        outfile.write("=" * len(fullClsName) + "\n")
-        outfile.write(fullClsName + "\n")
-        outfile.write("=" * len(fullClsName) + "\n")
-        outfile.write("\n")
-        outfile.write(".. currentmodule:: eg\n")
-        outfile.write(".. autoclass:: %s\n" % fullClsName)
-        outfile.write("   :members:\n")
-        if hasattr(cls, "__docsort__"):
-            outfile.write("      " + cls.__docsort__)
-        outfile.write("\n")
-    return "\n".join(res)
-
-
-MAIN_CLASSES = [
-    "PluginBase",
-    "ActionBase",
-    "SerialThread",
-    "ThreadWorker",
-    "ConfigPanel",
-    "Bunch",
-    "WindowMatcher",
-    "-EventGhostEvent",
-    "-Scheduler",
-    "-ControlProviderMixin",
-]
-
-GUI_CLASSES = [
-    "SpinIntCtrl",
-    "SpinNumCtrl",
-    "MessageDialog",
-    "DisplayChoice",
-    "SerialPortChoice",
-    "FileBrowseButton",
-    "DirBrowseButton",
-    "FontSelectButton",
-]
-
-
-def Prepare():
-    WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
-
-    filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
-    outfile = open(filepath, "wt")
-    outfile.write(CreateClsDocs(MAIN_CLASSES))
-    outfile.close()
-
-    filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
-    outfile = open(filepath, "wt")
-    outfile.write(CreateClsDocs(GUI_CLASSES))
-    outfile.close()
-
-
-
-class CreateHtmlDocs(builder.Task):
-    description = "Build HTML docs"
-
-    def Setup(self):
-        if self.buildSetup.showGui:
-            self.activated = False
-        else:
-            self.activated = bool(self.buildSetup.args.sync)
-
-    def DoTask(self):
-        Prepare()
-        sphinx.build_main([
-            None,
-            "-a",
-            "-b", "html",
-            "-E",
-            "-N",
-            "-P",
-            "-D", "release=%s" % self.buildSetup.appVersion,
-            "-d", join(self.buildSetup.tmpDir, ".doctree"),
-            DOCS_SOURCE_DIR,
-            join(self.buildSetup.websiteDir, "docs"),
-        ])
-
-
-
-class CreateChmDocs(builder.Task):
-    description = "Build CHM docs"
-
-    def Setup(self):
-        if self.buildSetup.showGui:
-            if os.path.exists(
-                join(self.buildSetup.sourceDir, "EventGhost.chm")
-            ):
-                self.activated = False
-        else:
-            self.activated = bool(self.buildSetup.args.package)
-
-    def DoTask(self):
-        tmpDir = join(self.buildSetup.tmpDir, "chm")
-        Prepare()
-        #warnings.simplefilter('ignore', DeprecationWarning)
-        sphinx.build_main([
-            None,
-            "-a",  # always write all output files
-            "-b", "htmlhelp",
-            "-E",  # Don’t use a saved environment (the structure
-                   # caching all cross-references),
-            "-N",  # Prevent colored output.
-            "-P",  # (Useful for debugging only.) Run the Python debugger,
-                    # pdb, if an unhandled exception occurs while building.
-            "-D", "release=%s" % self.buildSetup.appVersion,
-            "-D", "templates_path=[]",
-            "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
-            EncodePath(DOCS_SOURCE_DIR),
-            tmpDir,
-        ])
-
-        print "calling HTML Help Workshop compiler"
-        htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
-        if htmlHelpCompilerPath is None:
-            raise Exception(
-                "HTML Help Workshop command line compiler not found"
-            )
-        hhpPath = join(tmpDir, "EventGhost.hhp")
-        StartProcess(htmlHelpCompilerPath, hhpPath)
-        shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
-

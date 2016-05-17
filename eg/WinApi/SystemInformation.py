@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from ctypes import windll, Structure, sizeof, byref
-from ctypes.wintypes import DWORD, WCHAR, WORD, BYTE, LPVOID, POINTER
+from ctypes import byref, sizeof, Structure, windll
+from ctypes.wintypes import BYTE, DWORD, LPVOID, POINTER, WCHAR, WORD
 
 VER_NT_WORKSTATION = 1
 VER_SUITE_ENTERPRISE = 0x0002
@@ -86,9 +86,7 @@ EDITIONS = {
     0x1D: "Web %s (core installation)",
 }
 
-
 GetSystemMetrics = windll.user32.GetSystemMetrics
-
 
 class OSVERSIONINFOEX(Structure):
     _fields_ = [
@@ -225,7 +223,5 @@ def GetWindowsVersionString():
     name += " (build %d)" % osvi.dwBuildNumber
     return "Microsoft Windows " + name
 
-
 if __name__ == "__main__":
     print GetWindowsVersionString()
-

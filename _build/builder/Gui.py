@@ -16,16 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import sys
 import threading
 import wx
 
+# Local imports
 import builder
-from Utils import GetVersion, ParseVersion
+from builder.Utils import GetVersion, ParseVersion
 
 class MainDialog(wx.Dialog):
-
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
         wx.Dialog.__init__(
@@ -111,7 +110,7 @@ class MainDialog(wx.Dialog):
         refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
 
         egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
-                  wx.LEFT | wx.RIGHT, 5 )
+                  wx.LEFT | wx.RIGHT, 5)
         egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
         egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
@@ -124,22 +123,42 @@ class MainDialog(wx.Dialog):
         mainSizer.Add(ghSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         mainSizer.Add(egSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         mainSizer.Add(sizer2, 1, wx.ALL | wx.EXPAND, 10)
-        mainSizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
+        mainSizer.Add(btnSizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
         self.SetSizerAndFit(mainSizer)
         self.Center()
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
+    def DoMain(self):
+        builder.Tasks.Main(self.buildSetup)
+        wx.CallAfter(self.OnExit)
+
+    def OnCancel(self, event):
+        event.Skip()
+        self.Destroy()
+        wx.GetApp().ExitMainLoop()
+
+    def OnClose(self, event):
+        event.Skip()
+        self.Destroy()
+        wx.GetApp().ExitMainLoop()
+
+    def OnExit(self):
+        self.Destroy()
+        sys.exit(0)
 
     def OnOk(self, dummyEvent):
-        """ Handles a click on the Ok button. """
         repository = self.chcRepo.GetStringSelection()
         try:
             user, repo = repository.split('/')
         except ValueError:
-            dlg = wx.MessageDialog(self, caption="Information", style=wx.OK,
-                            message="Repositoryname not valid. Must be:\n"
-                            "<user or organization>/<repository>.")
-            rc = dlg.ShowModal()
+            dlg = wx.MessageDialog(
+                self,
+                caption="Information",
+                style=wx.OK,
+                message="Repositoryname not valid. Must be:\n"
+                "<user or organization>/<repository>."
+            )
+            dlg.ShowModal()
             return
 
         self.okButton.Enable(False)
@@ -164,40 +183,10 @@ class MainDialog(wx.Dialog):
             "user": user,
             "repo": repo,
             "branch": self.chcBranch.GetStringSelection(),
-            })
+        })
         self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()
-
-
-    def DoMain(self):
-        builder.Tasks.Main(self.buildSetup)
-        wx.CallAfter(self.OnExit)
-
-
-    def OnExit(self):
-        self.Destroy()
-        sys.exit(0)
-
-
-    def OnCancel(self, event):
-        """ Handles a click on the cancel button. """
-        event.Skip()
-        self.Destroy()
-        wx.GetApp().ExitMainLoop()
-
-
-    def OnClose(self, event):
-        """ Handles a click on the close box of the frame. """
-        event.Skip()
-        self.Destroy()
-        wx.GetApp().ExitMainLoop()
-
-
-    def RefreshVersion(self, event):
-        GetVersion(self.buildSetup)
-        self.versionStr.SetValue(self.buildSetup.appVersion)
-
 
     def OnRepoSelection(self, event):
         key = self.chcRepo.GetStringSelection()
@@ -208,10 +197,14 @@ class MainDialog(wx.Dialog):
             self.buildSetup.gitConfig["all_repos"][key]["def_branch"]
         )
 
+    def RefreshVersion(self, event):
+        GetVersion(self.buildSetup)
+        self.versionStr.SetValue(self.buildSetup.appVersion)
+
+
 def Main(buildSetup):
     app = wx.App(0)
     app.SetExitOnFrameDelete(True)
     mainDialog = MainDialog(buildSetup)
     mainDialog.Show()
     app.MainLoop()
-

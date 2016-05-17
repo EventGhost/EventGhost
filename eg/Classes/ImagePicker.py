@@ -20,9 +20,7 @@ import wx
 from base64 import b64decode, b64encode
 from cStringIO import StringIO
 
-
 class ImagePicker(wx.Window):
-
     def __init__(self, parent, label, title="", mesg="", imageString=None):
         self.title = title
         self.mesg = mesg
@@ -34,29 +32,22 @@ class ImagePicker(wx.Window):
         )
         self.SetValue(imageString)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.button, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer.Add(self.imageBox, 1, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.button, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer.Add(self.imageBox, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
         self.SetSizer(sizer)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.Layout()
 
-
-    def OnSetFocus(self, dummyEvent):
-        self.button.SetFocus()
-
-
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
+    def GetValue(self):
+        return self.imageString
 
     def OnButton(self, event):
         dialog = wx.FileDialog(
             self.GetParent(),
             message=self.mesg,
-            style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             wildcard=(
                 "BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|"
                 "PNG files (*.png)|*.png"
@@ -70,7 +61,12 @@ class ImagePicker(wx.Window):
             self.SetValue(b64encode(stream))
             event.Skip()
 
+    def OnSetFocus(self, dummyEvent):
+        self.button.SetFocus()
 
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()
 
     def SetValue(self, imageString):
         self.imageString = imageString
@@ -90,8 +86,3 @@ class ImagePicker(wx.Window):
             bmp = wx.BitmapFromImage(image)
             self.imageBox.SetBitmap(bmp)
             self.imageBox.SetSize((30, 30))
-
-
-    def GetValue(self):
-        return self.imageString
-

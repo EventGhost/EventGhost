@@ -17,24 +17,13 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from os.path import join, exists
+from os.path import exists, join
 from types import ClassType
+
+# Local imports
 import eg
 from eg.Utils import SetDefault
 from PluginModuleInfo import PluginModuleInfo
-
-
-class PluginProxy(object):
-
-    def __init__(self, plugin):
-        self.plugin = plugin
-        self.actions = plugin.info.actions
-
-
-    def __getattr__(self, name):
-        return self.actions[name]()
-
-
 
 class PluginInstanceInfo(PluginModuleInfo):
     pluginCls = None
@@ -56,55 +45,13 @@ class PluginInstanceInfo(PluginModuleInfo):
     def __init__(self):
         pass
 
-    @classmethod
-    def FromModuleInfo(cls, moduleInfo):
-        self = cls.__new__(cls)
-        self.__dict__.update(moduleInfo.__dict__)
-        pathname = join(self.path, "__init__.py")
-        if not exists(pathname):
-            eg.PrintError("File %s does not exist" % pathname)
-            return None
-        if self.path.startswith(eg.corePluginDir):
-            moduleName = "eg.CorePluginModule." + self.pluginName
-        else:
-            moduleName = "eg.UserPluginModule." + self.pluginName
-        try:
-            if moduleName in sys.modules:
-                module = sys.modules[moduleName]
-            else:
-                module = __import__(moduleName, None, None, [''])
-        except:
-            eg.PrintTraceback(
-                "Error while loading plugin-file %s." % self.path,
-                1
-            )
-            return None
-        pluginCls = module.__pluginCls__
-        self.module = module
-        self.pluginCls = pluginCls
-
-        englishText = pluginCls.text
-        if englishText is None:
-            englishText = ClassType("EmptyDefaultText", (), {})
-
-        englishText.name = self.englishName
-        englishText.description = self.englishDescription
-
-        # TODO: the text class should be referenced by the GUID instead of
-        #       pluginCls.__name__
-        translatedText = getattr(eg.text.Plugin, pluginCls.__name__, None)
-        if translatedText is None:
-            setattr(eg.text.Plugin, pluginCls.__name__, englishText)
-            text = englishText
-        else:
-            SetDefault(translatedText, englishText)
-            text = translatedText
-
-        pluginCls.text = text
-        pluginCls.name = text.name
-        pluginCls.description = text.description
-        return self
-
+    @eg.AssertInActionThread
+    def Close(self):
+        eg.PrintDebugNotice("closing %s" % self.path)
+        if self.isStarted:
+            self.Stop()
+        if not self.initFailed:
+            self.instance.__close__()
 
     def CreateInstance(self, args, evalName, treeItem):
         self.args = args
@@ -169,6 +116,72 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.label = self.name
         return self
 
+    def DeleteActionListItems(self, items):
+        if items is None:
+            return
+        for item in items:
+            if isinstance(item, type) and issubclass(item, eg.ActionBase):
+                item.plugin = None
+            else:
+                self.DeleteActionListItems(item.items)
+                item.plugin = None
+        del items
+
+    @classmethod
+    def FromModuleInfo(cls, moduleInfo):
+        self = cls.__new__(cls)
+        self.__dict__.update(moduleInfo.__dict__)
+        pathname = join(self.path, "__init__.py")
+        if not exists(pathname):
+            eg.PrintError("File %s does not exist" % pathname)
+            return None
+        if self.path.startswith(eg.corePluginDir):
+            moduleName = "eg.CorePluginModule." + self.pluginName
+        else:
+            moduleName = "eg.UserPluginModule." + self.pluginName
+        try:
+            if moduleName in sys.modules:
+                module = sys.modules[moduleName]
+            else:
+                module = __import__(moduleName, None, None, [''])
+        except:
+            eg.PrintTraceback(
+                "Error while loading plugin-file %s." % self.path,
+                1
+            )
+            return None
+        pluginCls = module.__pluginCls__
+        self.module = module
+        self.pluginCls = pluginCls
+
+        englishText = pluginCls.text
+        if englishText is None:
+            englishText = ClassType("EmptyDefaultText", (), {})
+
+        englishText.name = self.englishName
+        englishText.description = self.englishDescription
+
+        # TODO: the text class should be referenced by the GUID instead of
+        #       pluginCls.__name__
+        translatedText = getattr(eg.text.Plugin, pluginCls.__name__, None)
+        if translatedText is None:
+            setattr(eg.text.Plugin, pluginCls.__name__, englishText)
+            text = englishText
+        else:
+            SetDefault(translatedText, englishText)
+            text = translatedText
+
+        pluginCls.text = text
+        pluginCls.name = text.name
+        pluginCls.description = text.description
+        return self
+
+    def RemovePluginInstance(self):
+        plugin = self.instance
+        delattr(eg.plugins, self.evalName)
+        eg.pluginList.remove(plugin)
+        self.DeleteActionListItems(self.actionGroup.items)
+        eg.actionGroup.items.remove(self.actionGroup)
 
     @eg.AssertInActionThread
     def Start(self):
@@ -193,7 +206,6 @@ class PluginInstanceInfo(PluginModuleInfo):
             )
             eg.PrintTraceback()
             self.treeItem.Refresh()
-
 
     @eg.AssertInActionThread
     def Stop(self):
@@ -224,31 +236,10 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.treeItem.Refresh()
 
 
-    @eg.AssertInActionThread
-    def Close(self):
-        eg.PrintDebugNotice("closing %s" % self.path)
-        if self.isStarted:
-            self.Stop()
-        if not self.initFailed:
-            self.instance.__close__()
+class PluginProxy(object):
+    def __init__(self, plugin):
+        self.plugin = plugin
+        self.actions = plugin.info.actions
 
-
-    def DeleteActionListItems(self, items):
-        if items is None:
-            return
-        for item in items:
-            if isinstance(item, type) and issubclass(item, eg.ActionBase):
-                item.plugin = None
-            else:
-                self.DeleteActionListItems(item.items)
-                item.plugin = None
-        del items
-
-
-    def RemovePluginInstance(self):
-        plugin = self.instance
-        delattr(eg.plugins, self.evalName)
-        eg.pluginList.remove(plugin)
-        self.DeleteActionListItems(self.actionGroup.items)
-        eg.actionGroup.items.remove(self.actionGroup)
-
+    def __getattr__(self, name):
+        return self.actions[name]()

@@ -17,9 +17,10 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
 import eg
 from eg.Utils import SplitFirstParagraph
-
 
 class ConfigDialog(eg.TaskletDialog):
     panel = None
@@ -45,9 +46,9 @@ class ConfigDialog(eg.TaskletDialog):
             title = eg.text.General.settingsActionCaption
             addTestButton = True
 
-        dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
+        dialogStyle = wx.CAPTION | wx.CLOSE_BOX | wx.SYSTEM_MENU
         if resizable:
-            dialogStyle |= wx.RESIZE_BORDER|wx.MAXIMIZE_BOX
+            dialogStyle |= wx.RESIZE_BORDER | wx.MAXIMIZE_BOX
         eg.TaskletDialog.__init__(
             self, eg.document.frame, -1, title, style=dialogStyle
         )
@@ -83,11 +84,12 @@ class ConfigDialog(eg.TaskletDialog):
         mainSizer.AddMany(
             (
                 (self.headerBox, 0, wx.EXPAND, 0),
-                (wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0),
-                (self.notebook, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER, 5),
+                (wx.StaticLine(self), 0, wx.EXPAND | wx.ALIGN_CENTER, 0),
+                (self.notebook, 1, wx.EXPAND | wx.ALL | wx.ALIGN_CENTER, 5),
             )
         )
         self.mainSizer = mainSizer
+
         def ShowHelp(dummyEvent):
             self.treeItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
@@ -96,23 +98,13 @@ class ConfigDialog(eg.TaskletDialog):
             wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1, wx.ID_HELP), ])
         )
 
-
-    @eg.LogIt
-    def OnMaximize(self, event):
-        if self.buttonRow.sizeGrip:
-            self.buttonRow.sizeGrip.Hide()
-        self.Bind(wx.EVT_SIZE, self.OnRestore)
-        event.Skip()
-
-
-    @eg.LogIt
-    def OnRestore(self, event):
-        if not self.IsMaximized():
-            self.Unbind(wx.EVT_SIZE)
-            if self.buttonRow.sizeGrip:
-                self.buttonRow.sizeGrip.Show()
-        event.Skip()
-
+    @eg.LogItWithReturn
+    def Configure(self, treeItem, *args):
+        self.__class__.currentDialog = self
+        self.treeItem = treeItem
+        treeItem.openConfigDialog = self
+        treeItem.Configure(*args)
+        del treeItem.openConfigDialog
 
     def CreateHelpPanel(self):
         helpPanel = wx.Panel(self.notebook)
@@ -125,7 +117,6 @@ class ConfigDialog(eg.TaskletDialog):
         helpPanel.SetSizer(sizer)
         self.notebook.AddPage(helpPanel, "Description")
         return helpPanel
-
 
     def FinishSetup(self):
         # Temporary hack to fix button tabulator ordering problems.
@@ -145,24 +136,28 @@ class ConfigDialog(eg.TaskletDialog):
         if self.resizable:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND, 0)
         else:
-            self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND|wx.RIGHT, 10)
+            self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND | wx.RIGHT, 10)
         self.SetSizerAndFit(self.mainSizer)
-        self.Fit() # without the addition Fit(), some dialogs get a bad size
+        self.Fit()  # without the addition Fit(), some dialogs get a bad size
         self.SetMinSize(self.GetSize())
         self.CentreOnParent()
         self.panel.SetFocus()
         eg.TaskletDialog.FinishSetup(self)
 
+    @eg.LogIt
+    def OnMaximize(self, event):
+        if self.buttonRow.sizeGrip:
+            self.buttonRow.sizeGrip.Hide()
+        self.Bind(wx.EVT_SIZE, self.OnRestore)
+        event.Skip()
+
+    @eg.LogIt
+    def OnRestore(self, event):
+        if not self.IsMaximized():
+            self.Unbind(wx.EVT_SIZE)
+            if self.buttonRow.sizeGrip:
+                self.buttonRow.sizeGrip.Show()
+        event.Skip()
 
     def OnTestButton(self, event):
         self.DispatchEvent(event, eg.ID_TEST)
-
-
-    @eg.LogItWithReturn
-    def Configure(self, treeItem, *args):
-        self.__class__.currentDialog = self
-        self.treeItem = treeItem
-        treeItem.openConfigDialog = self
-        treeItem.Configure(*args)
-        del treeItem.openConfigDialog
-

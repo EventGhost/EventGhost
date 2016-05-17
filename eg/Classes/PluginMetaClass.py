@@ -23,10 +23,8 @@ class PluginMetaClass(type):
     The metaclass of PluginBase that allows us to monitor the definition of a
     new plugin.
     """
-
     def __new__(mcs, name, bases, dct):
         newClass = type.__new__(mcs, name, bases, dct)
         # store the plugin class as __pluginCls__ in the plugins module
         sys.modules[newClass.__module__].__pluginCls__ = newClass
         return newClass
-

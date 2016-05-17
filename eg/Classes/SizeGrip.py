@@ -17,16 +17,17 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+
+# Local imports
 from eg.WinApi.Dynamic import (
     GetSystemMetrics, GetModuleHandle, CreateWindowEx,
     WS_CHILD, WS_VISIBLE, SBS_SIZEGRIP, SBS_SIZEBOXTOPLEFTALIGN,
     SM_CYHSCROLL, SM_CXVSCROLL,
 )
-FLAGS = WS_CHILD|WS_VISIBLE|SBS_SIZEGRIP|SBS_SIZEBOXTOPLEFTALIGN
 
+FLAGS = WS_CHILD | WS_VISIBLE | SBS_SIZEGRIP | SBS_SIZEBOXTOPLEFTALIGN
 
 class SizeGrip(wx.PyWindow):
-
     def __init__(self, parent):
         wx.PyWindow.__init__(self, parent)
         size = GetSystemMetrics(SM_CYHSCROLL), GetSystemMetrics(SM_CXVSCROLL)
@@ -45,7 +46,5 @@ class SizeGrip(wx.PyWindow):
             None
         )
 
-
     def AcceptsFocus(self):
         return False
-

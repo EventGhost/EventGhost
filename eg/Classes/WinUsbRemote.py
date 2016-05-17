@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 from os.path import join
 
+# Local imports
 import eg
-from eg.WinApi.Dynamic import cast, c_ubyte, POINTER, WinDLL
+from eg.WinApi.Dynamic import c_ubyte, cast, POINTER, WinDLL
 
 PUBYTE = POINTER(c_ubyte)
-
 
 class WinUsbRemote(object):
     threadId = None
@@ -46,10 +45,19 @@ class WinUsbRemote(object):
             )
         self.Open()
 
+    def Close(self):
+        self.dll.End(self.threadId)
+        self.threadId = None
+        eg.messageReceiver.RemoveWmUserHandler(self.MsgHandler)
 
     def IsOk(self):
         return bool(self.threadId)
 
+    def MsgHandler(self, dummyHwnd, dummyMsg, dummyWParam, lParam):
+        dataArray = cast(lParam, PUBYTE)
+        value = tuple(dataArray[i] for i in range(self.dataSize))
+        self.callback(value)
+        return 1
 
     def Open(self):
         msgId = eg.messageReceiver.AddWmUserHandler(self.MsgHandler)
@@ -60,17 +68,3 @@ class WinUsbRemote(object):
             self.dataSize,
             int(self.suppressRepeat)
         )
-
-
-    def Close(self):
-        self.dll.End(self.threadId)
-        self.threadId = None
-        eg.messageReceiver.RemoveWmUserHandler(self.MsgHandler)
-
-
-    def MsgHandler(self, dummyHwnd, dummyMsg, dummyWParam, lParam):
-        dataArray = cast(lParam, PUBYTE)
-        value = tuple(dataArray[i] for i in range(self.dataSize))
-        self.callback(value)
-        return 1
-

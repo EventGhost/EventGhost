@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 import string
 from types import StringTypes
 
+# Local imports
+import eg
 
 class Text(eg.TranslatableStrings):
     title = "Find"
@@ -35,9 +36,7 @@ class Text(eg.TranslatableStrings):
     notFoundMesg = '"%s" couldn\'t be found.'
 
 
-
 class FindDialog(wx.Dialog):
-
     def __init__(self, parent, document):
         wx.Dialog.__init__(
             self,
@@ -67,7 +66,7 @@ class FindDialog(wx.Dialog):
 
         acv = wx.ALIGN_CENTER_VERTICAL
         upperLeftSizer = eg.HBoxSizer(
-            (wx.StaticText(self, -1, Text.searchLabel), 0, acv|wx.RIGHT, 5),
+            (wx.StaticText(self, -1, Text.searchLabel), 0, acv | wx.RIGHT, 5),
             (textCtrl, 1, wx.EXPAND),
         )
         cbSizer = eg.VBoxSizer(
@@ -76,25 +75,26 @@ class FindDialog(wx.Dialog):
             (searchParametersCb, 0, wx.TOP, 5),
         )
         lowerLeftSizer = eg.HBoxSizer(
-            (cbSizer, 0, acv|wx.RIGHT, 10),
+            (cbSizer, 0, acv | wx.RIGHT, 10),
             (directionRb),
         )
         leftSizer = eg.VBoxSizer(
-            (upperLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
-            (lowerLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
+            (upperLeftSizer, 0, wx.EXPAND | wx.ALL, 5),
+            (lowerLeftSizer, 0, wx.EXPAND | wx.ALL, 5),
         )
         btnSizer = eg.VBoxSizer(
             (searchButton, 0, wx.EXPAND),
-            (cancelButton, 0, wx.EXPAND|wx.TOP, 5),
+            (cancelButton, 0, wx.EXPAND | wx.TOP, 5),
         )
         sizer = eg.HBoxSizer(
             (leftSizer, 1, wx.EXPAND),
-            (btnSizer, 0, wx.EXPAND|wx.ALL, 5),
+            (btnSizer, 0, wx.EXPAND | wx.ALL, 5),
         )
         self.SetSizerAndFit(sizer)
         self.SetMinSize(self.GetSize())
 
         searchButton.Bind(wx.EVT_BUTTON, self.OnFindButton)
+
         def EnableSearchButton(event):
             enable = textCtrl.GetValue() != ""
             searchButton.Enable(enable)
@@ -109,20 +109,9 @@ class FindDialog(wx.Dialog):
         #self.Bind(wx.EVT_CLOSE, self.OnCancel)
         #cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
 
-
-    def Show(self):
-        self.CenterOnParent()
-        eg.Utils.EnsureVisible(self)
-        wx.Dialog.Show(self)
-        self.Raise()
-        self.textCtrl.SetSelection(-1, -1)
-        self.textCtrl.SetFocus()
-
-
     @eg.LogIt
     def OnCancel(self, event):
         self.Destroy()
-
 
     def OnFindButton(self, event=None):
         item = self.parent.treeCtrl.GetSelectedNode()
@@ -144,12 +133,11 @@ class FindDialog(wx.Dialog):
         if self.wholeWordsOnlyCb.GetValue():
             matchFunc = lambda text, pos: (
                 (
-                    pos == 0
-                    or not text[pos - 1].isalnum()
-                )
-                and (
-                    keyLen + pos == len(text)
-                    or not text[pos + keyLen].isalnum()
+                    pos == 0 or
+                    not text[pos - 1].isalnum()
+                ) and (
+                    keyLen + pos == len(text) or
+                    not text[pos + keyLen].isalnum()
                 )
             )
         else:
@@ -187,3 +175,10 @@ class FindDialog(wx.Dialog):
                             item.Select()
                             return
 
+    def Show(self):
+        self.CenterOnParent()
+        eg.Utils.EnsureVisible(self)
+        wx.Dialog.Show(self)
+        self.Raise()
+        self.textCtrl.SetSelection(-1, -1)
+        self.textCtrl.SetFocus()

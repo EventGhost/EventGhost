@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class ActionWithStringParameter(eg.ActionBase):
     """
@@ -42,8 +43,8 @@ class ActionWithStringParameter(eg.ActionBase):
         if self.parameterDescription:
             parameterDescription = self.parameterDescription
         elif (
-            hasattr(self, "text")
-            and hasattr(self.text, "parameterDescription")
+            hasattr(self, "text") and
+            hasattr(self.text, "parameterDescription")
         ):
             parameterDescription = self.text.parameterDescription
 
@@ -58,4 +59,3 @@ class ActionWithStringParameter(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(parameterCtrl.GetValue())
-

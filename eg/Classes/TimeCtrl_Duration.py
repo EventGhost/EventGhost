@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 
 class TimeCtrl_Duration(eg.TimeCtrl):
-
-    '''Ignore key "C", "c" and "!" (set time to "Now")'''
-
+    """
+    Ignore key "C", "c" and "!" (set time to "Now")
+    """
     def _TimeCtrl__OnSetToNow(self, evt):
         return False
-

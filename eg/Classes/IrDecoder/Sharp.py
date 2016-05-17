@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 SHARP_TIME = 0.000320  # 320 micro-seconds
-
 
 class Sharp(IrProtocolBase):
     """
@@ -30,12 +30,12 @@ class Sharp(IrProtocolBase):
     def Decode(self, data):
         buf = 0
         for i in range(16):
-            mark = data[i*2]
+            mark = data[i * 2]
             if mark < 100:
                 raise DecodeError("mark too short")
             if mark > 500:
                 raise DecodeError("mark too long")
-            space = data[i*2+1]
+            space = data[i * 2 + 1]
             if space < 600:
                 raise DecodeError("space too short")
             elif space < 1200:
@@ -53,4 +53,3 @@ class Sharp(IrProtocolBase):
         if (buf & 256):
             buf ^= 0x03ff
         return "Sharp.%0.4X" % (buf)
-

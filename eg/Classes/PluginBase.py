@@ -20,13 +20,13 @@
 Definition of the abstract plugin class.
 """
 
-from threading import Lock
 import wx
+from threading import Lock
+
+# Local imports
 import eg
 
-
 gTriggerEventLock = Lock()
-
 
 class PluginBase(object):
     """
@@ -51,7 +51,6 @@ class PluginBase(object):
         For more information read the section about
         :ref:`internationalisation`.
     """
-
     name = None
     description = None
     info = None
@@ -76,6 +75,17 @@ class PluginBase(object):
         """
         pass
 
+    class Exception(eg.Exception):
+        pass
+
+    def __close__(self):
+        """
+        Gets called, if the plugin is about to be closed.
+
+        Override this if you have to do some cleanup before your plugin gets
+        unloaded.
+        """
+        pass
 
     def __start__(self, *args):
         """
@@ -90,7 +100,6 @@ class PluginBase(object):
         """
         pass
 
-
     def __stop__(self):
         """
         Stop/Disable the plugin.
@@ -100,76 +109,6 @@ class PluginBase(object):
         gets another call to its :meth:`!__start__` method.
         """
         pass
-
-
-    def __close__(self):
-        """
-        Gets called, if the plugin is about to be closed.
-
-        Override this if you have to do some cleanup before your plugin gets
-        unloaded.
-        """
-        pass
-
-
-    def AddEvents(self, *eventList):
-        self.info.eventList = eventList
-
-
-    def TriggerEvent(self, suffix, payload=None):
-        """
-        Trigger an event.
-
-        If the plugin wants to trigger an event in EventGhost, it should call
-        self.TriggerEvent with the event name as *suffix* parameter. It can
-        also post optional additional data through the *payload* parameter.
-
-        Keep in mind, that an event generated through this method will also
-        automatically be ended immediately. If the plugin wants to generate
-        an event with a longer duration, it has to use
-        :meth:`!TriggerEnduringEvent`.
-        """
-        with gTriggerEventLock:
-            info = self.info
-            info.lastEvent.SetShouldEnd()
-            event = eg.TriggerEvent(suffix, payload, info.eventPrefix, self)
-            info.lastEvent = event
-            return event
-
-
-    def TriggerEnduringEvent(self, suffix, payload=None):
-        """
-        Trigger an enduring event.
-
-        Does nearly the same as :meth:`!TriggerEvent` but the event will not be
-        ended immediately. This is used for devices that can have longer
-        enduring events, like a remote, where you can press and hold a button.
-
-        The plugin has to call :meth:`!EndLastEvent` to end the event. The last
-        event will also be ended, if another event will be generated through
-        :meth:`!TriggerEvent` or :meth:`!TriggerEnduringEvent`. This will
-        ensure, that only one event per plugin can be active at the same time.
-        """
-        with gTriggerEventLock:
-            info = self.info
-            info.lastEvent.SetShouldEnd()
-            event = eg.TriggerEnduringEvent(
-                suffix,
-                payload,
-                info.eventPrefix,
-                self
-            )
-            info.lastEvent = event
-            return event
-
-
-    def EndLastEvent(self):
-        """
-        End the last event that was generated through
-        :meth:`!TriggerEnduringEvent`.
-        """
-        self.info.lastEvent.SetShouldEnd()
-
 
     def AddAction(
         self,
@@ -205,6 +144,11 @@ class PluginBase(object):
         # is instantiated (for speed purposes).
         pass
 
+    def AddActionsFromList(self, theList, defaultAction=None):
+        self.info.actionGroup.AddActionsFromList(theList, defaultAction)
+
+    def AddEvents(self, *eventList):
+        self.info.eventList = eventList
 
     def AddGroup(self, name=None, description=None, iconFile=None):
         """
@@ -228,31 +172,6 @@ class PluginBase(object):
         # is instantiated (for speed purposes).
         pass
 
-
-    def GetLabel(self, *args):
-        """
-        Returns the label that should be displayed in the configuration tree
-        with the current arguments.
-
-        The default method simply shows the plugin name. If you want to have
-        a different behaviour, you can override it. This method gets called
-        with the same parameters as the :meth:`!__start__`  method.
-        """
-        return self.name
-
-
-    def PrintError(self, msg):
-        """
-        Print an error message to the logger.
-
-        Prefer to use self.PrintError instead of eg.PrintError, since this
-        method gives the user better information about the source of the error.
-
-        :param msg: The error string you want to have printed to the logger
-        """
-        eg.PrintError(msg, source=self.info.treeItem)
-
-
     def Configure(self, *args):
         """
         This should be overridden in a subclass, if the plugin wants to have
@@ -268,7 +187,7 @@ class PluginBase(object):
         panel.dialog.buttonRow.applyButton.Enable(False)
         label = panel.StaticText(
             eg.text.General.noOptionsPlugin,
-            style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
+            style=wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
         )
         panel.sizer.Add((0, 0), 1, wx.EXPAND)
         panel.sizer.Add(label, 0, wx.ALIGN_CENTRE)
@@ -276,17 +195,23 @@ class PluginBase(object):
         while panel.Affirmed():
             panel.SetResult()
 
-
-    class Exception(eg.Exception):
-        pass
-
-
-    def OnComputerSuspend(self, suspendType):
+    def EndLastEvent(self):
         """
-        Prepares the plugin for suspension of the computer.
+        End the last event that was generated through
+        :meth:`!TriggerEnduringEvent`.
         """
-        pass
+        self.info.lastEvent.SetShouldEnd()
 
+    def GetLabel(self, *args):
+        """
+        Returns the label that should be displayed in the configuration tree
+        with the current arguments.
+
+        The default method simply shows the plugin name. If you want to have
+        a different behaviour, you can override it. This method gets called
+        with the same parameters as the :meth:`!__start__`  method.
+        """
+        return self.name
 
     def OnComputerResume(self, suspendType):
         """
@@ -294,6 +219,11 @@ class PluginBase(object):
         """
         pass
 
+    def OnComputerSuspend(self, suspendType):
+        """
+        Prepares the plugin for suspension of the computer.
+        """
+        pass
 
     def OnDelete(self):
         """
@@ -302,7 +232,58 @@ class PluginBase(object):
         """
         pass
 
+    def PrintError(self, msg):
+        """
+        Print an error message to the logger.
 
-    def AddActionsFromList(self, theList, defaultAction=None):
-        self.info.actionGroup.AddActionsFromList(theList, defaultAction)
+        Prefer to use self.PrintError instead of eg.PrintError, since this
+        method gives the user better information about the source of the error.
 
+        :param msg: The error string you want to have printed to the logger
+        """
+        eg.PrintError(msg, source=self.info.treeItem)
+
+    def TriggerEnduringEvent(self, suffix, payload=None):
+        """
+        Trigger an enduring event.
+
+        Does nearly the same as :meth:`!TriggerEvent` but the event will not be
+        ended immediately. This is used for devices that can have longer
+        enduring events, like a remote, where you can press and hold a button.
+
+        The plugin has to call :meth:`!EndLastEvent` to end the event. The last
+        event will also be ended, if another event will be generated through
+        :meth:`!TriggerEvent` or :meth:`!TriggerEnduringEvent`. This will
+        ensure, that only one event per plugin can be active at the same time.
+        """
+        with gTriggerEventLock:
+            info = self.info
+            info.lastEvent.SetShouldEnd()
+            event = eg.TriggerEnduringEvent(
+                suffix,
+                payload,
+                info.eventPrefix,
+                self
+            )
+            info.lastEvent = event
+            return event
+
+    def TriggerEvent(self, suffix, payload=None):
+        """
+        Trigger an event.
+
+        If the plugin wants to trigger an event in EventGhost, it should call
+        self.TriggerEvent with the event name as *suffix* parameter. It can
+        also post optional additional data through the *payload* parameter.
+
+        Keep in mind, that an event generated through this method will also
+        automatically be ended immediately. If the plugin wants to generate
+        an event with a longer duration, it has to use
+        :meth:`!TriggerEnduringEvent`.
+        """
+        with gTriggerEventLock:
+            info = self.info
+            info.lastEvent.SetShouldEnd()
+            event = eg.TriggerEvent(suffix, payload, info.eventPrefix, self)
+            info.lastEvent = event
+            return event

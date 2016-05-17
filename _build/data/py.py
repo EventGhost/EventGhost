@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import os
+import sys
+
 sys.path.append(os.getcwdu())
 
 if len(sys.argv) > 1:
@@ -30,4 +31,3 @@ else:
     if getattr(sys, "frozen", None) == "console_exe":
         from code import InteractiveConsole
         InteractiveConsole().interact()
-

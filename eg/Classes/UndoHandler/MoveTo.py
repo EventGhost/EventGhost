@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from eg.Classes.UndoHandler import UndoHandlerBase
-
 
 class MoveTo(UndoHandlerBase):
     name = "Move Item"
@@ -33,7 +33,6 @@ class MoveTo(UndoHandlerBase):
         self.newPositionData = eg.TreePosition(item)
         item.Select()
         self.document.AppendUndoHandler(self)
-
 
     @eg.AssertInActionThread
     @eg.LogIt
@@ -55,4 +54,3 @@ class MoveTo(UndoHandlerBase):
         item.Select()
 
     Redo = Undo
-

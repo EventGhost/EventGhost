@@ -16,13 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import socket
 import locale
-from hashlib import md5
+import socket
 import wx
+from hashlib import md5
 
 ENCODING = locale.getdefaultlocale()[1]
-
 
 def NetworkSend(host, port, password, eventString, payload=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,11 +32,11 @@ def NetworkSend(host, port, password, eventString, payload=None):
             sock.connect((host, port))
         except Exception, e:
             if e[0] == 10061:
-                app = wx.PySimpleApp()
-                win = wx.MessageBox(
+                wx.PySimpleApp()
+                wx.MessageBox(
                     '%s.\n\nMaybe the destination computer has not installed\nthe plugin "Network event receiver" ?' % e[1],
                     caption = "EventGhost - warning",
-                    style=wx.ICON_EXCLAMATION|wx.OK,
+                    style=wx.ICON_EXCLAMATION | wx.OK,
                     parent = None
                 )
             sock.close()
@@ -95,7 +94,6 @@ def NetworkSend(host, port, password, eventString, payload=None):
 
     return True
 
-
 def Main(argv):
     host, port = argv[0].split(":")
     password = argv[1]
@@ -103,8 +101,6 @@ def Main(argv):
     payloads = argv[3:]
     NetworkSend(host, int(port), password, eventstring, payloads)
 
-
 if __name__ == '__main__':
     import sys
     Main(sys.argv[1:])
-

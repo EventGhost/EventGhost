@@ -16,20 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
+import re
 import wx
 import wx.html
-import re
+
+# Local imports
+import eg
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
-
 
 class HeaderBox(wx.PyWindow):
     """
     The top description box of every tree item configuration dialog.
     """
-
     def __init__(self, parent, name="", text="", icon=None, url = None):
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
@@ -42,7 +42,7 @@ class HeaderBox(wx.PyWindow):
         )
 
         nameBox = wx.StaticText(self, -1, name)
-        font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+        font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD)
         nameBox.SetFont(font)
 
         self.text = '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
@@ -68,9 +68,9 @@ class HeaderBox(wx.PyWindow):
             (eg.VBoxSizer(
                 ((4, 4)),
                 (eg.HBoxSizer(
-                    (nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM),
-                ), 0, wx.EXPAND|wx.TOP, 2),
-                (descBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8),
+                    (nameBox, 1, wx.EXPAND | wx.ALIGN_BOTTOM),
+                ), 0, wx.EXPAND | wx.TOP, 2),
+                (descBox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8),
             ), 1, wx.EXPAND),
         )
         # odd sequence to setup the window, but all other ways seem
@@ -82,6 +82,14 @@ class HeaderBox(wx.PyWindow):
         self.Layout()
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
+    def AcceptsFocus(self):
+        return False
+
+    def OnLinkClicked(self, event):
+        if event.GetLinkInfo().GetHref() == "ShowMoreHelp":
+            self.parent.configureItem.ShowHelp(eg.document.frame)
+        else:
+            event.Skip()
 
     def OnSize(self, dummyEvent=None):
         if self.GetAutoLayout():
@@ -90,15 +98,3 @@ class HeaderBox(wx.PyWindow):
             height = self.descBox.GetInternalRepresentation().GetHeight()
             self.descBox.SetMinSize((-1, height + 4))
             self.Layout()
-
-
-    def OnLinkClicked(self, event):
-        if event.GetLinkInfo().GetHref() == "ShowMoreHelp":
-            self.parent.configureItem.ShowHelp(eg.document.frame)
-        else:
-            event.Skip()
-
-
-    def AcceptsFocus(self):
-        return False
-

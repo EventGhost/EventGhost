@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from NewItem import NewItem
-
 
 class NewFolder(NewItem):
     """
@@ -31,6 +31,7 @@ class NewFolder(NewItem):
     @eg.LogIt
     def Do(self, selection):
         document = self.document
+
         def ProcessInActionThread():
             if isinstance(
                 selection,
@@ -60,4 +61,3 @@ class NewFolder(NewItem):
         self.StoreItem(item)
         item.Select()
         return item
-

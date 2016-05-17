@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class Text:
     mesg = "Please select the folder you want to export"
@@ -27,25 +28,25 @@ text = Text
 
 
 class ExportDialog(eg.TaskletDialog):
-
     def Configure(self):
         self.foundId = None
-        style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+        style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         eg.TaskletDialog.__init__(self, None, -1, title="Export", style=style)
         staticText = wx.StaticText(self, -1, text.mesg)
 
-        filterClasses = (eg.FolderItem, )#eg.MacroItem)
+        filterClasses = (eg.FolderItem, )  #eg.MacroItem)
+
         def filterFunc(obj):
             return isinstance(obj, filterClasses)
 
-        tree = eg.TreeItemBrowseCtrl(self, filterFunc) #, multiSelect=True)
+        tree = eg.TreeItemBrowseCtrl(self, filterFunc)  #, multiSelect=True)
         #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.UnselectAll()
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
 
         mainSizer = eg.VBoxSizer(
-            (staticText, 0, wx.EXPAND|wx.ALL, 5),
+            (staticText, 0, wx.EXPAND | wx.ALL, 5),
             (tree, 1, wx.EXPAND),
             (buttonRow.sizer, 0, wx.EXPAND),
         )
@@ -58,4 +59,3 @@ class ExportDialog(eg.TaskletDialog):
             items = tree.GetSelections()
             GetPyData = tree.GetPyData
             self.SetResult([GetPyData(item) for item in items])
-

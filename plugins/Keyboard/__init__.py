@@ -30,8 +30,12 @@ succession of the event. So if the macro or any of its parents is disabled,
 the keypress will pass through.
 """
 
+import wx
 
+# Local imports
 import eg
+from eg import HasActiveHandler
+from eg.cFunctions import SetKeyboardCallback
 
 eg.RegisterPlugin(
     name = "Keyboard",
@@ -59,30 +63,21 @@ eg.RegisterPlugin(
     ),
 )
 
-
-from eg import HasActiveHandler
-from eg.cFunctions import SetKeyboardCallback
-
-
 class Text:
     label = "Universal modifiers"
 
 
 class Keyboard(eg.PluginBase):
-
     text = Text
 
     def __init__(self):
         self.AddEvents()
 
-
     def __start__(self, universalMods = False, *dummyArgs):
         SetKeyboardCallback(self.KeyboardCallback, int(universalMods))
 
-
     def __stop__(self):
         SetKeyboardCallback(None, 0)
-
 
     def Configure(self, universalMods = True):
         panel = eg.ConfigPanel()
@@ -90,7 +85,6 @@ class Keyboard(eg.PluginBase):
         panel.sizer.Add(universalModsCtrl, 0, wx.ALL, 20)
         while panel.Affirmed():
             panel.SetResult(universalModsCtrl.GetValue())
-
 
     def KeyboardCallback(self, codes, num, lastNum):
         if codes == "":
@@ -101,4 +95,3 @@ class Keyboard(eg.PluginBase):
             else:
                 self.EndLastEvent()
             return HasActiveHandler("Keyboard." + codes)
-

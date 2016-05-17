@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import os, winreg
+import os
+import winreg
 from collections import OrderedDict
 
 class Environment:
@@ -46,11 +47,9 @@ class Environment:
             path = val
         Environment.Set("PATH", path)
 
-
     @staticmethod
     def Clear():
         os.environ.clear()
-
 
     @staticmethod
     def ClearSafe():
@@ -58,11 +57,9 @@ class Environment:
             if var not in Environment.PROTECTED_VARS:
                 del os.environ[var]
 
-
     @staticmethod
     def Get():
         return Environment.Sort(os.environ)
-
 
     @staticmethod
     def GetLatest():
@@ -88,7 +85,6 @@ class Environment:
 
         return Environment.Sort(result)
 
-
     @staticmethod
     def Refresh():
         Environment.ClearSafe()
@@ -96,19 +92,15 @@ class Environment:
         for var, val in Environment.GetLatest().iteritems():
             Environment.Set(var, val)
 
-
     @staticmethod
     def Set(var, val):
         os.environ[var] = os.path.expandvars(val)
-
 
     @staticmethod
     def Sort(data):
         return OrderedDict(sorted(data.items(), key=lambda i: i[0]))
 
 
-
 for var in set(os.environ).difference(Environment.GetLatest()).union(Environment.IGNORE_LIST):
     if var.upper() != "PATH":
         Environment.PROTECTED_VARS[var] = os.environ[var]
-

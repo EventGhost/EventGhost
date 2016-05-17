@@ -16,18 +16,18 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 import sys
+import wx
 import wx.lib.mixins.listctrl as listmix
-from eg.WinApi import GetWindowText, GetClassName
-from eg.WinApi.Utils import GetHwndIcon, GetWindowProcessName
-from eg.Icons import GetInternalBitmap
 
+# Local imports
+from eg.Icons import GetInternalBitmap
+from eg.WinApi import GetClassName, GetWindowText
+from eg.WinApi.Utils import GetHwndIcon, GetWindowProcessName
 
 class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-
     def __init__(self, parent, hwnds):
-        wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT|wx.LC_SINGLE_SEL)
+        wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         imageList = wx.ImageList(16, 16)
         imageList.Add(GetInternalBitmap("cwindow"))
@@ -56,4 +56,3 @@ class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             labelSize = self.GetColumnWidth(i)
             if headerSize > labelSize:
                 self.SetColumnWidth(i, headerSize)
-

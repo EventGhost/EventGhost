@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import ManchesterCoding2, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, ManchesterCoding2
 
 ADDRESSES = {
     0x00: "TV1",
@@ -129,7 +129,6 @@ STREAMZAP = {
     0x63: "Blue",
 }
 
-
 class Rc5(ManchesterCoding2):
     """
     IR decoder for the Philips RC-5 protocol.
@@ -140,7 +139,6 @@ class Rc5(ManchesterCoding2):
     def __init__(self, controller):
         ManchesterCoding2.__init__(self, controller, 889)
         self.lastToggleBit = None
-
 
     def Decode(self, data):
         self.SetData(data)
@@ -175,4 +173,3 @@ class Rc5(ManchesterCoding2):
             self.lastCode = None
         self.lastToggleBit = toggleBit
         return code
-

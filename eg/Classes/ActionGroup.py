@@ -16,24 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-from types import ClassType
 from os.path import join
+from types import ClassType
+
+# Local imports
+import eg
 from eg.Utils import SetDefault
-
-
-
-class ActionInfo(object):
-    __slots__ = ["icon"]
-
-    def __init__(self, icon):
-        self.icon = icon
-
-
 
 class ActionGroup(object):
     __slots__ = [
-        "plugin", "name", "description", "icon", "items", "expanded"
+        "plugin", "name", "description", "icon", "items", "expanded",
     ]
 
     def __init__(self, plugin, name=None, description=None, iconFile=None):
@@ -48,31 +40,6 @@ class ActionGroup(object):
                 join(plugin.info.path, iconFile + ".png")
             )
         self.items = []
-
-
-    def AddGroup(self, name, description=None, iconFile=None, identifier=None):
-        """
-        Create and add a new sub-group.
-        """
-        plugin = self.plugin
-        if identifier is not None:
-            description = name if description is None else description
-            defaultText = ClassType(
-                identifier,
-                (),
-                {"name": name, "description": description}
-            )
-            translatedText = getattr(plugin.text, identifier, None)
-            if translatedText is None:
-                translatedText = ClassType(identifier, (), {})
-                setattr(plugin.text, identifier, translatedText)
-            SetDefault(translatedText, defaultText)
-            name = translatedText.name
-            description = translatedText.description
-        group = ActionGroup(plugin, name, description, iconFile)
-        self.items.append(group)
-        return group
-
 
     def AddAction(
         self,
@@ -127,27 +94,6 @@ class ActionGroup(object):
             self.items.append(actionCls)
         return actionCls
 
-
-    def Translate(self, plugin, actionCls, actionClsName):
-        defaultText = actionCls.text
-        if defaultText is None:
-            defaultText = ClassType(actionClsName, (), {})
-        translatedText = getattr(plugin.text, actionClsName, None)
-        if translatedText is None:
-            translatedText = ClassType(actionClsName, (), {})
-            setattr(plugin.text, actionClsName, translatedText)
-        SetDefault(translatedText, defaultText)
-        if not hasattr(translatedText, "name"):
-            name = actionCls.name
-            translatedText.name = actionClsName if name is None else name
-        if not hasattr(translatedText, "description"):
-            description = actionCls.description
-            translatedText.description = (
-                translatedText.name if description is None else description
-            )
-        return translatedText
-
-
     def AddActionsFromList(self, theList, defaultAction=None):
         def Recurse(theList, group):
             for parts in theList:
@@ -187,3 +133,51 @@ class ActionGroup(object):
 
         Recurse(theList, self)
 
+    def AddGroup(self, name, description=None, iconFile=None, identifier=None):
+        """
+        Create and add a new sub-group.
+        """
+        plugin = self.plugin
+        if identifier is not None:
+            description = name if description is None else description
+            defaultText = ClassType(
+                identifier,
+                (),
+                {"name": name, "description": description}
+            )
+            translatedText = getattr(plugin.text, identifier, None)
+            if translatedText is None:
+                translatedText = ClassType(identifier, (), {})
+                setattr(plugin.text, identifier, translatedText)
+            SetDefault(translatedText, defaultText)
+            name = translatedText.name
+            description = translatedText.description
+        group = ActionGroup(plugin, name, description, iconFile)
+        self.items.append(group)
+        return group
+
+    def Translate(self, plugin, actionCls, actionClsName):
+        defaultText = actionCls.text
+        if defaultText is None:
+            defaultText = ClassType(actionClsName, (), {})
+        translatedText = getattr(plugin.text, actionClsName, None)
+        if translatedText is None:
+            translatedText = ClassType(actionClsName, (), {})
+            setattr(plugin.text, actionClsName, translatedText)
+        SetDefault(translatedText, defaultText)
+        if not hasattr(translatedText, "name"):
+            name = actionCls.name
+            translatedText.name = actionClsName if name is None else name
+        if not hasattr(translatedText, "description"):
+            description = actionCls.description
+            translatedText.description = (
+                translatedText.name if description is None else description
+            )
+        return translatedText
+
+
+class ActionInfo(object):
+    __slots__ = ["icon"]
+
+    def __init__(self, icon):
+        self.icon = icon

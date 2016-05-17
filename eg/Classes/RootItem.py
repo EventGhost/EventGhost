@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import time
+
+# Local imports
+import eg
 from ContainerItem import ContainerItem
 from TreeItem import HINT_MOVE_INSIDE
-
 
 class RootItem(ContainerItem):
     xmlTag = "EventGhost"
@@ -34,17 +35,6 @@ class RootItem(ContainerItem):
         "Macro": HINT_MOVE_INSIDE,
         "Folder": HINT_MOVE_INSIDE,
     }
-
-    def GetData(self):
-        from comtypes import GUID
-        self.guid = str(GUID.create_new())
-        self.time = str(time.time())
-        attr = []
-        attr.append(('Version', str(eg.Version.string)))
-        attr.append(('Guid', self.guid))
-        attr.append(('Time', self.time))
-        return attr, None
-
 
     def __init__(self, parent, node):
         parent = None
@@ -60,6 +50,32 @@ class RootItem(ContainerItem):
         self.name = eg.text.General.configTree
         self.expanded = True
 
+    def CanCopy(self):
+        return False
+
+    def CanCut(self):
+        return False
+
+    def CanDelete(self):
+        return False
+
+    def Delete(self):
+        childs = self.childs[:]
+        for child in childs:
+            child.Delete()
+
+    def Enable(self, flag=True):
+        pass
+
+    def GetData(self):
+        from comtypes import GUID
+        self.guid = str(GUID.create_new())
+        self.time = str(time.time())
+        attr = []
+        attr.append(('Version', str(eg.Version.string)))
+        attr.append(('Guid', self.guid))
+        attr.append(('Time', self.time))
+        return attr, None
 
     def WriteXmlChilds(self, streamWriter, indent):
         content = eg.Password.GetDatabaseContent()
@@ -70,26 +86,3 @@ class RootItem(ContainerItem):
             streamWriter("    </Passwords>\r\n")
         for child in self.childs:
             child.WriteXmlString(streamWriter, indent)
-
-
-    def Delete(self):
-        childs = self.childs[:]
-        for child in childs:
-            child.Delete()
-
-
-    def CanCut(self):
-        return False
-
-
-    def CanCopy(self):
-        return False
-
-
-    def CanDelete(self):
-        return False
-
-
-    def Enable(self, flag=True):
-        pass
-

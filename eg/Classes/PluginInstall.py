@@ -16,19 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import tempfile
-import shutil
-import compileall
-import base64
 import __builtin__
 import ast
-from zipfile import ZipFile, ZIP_DEFLATED
+import base64
+import compileall
+import os
+import shutil
+import tempfile
 import wx
-import eg
-from eg.Utils import DecodeReST
-from eg.Classes.Dialog import Dialog
+from zipfile import ZIP_DEFLATED, ZipFile
 
+# Local imports
+import eg
+from eg.Classes.Dialog import Dialog
+from eg.Utils import DecodeReST
 
 TEMPLATE = u"""
 <FONT SIZE=5><b>{name}</b></FONT>
@@ -64,45 +65,30 @@ INFO_FIELDS = [
     "icon",
 ]
 
-
-class SafeExecParser(object):
-
-    def Visit(self, node, *args):
-        meth = getattr(self, 'Visit' + node.__class__.__name__)
-        return meth(node, *args)
-
-
-    def VisitModule(self, node):
-        mod = {}
-        for child in node.body:
-            self.Visit(child, mod)
-        return mod
-
-
-    def VisitAssign(self, node, parent):
-        value = self.Visit(node.value)
-        for target in node.targets:
-            parent[self.Visit(target)] = value
-
-
-    def VisitName(self, node):
-        if isinstance(node.ctx, ast.Load):
-            if node.id in ("True", "False", "None"):
-                return getattr(__builtin__, node.id)
-        return node.id
-
-
-    def VisitStr(self, node):
-        return node.s
-
-
-    @classmethod
-    def Parse(cls, source):
-        return cls().Visit(ast.parse(source))
-
-
-
 class PluginInstall(object):
+    def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
+        zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
+        sourceCode = "\n".join(
+            "%s = %r" % (fieldName, pluginData[fieldName])
+            for fieldName in INFO_FIELDS
+        )
+        zipfile.writestr("info.py", sourceCode)
+        baseName = os.path.basename(sourcePath)
+        for dirpath, dirnames, filenames in os.walk(sourcePath):
+            for dirname in dirnames[:]:
+                if dirname.startswith("."):
+                    dirnames.remove(dirname)
+            for filename in filenames:
+                ext = os.path.splitext(filename)[1]
+                if (
+                    ext.lower() in (".pyc", ".pyo") and
+                    filename[:-1] in filenames
+                ):
+                    continue
+                src = os.path.join(dirpath, filename)
+                dst = os.path.join(baseName, src[len(sourcePath) + 1:])
+                zipfile.write(src, dst)
+        zipfile.close()
 
     @eg.LogItWithReturn
     def Export(self, mainFrame=None):
@@ -131,7 +117,7 @@ class PluginInstall(object):
             mainFrame,
             defaultFile=filename,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
-            style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
         )
         try:
             result = dialog.ShowModal()
@@ -142,12 +128,11 @@ class PluginInstall(object):
             dialog.Destroy()
         self.CreatePluginPackage(pluginInfo.path, targetPath, pluginData)
 
-
     def GetPluginData(self, pluginInfo):
         description = pluginInfo.englishDescription
         pos = description.find("<rst>")
         if pos != -1:
-            description = DecodeReST(description[pos+5:])
+            description = DecodeReST(description[pos + 5:])
         iconData = base64.b64encode(str(pluginInfo.icon.pil.tobytes()))
         return {
             "name": pluginInfo.englishName,
@@ -158,32 +143,6 @@ class PluginInstall(object):
             "description": description,
             "icon": iconData,
         }
-
-
-    def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
-        zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
-        sourceCode = "\n".join(
-            "%s = %r" % (fieldName, pluginData[fieldName])
-                for fieldName in INFO_FIELDS
-        )
-        zipfile.writestr("info.py", sourceCode)
-        baseName = os.path.basename(sourcePath)
-        for dirpath, dirnames, filenames in os.walk(sourcePath):
-            for dirname in dirnames[:]:
-                if dirname.startswith("."):
-                    dirnames.remove(dirname)
-            for filename in filenames:
-                ext = os.path.splitext(filename)[1]
-                if (
-                    ext.lower() in (".pyc", ".pyo")
-                    and filename[:-1] in filenames
-                ):
-                    continue
-                src = os.path.join(dirpath, filename)
-                dst = os.path.join(baseName, src[len(sourcePath)+1:])
-                zipfile.write(src, dst)
-        zipfile.close()
-
 
     @eg.LogItWithReturn
     def Import(self, filepath):
@@ -243,7 +202,6 @@ PluginInstall = PluginInstall()
 
 
 class PluginOverviewDialog(Dialog):
-
     def __init__(
         self,
         parent=None,
@@ -258,7 +216,7 @@ class PluginOverviewDialog(Dialog):
             -1,
             title,
             size=(400, 300),
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
         self.text = TEMPLATE.format(**pluginData)
         headerCtrl = eg.HtmlWindow(self, style=wx.html.HW_SCROLLBAR_NEVER)
@@ -278,11 +236,11 @@ class PluginOverviewDialog(Dialog):
             self, (wx.ID_OK, wx.ID_CANCEL), True, True
         )
         mainSizer = eg.VBoxSizer(
-            (headerCtrl, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 5),
+            (headerCtrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 5),
             (wx.StaticLine(self), 0, wx.EXPAND, 0),
-            (descriptionCtrl, 1, wx.EXPAND|wx.ALL, 5),
+            (descriptionCtrl, 1, wx.EXPAND | wx.ALL, 5),
             (wx.StaticLine(self), 0, wx.EXPAND, 0),
-            (questionCtrl, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5),
+            (questionCtrl, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5),
             (self.buttonRow.sizer, 0, wx.EXPAND),
         )
         self.SetSizer(mainSizer)
@@ -298,7 +256,6 @@ class PluginOverviewDialog(Dialog):
 #        self.Bind(wx.EVT_SIZE, self.OnSize)
 #        self.Layout()
 
-
     def OnSize(self, dummyEvent=None):
         self.Layout()
         #self.headerCtrl.SetPage(self.text)
@@ -306,6 +263,35 @@ class PluginOverviewDialog(Dialog):
         internal = self.headerCtrl.GetInternalRepresentation()
         height = internal.GetHeight()
         #self.headerCtrl.SetSizeHints(self.headerCtrl.GetSize()[0], height)
-        self.headerCtrl.SetMinSize((-1, height+4))
+        self.headerCtrl.SetMinSize((-1, height + 4))
         self.Layout()
 
+
+class SafeExecParser(object):
+    @classmethod
+    def Parse(cls, source):
+        return cls().Visit(ast.parse(source))
+
+    def Visit(self, node, *args):
+        meth = getattr(self, 'Visit' + node.__class__.__name__)
+        return meth(node, *args)
+
+    def VisitAssign(self, node, parent):
+        value = self.Visit(node.value)
+        for target in node.targets:
+            parent[self.Visit(target)] = value
+
+    def VisitModule(self, node):
+        mod = {}
+        for child in node.body:
+            self.Visit(child, mod)
+        return mod
+
+    def VisitName(self, node):
+        if isinstance(node.ctx, ast.Load):
+            if node.id in ("True", "False", "None"):
+                return getattr(__builtin__, node.id)
+        return node.id
+
+    def VisitStr(self, node):
+        return node.s

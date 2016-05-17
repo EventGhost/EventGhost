@@ -26,11 +26,9 @@ class TreePosition:
     use any direct item reference, but must use an "index path" to find
     the right object.
     """
-
     def __init__(self, item):
         self.root = item.root
         self.path = item.GetPath()
-
 
     def GetItem(self):
         """
@@ -41,7 +39,6 @@ class TreePosition:
             item = item.childs[pos]
         return item
 
-
     def GetParentAndPosition(self):
         """
         Return the parent item and the index inside the parents childs.
@@ -50,4 +47,3 @@ class TreePosition:
         for pos in self.path[:-1]:
             parent = parent.childs[pos]
         return parent, self.path[-1]
-

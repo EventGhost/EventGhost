@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import os
 import re
 import struct
@@ -25,135 +24,32 @@ import sys
 import textwrap
 import time
 import _winreg
-from ctypes import windll, create_string_buffer
+from ctypes import create_string_buffer, windll
 from os.path import (
-    dirname, exists, expanduser, expandvars, join, normpath
+    exists, expanduser, expandvars, join, normpath
 )
 
+# Local imports
 import builder
 from builder.subprocess2 import Popen
 
-
+# Exceptions
 class InvalidVersion(Exception):
     pass
-
-
-def EncodePath(path):
-    return path.encode('mbcs')
-
 
 def DecodePath(path):
     return path.decode('mbcs')
 
-
-def StartProcess(*args):
-    #SetIndent(1)
-    startupInfo = subprocess.STARTUPINFO()
-    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
-    startupInfo.wShowWindow = subprocess.SW_HIDE
-    process = Popen(
-        args,
-        cwd=EncodePath(join(builder.buildSetup.buildDir)),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        startupinfo=startupInfo,
-    )
-    while process.returncode is None:
-        process.poll()
-        errData = process.recv_err()
-        if errData is not None:
-            sys.stderr.write(errData)
-        inData = process.recv()
-        if inData is not None:
-            if inData:
-                sys.stdout.write(inData)
-            else:
-                time.sleep(0.1)
-        else:
-            break
-    process.wait()
-    #SetIndent(0)
-    return process.returncode
-
+def EncodePath(path):
+    return path.encode('mbcs')
 
 def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
 
-
-def GetVersion(buildSetup):
-    """
-    Get the app version.
-    """
-    #print "getting version from GitHub."
-    if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
-        parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
-        parts[0] = parts[0].strip('v')
-        while len(parts) < 6:
-            parts.append("0")
-        parts[2] = int(parts[2]) + 1
-        buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
-        buildSetup.appVersionShort = buildSetup.appVersion
-        buildSetup.appVersionInfo = tuple(parts)
-    else:
-        (
-            buildSetup.appVersion,
-            buildSetup.appVersionShort,
-            buildSetup.appVersionInfo
-        ) = (
-            ParseVersion(buildSetup.args.version)
-        )
-
-
-def GetLastReleaseOrTagName(buildSetup):
-    '''
-    Get the name of latest release. If none is found, all releases
-    will be searched for highest number. If there is although no
-    name found, the tags will be searched.
-    '''
-    from agithub.GitHub import GitHub
-    token = buildSetup.gitConfig["token"]
-    user = buildSetup.gitConfig["user"]
-    repo = buildSetup.gitConfig["repo"]
-    branch = buildSetup.gitConfig["branch"]
-    gh = GitHub(token=token)
-
-    # first try if there's already a latest release
-    rc, data = gh.repos[user][repo].releases.latest.get()
-    if rc == 200:
-        return data['name']
-
-    # if not, let's try if there's any release
-    lastRelease = ''
-    page = 1
-    while page > 0:
-        rc, data = gh.repos[user][repo].releases.get(sha=branch,
-                                                     per_page=100, page=page)
-        if rc != 200:
-            break
-        page = NextPage(gh)
-        for release in data:
-            if release['name'] > lastRelease:
-                lastRelease = release['name']
-
-    # ok, no releases, let's check the tags.
-    if lastRelease == '':
-        page = 1
-        while page > 0:
-            rc, data = gh.repos[user][repo].git.refs.tags.get(sha=branch,
-                                                     per_page=100, page=page)
-            if rc != 200:
-                break
-            page = NextPage(gh)
-            for tag in data:
-                if tag['ref'][10:] > lastRelease:
-                    lastRelease = tag['ref'][10:]
-        return lastRelease
-
-
 def GetCommitCount(buildSetup):
-    '''
+    """
     Get the count of commits for repository.
-    '''
+    """
     from agithub.GitHub import GitHub
     token = buildSetup.gitConfig["token"]
     user = buildSetup.gitConfig["user"]
@@ -175,78 +71,42 @@ def GetCommitCount(buildSetup):
             counter += contr['contributions']
     return counter
 
-
-def GetHtmlHelpCompilerPath():
+def GetEnvironmentVar(var):
     """
-    Try to find the install location of the HTML Help command line compiler
+    Pull the latest version of an environment var from the registry.
     """
-    subkey = r"Software\Microsoft\HTML Help Workshop"
-    try:
-        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, subkey)
-        path = _winreg.QueryValueEx(key, "InstallDir")[0]
-    except WindowsError:
-        path = join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
-    programPath = join(path, "hhc.exe")
-    if not exists(programPath):
-        return None
-    return programPath
+    KEY_LIST = (
+        (
+            _winreg.HKEY_LOCAL_MACHINE,
+            "System\CurrentControlSet\Control\Session Manager\Environment"
+        ),
+        (
+            _winreg.HKEY_CURRENT_USER,
+            "Environment"
+        ),
+    )
 
-
-def ListDir(path, skip_dirs=[], fullpath=True):
-    '''
-    Return a list with all files in given path (including subdirs).
-    skip_dirs is a list of directories, which contents should not be listet.
-
-    :param path: root directory (full path)
-    :param skip_dirs: list of directory names to skip
-    :param fullpath: should the list contain the full path?
-    :return: list of filenames with full path
-    '''
-
-    if not fullpath:
-        cwd = os.getcwd()
-        os.chdir(path)
-        path = '.'
-
-    contents = os.walk(path)
-    files = []
-    for item in contents:
-        parts = set(item[0].split('\\'))
-        if parts.intersection(skip_dirs):
-            continue
-        if len(item[2]) > 0:
-            for name in item[2]:
-                if name[-4:] not in ('.pyc',):
-                    filename = normpath(join(item[0], name))
-                    files.append(filename)
-        if len(item[1]) > 0:
-            for subdir in item[1]:
-                parts = set(subdir.split('\\'))
-                if parts.intersection(skip_dirs):
-                    continue
-                else:
-                    subpath = normpath(join(path, subdir))
-                    sublist = ListDir(subpath, skip_dirs)
-                    files.extend(sublist)
-    if not fullpath:
-        os.chdir(cwd)
-    return files
-
+    for key, subkey in KEY_LIST:
+        try:
+            with _winreg.OpenKey(key, subkey) as hand:
+                return expandvars(_winreg.QueryValueEx(hand, var)[0])
+        except WindowsError:
+            return ""
 
 def GetGitHubConfig():
-    '''
+    """
     Get GitHub from .gitconfig .
-    '''
+    """
     from agithub.GitHub import GitHub
     # read .gitconfig
     cfg = expanduser('~\.gitconfig')
-    with open(cfg,"rt") as f:
+    with open(cfg, "rt") as f:
         cfg = f.readlines()
 
     # try to to read github section from .gitconfig
     idx = cfg.index("[github]\n")
     gitcfg = {}
-    for i in range(idx+1, len(cfg)):
+    for i in range(idx + 1, len(cfg)):
         if cfg[i].strip().startswith('['):
             break
         elif cfg[i].strip() == "":
@@ -287,51 +147,72 @@ def GetGitHubConfig():
                             "name": repo["name"],
                             "all_branches": branches,
                             "def_branch": repo["default_branch"]
-                            }
-                        })
+                        }
+                    })
     return gitcfg
 
-
-def NextPage(gh):
-    hdr = gh.getheaders()
-    header = {item[0].strip(): item[1].strip() for item in hdr}
-    if 'link' in header:
-        parts = header['link'].split(',')
-        for part in parts:
-            subparts = part.split(';')
-            sub = subparts[1].split('=')
-            if sub[0].strip() == 'rel':
-                if sub[1] == '"next"':
-                    page = int(re.match(ur'.*page=(\d+).*',
-                               subparts[0],
-                               re.IGNORECASE | re.DOTALL | re.UNICODE).
-                               groups()[0])
-                    return page
-    return 0
-
-
-def GetEnvironmentVar(var):
+def GetHtmlHelpCompilerPath():
     """
-    Pull the latest version of an environment var from the registry.
+    Try to find the install location of the HTML Help command line compiler
     """
-    KEY_LIST = (
-        (
-            _winreg.HKEY_LOCAL_MACHINE,
-            "System\CurrentControlSet\Control\Session Manager\Environment"
-        ),
-        (
-            _winreg.HKEY_CURRENT_USER,
-            "Environment"
-        ),
-    )
+    subkey = r"Software\Microsoft\HTML Help Workshop"
+    try:
+        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, subkey)
+        path = _winreg.QueryValueEx(key, "InstallDir")[0]
+    except WindowsError:
+        path = join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
+    programPath = join(path, "hhc.exe")
+    if not exists(programPath):
+        return None
+    return programPath
 
-    for key, subkey in KEY_LIST:
-        try:
-            with _winreg.OpenKey(key, subkey) as hand:
-                return expandvars(_winreg.QueryValueEx(hand, var)[0])
-        except WindowsError:
-            return ""
+def GetLastReleaseOrTagName(buildSetup):
+    """
+    Get the name of latest release. If none is found, all releases
+    will be searched for highest number. If there is although no
+    name found, the tags will be searched.
+    """
+    from agithub.GitHub import GitHub
+    token = buildSetup.gitConfig["token"]
+    user = buildSetup.gitConfig["user"]
+    repo = buildSetup.gitConfig["repo"]
+    branch = buildSetup.gitConfig["branch"]
+    gh = GitHub(token=token)
 
+    # first try if there's already a latest release
+    rc, data = gh.repos[user][repo].releases.latest.get()
+    if rc == 200:
+        return data['name']
+
+    # if not, let's try if there's any release
+    lastRelease = ''
+    page = 1
+    while page > 0:
+        rc, data = gh.repos[user][repo].releases.get(sha=branch,
+                                                     per_page=100, page=page)
+        if rc != 200:
+            break
+        page = NextPage(gh)
+        for release in data:
+            if release['name'] > lastRelease:
+                lastRelease = release['name']
+
+    # ok, no releases, let's check the tags.
+    if lastRelease == '':
+        page = 1
+        while page > 0:
+            rc, data = gh.repos[user][repo].git.refs.tags.get(
+                sha=branch,
+                per_page=100,
+                page=page
+            )
+            if rc != 200:
+                break
+            page = NextPage(gh)
+            for tag in data:
+                if tag['ref'][10:] > lastRelease:
+                    lastRelease = tag['ref'][10:]
+        return lastRelease
 
 def GetTerminalSize(fallback=(80, 24)):
     """
@@ -355,6 +236,28 @@ def GetTerminalSize(fallback=(80, 24)):
 
 _COLUMNS, _LINES = GetTerminalSize()
 
+def GetVersion(buildSetup):
+    """
+    Get the app version.
+    """
+    #print "getting version from GitHub."
+    if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
+        parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
+        parts[0] = parts[0].strip('v')
+        while len(parts) < 6:
+            parts.append("0")
+        parts[2] = int(parts[2]) + 1
+        buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
+        buildSetup.appVersionShort = buildSetup.appVersion
+        buildSetup.appVersionInfo = tuple(parts)
+    else:
+        (
+            buildSetup.appVersion,
+            buildSetup.appVersionShort,
+            buildSetup.appVersionInfo
+        ) = (
+            ParseVersion(buildSetup.args.version)
+        )
 
 def IsAdmin():
     """
@@ -366,6 +269,61 @@ def IsAdmin():
     except:
         return False
 
+def ListDir(path, skip_dirs=[], fullpath=True):
+    """
+    Return a list with all files in given path (including subdirs).
+    skip_dirs is a list of directories, which contents should not be listet.
+
+    :param path: root directory (full path)
+    :param skip_dirs: list of directory names to skip
+    :param fullpath: should the list contain the full path?
+    :return: list of filenames with full path
+    """
+    if not fullpath:
+        cwd = os.getcwd()
+        os.chdir(path)
+        path = '.'
+
+    contents = os.walk(path)
+    files = []
+    for item in contents:
+        parts = set(item[0].split('\\'))
+        if parts.intersection(skip_dirs):
+            continue
+        if len(item[2]) > 0:
+            for name in item[2]:
+                if name[-4:] not in ('.pyc',):
+                    filename = normpath(join(item[0], name))
+                    files.append(filename)
+        if len(item[1]) > 0:
+            for subdir in item[1]:
+                parts = set(subdir.split('\\'))
+                if parts.intersection(skip_dirs):
+                    continue
+                else:
+                    subpath = normpath(join(path, subdir))
+                    sublist = ListDir(subpath, skip_dirs)
+                    files.extend(sublist)
+    if not fullpath:
+        os.chdir(cwd)
+    return files
+
+def NextPage(gh):
+    hdr = gh.getheaders()
+    header = {item[0].strip(): item[1].strip() for item in hdr}
+    if 'link' in header:
+        parts = header['link'].split(',')
+        for part in parts:
+            subparts = part.split(';')
+            sub = subparts[1].split('=')
+            if sub[0].strip() == 'rel':
+                if sub[1] == '"next"':
+                    page = int(re.match(ur'.*page=(\d+).*',
+                               subparts[0],
+                               re.IGNORECASE | re.DOTALL | re.UNICODE).
+                               groups()[0])
+                    return page
+    return 0
 
 def ParseVersion(ver):
     """
@@ -384,6 +342,34 @@ def ParseVersion(ver):
         else:
             raise InvalidVersion
 
+def StartProcess(*args):
+    #SetIndent(1)
+    startupInfo = subprocess.STARTUPINFO()
+    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    startupInfo.wShowWindow = subprocess.SW_HIDE
+    process = Popen(
+        args,
+        cwd=EncodePath(join(builder.buildSetup.buildDir)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        startupinfo=startupInfo,
+    )
+    while process.returncode is None:
+        process.poll()
+        errData = process.recv_err()
+        if errData is not None:
+            sys.stderr.write(errData)
+        inData = process.recv()
+        if inData is not None:
+            if inData:
+                sys.stdout.write(inData)
+            else:
+                time.sleep(0.1)
+        else:
+            break
+    process.wait()
+    #SetIndent(0)
+    return process.returncode
 
 def WrapText(text, i1 = "", i2 = ""):
     """
@@ -394,4 +380,3 @@ def WrapText(text, i1 = "", i2 = ""):
         initial_indent=i1,
         subsequent_indent=i2,
     ).fill(text)
-

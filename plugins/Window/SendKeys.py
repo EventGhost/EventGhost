@@ -17,8 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
-This action emulates keystrokes to control other programs. Just type the text
-you want into the edit-box.
+Sends keystrokes to the target window.
 
 To emulate special-keys, you have to enclose a keyword in curly braces.
 For example if you want to have a cursor-up-key you write **{Up}**. You
@@ -66,14 +65,16 @@ And here is the list of the remaining keywords EventGhost understands:
     | **{Numpad0}, {Numpad1}, ... , {Numpad9}**
 """
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class SendKeys(eg.ActionBase):
-    name = "Emulate Keystrokes"
+    name = "Send Keystrokes"
     description = __doc__
     iconFile = "icons/SendKeys"
+
     class text:
         useAlternativeMethod = "Use alternate method to emulate keypresses"
         insertButton = "&Insert"
@@ -85,6 +86,7 @@ class SendKeys(eg.ActionBase):
             "Set button(s) Down",
             "Trigger button(s) Down+Up (Default!)"
         ]
+
         class Keys:
             returnKey = "Return"
             enter = "Enter"
@@ -120,7 +122,6 @@ class SendKeys(eg.ActionBase):
             num8 = "Numpad 8"
             num9 = "Numpad 9"
 
-
     def __call__(self, data, useAlternateMethod=False, mode=2):
         hwnds = eg.lastFoundWindows
         if not hwnds:
@@ -128,7 +129,6 @@ class SendKeys(eg.ActionBase):
         else:
             hwnd = hwnds[0]
         eg.SendKeys(hwnd, data, useAlternateMethod, mode)
-
 
     def Configure(self, data="", useAlternateMethod=False, mode=2):
         panel = eg.ConfigPanel()
@@ -196,8 +196,9 @@ class SendKeys(eg.ActionBase):
         keyChoice = wx.Choice(panel, -1, choices=keyLabels)
         keyChoice.SetSelection(0)
         insertButton = wx.Button(panel, -1, text.insertButton)
+
         def DummyHandler(dummyEvent):
-            pass # used to prevent propagating of the event to the panel
+            pass  # used to prevent propagating of the event to the panel
         shiftCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         ctrlCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         altCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
@@ -216,13 +217,13 @@ class SendKeys(eg.ActionBase):
         insertButton.Bind(wx.EVT_BUTTON, OnInsert)
 
         cbSizer = eg.VBoxSizer(
-            (shiftCB, 0, wx.EXPAND|wx.BOTTOM, 5),
-            (ctrlCB, 0, wx.EXPAND|wx.BOTTOM, 5),
+            (shiftCB, 0, wx.EXPAND | wx.BOTTOM, 5),
+            (ctrlCB, 0, wx.EXPAND | wx.BOTTOM, 5),
             (altCB, 0, wx.EXPAND, 0),
         )
         rightSizer = eg.VBoxSizer(
             (keyChoice),
-            (insertButton, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 15),
+            (insertButton, 0, wx.TOP | wx.ALIGN_CENTER_HORIZONTAL, 15),
         )
         staticBox = wx.StaticBox(panel, -1, text.specialKeyTool)
         specialKeySizer = wx.StaticBoxSizer(staticBox, wx.HORIZONTAL)
@@ -243,5 +244,8 @@ class SendKeys(eg.ActionBase):
         )
 
         while panel.Affirmed():
-            panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue(),radioBox.GetSelection())
-
+            panel.SetResult(
+                textCtrl.GetValue(),
+                alternateMethodCB.GetValue(),
+                radioBox.GetSelection()
+            )

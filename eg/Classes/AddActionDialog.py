@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class Config(eg.PersistentData):
     position = None
@@ -26,11 +27,9 @@ class Config(eg.PersistentData):
     splitPosition = 210
 
 
-
 class Text(eg.TranslatableStrings):
     title = "Select an action to add..."
     descriptionLabel = "Description"
-
 
 
 class AddActionDialog(eg.TaskletDialog):
@@ -45,19 +44,23 @@ class AddActionDialog(eg.TaskletDialog):
             parent,
             -1,
             Text.title,
-            style=wx.DEFAULT_DIALOG_STYLE
-                |wx.RESIZE_BORDER
-                |wx.THICK_FRAME
+            style=(
+                wx.DEFAULT_DIALOG_STYLE |
+                wx.RESIZE_BORDER |
+                wx.THICK_FRAME
+            )
         )
         splitterWindow = wx.SplitterWindow(
             self,
             -1,
-            style=wx.SP_LIVE_UPDATE
-                |wx.CLIP_CHILDREN
-                |wx.NO_FULL_REPAINT_ON_RESIZE
+            style=(
+                wx.SP_LIVE_UPDATE |
+                wx.CLIP_CHILDREN |
+                wx.NO_FULL_REPAINT_ON_RESIZE
+            )
         )
 
-        style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
+        style = wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT | wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
         tree.SetMinSize((100, 100))
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
@@ -73,7 +76,7 @@ class AddActionDialog(eg.TaskletDialog):
 
         self.nameText = nameText = wx.StaticText(rightPanel)
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
-        rightSizer.Add(nameText, 0, wx.EXPAND|wx.LEFT|wx.BOTTOM, 5)
+        rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
             wx.StaticBox(rightPanel, label=Text.descriptionLabel),
@@ -92,7 +95,7 @@ class AddActionDialog(eg.TaskletDialog):
         splitterWindow.UpdateSize()
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)
+        mainSizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
 
         self.SetSizerAndFit(mainSizer)
@@ -111,7 +114,6 @@ class AddActionDialog(eg.TaskletDialog):
         Config.size = self.GetSizeTuple()
         Config.position = self.GetPositionTuple()
         Config.splitPosition = splitterWindow.GetSashPosition()
-
 
     def FillTree(self):
         """
@@ -133,6 +135,46 @@ class AddActionDialog(eg.TaskletDialog):
                 tree.EnsureVisible(treeItem)
             tree.SelectItem(self.lastSelectedTreeItem)
 
+    def OnActivated(self, event):
+        """
+        Process wx.EVT_TREE_ITEM_ACTIVATED events.
+        """
+        treeItem = self.tree.GetSelection()
+        itemData = self.tree.GetPyData(treeItem)
+        if isinstance(itemData, eg.ActionGroup):
+            event.Skip()
+        else:
+            self.OnOK(wx.CommandEvent())
+
+    def OnCollapsed(self, event):
+        """
+        Process wx.EVT_TREE_ITEM_COLLAPSED events.
+        """
+        self.tree.GetPyData(event.GetItem()).expanded = False
+
+    def OnExpanded(self, event):
+        """
+        Process wx.EVT_TREE_ITEM_EXPANDED events.
+        """
+        self.tree.GetPyData(event.GetItem()).expanded = True
+
+    def OnSelectionChanged(self, event):
+        """
+        Process wx.EVT_TREE_SEL_CHANGED events.
+        """
+        treeItem = event.GetItem()
+        if not treeItem.IsOk():
+            return
+        itemData = self.tree.GetPyData(treeItem)
+        if isinstance(itemData, eg.ActionGroup):
+            self.resultData = None
+            self.buttonRow.okButton.Enable(False)
+        else:
+            self.resultData = itemData
+            self.buttonRow.okButton.Enable(True)
+        self.nameText.SetLabel(itemData.name)
+        self.docText.SetBasePath(itemData.plugin.info.path)
+        self.docText.SetPage(itemData.description)
 
     def RecurseActionGroup(self, actionGroup, tree, parentTreeItem):
         """
@@ -159,49 +201,3 @@ class AddActionDialog(eg.TaskletDialog):
                     tree.Expand(newTreeItem)
             if dataItem == self.lastSelectedDataItem:
                 self.lastSelectedTreeItem = newTreeItem
-
-
-    def OnSelectionChanged(self, event):
-        """
-        Process wx.EVT_TREE_SEL_CHANGED events.
-        """
-        treeItem = event.GetItem()
-        if not treeItem.IsOk():
-            return
-        itemData = self.tree.GetPyData(treeItem)
-        if isinstance(itemData, eg.ActionGroup):
-            self.resultData = None
-            self.buttonRow.okButton.Enable(False)
-        else:
-            self.resultData = itemData
-            self.buttonRow.okButton.Enable(True)
-        self.nameText.SetLabel(itemData.name)
-        self.docText.SetBasePath(itemData.plugin.info.path)
-        self.docText.SetPage(itemData.description)
-
-
-    def OnCollapsed(self, event):
-        """
-        Process wx.EVT_TREE_ITEM_COLLAPSED events.
-        """
-        self.tree.GetPyData(event.GetItem()).expanded = False
-
-
-    def OnExpanded(self, event):
-        """
-        Process wx.EVT_TREE_ITEM_EXPANDED events.
-        """
-        self.tree.GetPyData(event.GetItem()).expanded = True
-
-
-    def OnActivated(self, event):
-        """
-        Process wx.EVT_TREE_ITEM_ACTIVATED events.
-        """
-        treeItem = self.tree.GetSelection()
-        itemData = self.tree.GetPyData(treeItem)
-        if isinstance(itemData, eg.ActionGroup):
-            event.Skip()
-        else:
-            self.OnOK(wx.CommandEvent())
-

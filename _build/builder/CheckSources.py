@@ -18,26 +18,9 @@
 
 import os
 from os.path import join, splitext
-import builder
 
-HEADER = """# -*- coding: utf-8 -*-
-#
-# This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
-#
-# EventGhost is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 2 of the License, or (at your option)
-# any later version.
-#
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-# more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
-"""
+# Local imports
+import builder
 
 PLUGINS = [
     "EventGhost",
@@ -78,6 +61,24 @@ PLUGINS = [
     "ZoomPlayer",
 ]
 
+HEADER = """# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+#
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+"""
 
 class CheckSources(builder.Task):
     description = "Check source files"
@@ -112,6 +113,24 @@ class CheckSources(builder.Task):
                         #     continue
                         self.FixTrailingWhitespace(path)
 
+    def CheckHeader(self, path):
+        """
+        Checks if the source file has the right GPLv2 header.
+        """
+        sourceFile = open(path, "rt")
+        header = sourceFile.read(len(HEADER))
+        if header != HEADER:
+            print "wrong file header:", path
+
+    def CheckLineLength(self, path):
+        """
+        Checks if the source file doesn't exceed the line length.
+        """
+        sourceFile = open(path, "rt")
+        for line in sourceFile.readlines():
+            if len(line.rstrip()) > 79:
+                print "line to long", path, line.rstrip()
+                return
 
     def FixTrailingWhitespace(self, path):
         """
@@ -130,25 +149,3 @@ class CheckSources(builder.Task):
             sourceFile = open(path, "wt")
             sourceFile.write(newContent)
             sourceFile.close()
-
-
-    def CheckHeader(self, path):
-        """
-        Checks if the source file has the right GPLv2 header.
-        """
-        sourceFile = open(path, "rt")
-        header = sourceFile.read(len(HEADER))
-        if header != HEADER:
-            print "wrong file header:", path
-
-
-    def CheckLineLength(self, path):
-        """
-        Checks if the source file doesn't exceed the line length.
-        """
-        sourceFile = open(path, "rt")
-        for line in sourceFile.readlines():
-            if len(line.rstrip()) > 79:
-                print "line to long", path, line.rstrip()
-                return
-

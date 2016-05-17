@@ -16,15 +16,84 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
 import _winreg
-from os.path import abspath, join, exists
-from builder.Utils import StartProcess, EncodePath
+from os.path import abspath, exists, join
 
+# Local imports
+from builder.Utils import EncodePath, StartProcess
 
+# Exceptions
 class InnoSetupError(Exception):
     pass
+
+class InnoInstaller(object):
+    """
+    Helper class to create Inno Setup installers more easily.
+    """
+    def __init__(self, buildSetup):
+        self.innoSections = {}
+        self.buildSetup = buildSetup
+
+    def Add(self, section, line):
+        """
+        Adds a line to the INI section.
+        """
+        if section not in self.innoSections:
+            self.innoSections[section] = []
+        self.innoSections[section].append(EncodePath(line))
+
+    def AddFile(self, source, destDir="", destName=None, ignoreversion=True, prefix="{app}"):
+        """
+        Adds a file to the [Files] section.
+        """
+        line = 'Source: "%s"; DestDir: "%s\\%s"' % (
+            abspath(source), prefix, destDir
+        )
+        if destName is not None:
+            line += '; DestName: "%s"' % destName
+        if ignoreversion:
+            line += '; Flags: ignoreversion'
+        self.Add("Files", line)
+
+    def ExecuteInnoSetup(self):
+        """
+        Finishes the setup, writes the Inno Setup script and calls the
+        Inno Setup compiler.
+        """
+        srcDir = self.buildSetup.sourceDir
+        if self.buildSetup.pyVersionStr in ["26", "27"]:
+            self.AddFile(join(srcDir, "msvcr90.dll"))
+            self.AddFile(join(srcDir, "msvcp90.dll"))
+            self.AddFile(join(srcDir, "msvcm90.dll"))
+            self.AddFile(join(
+                srcDir,
+                "python{0}.dll".format(self.buildSetup.pyVersionStr)
+            ))
+        else:
+            print "Python version not supported."
+            return
+
+        innoScriptTemplate = file(
+            join(self.buildSetup.dataDir, "InnoSetup.template"),
+            "rt"
+        ).read()
+        innoScriptPath = join(self.buildSetup.tmpDir, "Setup.iss")
+        issFile = open(innoScriptPath, "w")
+        templateDict = {}
+        for key, value in self.buildSetup.__dict__.iteritems():
+            if isinstance(value, unicode):
+                value = EncodePath(value)
+            templateDict[key] = value
+
+        issFile.write(innoScriptTemplate % templateDict)
+        for section, lines in self.innoSections.iteritems():
+            issFile.write("[%s]\n" % section)
+            for line in lines:
+                issFile.write("%s\n" % line)
+        issFile.close()
+
+        if not (StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q") == 0):
+            raise InnoSetupError
 
 
 def GetInnoCompilerPath():
@@ -44,76 +113,3 @@ def GetInnoCompilerPath():
     if not exists(installPath):
         return None
     return installPath
-
-
-class InnoInstaller(object):
-    """
-    Helper class to create Inno Setup installers more easily.
-    """
-
-    def __init__(self, buildSetup):
-        self.innoSections = {}
-        self.buildSetup = buildSetup
-
-
-    def Add(self, section, line):
-        """
-        Adds a line to the INI section.
-        """
-        if not section in self.innoSections:
-            self.innoSections[section] = []
-        self.innoSections[section].append(EncodePath(line))
-
-
-    def AddFile(self, source, destDir="", destName=None, ignoreversion=True, prefix="{app}"):
-        """
-        Adds a file to the [Files] section.
-        """
-        line = 'Source: "%s"; DestDir: "%s\\%s"' % (
-            abspath(source), prefix, destDir
-        )
-        if destName is not None:
-            line += '; DestName: "%s"' % destName
-        if ignoreversion:
-            line += '; Flags: ignoreversion'
-        self.Add("Files", line)
-
-
-    def ExecuteInnoSetup(self):
-        """
-        Finishes the setup, writes the Inno Setup script and calls the
-        Inno Setup compiler.
-        """
-        srcDir = self.buildSetup.sourceDir
-        if  self.buildSetup.pyVersionStr in ["26", "27"]:
-            self.AddFile(join(srcDir, "msvcr90.dll"))
-            self.AddFile(join(srcDir, "msvcp90.dll"))
-            self.AddFile(join(srcDir, "msvcm90.dll"))
-            self.AddFile(join(srcDir,
-                        "python{0}.dll".format(self.buildSetup.pyVersionStr)))
-        else:
-            print "Python version not supported."
-            return
-
-        innoScriptTemplate = file(
-                join(self.buildSetup.dataDir, "InnoSetup.template"),
-                "rt"
-        ).read()
-        innoScriptPath = join(self.buildSetup.tmpDir, "Setup.iss")
-        issFile = open(innoScriptPath, "w")
-        templateDict = {}
-        for key, value in  self.buildSetup.__dict__.iteritems():
-            if isinstance(value, unicode):
-                value = EncodePath(value)
-            templateDict[key] = value
-
-        issFile.write(innoScriptTemplate % templateDict)
-        for section, lines in self.innoSections.iteritems():
-            issFile.write("[%s]\n" % section)
-            for line in lines:
-                issFile.write("%s\n" % line)
-        issFile.close()
-
-        if not (StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q") == 0):
-            raise InnoSetupError
-

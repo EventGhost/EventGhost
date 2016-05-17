@@ -16,17 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
-from eg.Utils import DecodeReST
 import webbrowser
+import wx
 from threading import Thread
-
 from wx.html import HtmlWindow as wxHtmlWindow
 from wx.html import (
-    HTML_URL_IMAGE, HTML_OPEN, EVT_HTML_LINK_CLICKED, HW_DEFAULT_STYLE
+    EVT_HTML_LINK_CLICKED, HTML_OPEN, HTML_URL_IMAGE, HW_DEFAULT_STYLE
 )
 
-
+# Local imports
+from eg.Utils import DecodeReST
 
 class HtmlWindow(wxHtmlWindow):
     basePath = None
@@ -51,43 +50,12 @@ class HtmlWindow(wxHtmlWindow):
         #    self.isSet = False
         self.Bind(EVT_HTML_LINK_CLICKED, self.OnHtmlLinkClicked)
 
-
-    def SetPage(self, html):
-        pos = html.find("<rst>")
-        if pos != -1:
-            html = DecodeReST(html[pos+5:])
-        wxHtmlWindow.SetPage(
-            self,
-            '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
-                self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
-                self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
-                html
-            )
-        )
-
-
     def OnHtmlLinkClicked(self, event):
         Thread(
             target=webbrowser.open,
             args=(event.GetLinkInfo().GetHref(), 0)
         ).start()
 
-
-    def SetBasePath(self, basePath):
-        self.basePath = basePath
-
-
-    def OnOpeningURL(self, htmlUrlType, url):
-        if (
-            htmlUrlType == HTML_URL_IMAGE
-            and (self.basePath is not None)
-            and not url.startswith(self.basePath)
-        ):
-            return self.basePath + "/" + url
-        else:
-            return HTML_OPEN
-
-#
 #    def OnIdle(self, event):
 #        x2, y2 = self.GetViewStart()
 #        x3, y3 = event.GetPosition()
@@ -106,3 +74,28 @@ class HtmlWindow(wxHtmlWindow):
 #            self.SetCursor(wx.STANDARD_CURSOR)
 #            self.isSet = False
 
+    def OnOpeningURL(self, htmlUrlType, url):
+        if (
+            htmlUrlType == HTML_URL_IMAGE and
+            (self.basePath is not None) and
+            not url.startswith(self.basePath)
+        ):
+            return self.basePath + "/" + url
+        else:
+            return HTML_OPEN
+
+    def SetBasePath(self, basePath):
+        self.basePath = basePath
+
+    def SetPage(self, html):
+        pos = html.find("<rst>")
+        if pos != -1:
+            html = DecodeReST(html[pos + 5:])
+        wxHtmlWindow.SetPage(
+            self,
+            '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
+                self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
+                self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
+                html
+            )
+        )

@@ -16,5 +16,5 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 from eg.WinApi.serial import Serial as SerialPort
-

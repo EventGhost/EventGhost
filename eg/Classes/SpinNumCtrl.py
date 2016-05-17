@@ -16,24 +16,23 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
-import locale
 from wx import SystemSettings_GetColour as GetColour
 from wx.lib import masked
 
-l=wx.Locale()
+# Local imports
+import eg
+
+l = wx.Locale()
 l.Init2(language=wx.LANGUAGE_DEFAULT, flags=wx.LOCALE_LOAD_DEFAULT)
 THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
-
 
 class SpinNumCtrl(wx.Window):
     """
     A wx.Control that shows a fixed width floating point value and spin
     buttons to let the user easily input a floating point value.
     """
-
     _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,
@@ -71,15 +70,15 @@ class SpinNumCtrl(wx.Window):
             kwargs["allowNegative"] = True
         if "max" not in kwargs:
             kwargs["max"] = (
-                (10 ** kwargs["integerWidth"])
-                 - (10 ** -kwargs["fractionWidth"])
+                (10 ** kwargs["integerWidth"]) -
+                (10 ** -kwargs["fractionWidth"])
             )
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
             self,
             -1,
-            0, # Can't set value here, to avoid bug in NumCtrl
+            0,  # Can't set value here, to avoid bug in NumCtrl
             pos,
             size,
             style,
@@ -88,8 +87,8 @@ class SpinNumCtrl(wx.Window):
             allowNone=True,
             #**kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
-        numCtrl.SetParameters(**kwargs) # To avoid bug in NumCtrl
-        numCtrl.SetValue(value) # To avoid bug in NumCtrl
+        numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
+        numCtrl.SetValue(value)  # To avoid bug in NumCtrl
         numCtrl.SetMin(minValue)
 
         self.numCtrl = numCtrl
@@ -122,26 +121,8 @@ class SpinNumCtrl(wx.Window):
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         wx.CallAfter(numCtrl.SetSelection, -1, -1)
 
-
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
-
-    def OnSetFocus(self, dummyEvent):
-        self.numCtrl.SetFocus()
-        self.numCtrl.SetSelection(-1, -1)
-
-
-    def OnSpinUp(self, dummyEvent):
-        value = self.numCtrl.GetValue() + self.increment
-        self.SetValue(value)
-
-
-    def OnSpinDown(self, dummyEvent):
-        value = self.numCtrl.GetValue() - self.increment
-        self.SetValue(value)
-
+    def GetValue(self):
+        return self.numCtrl.GetValue()
 
     def OnChar(self, event):
         key = event.GetKeyCode()
@@ -153,10 +134,21 @@ class SpinNumCtrl(wx.Window):
             return
         event.Skip()
 
+    def OnSetFocus(self, dummyEvent):
+        self.numCtrl.SetFocus()
+        self.numCtrl.SetSelection(-1, -1)
 
-    def GetValue(self):
-        return self.numCtrl.GetValue()
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()
 
+    def OnSpinDown(self, dummyEvent):
+        value = self.numCtrl.GetValue() - self.increment
+        self.SetValue(value)
+
+    def OnSpinUp(self, dummyEvent):
+        value = self.numCtrl.GetValue() + self.increment
+        self.SetValue(value)
 
     def SetValue(self, value):
         minValue, maxValue = self.numCtrl.GetBounds()
@@ -167,7 +159,6 @@ class SpinNumCtrl(wx.Window):
         res = self.numCtrl.SetValue(value)
         wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value = value))
         return res
-
 
     def __OnSpin(self, pos):
         """
@@ -183,4 +174,3 @@ class SpinNumCtrl(wx.Window):
         start, end = numCtrl._FindField(pos)._extent
         numCtrl.SetInsertionPoint(start)
         numCtrl.SetSelection(start, end)
-

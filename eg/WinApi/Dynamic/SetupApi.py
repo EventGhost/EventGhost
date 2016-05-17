@@ -21,13 +21,16 @@
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
 
-from eg.WinApi.Dynamic import *
-_setupapi = WinDLL("setupapi")
 import sys
-if not hasattr(sys, "frozen"): # detect py2exe
+
+# Local imports
+from eg.WinApi.Dynamic import *
+
+_setupapi = WinDLL("setupapi")
+if not hasattr(sys, "frozen"):  # detect py2exe
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
-    except ImportError :
+    except ImportError:
         print "ctypeslib is not installed!"
     else:
         try:
@@ -41,6 +44,8 @@ if not hasattr(sys, "frozen"): # detect py2exe
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
+
+#-----------------------------------------------------------------------------#
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
 WSTRING = c_wchar_p
@@ -49,7 +54,7 @@ PCWSTR = WSTRING
 SetupDiGetClassDevsW = _setupapi.SetupDiGetClassDevsW
 SetupDiGetClassDevsW.restype = HDEVINFO
 SetupDiGetClassDevsW.argtypes = [POINTER(GUID), PCWSTR, HWND, DWORD]
-SetupDiGetClassDevs = SetupDiGetClassDevsW # alias
+SetupDiGetClassDevs = SetupDiGetClassDevsW  # alias
 class _SP_DEVINFO_DATA(Structure):
     pass
 PSP_DEVINFO_DATA = POINTER(_SP_DEVINFO_DATA)
@@ -57,7 +62,7 @@ PDWORD = POINTER(DWORD)
 SetupDiGetDeviceRegistryPropertyW = _setupapi.SetupDiGetDeviceRegistryPropertyW
 SetupDiGetDeviceRegistryPropertyW.restype = BOOL
 SetupDiGetDeviceRegistryPropertyW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD]
-SetupDiGetDeviceRegistryProperty = SetupDiGetDeviceRegistryPropertyW # alias
+SetupDiGetDeviceRegistryProperty = SetupDiGetDeviceRegistryPropertyW  # alias
 class _GUID(Structure):
     pass
 _GUID._fields_ = [
@@ -83,7 +88,7 @@ PSP_DRVINFO_DATA_W = PSP_DRVINFO_DATA_V2_W
 SetupDiGetSelectedDriverW = _setupapi.SetupDiGetSelectedDriverW
 SetupDiGetSelectedDriverW.restype = BOOL
 SetupDiGetSelectedDriverW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DRVINFO_DATA_W]
-SetupDiGetSelectedDriver = SetupDiGetSelectedDriverW # alias
+SetupDiGetSelectedDriver = SetupDiGetSelectedDriverW  # alias
 class _FILETIME(Structure):
     pass
 _FILETIME._fields_ = [
@@ -107,7 +112,7 @@ PSP_DEVINSTALL_PARAMS_W = POINTER(_SP_DEVINSTALL_PARAMS_W)
 SetupDiSetDeviceInstallParamsW = _setupapi.SetupDiSetDeviceInstallParamsW
 SetupDiSetDeviceInstallParamsW.restype = BOOL
 SetupDiSetDeviceInstallParamsW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DEVINSTALL_PARAMS_W]
-SetupDiSetDeviceInstallParams = SetupDiSetDeviceInstallParamsW # alias
+SetupDiSetDeviceInstallParams = SetupDiSetDeviceInstallParamsW  # alias
 PSP_FILE_CALLBACK_W = WINFUNCTYPE(UINT, PVOID, UINT, UINT_PTR, UINT_PTR)
 HSPFILEQ = PVOID
 _SP_DEVINSTALL_PARAMS_W._pack_ = 1
@@ -126,34 +131,34 @@ _SP_DEVINSTALL_PARAMS_W._fields_ = [
 SetupDiGetDeviceInstallParamsW = _setupapi.SetupDiGetDeviceInstallParamsW
 SetupDiGetDeviceInstallParamsW.restype = BOOL
 SetupDiGetDeviceInstallParamsW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DEVINSTALL_PARAMS_W]
-SetupDiGetDeviceInstallParams = SetupDiGetDeviceInstallParamsW # alias
+SetupDiGetDeviceInstallParams = SetupDiGetDeviceInstallParamsW  # alias
 SetupDiOpenDeviceInfoW = _setupapi.SetupDiOpenDeviceInfoW
 SetupDiOpenDeviceInfoW.restype = BOOL
 SetupDiOpenDeviceInfoW.argtypes = [HDEVINFO, PCWSTR, HWND, DWORD, PSP_DEVINFO_DATA]
-SetupDiOpenDeviceInfo = SetupDiOpenDeviceInfoW # alias
+SetupDiOpenDeviceInfo = SetupDiOpenDeviceInfoW  # alias
 SetupDiEnumDriverInfoW = _setupapi.SetupDiEnumDriverInfoW
 SetupDiEnumDriverInfoW.restype = BOOL
 SetupDiEnumDriverInfoW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, DWORD, PSP_DRVINFO_DATA_W]
-SetupDiEnumDriverInfo = SetupDiEnumDriverInfoW # alias
+SetupDiEnumDriverInfo = SetupDiEnumDriverInfoW  # alias
 SetupDiBuildDriverInfoList = _setupapi.SetupDiBuildDriverInfoList
 SetupDiBuildDriverInfoList.restype = BOOL
 SetupDiBuildDriverInfoList.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD]
-DIGCF_PRESENT = 2 # Variable c_int '2'
-DIGCF_ALLCLASSES = 4 # Variable c_int '4'
-DIGCF_DEVICEINTERFACE = 16 # Variable c_int '16'
+DIGCF_PRESENT = 2  # Variable c_int '2'
+DIGCF_ALLCLASSES = 4  # Variable c_int '4'
+DIGCF_DEVICEINTERFACE = 16  # Variable c_int '16'
 SP_DEVINFO_DATA = _SP_DEVINFO_DATA
 SP_DRVINFO_DATA_V2_W = _SP_DRVINFO_DATA_V2_W
 SP_DRVINFO_DATA_V2 = SP_DRVINFO_DATA_V2_W
 SP_DRVINFO_DATA = SP_DRVINFO_DATA_V2
 SP_DEVINSTALL_PARAMS_W = _SP_DEVINSTALL_PARAMS_W
 SP_DEVINSTALL_PARAMS = SP_DEVINSTALL_PARAMS_W
-SPDRP_DEVICEDESC = 0 # Variable c_int '0'
-SPDRP_HARDWAREID = 1 # Variable c_int '1'
-SPDRP_DRIVER = 9 # Variable c_int '9'
-SPDIT_CLASSDRIVER = 1 # Variable c_int '1'
-SPDIT_COMPATDRIVER = 2 # Variable c_int '2'
-ERROR_INSUFFICIENT_BUFFER = 122 # Variable c_long '122l'
-ERROR_INVALID_DATA = 13 # Variable c_long '13l'
+SPDRP_DEVICEDESC = 0  # Variable c_int '0'
+SPDRP_HARDWAREID = 1  # Variable c_int '1'
+SPDRP_DRIVER = 9  # Variable c_int '9'
+SPDIT_CLASSDRIVER = 1  # Variable c_int '1'
+SPDIT_COMPATDRIVER = 2  # Variable c_int '2'
+ERROR_INSUFFICIENT_BUFFER = 122  # Variable c_long '122l'
+ERROR_INVALID_DATA = 13  # Variable c_long '13l'
 SetupDiDestroyDeviceInfoList = _setupapi.SetupDiDestroyDeviceInfoList
 SetupDiDestroyDeviceInfoList.restype = BOOL
 SetupDiDestroyDeviceInfoList.argtypes = [HDEVINFO]
@@ -176,7 +181,7 @@ PSP_DEVICE_INTERFACE_DETAIL_DATA_W = POINTER(_SP_DEVICE_INTERFACE_DETAIL_DATA_W)
 SetupDiGetDeviceInterfaceDetailW = _setupapi.SetupDiGetDeviceInterfaceDetailW
 SetupDiGetDeviceInterfaceDetailW.restype = BOOL
 SetupDiGetDeviceInterfaceDetailW.argtypes = [HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W, DWORD, PDWORD, PSP_DEVINFO_DATA]
-SetupDiGetDeviceInterfaceDetail = SetupDiGetDeviceInterfaceDetailW # alias
+SetupDiGetDeviceInterfaceDetail = SetupDiGetDeviceInterfaceDetailW  # alias
 _SP_DEVICE_INTERFACE_DETAIL_DATA_W._pack_ = 1
 _SP_DEVICE_INTERFACE_DETAIL_DATA_W._fields_ = [
     ('cbSize', DWORD),
@@ -186,4 +191,3 @@ SP_DEVICE_INTERFACE_DATA = _SP_DEVICE_INTERFACE_DATA
 SP_DEVICE_INTERFACE_DETAIL_DATA_W = _SP_DEVICE_INTERFACE_DETAIL_DATA_W
 SP_DEVICE_INTERFACE_DETAIL_DATA = SP_DEVICE_INTERFACE_DETAIL_DATA_W
 PSP_DEVICE_INTERFACE_DETAIL_DATA = PSP_DEVICE_INTERFACE_DETAIL_DATA_W
-

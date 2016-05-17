@@ -16,44 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
-import pickle
 import ctypes
 import hashlib
-import weakref
+import pickle
 import struct
+import weakref
+import wx
 from comtypes import GUID
 from Crypto.Cipher import AES
+
+# Local imports
+import eg
 from eg.WinApi.Dynamic import GetVolumeInformation, DWORD, byref
 
-
-def GetMachineKey():
-    # Get the volume serial number of the system drive
-    volumeSerialBuffer = DWORD()
-    GetVolumeInformation(
-        "C:\\", None, 0, byref(volumeSerialBuffer), None, None, None, 0
-    )
-    value = volumeSerialBuffer.value
-    volumeSerial = (
-        chr((value >> 24) & 0xFF)
-        + chr((value >> 16) & 0xFF)
-        + chr((value >> 8) & 0xFF)
-        + chr(value & 0xFF)
-    )
-    # The last 6 bytes of the UUID returned from UuidCreateSequential contain
-    # the hardware MAC address.
-    uuid = ctypes.create_string_buffer(16)
-    ctypes.windll.rpcrt4.UuidCreateSequential(uuid)
-    mac = uuid.raw[-6:]
-    return volumeSerial + mac
-
-MACHINE_KEY = GetMachineKey()
-
-
-
 class MasterPasswordDialog(wx.Dialog):
-
     def __init__(self):
         self.result = None
         wx.Dialog.__init__(self, eg.document.frame)
@@ -63,29 +39,21 @@ class MasterPasswordDialog(wx.Dialog):
         self.passwordCtrl = wx.TextCtrl(self, -1, "", style=wx.TE_PASSWORD)
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)
-        sizer.Add(self.passwordCtrl, 0, wx.EXPAND|wx.ALL, 5)
-        sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        sizer.Add(staticText, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.passwordCtrl, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(wx.StaticLine(self), 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
         sizer.Add(self.buttonRow.sizer, 0, wx.ALIGN_CENTER)
         self.SetSizerAndFit(sizer)
-
 
     def OnOK(self, event):
         self.result = self.passwordCtrl.GetValue()
         event.Skip()
 
 
-
 class Password(object):
     database = {}
     instances = weakref.WeakKeyDictionary()
     masterkey = "EventGhost"
-
-    def __new__(cls, *args, **kwargs):
-        self = super(Password, cls).__new__(cls)
-        cls.instances[self] = 1
-        return self
-
 
     def __init__(self, guid=None, content=None):
         if guid is None:
@@ -96,29 +64,25 @@ class Password(object):
             self.database[guid] = content
         self.guid = guid
 
+    def __new__(cls, *args, **kwargs):
+        self = super(Password, cls).__new__(cls)
+        cls.instances[self] = 1
+        return self
+
+    def __repr__(self):
+        return "eg.Password(%r)" % self.guid
+
+    def __str__(self):
+        return self.Get()
+
+    def __unicode__(self):
+        return self.Get()
 
     def Get(self):
         try:
             return self.database[self.guid]
         except KeyError:
             return ""
-
-
-    def Set(self, password):
-        self.database[self.guid] = password
-
-
-    def __repr__(self):
-        return "eg.Password(%r)" % self.guid
-
-
-    def __unicode__(self):
-        return self.Get()
-
-
-    def __str__(self):
-        return self.Get()
-
 
     @classmethod
     def GetDatabaseContent(cls):
@@ -143,6 +107,8 @@ class Password(object):
         paddedString = textHash + struct.pack("L", length) + text + padding
         return AES.new(key, AES.MODE_ECB).encrypt(paddedString)
 
+    def Set(self, password):
+        self.database[self.guid] = password
 
     @classmethod
     def SetDatabaseContent(cls, data):
@@ -165,3 +131,25 @@ class Password(object):
             return
         cls.database = pickle.loads(plaintext)
 
+
+def GetMachineKey():
+    # Get the volume serial number of the system drive
+    volumeSerialBuffer = DWORD()
+    GetVolumeInformation(
+        "C:\\", None, 0, byref(volumeSerialBuffer), None, None, None, 0
+    )
+    value = volumeSerialBuffer.value
+    volumeSerial = (
+        chr((value >> 24) & 0xFF) +
+        chr((value >> 16) & 0xFF) +
+        chr((value >> 8) & 0xFF) +
+        chr(value & 0xFF)
+    )
+    # The last 6 bytes of the UUID returned from UuidCreateSequential contain
+    # the hardware MAC address.
+    uuid = ctypes.create_string_buffer(16)
+    ctypes.windll.rpcrt4.UuidCreateSequential(uuid)
+    mac = uuid.raw[-6:]
+    return volumeSerial + mac
+
+MACHINE_KEY = GetMachineKey()

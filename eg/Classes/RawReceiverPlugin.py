@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 from threading import Timer
 
+# Local imports
+import eg
 
 class RawReceiverPlugin(eg.PluginBase):
-
     def __init__(self):
         eg.PluginBase.__init__(self)
         self.mapTable = {}
@@ -32,6 +32,12 @@ class RawReceiverPlugin(eg.PluginBase):
         self.disableUnmapped = False
         self.repeatCode = None
 
+    def Map(self, what, to, timeout=None, repeatCode=None):
+        self.mapTable[what] = (to, timeout or self.timeout, repeatCode)
+
+    def OnTimeOut(self):
+        self.EndLastEvent()
+        self.lastEventString = ""
 
     def TriggerEvent(self, suffix, payload=None):
         if suffix == self.repeatCode:
@@ -53,13 +59,3 @@ class RawReceiverPlugin(eg.PluginBase):
         self.timer.start()
         self.lastTimeout = timeout
         return self.info.lastEvent
-
-
-    def OnTimeOut(self):
-        self.EndLastEvent()
-        self.lastEventString = ""
-
-
-    def Map(self, what, to, timeout=None, repeatCode=None):
-        self.mapTable[what] = (to, timeout or self.timeout, repeatCode)
-

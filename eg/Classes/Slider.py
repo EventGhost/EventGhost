@@ -18,9 +18,7 @@
 
 import wx
 
-
 class Slider(wx.Window):
-
     def __init__(
         self,
         parent,
@@ -75,15 +73,8 @@ class Slider(wx.Window):
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.OnScrollChanged()
 
-
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
-
-    def OnSetFocus(self, dummyEvent):
-        self.slider.SetFocus()
-
+    def GetValue(self):
+        return self.slider.GetValue()
 
     def OnScrollChanged(self, dummyEvent=None):
         value = self.slider.GetValue()
@@ -94,12 +85,13 @@ class Slider(wx.Window):
         if dummyEvent:
             dummyEvent.Skip()
 
+    def OnSetFocus(self, dummyEvent):
+        self.slider.SetFocus()
 
-    def GetValue(self):
-        return self.slider.GetValue()
-
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()
 
     def SetValue(self, value):
         self.slider.SetValue(value)
         self.OnScrollChanged()
-

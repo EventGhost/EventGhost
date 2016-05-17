@@ -16,17 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
-
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, ManchesterCoding1
 
 class Nrc17(ManchesterCoding1):
     """
     IR decoder for the Nokia NRC17 protocol.
     """
-
     def __init__(self, controller):
         ManchesterCoding1.__init__(self, controller, 500)
-
 
     def Decode(self, data):
         self.SetData(data)
@@ -47,4 +45,3 @@ class Nrc17(ManchesterCoding1):
         if code == 0xFFFE:
             return ""
         return "NRC17_%0.4X" % code
-

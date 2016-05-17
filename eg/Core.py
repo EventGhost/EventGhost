@@ -40,16 +40,17 @@ import time
 import threading
 import locale
 from os.path import join
+
+# Local imports
 import eg
 import Init
 
-
 eg.APP_NAME = "EventGhost"
 eg.CORE_PLUGIN_GUIDS = (
-    "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}", # "EventGhost"
-    "{A21F443B-221D-44E4-8596-E1ED7100E0A4}", # "System"
-    "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}", # "Window"
-    "{6B1751BF-F94E-4260-AB7E-64C0693FD959}", # "Mouse"
+    "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",  # "EventGhost"
+    "{A21F443B-221D-44E4-8596-E1ED7100E0A4}",  # "System"
+    "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",  # "Window"
+    "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
@@ -85,7 +86,6 @@ eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
 
-
 def _CommandEvent():
     """Generate new (CmdEvent, Binder) tuple
         e.g. MooCmdEvent, EVT_MOO = EgCommandEvent()
@@ -93,18 +93,17 @@ def _CommandEvent():
     evttype = wx.NewEventType()
 
     class _Event(wx.PyCommandEvent):
-
         def __init__(self, id, **kw):
             wx.PyCommandEvent.__init__(self, evttype, id)
             self.__dict__.update(kw)
             if not hasattr(self, "value"):
                 self.value = None
 
-        def SetValue(self, value):
-            self.value = value
-
         def GetValue(self):
             return self.value
+
+        def SetValue(self, value):
+            self.value = value
 
     return _Event, wx.PyEventBinder(evttype, 1)
 
@@ -123,23 +122,54 @@ eg.corePluginDir = join(eg.mainDir, "plugins")
 eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
 if eg.startupArguments.pluginDir is not None:
     eg.pluginDirs.append(eg.startupArguments.pluginDir)
-Init.InitPathesAndBuiltins()
-from eg.WinApi.Dynamic import GetCurrentProcessId
+Init.InitPathsAndBuiltins()
+from eg.WinApi.Dynamic import GetCurrentProcessId  # NOQA
 eg.processId = GetCurrentProcessId()
 Init.InitPil()
 
-def RestartAsyncore():
-    """ Informs the asyncore loop of a new socket to handle. """
-    oldDispatcher = eg.dummyAsyncoreDispatcher
-    dispatcher = asyncore.dispatcher()
-    dispatcher.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-    eg.dummyAsyncoreDispatcher = dispatcher
-    if oldDispatcher:
-        oldDispatcher.close()
-    if oldDispatcher is None:
-        # create a global asyncore loop thread
-        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
+class Exception(Exception):
+    def __unicode__(self):
+        try:
+            return "\n".join([unicode(arg) for arg in self.args])
+        except UnicodeDecodeError:
+            return "\n".join([str(arg).decode('mbcs') for arg in self.args])
 
+
+class StopException(Exception):
+    pass
+
+
+class HiddenAction:
+    pass
+
+
+def Bind(notification, listener):
+    if notification not in eg.notificationHandlers:
+        notificationHandler = eg.NotificationHandler()
+        eg.notificationHandlers[notification] = notificationHandler
+    else:
+        notificationHandler = eg.notificationHandlers[notification]
+    notificationHandler.listeners.append(listener)
+
+def CallWait(func, *args, **kwargs):
+    result = [None]
+    event = threading.Event()
+
+    def CallWaitWrapper():
+        try:
+            result[0] = func(*args, **kwargs)
+        finally:
+            event.set()
+
+    wx.CallAfter(CallWaitWrapper)
+    event.wait()
+    return result[0]
+
+def DummyFunc(*dummyArgs, **dummyKwargs):
+    """
+    Just a do-nothing-function, that accepts arbitrary arguments.
+    """
+    pass
 
 def Exit():
     """
@@ -150,22 +180,6 @@ def Exit():
     because the SystemExit exception is catched for a PythonScript.)
     """
     sys.exit()
-
-
-def Wait(secs, raiseException=True):
-    while secs > 0.0:
-        if eg.stopExecutionFlag:
-            if raiseException:
-                raise eg.StopException("Execution interrupted by the user.")
-            else:
-                return False
-        if secs > 0.1:
-            time.sleep(0.1)
-        else:
-            time.sleep(secs)
-        secs -= 0.1
-    return True
-
 
 def HasActiveHandler(eventstring):
     for eventHandler in eg.eventTable.get(eventstring, []):
@@ -178,98 +192,6 @@ def HasActiveHandler(eventstring):
             return True
     return False
 
-
-def Bind(notification, listener):
-    if notification not in eg.notificationHandlers:
-        notificationHandler = eg.NotificationHandler()
-        eg.notificationHandlers[notification] = notificationHandler
-    else:
-        notificationHandler = eg.notificationHandlers[notification]
-    notificationHandler.listeners.append(listener)
-
-
-def Unbind(notification, listener):
-    eg.notificationHandlers[notification].listeners.remove(listener)
-
-
-def Notify(notification, value=None):
-    if notification in eg.notificationHandlers:
-        for listener in eg.notificationHandlers[notification].listeners:
-            listener(value)
-
-
-def StopMacro(ignoreReturn=False):
-    """
-    Instructs EventGhost to stop executing the current macro after the
-    current action (thus the PythonScript or PythonCommand) has finished.
-    """
-    eg.programCounter = None
-    if ignoreReturn:
-        del eg.programReturnStack[:]
-
-
-def CallWait(func, *args, **kwargs):
-    result = [None]
-    event = threading.Event()
-    def CallWaitWrapper():
-        try:
-            result[0] = func(*args, **kwargs)
-        finally:
-            event.set()
-    wx.CallAfter(CallWaitWrapper)
-    event.wait()
-    return result[0]
-
-
-def DummyFunc(*dummyArgs, **dummyKwargs):
-    """
-    Just a do-nothing-function, that accepts arbitrary arguments.
-    """
-    pass
-
-
-def RunProgram():
-    eg.stopExecutionFlag = False
-    del eg.programReturnStack[:]
-    while eg.programCounter is not None:
-        programCounter = eg.programCounter
-        item, idx = programCounter
-        item.Execute()
-        if eg.programCounter == programCounter:
-            # program counter has not changed. Ask the parent for the next
-            # item.
-            if isinstance(item.parent, eg.MacroItem):
-                eg.programCounter = item.parent.GetNextChild(idx)
-            else:
-                eg.programCounter = None
-
-        while eg.programCounter is None and eg.programReturnStack:
-            # we have no next item in this level. So look in the return
-            # stack if any return has to be executed
-            eg.indent -= 2
-            item, idx = eg.programReturnStack.pop()
-            eg.programCounter = item.parent.GetNextChild(idx)
-    eg.indent = 0
-
-
-class Exception(Exception):
-
-    def __unicode__(self):
-        try:
-            return "\n".join([unicode(arg) for arg in self.args])
-        except UnicodeDecodeError:
-            return "\n".join([str(arg).decode('mbcs') for arg in self.args])
-
-
-class StopException(Exception):
-    pass
-
-
-
-class HiddenAction:
-    pass
-
-
 def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     if parent is None:
         style |= wx.STAY_ON_TOP
@@ -278,6 +200,10 @@ def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     dialog.Destroy()
     return result
 
+def Notify(notification, value=None):
+    if notification in eg.notificationHandlers:
+        for listener in eg.notificationHandlers[notification].listeners:
+            listener(value)
 
 # pylint: disable-msg=W0613
 def RegisterPlugin(
@@ -329,30 +255,92 @@ def RegisterPlugin(
     pass
 # pylint: enable-msg=W0613
 
-eg.RegisterPlugin = RegisterPlugin
+def RestartAsyncore():
+    """
+    Informs the asyncore loop of a new socket to handle.
+    """
+    oldDispatcher = eg.dummyAsyncoreDispatcher
+    dispatcher = asyncore.dispatcher()
+    dispatcher.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+    eg.dummyAsyncoreDispatcher = dispatcher
+    if oldDispatcher:
+        oldDispatcher.close()
+    if oldDispatcher is None:
+        # create a global asyncore loop thread
+        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
+
+def RunProgram():
+    eg.stopExecutionFlag = False
+    del eg.programReturnStack[:]
+    while eg.programCounter is not None:
+        programCounter = eg.programCounter
+        item, idx = programCounter
+        item.Execute()
+        if eg.programCounter == programCounter:
+            # program counter has not changed. Ask the parent for the next
+            # item.
+            if isinstance(item.parent, eg.MacroItem):
+                eg.programCounter = item.parent.GetNextChild(idx)
+            else:
+                eg.programCounter = None
+
+        while eg.programCounter is None and eg.programReturnStack:
+            # we have no next item in this level. So look in the return
+            # stack if any return has to be executed
+            eg.indent -= 2
+            item, idx = eg.programReturnStack.pop()
+            eg.programCounter = item.parent.GetNextChild(idx)
+    eg.indent = 0
+
+def StopMacro(ignoreReturn=False):
+    """
+    Instructs EventGhost to stop executing the current macro after the
+    current action (thus the PythonScript or PythonCommand) has finished.
+    """
+    eg.programCounter = None
+    if ignoreReturn:
+        del eg.programReturnStack[:]
+
+def Unbind(notification, listener):
+    eg.notificationHandlers[notification].listeners.remove(listener)
+
+def Wait(secs, raiseException=True):
+    while secs > 0.0:
+        if eg.stopExecutionFlag:
+            if raiseException:
+                raise eg.StopException("Execution interrupted by the user.")
+            else:
+                return False
+        if secs > 0.1:
+            time.sleep(0.1)
+        else:
+            time.sleep(secs)
+        secs -= 0.1
+    return True
 
 # now assign all the functions above to `eg`
-eg.RestartAsyncore = RestartAsyncore
-eg.Exit = Exit
-eg.Wait = Wait
-eg.HasActiveHandler = HasActiveHandler
 eg.Bind = Bind
-eg.Unbind = Unbind
-eg.Notify = Notify
-eg.StopMacro = StopMacro
 eg.CallWait = CallWait
 eg.DummyFunc = DummyFunc
-eg.RunProgram = RunProgram
 eg.Exception = Exception
-eg.StopException = StopException
+eg.Exit = Exit
+eg.HasActiveHandler = HasActiveHandler
 eg.HiddenAction = HiddenAction
 eg.MessageBox = MessageBox
+eg.Notify = Notify
+eg.RegisterPlugin = RegisterPlugin
+eg.RestartAsyncore = RestartAsyncore
+eg.RunProgram = RunProgram
+eg.StopException = StopException
+eg.StopMacro = StopMacro
+eg.Unbind = Unbind
+eg.Wait = Wait
 
 eg.messageReceiver = eg.MainMessageReceiver()
 eg.app = eg.App()
 
-import Icons # we can't import the Icons module earlier, because wx.App
-             # must exist before
+# we can't import the Icons module earlier, because wx.App must exist
+import Icons  # NOQA
 eg.Icons = Icons
 
 eg.log = eg.Log()
@@ -381,20 +369,19 @@ eg.scheduler = eg.Scheduler()
 eg.TriggerEvent = eg.eventThread.TriggerEvent
 eg.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
 
-from eg.WinApi.SendKeys import SendKeysParser
+from eg.WinApi.SendKeys import SendKeysParser  # NOQA
 eg.SendKeys = SendKeysParser()
 
 setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
 
 eg.taskBarIcon = eg.TaskBarIcon(
-    eg.startupArguments.isMain
-    and not eg.startupArguments.translate
-    and not eg.startupArguments.install
-    and not eg.startupArguments.pluginFile
+    eg.startupArguments.isMain and
+    not eg.startupArguments.translate and
+    not eg.startupArguments.install and
+    not eg.startupArguments.pluginFile
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
 eg.Init = Init
 eg.Init.Init()
-

@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import os
-
+import wx
 from wx.combo import BitmapComboBox
 
+# Local imports
+import eg
 
 class Text(eg.TranslatableStrings):
     Title = "Options"
@@ -47,32 +47,11 @@ class Text(eg.TranslatableStrings):
     refreshEnv = "Always refresh environment before launching programs"
 
 
-
 class OptionsDialog(eg.TaskletDialog):
     instance = None
 
-    def UpdateFont(self, val):
-        font = eg.document.frame.treeCtrl.GetFont()
-        if val:
-            font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
-        wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)
-
-
-    @eg.LogItWithReturn
-    def OnClose(self, event):
-        self.UpdateFont(self.useFixedFont)
-        self.DispatchEvent(event, wx.ID_CANCEL)
-
-
-    @eg.LogItWithReturn
-    def OnCancel(self, event):
-        self.UpdateFont(self.useFixedFont)
-        self.DispatchEvent(event, wx.ID_CANCEL)
-
-
     @eg.LogItWithReturn
     def Configure(self, parent=None):
-
         if OptionsDialog.instance:
             OptionsDialog.instance.Raise()
             return
@@ -120,6 +99,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.propResize,
             text.propResize
         )
+
         def OnFixedFontBox(evt):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
@@ -127,6 +107,7 @@ class OptionsDialog(eg.TaskletDialog):
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
         checkPreReleaseCtrl.Enable(config.checkUpdate)
+
         def OnCheckUpdateCheckBox(event):
             checkPreReleaseCtrl.Enable(event.IsChecked())
         checkUpdateCtrl.Bind(wx.EVT_CHECKBOX, OnCheckUpdateCheckBox)
@@ -137,6 +118,7 @@ class OptionsDialog(eg.TaskletDialog):
             min=4,
             max=999
         )
+
         def OnMemoryLimitCheckBox(dummyEvent):
             memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
         memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
@@ -173,7 +155,7 @@ class OptionsDialog(eg.TaskletDialog):
         memoryLimitSizer = eg.HBoxSizer(
             (memoryLimitCtrl, 0, flags),
             (memoryLimitSpinCtrl, 0, flags),
-            (page1.StaticText(text.limitMemory2), 0, flags|wx.LEFT, 2),
+            (page1.StaticText(text.limitMemory2), 0, flags | wx.LEFT, 2),
         )
 
         startGroupSizer = wx.GridSizer(cols=1, vgap=2, hgap=2)
@@ -193,20 +175,20 @@ class OptionsDialog(eg.TaskletDialog):
 
         langGroupSizer = page1.VStaticBoxSizer(
             text.LanguageGroup,
-            (languageChoice, 0, wx.LEFT|wx.RIGHT, 18),
+            (languageChoice, 0, wx.LEFT | wx.RIGHT, 18),
         )
 
         page1Sizer = eg.VBoxSizer(
             ((15, 7), 1),
-            (startGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
+            (startGroupSizer, 0, wx.EXPAND | wx.ALL, 5),
             ((15, 7), 1),
-            (langGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
+            (langGroupSizer, 0, wx.EXPAND | wx.ALL, 5),
         )
         page1.SetSizer(page1Sizer)
         page1.SetAutoLayout(True)
 
         sizer = eg.VBoxSizer(
-            (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
+            (notebook, 1, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, 5),
             (buttonRow.sizer, 0, wx.EXPAND),
         )
         self.SetSizerAndFit(sizer)
@@ -235,16 +217,30 @@ class OptionsDialog(eg.TaskletDialog):
             wx.CallAfter(self.ShowLanguageWarning)
         OptionsDialog.instance = None
 
+    @eg.LogItWithReturn
+    def OnCancel(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
+
+    @eg.LogItWithReturn
+    def OnClose(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
 
     def ShowLanguageWarning(self):
         dlg = wx.MessageDialog(
             eg.document.frame,
             Text.confirmRestart,
             "",
-            wx.YES_NO|wx.ICON_QUESTION
+            wx.YES_NO | wx.ICON_QUESTION
         )
         res = dlg.ShowModal()
         dlg.Destroy()
         if res == wx.ID_YES:
             eg.app.Restart()
 
+    def UpdateFont(self, val):
+        font = eg.document.frame.treeCtrl.GetFont()
+        if val:
+            font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
+        wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)

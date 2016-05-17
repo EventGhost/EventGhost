@@ -17,22 +17,18 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 from threading import Thread, Lock
+
+# Local imports
 from eg.WinApi.Dynamic import (
     CreateEvent,
-    SetEvent,
-    WaitForSingleObject,
     INFINITE,
+    SetEvent,
+    WAIT_OBJECT_0,
     WAIT_TIMEOUT,
-    WAIT_OBJECT_0
+    WaitForSingleObject,
 )
 
-
-class StopMessage(object):
-    pass
-
-
 class ResettableTimer(Thread):
-
     def __init__(self, callback):
         Thread.__init__(self, target=self.ThreadLoop)
         self.timeout = INFINITE
@@ -40,11 +36,6 @@ class ResettableTimer(Thread):
         self.callback = callback
         self.event = CreateEvent(None, 0, 0, None)
         self.start()
-
-
-    def Stop(self):
-        self.Reset(StopMessage)
-
 
     def Reset(self, milliseconds):
         self.lock.acquire()
@@ -54,6 +45,8 @@ class ResettableTimer(Thread):
         SetEvent(self.event)
         self.lock.release()
 
+    def Stop(self):
+        self.Reset(StopMessage)
 
     def ThreadLoop(self):
         timeout = INFINITE
@@ -70,3 +63,6 @@ class ResettableTimer(Thread):
                     break
         self.callback = None
 
+
+class StopMessage(object):
+    pass

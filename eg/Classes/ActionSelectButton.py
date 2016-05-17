@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class ActionSelectButton(wx.Window):
-
     def __init__(self, parent, label, title, mesg, treeLink=None):
         if treeLink is None:
             treeLink = eg.TreeLink(eg.Utils.GetTopLevelWindow(parent).treeItem)
@@ -38,22 +38,16 @@ class ActionSelectButton(wx.Window):
         self.button = wx.Button(self, -1, label)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.textBox, 1, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.textBox, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(self.button, 0, wx.LEFT, 5)
         self.SetSizer(sizer)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.Layout()
 
-
-    def OnSetFocus(self, dummyEvent):
-        self.button.SetFocus()
-
-
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
+    def GetValue(self):
+        self.treeLink.SetTarget(self.action)
+        return self.treeLink
 
     @eg.AsTasklet
     def OnButton(self, dummyEvent):
@@ -73,8 +67,9 @@ class ActionSelectButton(wx.Window):
                 wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId())
             )
 
+    def OnSetFocus(self, dummyEvent):
+        self.button.SetFocus()
 
-    def GetValue(self):
-        self.treeLink.SetTarget(self.action)
-        return self.treeLink
-
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()

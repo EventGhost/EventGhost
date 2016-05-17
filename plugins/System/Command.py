@@ -16,36 +16,29 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
-from threading import Thread
-from subprocess import STARTUPINFO, STARTF_USESHOWWINDOW, PIPE, Popen
-from eg.WinApi import IsWin64
-from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
-from eg.WinApi.Dynamic import (
-    sizeof, byref, WaitForSingleObject, FormatError,
-    CloseHandle, INFINITE, GetExitCodeProcess, DWORD,
-    SHELLEXECUTEINFO, SEE_MASK_NOCLOSEPROCESS, windll
-)
-from time import time as ttime
 from codecs import open as code_open
 from os import devnull, remove
 from os.path import join
+from subprocess import PIPE, Popen, STARTF_USESHOWWINDOW, STARTUPINFO
+from threading import Thread
+from time import time as ttime
+from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
 
-def popen(cmd, si):
-    return Popen(
-        'cmd /C %s' % cmd,
-        stdout = PIPE,
-        stderr = open(devnull),
-        startupinfo = si,
-        shell = False
-    )
-
+# Local imports
+import eg
+from eg.WinApi import IsWin64
+from eg.WinApi.Dynamic import (
+    byref, CloseHandle, DWORD, FormatError, GetExitCodeProcess, INFINITE,
+    SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFO, sizeof, WaitForSingleObject,
+    windll,
+)
 
 class Command(eg.ActionBase):
-    name = "Windows Command"
-    description = "Executes a single windows Command line statement."
+    name = "Run Command"
+    description = "Runs a Windows command-line statement."
     iconFile = "icons/Execute"
+
     class text:
         Command = "Command Line:"
         waitCheckbox = "Wait until command is terminated before proceeding"
@@ -57,6 +50,44 @@ class Command(eg.ActionBase):
         payload = "Use result as payload"
         runAsAdminCheckbox = "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
 
+    class TriggerEvent(Thread):
+        def __init__(self, processInformation, suffix, prefix, filename, cp, pld):
+            Thread.__init__(self)
+            self.processInformation = processInformation
+            self.suffix = suffix
+            self.prefix = prefix
+            self.filename = filename
+            self.cp = cp
+            self.pld = pld
+
+        def run(self):
+            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                self.processInformation.hProcess,
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            CloseHandle(self.processInformation.hProcess)
+            if hasattr(self.processInformation, "hThread"):
+                CloseHandle(self.processInformation.hThread)
+            if self.pld:
+                try:
+                    data = code_open(self.filename, 'r', self.cp)
+                    lines = data.readlines()
+                    returnValue = "".join(lines)
+                    data.close()
+                    remove(self.filename)
+                except:
+                    returnValue = ""
+
+                eg.TriggerEvent(
+                    self.suffix,
+                    prefix = self.prefix,
+                    payload = returnValue.rstrip()
+                )
+            else:
+                eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
     def __call__(
         self,
@@ -88,7 +119,7 @@ class Command(eg.ActionBase):
         if waitForCompletion or triggerEvent:
             si = STARTUPINFO()
             si.dwFlags |= STARTF_USESHOWWINDOW
-            proc = popen("chcp", si) #DOS console codepage
+            proc = popen("chcp", si)  # DOS console codepage
             data = proc.communicate()[0]
             if not proc.returncode:
                 cp = "cp" + data.split()[-1].replace(".", "")
@@ -146,53 +177,6 @@ class Command(eg.ActionBase):
             te.start()
         else:
             CloseHandle(processInformation.hProcess)
-
-
-
-    class TriggerEvent(Thread):
-
-        def __init__(self, processInformation, suffix, prefix, filename, cp, pld):
-            Thread.__init__(self)
-            self.processInformation = processInformation
-            self.suffix = suffix
-            self.prefix = prefix
-            self.filename = filename
-            self.cp = cp
-            self.pld = pld
-
-        def run(self):
-            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
-            exitCode = DWORD()
-            if not GetExitCodeProcess(
-                self.processInformation.hProcess,
-                byref(exitCode)
-            ):
-                raise self.Exception(FormatError())
-            CloseHandle(self.processInformation.hProcess)
-            if hasattr(self.processInformation, "hThread"):
-                CloseHandle(self.processInformation.hThread)
-            if self.pld:
-                try:
-                    data = code_open(self.filename, 'r', self.cp)
-                    lines = data.readlines()
-                    returnValue = "".join(lines)
-                    data.close()
-                    remove(self.filename)
-                except:
-                    returnValue = ""
-
-                eg.TriggerEvent(
-                    self.suffix,
-                    prefix = self.prefix,
-                    payload = returnValue.rstrip()
-                )
-            else:
-                eg.TriggerEvent(self.suffix, prefix = self.prefix)
-
-
-    def GetLabel(self, command = '', *dummyArgs):
-        return "%s: %s" % (self.name, command)
-
 
     def Configure(
         self,
@@ -298,3 +282,15 @@ class Command(eg.ActionBase):
                 runAsAdminCheckBox.GetValue()
             )
 
+    def GetLabel(self, command = '', *dummyArgs):
+        return "%s: %s" % (self.name, command)
+
+
+def popen(cmd, si):
+    return Popen(
+        'cmd /C %s' % cmd,
+        stdout = PIPE,
+        stderr = open(devnull),
+        startupinfo = si,
+        shell = False
+    )

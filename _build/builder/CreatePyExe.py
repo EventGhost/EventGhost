@@ -20,22 +20,23 @@
 Create py.exe and pyw.exe for EventGhost
 """
 
-from distutils.core import setup
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import py2exe
-import tempfile
 import shutil
 import sys
-from os.path import join, exists
+import tempfile
+import warnings
+from distutils.core import setup
+from os.path import exists, join
 
+# Local imports
 import builder
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import py2exe  # NOQA
 
 PYVERSION = "%d%d" % sys.version_info[:2]
 PY_BASE_NAME = "py%s" % PYVERSION
 PYW_BASE_NAME = "pyw%s" % PYVERSION
-
 
 class CreatePyExe(builder.Task):
     description = "Build interpreters (py.exe, pyw.exe)"
@@ -89,4 +90,3 @@ class CreatePyExe(builder.Task):
             buildSetup.sourceDir
         )
         shutil.rmtree(tmpDir)
-

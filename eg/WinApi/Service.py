@@ -16,61 +16,51 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 from Dynamic import (
     byref,
-    sizeof,
     cast,
-    WinError,
-    DWORD,
-    LPBYTE,
-    OpenSCManager,
-    SC_MANAGER_ALL_ACCESS,
-    CreateService,
-    SERVICE_ALL_ACCESS,
-    SERVICE_WIN32_OWN_PROCESS,
-    SERVICE_DEMAND_START,
-    SERVICE_AUTO_START,
-    SERVICE_ERROR_NORMAL,
+    ChangeServiceConfig2,
     CloseServiceHandle,
-    FormatError,
-    DELETE,
-    OpenService,
-    DeleteService,
-    QueryServiceStatusEx,
-    SC_STATUS_PROCESS_INFO,
-    SERVICE_STATUS_PROCESS,
-    SERVICE_QUERY_STATUS,
-    SERVICE_STOPPED,
-    SERVICE_STOP_PENDING,
-    SERVICE_START_PENDING,
-    SERVICE_RUNNING,
-    SERVICE_CONTROL_STOP,
-    SERVICE_ACTIVE,
-    GetTickCount,
-    Sleep,
-    StartService,
     ControlService,
-    LPSERVICE_STATUS,
+    CreateService,
+    DELETE,
+    DeleteService,
+    DWORD,
     EnumDependentServices,
     ERROR_MORE_DATA,
-    GetLastError,
-    ChangeServiceConfig2,
-    SERVICE_DESCRIPTION,
-    SERVICE_CONFIG_DESCRIPTION,
-    SERVICE_CHANGE_CONFIG,
+    FormatError,
     GetExitCodeProcess,
+    GetLastError,
+    GetTickCount,
+    LPBYTE,
+    LPSERVICE_STATUS,
+    OpenSCManager,
+    OpenService,
+    QueryServiceStatusEx,
+    SC_MANAGER_ALL_ACCESS,
+    SC_STATUS_PROCESS_INFO,
+    SERVICE_ACTIVE,
+    SERVICE_ALL_ACCESS,
+    SERVICE_AUTO_START,
+    SERVICE_CHANGE_CONFIG,
+    SERVICE_CONFIG_DESCRIPTION,
+    SERVICE_CONTROL_STOP,
+    SERVICE_DEMAND_START,
+    SERVICE_DESCRIPTION,
+    SERVICE_ERROR_NORMAL,
+    SERVICE_QUERY_STATUS,
+    SERVICE_RUNNING,
+    SERVICE_START_PENDING,
+    SERVICE_STATUS_PROCESS,
+    SERVICE_STOP_PENDING,
+    SERVICE_STOPPED,
+    SERVICE_WIN32_OWN_PROCESS,
+    sizeof,
+    Sleep,
+    StartService,
+    WinError,
 )
-
-
-class TimeOutError(Exception):
-
-    def __init__(self):
-        Exception.__init__(self)
-
-    def __str__(self):
-        return "Timeout in waiting for service."
-
-
 
 class Service(object):
     schService = None
@@ -80,6 +70,11 @@ class Service(object):
         self.serviceName = serviceName
         self.ssStatus = SERVICE_STATUS_PROCESS()
 
+    def __del__(self):
+        if self.schService:
+            CloseServiceHandle(self.schService)
+        if self.schSCManager:
+            CloseServiceHandle(self.schSCManager)
 
     def GetServiceControlManager(self):
         if self.schSCManager:
@@ -94,7 +89,6 @@ class Service(object):
             raise WinError()
         self.schSCManager = schSCManager
 
-
     def GetServiceHandle(self):
         if self.schService:
             return
@@ -104,22 +98,22 @@ class Service(object):
             self.schSCManager,       # SCM database
             self.serviceName,        # name of service
             SERVICE_ALL_ACCESS       # need delete access
-       )
+        )
         if not self.schService:
             raise WinError()
 
-
-    def SetDescription(self, description):
-        self.GetServiceHandle()
-        serviceDescription = SERVICE_DESCRIPTION()
-        serviceDescription.lpDescription = description
-        if not ChangeServiceConfig2(
-            self.schService, # handle to service
-            SERVICE_CONFIG_DESCRIPTION, # change: description
-            byref(serviceDescription) # new description
-        ):
+    def GetStatus(self):
+        dwBytesNeeded = DWORD()
+        result = QueryServiceStatusEx(
+            self.schService,  # handle to service
+            SC_STATUS_PROCESS_INFO,  # information level
+            cast(byref(self.ssStatus), LPBYTE),  # address of structure
+            sizeof(self.ssStatus),  # size of structure
+            byref(dwBytesNeeded)  # size needed if buffer is too small
+        )
+        if not result:
             raise WinError()
-
+        return self.ssStatus
 
     def Install(self, path):
         """
@@ -128,19 +122,19 @@ class Service(object):
         self.GetServiceControlManager()
         # Create the service
         schService = CreateService(
-            self.schSCManager,              # SCM database
-            self.serviceName,               # name of service
-            self.serviceName,               # service name to display
-            SERVICE_ALL_ACCESS,        # desired access
-            SERVICE_WIN32_OWN_PROCESS, # service type
-            SERVICE_AUTO_START,        # start type
-            SERVICE_ERROR_NORMAL,      # error control type
-            path,                    # path to service's binary
-            None,                      # no load ordering group
-            None,                      # no tag identifier
-            None,                      # no dependencies
-            None,                      # LocalSystem account
-            None                       # no password
+            self.schSCManager,          # SCM database
+            self.serviceName,           # name of service
+            self.serviceName,           # service name to display
+            SERVICE_ALL_ACCESS,         # desired access
+            SERVICE_WIN32_OWN_PROCESS,  # service type
+            SERVICE_AUTO_START,         # start type
+            SERVICE_ERROR_NORMAL,       # error control type
+            path,                       # path to service's binary
+            None,                       # no load ordering group
+            None,                       # no tag identifier
+            None,                       # no dependencies
+            None,                       # LocalSystem account
+            None                        # no password
         )
         if not schService:
             raise WinError()
@@ -148,29 +142,16 @@ class Service(object):
             #print ("Service installed successfully")
             CloseServiceHandle(schService)
 
-
-    def Uninstall(self):
-        """
-        Uninstalls the service.
-        """
+    def SetDescription(self, description):
         self.GetServiceHandle()
-        if not DeleteService(self.schService):
+        serviceDescription = SERVICE_DESCRIPTION()
+        serviceDescription.lpDescription = description
+        if not ChangeServiceConfig2(
+            self.schService,  # handle to service
+            SERVICE_CONFIG_DESCRIPTION,  # change: description
+            byref(serviceDescription)  # new description
+        ):
             raise WinError()
-
-
-    def GetStatus(self):
-        dwBytesNeeded = DWORD()
-        result = QueryServiceStatusEx(
-            self.schService, # handle to service
-            SC_STATUS_PROCESS_INFO, # information level
-            cast(byref(self.ssStatus), LPBYTE), # address of structure
-            sizeof(self.ssStatus), # size of structure
-            byref(dwBytesNeeded) # size needed if buffer is too small
-        )
-        if not result:
-            raise WinError()
-        return self.ssStatus
-
 
     def Start(self):
         """
@@ -182,8 +163,8 @@ class Service(object):
         # Check if the service is already running. It would be possible to stop
         # the service here, but for simplicity this example just returns.
         if (
-            ssStatus.dwCurrentState != SERVICE_STOPPED
-            and ssStatus.dwCurrentState != SERVICE_STOP_PENDING
+            ssStatus.dwCurrentState != SERVICE_STOPPED and
+            ssStatus.dwCurrentState != SERVICE_STOP_PENDING
         ):
             return
 
@@ -241,14 +222,13 @@ class Service(object):
 
         if ssStatus.dwCurrentState == SERVICE_RUNNING:
             return True
-        else :
+        else:
             print "Service not started."
             print "  Current State:", ssStatus.dwCurrentState
             print "  Exit Code:", ssStatus.dwWin32ExitCode
             print "  Check Point:", ssStatus.dwCheckPoint
             print "  Wait Hint:", ssStatus.dwWaitHint
             raise Exception("Service not started.")
-
 
     def Stop(self):
         """
@@ -293,7 +273,6 @@ class Service(object):
                 break
             if GetTickCount() - dwStartTime > dwTimeout:
                 raise TimeOutError()
-
 
 #    def StopDependentServices(self):
 #        # Pass a zero-length buffer to get the required buffer size.
@@ -356,10 +335,18 @@ class Service(object):
 #                CloseServiceHandle(hDepService)
 #        return True
 
+    def Uninstall(self):
+        """
+        Uninstalls the service.
+        """
+        self.GetServiceHandle()
+        if not DeleteService(self.schService):
+            raise WinError()
 
-    def __del__(self):
-        if self.schService:
-            CloseServiceHandle(self.schService)
-        if self.schSCManager:
-            CloseServiceHandle(self.schSCManager)
 
+class TimeOutError(Exception):
+    def __init__(self):
+        Exception.__init__(self)
+
+    def __str__(self):
+        return "Timeout in waiting for service."

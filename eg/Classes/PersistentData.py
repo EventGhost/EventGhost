@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 
-
 class PersistentDataMeta(type):
-
     def __new__(mcs, name, bases, dct):
         cls = type.__new__(mcs, name, bases, dct)
         if len(bases):
@@ -33,7 +32,5 @@ class PersistentDataMeta(type):
         return cls
 
 
-
 class PersistentData:
     __metaclass__ = PersistentDataMeta
-

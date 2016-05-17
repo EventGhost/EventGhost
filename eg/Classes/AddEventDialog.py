@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 gLastSelected = None
-
 
 class Config(eg.PersistentData):
     position = None
@@ -29,28 +29,12 @@ class Config(eg.PersistentData):
     splitPosition = 210
 
 
-
 class Text(eg.TranslatableStrings):
     title = "Select an event to add..."
     descriptionLabel = "Description"
 
 
-
-class EventInfo:
-    icon = eg.Icons.EVENT_ICON
-
-    def __init__(self, name, description, info):
-        self.name = name
-        if description :
-            self.description = description
-        else :
-            self.description = ""
-        self.info = info
-
-
-
 class AddEventDialog(eg.TaskletDialog):
-
     @eg.LogItWithReturn
     def Configure(self, parent):
         global gLastSelected
@@ -127,7 +111,6 @@ class AddEventDialog(eg.TaskletDialog):
         Config.position = self.GetPositionTuple()
         Config.splitPosition = splitterWindow.GetSashPosition()
 
-
     def FillTree(self):
         tree = self.tree
         for plugin in eg.pluginList:
@@ -144,50 +127,6 @@ class AddEventDialog(eg.TaskletDialog):
                 tree.SetPyData(tmp, data)
                 tree.SetItemImage(tmp, data.icon.index)
 
-
-    def ReloadTree(self):
-        tree = self.tree
-        tree.DeleteAllItems()
-        self.root = tree.AddRoot("Functions")
-        self.lastSelectedTreeItem = None
-        self.FillTree()
-
-        if self.lastSelectedTreeItem:
-            item = self.lastSelectedTreeItem
-            while True:
-                item = tree.GetItemParent(item)
-                if item == self.root:
-                    break
-                tree.EnsureVisible(item)
-            tree.SelectItem(self.lastSelectedTreeItem)
-
-
-    def OnSelectionChanged(self, event):
-        item = event.GetItem()
-        if not item.IsOk():
-            return
-        data = self.tree.GetPyData(item)
-        if isinstance(data, EventInfo):
-            self.resultData = data.info.eventPrefix + "." + data.name
-            self.buttonRow.okButton.Enable(True)
-            path = data.info.path
-        else:
-            self.resultData = None
-            self.buttonRow.okButton.Enable(False)
-            path = data.path
-        self.nameText.SetLabel(data.name)
-        self.docText.SetBasePath(path)
-        self.docText.SetPage(data.description)
-
-
-    def OnCollapsed(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = False
-
-
-    def OnExpanded(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = True
-
-
     def OnActivated(self, event):
         item = self.tree.GetSelection()
         data = self.tree.GetPyData(item)
@@ -196,6 +135,11 @@ class AddEventDialog(eg.TaskletDialog):
         else:
             event.Skip()
 
+    def OnCollapsed(self, event):
+        self.tree.GetPyData(event.GetItem()).expanded = False
+
+    def OnExpanded(self, event):
+        self.tree.GetPyData(event.GetItem()).expanded = True
 
     @eg.LogItWithReturn
     def OnStartDrag(self, event):
@@ -214,3 +158,47 @@ class AddEventDialog(eg.TaskletDialog):
         if result == wx.DragMove:
             self.Refresh()
 
+    def OnSelectionChanged(self, event):
+        item = event.GetItem()
+        if not item.IsOk():
+            return
+        data = self.tree.GetPyData(item)
+        if isinstance(data, EventInfo):
+            self.resultData = data.info.eventPrefix + "." + data.name
+            self.buttonRow.okButton.Enable(True)
+            path = data.info.path
+        else:
+            self.resultData = None
+            self.buttonRow.okButton.Enable(False)
+            path = data.path
+        self.nameText.SetLabel(data.name)
+        self.docText.SetBasePath(path)
+        self.docText.SetPage(data.description)
+
+    def ReloadTree(self):
+        tree = self.tree
+        tree.DeleteAllItems()
+        self.root = tree.AddRoot("Functions")
+        self.lastSelectedTreeItem = None
+        self.FillTree()
+
+        if self.lastSelectedTreeItem:
+            item = self.lastSelectedTreeItem
+            while True:
+                item = tree.GetItemParent(item)
+                if item == self.root:
+                    break
+                tree.EnsureVisible(item)
+            tree.SelectItem(self.lastSelectedTreeItem)
+
+
+class EventInfo:
+    icon = eg.Icons.EVENT_ICON
+
+    def __init__(self, name, description, info):
+        self.name = name
+        if description:
+            self.description = description
+        else:
+            self.description = ""
+        self.info = info

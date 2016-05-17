@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Utils import SetDefault
 import os
-import sys
 
+# Local imports
+import eg
+from eg.Utils import SetDefault
 
 class Default:
     class General:
@@ -81,7 +82,6 @@ class Default:
         )
         smartSpinTooltip = "Use the right mouse button\nto get the context menu !"
 
-
     class Error:
         FileNotFound = "File \"%s\" couldn't be found."
         InAction = 'Error in Action: "%s"'
@@ -93,7 +93,6 @@ class Default:
     class Plugin:
         pass
 
-
     class MainFrame:
         onlyLogAssigned = "&Log only assigned and activated events"
         onlyLogAssignedToolTip = (
@@ -102,6 +101,7 @@ class Default:
             "this, while you want to assign new events."
         )
         scrollLog = "Scroll log"
+
         class TaskBarMenu:
             Show = "&Show EventGhost"
             Hide = "&Hide EventGhost"
@@ -219,4 +219,3 @@ def Text(language):
         pass
     SetDefault(Translation, Default)
     return Translation
-

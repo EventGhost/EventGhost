@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class SmartSpinNumCtrl(wx.Window):
     """
@@ -60,18 +61,6 @@ class SmartSpinNumCtrl(wx.Window):
         self.ctrl = self.CreateCtrl(int(not isinstance(value, (int, float))))
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
-
-    def UpdateWidth(self, ctrl):
-        w = (self.tW, self.nW)[int(isinstance(ctrl, eg.Classes.SpinNumCtrl.SpinNumCtrl))]
-        parentSizer = self.GetContainingSizer()
-        if parentSizer:
-            parentSizer.SetItemMinSize(self,w, -1)
-            parentSizer.Layout()
-        else:
-            ctrl.SetMinSize((w, -1))
-            ctrl.SetSize((w, -1))
-
-
     def CreateCtrl(self, ctrlType, init = True):
         szr = self.sizer
         szr.Clear(True)
@@ -95,16 +84,53 @@ class SmartSpinNumCtrl(wx.Window):
             ctrl.Bind(wx.EVT_RIGHT_UP, self.OnRclick)
             ctrl.SetToolTipString(eg.text.General.smartSpinTooltip)
             if not init:
-                ctrl.SetValue(("","{eg.result}","{eg.event.payload}","")[ctrlType])
+                ctrl.SetValue(("", "{eg.result}", "{eg.event.payload}", "")[ctrlType])
         szr.Add(ctrl, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
         szr.Layout()
         self.UpdateWidth(ctrl)
         return ctrl
 
+    def GetSize(self):
+        return self.ctrl.GetSize()
 
     def GetValue(self):
         return self.ctrl.GetValue()
 
+    def OnMenu(self, evt):
+        self.ctrl = self.CreateCtrl(self.popups.index(evt.GetId()), False)
+
+    def OnRclick(self, evt):
+        if not hasattr(self, "popupId0"):
+            self.popupId0 = wx.NewId()
+            self.popupId1 = wx.NewId()
+            self.popupId2 = wx.NewId()
+            self.popupId3 = wx.NewId()
+            self.popups = (
+                self.popupId0,
+                self.popupId1,
+                self.popupId2,
+                self.popupId3
+            )
+            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId0)
+            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId1)
+            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId2)
+            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId3)
+        menu = wx.Menu()
+        for i in range(4):
+            menu.Append(self.popups[i], eg.text.General.smartSpinMenu[i])
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()
+
+    def SetSize(self, size):
+        w = size[0]
+        if w != -1:
+            self.tW = w
+            self.nW = w
+        self.UpdateWidth(self.ctrl)
 
     def SetValue(self, value):
         if isinstance(self.ctrl, eg.Classes.SpinNumCtrl.SpinNumCtrl):
@@ -121,47 +147,12 @@ class SmartSpinNumCtrl(wx.Window):
         wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value = value))
         return res
 
-
-    def GetSize(self):
-        return self.ctrl.GetSize()
-
-
-    def SetSize(self, size):
-        w = size[0]
-        if w != -1:
-            self.tW = w
-            self.nW = w
-        self.UpdateWidth(self.ctrl)
-
-
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
-
-    def OnMenu(self, evt):
-        self.ctrl = self.CreateCtrl(self.popups.index(evt.GetId()), False)
-
-
-    def OnRclick(self, evt):
-        if not hasattr(self, "popupId0"):
-            self.popupId0 = wx.NewId()
-            self.popupId1 = wx.NewId()
-            self.popupId2 = wx.NewId()
-            self.popupId3 = wx.NewId()
-            self.popups=(
-                self.popupId0,
-                self.popupId1,
-                self.popupId2,
-                self.popupId3
-            )
-            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId0)
-            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId1)
-            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId2)
-            self.Bind(wx.EVT_MENU, self.OnMenu, id=self.popupId3)
-        menu = wx.Menu()
-        for i in range(4):
-            menu.Append(self.popups[i], eg.text.General.smartSpinMenu[i])
-        self.PopupMenu(menu)
-        menu.Destroy()
-
+    def UpdateWidth(self, ctrl):
+        w = (self.tW, self.nW)[int(isinstance(ctrl, eg.Classes.SpinNumCtrl.SpinNumCtrl))]
+        parentSizer = self.GetContainingSizer()
+        if parentSizer:
+            parentSizer.SetItemMinSize(self, w, -1)
+            parentSizer.Layout()
+        else:
+            ctrl.SetMinSize((w, -1))
+            ctrl.SetSize((w, -1))

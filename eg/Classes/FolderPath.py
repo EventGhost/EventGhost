@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from ctypes import create_unicode_buffer, windll, HRESULT, c_int
-from ctypes.wintypes import HWND, HANDLE, DWORD, LPWSTR
+from ctypes import c_int, create_unicode_buffer, HRESULT, windll
+from ctypes.wintypes import DWORD, HANDLE, HWND, LPWSTR
 
 GetTempPathW = windll.kernel32.GetTempPathW
 GetTempPathW.restype = DWORD
@@ -82,7 +82,6 @@ BUFFER = create_unicode_buffer(MAX_PATH)
 GetTempPathW(MAX_PATH, BUFFER)
 temporaryFiles = BUFFER.value[:-1]
 
-
 class FolderPath(object):
     __ALL__ = CSIDL.keys() + ["TemporaryFiles"]
     TemporaryFiles = temporaryFiles
@@ -92,7 +91,7 @@ class FolderPath(object):
         csidl = CSIDL[name]
         SHGetFolderPathW(
             0,
-            csidl|CSIDL_FLAG_DONT_VERIFY,
+            csidl | CSIDL_FLAG_DONT_VERIFY,
             0,
             SHGFP_TYPE_CURRENT,
             BUFFER
@@ -100,4 +99,3 @@ class FolderPath(object):
         path = BUFFER.value
         self.__dict__[name] = path
         return path
-

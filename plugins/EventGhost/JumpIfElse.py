@@ -16,18 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class JumpIfElse(eg.ActionBase):
-    name = 'Jump with "Else" option'
+    name = 'Jump with "Else"'
     description = (
         "Jumps to another macro, if the specified condition is "
         "fulfilled (with the option to specify the destination "
         "also for the second case)."
     )
     iconFile = "icons/NewJumpIf"
+
     class text:
         text1 = "If:"
         text2 = "Jump to:"
@@ -48,13 +50,12 @@ class JumpIfElse(eg.ActionBase):
             "always"
         ]
         labels = [
-            'If successful jump to "%s"',
-            'If unsuccessful jump to "%s"',
+            'If successful, jump to "%s"',
+            'If unsuccessful, jump to "%s"',
             'Jump to "%s"',
             ' and return',
             ' else jump to "%s"'
         ]
-
 
     def __call__(
         self,
@@ -79,29 +80,6 @@ class JumpIfElse(eg.ActionBase):
             eg.indent += 1
             eg.programCounter = (nextItem, nextIndex)
         return eg.result
-
-
-    def GetLabel(
-        self,
-        link = None,
-        kind = 0,
-        gosub = False,
-        link2 = None,
-        gosub2 = False
-    ):
-        labels = self.text.labels
-        target = link.target if link is not None else None
-        target2 = link2.target if link2 is not None else None
-        res =  (
-            labels[kind] % (target.name if target is not None else "None")
-        ) if link is not None else ""
-        res += labels[3] if link is not None and gosub else ""
-        res += (
-            labels[4] % (target2.name if target2 is not None else "None")
-        ) if link2 is not None else ""
-        res += labels[3] if link2 is not None and gosub2 else ""
-        return res if res else self.name
-
 
     def Configure(
         self,
@@ -181,3 +159,23 @@ class JumpIfElse(eg.ActionBase):
                 gosubCtrl2.GetValue()
             )
 
+    def GetLabel(
+        self,
+        link = None,
+        kind = 0,
+        gosub = False,
+        link2 = None,
+        gosub2 = False
+    ):
+        labels = self.text.labels
+        target = link.target if link is not None else None
+        target2 = link2.target if link2 is not None else None
+        res = (
+            labels[kind] % (target.name if target is not None else "None")
+        ) if link is not None else ""
+        res += labels[3] if link is not None and gosub else ""
+        res += (
+            labels[4] % (target2.name if target2 is not None else "None")
+        ) if link2 is not None else ""
+        res += labels[3] if link2 is not None and gosub2 else ""
+        return res if res else self.name

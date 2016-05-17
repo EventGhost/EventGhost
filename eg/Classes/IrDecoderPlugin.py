@@ -16,15 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 
 class IrDecoderPlugin(eg.PluginBase):
-
     def __init__(self, sampleTime):
         eg.PluginBase.__init__(self)
         self.irDecoder = eg.IrDecoder(self, sampleTime)
 
-
     def Map(self, what, to, timeout=None, repeatCode=None):
         self.irDecoder.mapTable[what] = (to, timeout, repeatCode)
-

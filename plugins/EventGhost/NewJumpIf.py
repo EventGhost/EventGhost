@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
+# Local imports
+import eg
 
 class NewJumpIf(eg.ActionBase):
     name = "Jump"
@@ -27,6 +28,7 @@ class NewJumpIf(eg.ActionBase):
         "fulfilled."
     )
     iconFile = "icons/NewJumpIf"
+
     class text:
         text1 = "If:"
         text2 = "Jump to:"
@@ -42,11 +44,11 @@ class NewJumpIf(eg.ActionBase):
             "always"
         ]
         labels = [
-            'If successful jump to "%s"',
-            'If unsuccessful jump to "%s"',
+            'If successful, jump to "%s"',
+            'If unsuccessful, jump to "%s"',
             'Jump to "%s"',
-            'If successful jump to "%s" and return',
-            'If unsuccessful jump to "%s" and return',
+            'If successful, jump to "%s" and return',
+            'If unsuccessful, jump to "%s" and return',
             'Jump to "%s" and return'
         ]
 
@@ -59,11 +61,6 @@ class NewJumpIf(eg.ActionBase):
             eg.indent += 1
             eg.programCounter = (nextItem, nextIndex)
         return eg.result
-
-
-    def GetLabel(self, link, kind=0, gosub=False):
-        return self.text.labels[kind + int(gosub) * 3] % link.target.name
-
 
     def Configure(self, link=None, kind=0, gosub=False):
         text = self.text
@@ -99,3 +96,5 @@ class NewJumpIf(eg.ActionBase):
                 gosubCtrl.GetValue()
             )
 
+    def GetLabel(self, link, kind=0, gosub=False):
+        return self.text.labels[kind + int(gosub) * 3] % link.target.name

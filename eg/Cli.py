@@ -20,12 +20,12 @@
 Parses the command line arguments of the program.
 """
 
-import os
-import sys
-import locale
 import ctypes
+import locale
+import os
 import pywintypes
-from os.path import join, dirname, abspath
+import sys
+from os.path import abspath, dirname, join
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -36,7 +36,7 @@ scriptPath = argvIter.next()
 mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 
 # determine the commandline parameters
-import __main__
+import __main__  # NOQA
 class args:
     hideOnStartup = False
     startupEvent = None
@@ -46,7 +46,7 @@ class args:
     translate = False
     configDir = None
     install = False
-    isMain = hasattr(__main__, "isMain") #splitext(basename(scriptPath))[0].lower() == "eventghost"
+    isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
     pluginFile = None
     pluginDir = None
 
@@ -107,7 +107,6 @@ if args.isMain:
                 if err == 0:
                     break
                 time.sleep(0.1)
-
         else:
             path = abspath(arg)
             ext = os.path.splitext(path)[1].lower()
@@ -117,10 +116,10 @@ if args.isMain:
                 args.startupFile = path
 
     if (
-        not args.allowMultiLoad
-        and not args.translate
-        and args.isMain
-        #and not args.pluginFile
+        not args.allowMultiLoad and
+        not args.translate and
+        args.isMain  #and
+        #not args.pluginFile
     ):
         # check if another instance of the program is running
         appMutex = ctypes.windll.kernel32.CreateMutexA(
@@ -153,4 +152,3 @@ if args.isMain:
     # change working directory to program directory
     if args.debugLevel < 1 and args.isMain:
         os.chdir(mainDir)
-

@@ -16,42 +16,31 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 from time import sleep
-from eg.WinApi.Dynamic import (
-    cast,
-    sizeof,
-    create_unicode_buffer,
+import ctypes
+
+# Local imports
+import eg
+from Dynamic import (
     c_char_p,
     c_wchar_p,
-    OpenClipboard,
-    EmptyClipboard,
-    CloseClipboard,
-    GetClipboardData,
-    SetClipboardData,
-    GlobalLock,
-    GlobalUnlock,
-    GlobalAlloc,
+    cast,
     CF_TEXT,
     CF_UNICODETEXT,
+    CloseClipboard,
+    create_unicode_buffer,
+    EmptyClipboard,
+    GetClipboardData,
     GHND,
+    GlobalAlloc,
+    GlobalLock,
+    GlobalUnlock,
+    OpenClipboard,
+    SetClipboardData,
+    sizeof,
 )
-import ctypes
+
 memcpy = ctypes.cdll.msvcrt.memcpy
-
-
-def SafeOpenClipboard():
-    # some programs seem to poll the clipboard and therefore OpenClipboard
-    # returns FALSE. To increase our chances to get the clipboard lock, we
-    # try it ten times with a small delay in-between.
-    i = 0
-    while not OpenClipboard(0):
-        i += 1
-        if i >= 10:
-            return False
-        sleep(0.01)
-    return True
-
 
 def GetClipboardText():
     if not SafeOpenClipboard():
@@ -76,6 +65,17 @@ def GetClipboardText():
     text = text.replace("\r\n", "\n")
     return text
 
+def SafeOpenClipboard():
+    # some programs seem to poll the clipboard and therefore OpenClipboard
+    # returns FALSE. To increase our chances to get the clipboard lock, we
+    # try it ten times with a small delay in-between.
+    i = 0
+    while not OpenClipboard(0):
+        i += 1
+        if i >= 10:
+            return False
+        sleep(0.01)
+    return True
 
 def SetClipboardText(text):
     charBuffer = create_unicode_buffer(text)
@@ -91,4 +91,3 @@ def SetClipboardText(text):
         SetClipboardData(CF_UNICODETEXT, hGlobalMem)
     finally:
         CloseClipboard()
-

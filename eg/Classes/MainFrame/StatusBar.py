@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+
+# Local imports
+import eg
 from eg.Icons import GetInternalBitmap
 
-
 class StatusBar(wx.StatusBar):
-
     def __init__(self, parent):
         wx.StatusBar.__init__(self, parent, -1)
         self.sizeChanged = False
@@ -59,28 +59,35 @@ class StatusBar(wx.StatusBar):
         eg.Bind("ProcessingChange", self.OnProcessingChange)
         self.Reposition()
 
-
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
             pass
-
 
     @eg.LogIt
     def Destroy(self):
         eg.Unbind("ProcessingChange", self.OnProcessingChange)
         return wx.StatusBar.Destroy(self)
 
-
-    def OnSize(self, dummyEvent):
-        self.Reposition()  # for normal size events
-        self.sizeChanged = True
-
+    @eg.LogIt
+    def OnCheckBox(self, dummyEvent):
+        eg.config.onlyLogAssigned = self.checkBox.GetValue()
+        self.SetCheckBoxColour(eg.config.onlyLogAssigned)
 
     def OnIdle(self, dummyEvent):
         if self.sizeChanged:
             self.Reposition()
 
+    def OnProcessingChange(self, state):
+        self.icon.SetBitmap(self.icons[state])
+
+    @eg.LogIt
+    def OnScrollCheckBox(self, dummyEvent):
+        eg.config.scrollLog = self.scrollCheckBox.GetValue()
+
+    def OnSize(self, dummyEvent):
+        self.Reposition()  # for normal size events
+        self.sizeChanged = True
 
     def Reposition(self):
         rect = self.GetFieldRect(1)
@@ -88,25 +95,8 @@ class StatusBar(wx.StatusBar):
         self.icon.SetPosition((rect.x + 5, y))
         self.sizeChanged = False
 
-
     def SetCheckBoxColour(self, value):
         if value:
             self.checkBox.SetForegroundColour((255, 0, 0))
         else:
             self.checkBox.SetForegroundColour(self.checkBoxColour)
-
-
-    @eg.LogIt
-    def OnCheckBox(self, dummyEvent):
-        eg.config.onlyLogAssigned = self.checkBox.GetValue()
-        self.SetCheckBoxColour(eg.config.onlyLogAssigned)
-
-
-    @eg.LogIt
-    def OnScrollCheckBox(self, dummyEvent):
-        eg.config.scrollLog = self.scrollCheckBox.GetValue()
-
-
-    def OnProcessingChange(self, state):
-        self.icon.SetBitmap(self.icons[state])
-

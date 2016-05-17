@@ -16,24 +16,24 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
-import wx
 import keyword
 import re
-from wx.stc import * #pylint: disable-msg=W0614,W0401
+import wx
+from wx.stc import *  #pylint: disable-msg=W0614,W0401
+
+# Local imports
+import eg
 
 FACES = {
     'times': 'Times New Roman',
-    'mono' : 'Courier New',
-    'helv' : 'Arial',
+    'mono': 'Courier New',
+    'helv': 'Arial',
     'other': 'Comic Sans MS',
-    'size' : 10,
+    'size': 10,
     'size2': 8,
 }
 
-
 class PythonEditorCtrl(StyledTextCtrl):
-
     def __init__(
         self,
         parent,
@@ -44,14 +44,13 @@ class PythonEditorCtrl(StyledTextCtrl):
     ):
         StyledTextCtrl.__init__(self, parent, -1, pos, size, style)
         self.SetCodePage(STC_CP_UTF8)
-        StyleSetSpec = self.StyleSetSpec #IGNORE:C0103
+        StyleSetSpec = self.StyleSetSpec  #IGNORE:C0103
 
         self.CmdKeyAssign(ord('B'), STC_SCMOD_CTRL, STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), STC_SCMOD_CTRL, STC_CMD_ZOOMOUT)
 
         # Setup a margin to hold fold markers
-        #self.SetFoldFlags(16)  ### WHAT IS THIS VALUE?
-                                ### WHAT ARE THE OTHER FLAGS?  DOES IT MATTER?
+        #self.SetFoldFlags(16)  # WHAT IS THIS VALUE?
 
         self.Bind(EVT_STC_UPDATEUI, self.OnUpdateUI)
         self.Bind(EVT_STC_MARGINCLICK, self.OnMarginClick)
@@ -85,7 +84,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetKeyWords(0, " ".join(keyword.kwlist))
 
         # Enable folding
-        self.SetProperty("fold", "1" )
+        self.SetProperty("fold", "1")
 
         # Highlight tab/space mixing (shouldn't be any)
         self.SetProperty("tab.timmy.whinge.level", "1")
@@ -100,12 +99,12 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         # Indentation and tab stuff
         self.SetIndentSize(value)
-        self.SetIndentationGuides(True) # Show indent guides
-        self.SetBackSpaceUnIndents(True)# Backspace unindents rather than
-                                        # delete 1 space
-        self.SetTabIndents(True)        # Tab key indents
-        self.SetUseTabs(False)          # Use spaces rather than tabs, or
-                                        # TabTimmy will complain!
+        self.SetIndentationGuides(True)   # Show indent guides
+        self.SetBackSpaceUnIndents(True)  # Backspace unindents rather than
+                                          # delete 1 space
+        self.SetTabIndents(True)          # Tab key indents
+        self.SetUseTabs(False)            # Use spaces rather than tabs, or
+                                          # TabTimmy will complain!
         # White space
         self.SetViewWhiteSpace(False)   # Don't view white space
 
@@ -125,7 +124,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetMarginWidth(2, 12)
 
         # and now set up the fold markers
-        MarkerDefine = self.MarkerDefine #IGNORE:C0103
+        MarkerDefine = self.MarkerDefine  #IGNORE:C0103
         MarkerDefine(
             STC_MARKNUM_FOLDEREND, STC_MARK_BOXPLUSCONNECTED, "white", "black"
         )
@@ -164,18 +163,18 @@ class PythonEditorCtrl(StyledTextCtrl):
         # The rest remains unchanged.
 
         # Line numbers in margin
-        StyleSetSpec(STC_STYLE_LINENUMBER,'fore:#000000,back:#99A9C2')
+        StyleSetSpec(STC_STYLE_LINENUMBER, 'fore:#000000,back:#99A9C2')
         # Highlighted brace
-        StyleSetSpec(STC_STYLE_BRACELIGHT,'fore:#00009D,back:#FFFF00')
+        StyleSetSpec(STC_STYLE_BRACELIGHT, 'fore:#00009D,back:#FFFF00')
         # Unmatched brace
-        StyleSetSpec(STC_STYLE_BRACEBAD,'fore:#00009D,back:#FF0000')
+        StyleSetSpec(STC_STYLE_BRACEBAD, 'fore:#00009D,back:#FF0000')
         # Indentation guide
         StyleSetSpec(STC_STYLE_INDENTGUIDE, "fore:#CDCDCD")
 
         # Python styles
         StyleSetSpec(STC_P_DEFAULT, 'fore:#000000')
         # Comments
-        StyleSetSpec(STC_P_COMMENTLINE,  'fore:#008000')
+        StyleSetSpec(STC_P_COMMENTLINE, 'fore:#008000')
         StyleSetSpec(STC_P_COMMENTBLOCK, 'fore:#008000')
         # Numbers
         StyleSetSpec(STC_P_NUMBER, 'fore:#008080')
@@ -225,6 +224,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         # popup menu
         menu = wx.Menu()
         text = eg.text.MainFrame.Menu
+
         def AddMenuItem(ident, menuId):
             self.Bind(wx.EVT_MENU, getattr(self, "OnCmd" + ident), id=menuId)
             return menu.Append(menuId, getattr(text, ident, ident))
@@ -245,208 +245,6 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetText(value)
         self.EmptyUndoBuffer()
         self.Bind(EVT_STC_SAVEPOINTLEFT, self.OnSavePointLeft)
-
-
-    def OnSavePointLeft(self, event):
-        self.Bind(EVT_STC_MODIFIED, self.OnModified)
-        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
-        event.Skip()
-
-
-    def OnModified(self, event):
-        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
-        event.Skip()
-
-
-    def GetValue(self):
-        return self.GetText()
-
-
-    def SetValue(self, value):
-        self.SetText(value)
-
-
-    def OnRightClick(self, dummyEvent):
-        menu = self.popupMenu
-        first, last = self.GetSelection()
-        menu.Enable(wx.ID_UNDO, self.CanUndo())
-        menu.Enable(wx.ID_REDO, self.CanUndo())
-        menu.Enable(wx.ID_CUT, first != last)
-        menu.Enable(wx.ID_COPY, first != last)
-        menu.Enable(wx.ID_PASTE, self.CanPaste())
-        menu.Enable(wx.ID_DELETE, first != last)
-        menu.Enable(wx.ID_SELECTALL, True)
-        self.PopupMenu(menu)
-
-
-    def OnCmdUndo(self, dummyEvent=None):
-        self.Undo()
-
-
-    def OnCmdRedo(self, dummyEvent=None):
-        self.Redo()
-
-
-    def OnCmdCut(self, dummyEvent=None):
-        self.Cut()
-
-
-    def OnCmdCopy(self, dummyEvent=None):
-        self.Copy()
-
-
-    def OnCmdPaste(self, dummyEvent=None):
-        self.Paste()
-
-
-    def OnCmdDelete(self, dummyEvent=None):
-        self.Delete()
-
-
-    def OnCmdSelectAll(self, dummyEvent=None):
-        self.SelectAll()
-
-
-    def Delete(self):
-        self.CmdKeyExecute(STC_CMD_CLEAR)
-
-
-    def OnKeyPressed(self, event):
-        keycode = event.GetKeyCode()
-        if (keycode == wx.WXK_RETURN) or (keycode == 372):
-            self.CmdKeyExecute(STC_CMD_NEWLINE)
-            self.AutoIndent()
-        elif keycode == wx.WXK_TAB and event.GetModifiers() == wx.MOD_CONTROL:
-            self.Navigate()
-        else:
-            event.Skip()
-
-
-    def OnUpdateUI(self, dummyEvent):
-        # check for matching braces
-        braceAtCaret = -1
-        braceOpposite = -1
-        charBefore = None
-        caretPos = self.GetCurrentPos()
-
-        if caretPos > 0:
-            charBefore = self.GetCharAt(caretPos - 1)
-            styleBefore = self.GetStyleAt(caretPos - 1)
-
-        # check before
-        if (
-            charBefore
-            and chr(charBefore) in "[]{}()"
-            and styleBefore == STC_P_OPERATOR
-        ):
-            braceAtCaret = caretPos - 1
-
-        # check after
-        if braceAtCaret < 0:
-            charAfter = self.GetCharAt(caretPos)
-            styleAfter = self.GetStyleAt(caretPos)
-            if (
-                charAfter
-                and chr(charAfter) in "[]{}()"
-                and styleAfter == STC_P_OPERATOR
-            ):
-                braceAtCaret = caretPos
-
-        if braceAtCaret >= 0:
-            braceOpposite = self.BraceMatch(braceAtCaret)
-
-        if braceAtCaret != -1  and braceOpposite == -1:
-            self.BraceBadLight(braceAtCaret)
-        else:
-            self.BraceHighlight(braceAtCaret, braceOpposite)
-            #pt = self.PointFromPosition(braceOpposite)
-            #self.Refresh(True, wxRect(pt.x, pt.y, 5,5))
-            #self.Refresh(False)
-
-
-    def OnMarginClick(self, event):
-        # fold and unfold as needed
-        if event.GetMargin() == 2:
-            if event.GetShift() and event.GetControl():
-                self.FoldAll()
-            else:
-                lineClicked = self.LineFromPosition(event.GetPosition())
-
-                if self.GetFoldLevel(lineClicked) & STC_FOLDLEVELHEADERFLAG:
-                    if event.GetShift():
-                        self.SetFoldExpanded(lineClicked, True)
-                        self.Expand(lineClicked, True, True, 1)
-                    elif event.GetControl():
-                        if self.GetFoldExpanded(lineClicked):
-                            self.SetFoldExpanded(lineClicked, False)
-                            self.Expand(lineClicked, False, True, 0)
-                        else:
-                            self.SetFoldExpanded(lineClicked, True)
-                            self.Expand(lineClicked, True, True, 100)
-                    else:
-                        self.ToggleFold(lineClicked)
-
-
-    def FoldAll(self):
-        lineCount = self.GetLineCount()
-        expanding = True
-
-        # find out if we are folding or unfolding
-        for lineNum in xrange(lineCount):
-            if self.GetFoldLevel(lineNum) & STC_FOLDLEVELHEADERFLAG:
-                expanding = not self.GetFoldExpanded(lineNum)
-                break
-
-        lineNum = 0
-
-        while lineNum < lineCount:
-            level = self.GetFoldLevel(lineNum)
-            if level & STC_FOLDLEVELHEADERFLAG and \
-               (level & STC_FOLDLEVELNUMBERMASK) == STC_FOLDLEVELBASE:
-
-                if expanding:
-                    self.SetFoldExpanded(lineNum, True)
-                    lineNum = self.Expand(lineNum, True)
-                    lineNum = lineNum - 1
-                else:
-                    lastChild = self.GetLastChild(lineNum, -1)
-                    self.SetFoldExpanded(lineNum, False)
-
-                    if lastChild > lineNum:
-                        self.HideLines(lineNum+1, lastChild)
-
-            lineNum = lineNum + 1
-
-
-    def Expand(self, line, doExpand, force=False, visLevels=0, level=-1):
-        lastChild = self.GetLastChild(line, level)
-        line = line + 1
-
-        while line <= lastChild:
-            if force:
-                if visLevels > 0:
-                    self.ShowLines(line, line)
-                else:
-                    self.HideLines(line, line)
-            else:
-                if doExpand:
-                    self.ShowLines(line, line)
-
-            if level == -1:
-                level = self.GetFoldLevel(line)
-
-            if level & STC_FOLDLEVELHEADERFLAG:
-                if force:
-                    self.SetFoldExpanded(line, visLevels > 1)
-                    line = self.Expand(line, doExpand, force, visLevels-1)
-                else:
-                    flag = doExpand and self.GetFoldExpanded(line)
-                    line = self.Expand(line, flag, force, visLevels-1)
-            else:
-                line = line + 1
-
-        return line
-
 
     def AutoIndent(self):
         indentSize = self.SetIndentSize(self.GetValue())
@@ -472,12 +270,12 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         self.GotoLine(clinenumber)
 
-        numtabs = self.GetLineIndentation(clinenumber+1) / indentSize
+        numtabs = self.GetLineIndentation(clinenumber + 1) / indentSize
 
         search = self.renonwhitespace.search
         if (
-            search(self.GetLine(clinenumber+1)) is not None
-            and search(self.GetLine(clinenumber)) is None
+            search(self.GetLine(clinenumber + 1)) is not None and
+            search(self.GetLine(clinenumber)) is None
         ):
             numtabs += self.GetLineIndentation(clinenumber) / indentSize
 
@@ -499,11 +297,11 @@ class PythonEditorCtrl(StyledTextCtrl):
                         numtabs = numtabs - 1
         #Go to current line to add tabs
 
-        self.SetTargetStart(pos+1)
-        end = self.GetLineEndPosition(clinenumber+1)
+        self.SetTargetStart(pos + 1)
+        end = self.GetLineEndPosition(clinenumber + 1)
         self.SetTargetEnd(end)
 
-        self.ReplaceTarget(self.GetTextRange(pos+1, end).lstrip())
+        self.ReplaceTarget(self.GetTextRange(pos + 1, end).lstrip())
 
         pos = pos + 1
         self.GotoPos(pos)
@@ -517,6 +315,186 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.CmdKeyExecute(STC_CMD_CHARLEFT)
         self.CmdKeyExecute(STC_CMD_CHARRIGHT)
 
+    def Delete(self):
+        self.CmdKeyExecute(STC_CMD_CLEAR)
+
+    def Expand(self, line, doExpand, force=False, visLevels=0, level=-1):
+        lastChild = self.GetLastChild(line, level)
+        line = line + 1
+
+        while line <= lastChild:
+            if force:
+                if visLevels > 0:
+                    self.ShowLines(line, line)
+                else:
+                    self.HideLines(line, line)
+            else:
+                if doExpand:
+                    self.ShowLines(line, line)
+
+            if level == -1:
+                level = self.GetFoldLevel(line)
+
+            if level & STC_FOLDLEVELHEADERFLAG:
+                if force:
+                    self.SetFoldExpanded(line, visLevels > 1)
+                    line = self.Expand(line, doExpand, force, visLevels - 1)
+                else:
+                    flag = doExpand and self.GetFoldExpanded(line)
+                    line = self.Expand(line, flag, force, visLevels - 1)
+            else:
+                line = line + 1
+
+        return line
+
+    def FoldAll(self):
+        lineCount = self.GetLineCount()
+        expanding = True
+
+        # find out if we are folding or unfolding
+        for lineNum in xrange(lineCount):
+            if self.GetFoldLevel(lineNum) & STC_FOLDLEVELHEADERFLAG:
+                expanding = not self.GetFoldExpanded(lineNum)
+                break
+
+        lineNum = 0
+
+        while lineNum < lineCount:
+            level = self.GetFoldLevel(lineNum)
+            if (
+                level & STC_FOLDLEVELHEADERFLAG and
+                (level & STC_FOLDLEVELNUMBERMASK) == STC_FOLDLEVELBASE
+            ):
+                if expanding:
+                    self.SetFoldExpanded(lineNum, True)
+                    lineNum = self.Expand(lineNum, True)
+                    lineNum = lineNum - 1
+                else:
+                    lastChild = self.GetLastChild(lineNum, -1)
+                    self.SetFoldExpanded(lineNum, False)
+
+                    if lastChild > lineNum:
+                        self.HideLines(lineNum + 1, lastChild)
+
+            lineNum = lineNum + 1
+
+    def GetValue(self):
+        return self.GetText()
+
+    def OnCmdCopy(self, dummyEvent=None):
+        self.Copy()
+
+    def OnCmdCut(self, dummyEvent=None):
+        self.Cut()
+
+    def OnCmdDelete(self, dummyEvent=None):
+        self.Delete()
+
+    def OnCmdPaste(self, dummyEvent=None):
+        self.Paste()
+
+    def OnCmdRedo(self, dummyEvent=None):
+        self.Redo()
+
+    def OnCmdSelectAll(self, dummyEvent=None):
+        self.SelectAll()
+
+    def OnCmdUndo(self, dummyEvent=None):
+        self.Undo()
+
+    def OnKeyPressed(self, event):
+        keycode = event.GetKeyCode()
+        if (keycode == wx.WXK_RETURN) or (keycode == 372):
+            self.CmdKeyExecute(STC_CMD_NEWLINE)
+            self.AutoIndent()
+        elif keycode == wx.WXK_TAB and event.GetModifiers() == wx.MOD_CONTROL:
+            self.Navigate()
+        else:
+            event.Skip()
+
+    def OnMarginClick(self, event):
+        # fold and unfold as needed
+        if event.GetMargin() == 2:
+            if event.GetShift() and event.GetControl():
+                self.FoldAll()
+            else:
+                lineClicked = self.LineFromPosition(event.GetPosition())
+
+                if self.GetFoldLevel(lineClicked) & STC_FOLDLEVELHEADERFLAG:
+                    if event.GetShift():
+                        self.SetFoldExpanded(lineClicked, True)
+                        self.Expand(lineClicked, True, True, 1)
+                    elif event.GetControl():
+                        if self.GetFoldExpanded(lineClicked):
+                            self.SetFoldExpanded(lineClicked, False)
+                            self.Expand(lineClicked, False, True, 0)
+                        else:
+                            self.SetFoldExpanded(lineClicked, True)
+                            self.Expand(lineClicked, True, True, 100)
+                    else:
+                        self.ToggleFold(lineClicked)
+
+    def OnModified(self, event):
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
+        event.Skip()
+
+    def OnRightClick(self, dummyEvent):
+        menu = self.popupMenu
+        first, last = self.GetSelection()
+        menu.Enable(wx.ID_UNDO, self.CanUndo())
+        menu.Enable(wx.ID_REDO, self.CanUndo())
+        menu.Enable(wx.ID_CUT, first != last)
+        menu.Enable(wx.ID_COPY, first != last)
+        menu.Enable(wx.ID_PASTE, self.CanPaste())
+        menu.Enable(wx.ID_DELETE, first != last)
+        menu.Enable(wx.ID_SELECTALL, True)
+        self.PopupMenu(menu)
+
+    def OnSavePointLeft(self, event):
+        self.Bind(EVT_STC_MODIFIED, self.OnModified)
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
+        event.Skip()
+
+    def OnUpdateUI(self, dummyEvent):
+        # check for matching braces
+        braceAtCaret = -1
+        braceOpposite = -1
+        charBefore = None
+        caretPos = self.GetCurrentPos()
+
+        if caretPos > 0:
+            charBefore = self.GetCharAt(caretPos - 1)
+            styleBefore = self.GetStyleAt(caretPos - 1)
+
+        # check before
+        if (
+            charBefore and
+            chr(charBefore) in "[]{}()" and
+            styleBefore == STC_P_OPERATOR
+        ):
+            braceAtCaret = caretPos - 1
+
+        # check after
+        if braceAtCaret < 0:
+            charAfter = self.GetCharAt(caretPos)
+            styleAfter = self.GetStyleAt(caretPos)
+            if (
+                charAfter and
+                chr(charAfter) in "[]{}()" and
+                styleAfter == STC_P_OPERATOR
+            ):
+                braceAtCaret = caretPos
+
+        if braceAtCaret >= 0:
+            braceOpposite = self.BraceMatch(braceAtCaret)
+
+        if braceAtCaret != -1 and braceOpposite == -1:
+            self.BraceBadLight(braceAtCaret)
+        else:
+            self.BraceHighlight(braceAtCaret, braceOpposite)
+            #pt = self.PointFromPosition(braceOpposite)
+            #self.Refresh(True, wxRect(pt.x, pt.y, 5,5))
+            #self.Refresh(False)
 
     def SetIndentSize(self, value):
         indentSize = 4
@@ -528,3 +506,5 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetTabWidth(indentSize)
         return indentSize
 
+    def SetValue(self, value):
+        self.SetText(value)

@@ -16,17 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-
 import ConfigParser
 
-
 class Config(object):
-
     def __init__(self, buildSetup, configFilePath):
         self.buildSetup = buildSetup
         self._configFilePath = configFilePath
         self.LoadSettings()
-
 
     def LoadSettings(self):
         """
@@ -84,4 +80,3 @@ class Config(object):
         configFile = open(self._configFilePath, "w")
         config.write(configFile)
         configFile.close()
-

@@ -18,9 +18,7 @@
 
 import wx
 
-
 class RadioBox(wx.Panel):
-
     def __init__(
         self,
         parent = None,
@@ -51,11 +49,11 @@ class RadioBox(wx.Panel):
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
+    def GetSelection(self):
+        return self.value
 
-    def OnSize(self, dummyEvent):
-        if self.GetAutoLayout():
-            self.Layout()
-
+    def GetValue(self):
+        return self.value
 
     def OnSelect(self, event):
         self.value = event.GetId()
@@ -63,20 +61,13 @@ class RadioBox(wx.Panel):
         newEvent.SetInt(self.value)
         self.ProcessEvent(newEvent)
 
+    def OnSize(self, dummyEvent):
+        if self.GetAutoLayout():
+            self.Layout()
 
     def SetSelection(self, selection):
         self.FindWindowById(selection).SetValue(True)
         self.value = selection
 
-
-    def GetSelection(self):
-        return self.value
-
-
-    def GetValue(self):
-        return self.value
-
-
     def SetValue(self, value):
         self.SetSelection(int(value))
-

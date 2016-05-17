@@ -17,13 +17,13 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from time import clock
 from math import sin
+from time import clock
+
+# Local imports
 from eg.Icons import GetInternalBitmap, GetInternalImage
 
-
 class AnimatedWindow(wx.PyWindow):
-
     def __init__(self, parent):
         wx.PyWindow.__init__(self, parent)
         self.font = wx.Font(
@@ -44,6 +44,25 @@ class AnimatedWindow(wx.PyWindow):
         self.timer = wx.Timer(self)
         self.timer.Start(10)
 
+    def AcceptsFocus(self):
+        return False
+
+    def AcceptsFocusFromKeyboard(self):
+        return False
+
+    def Draw(self, deviceContext):
+        deviceContext.BeginDrawing()
+        deviceContext.DrawBitmap(self.backbuffer, 0, 0, False)
+        t = clock() / 2.0
+        y3 = self.y3
+        x3 = self.x3
+        y = (sin(t) + sin(1.8 * t)) * y3 + y3 * 2.0
+        x = (sin(t * 0.8) + sin(1.9 * t)) * x3 + x3 * 2.0
+        alpha = sin(t) / 2.0 + 0.5
+        image = self.image.AdjustChannels(1.0, 1.0, 1.0, alpha)
+        bmp = wx.BitmapFromImage(image, 24)
+        deviceContext.DrawBitmap(bmp, x, y, True)
+        deviceContext.EndDrawing()
 
     def MakeBackground(self):
         self.backbuffer = wx.EmptyBitmap(self.width, self.height)
@@ -51,7 +70,7 @@ class AnimatedWindow(wx.PyWindow):
         deviceContext.SelectObject(self.backbuffer)
         deviceContext.BeginDrawing()
         deviceContext.SetBackground(wx.Brush(self.GetBackgroundColour()))
-        deviceContext.Clear() # make sure you clear the bitmap!
+        deviceContext.Clear()  # make sure you clear the bitmap!
         deviceContext.SetFont(self.font)
         deviceContext.SetTextForeground((128, 128, 128))
 
@@ -81,15 +100,6 @@ class AnimatedWindow(wx.PyWindow):
         )
         deviceContext.EndDrawing()
 
-
-    def AcceptsFocus(self):
-        return False
-
-
-    def AcceptsFocusFromKeyboard(self):
-        return False
-
-
     def OnSize(self, dummyEvent):
         self.width, self.height = self.GetClientSizeTuple()
         self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
@@ -98,23 +108,6 @@ class AnimatedWindow(wx.PyWindow):
         self.MakeBackground()
         self.UpdateDrawing()
 
-
     def UpdateDrawing(self, dummyEvent=None):
         deviceContext = wx.BufferedDC(wx.ClientDC(self), self.dcBuffer)
         self.Draw(deviceContext)
-
-
-    def Draw(self, deviceContext):
-        deviceContext.BeginDrawing()
-        deviceContext.DrawBitmap(self.backbuffer, 0, 0, False)
-        t = clock() / 2.0
-        y3 = self.y3
-        x3 = self.x3
-        y = (sin(t) + sin(1.8 * t)) * y3 + y3 * 2.0
-        x = (sin(t * 0.8) + sin(1.9 * t)) * x3 + x3 * 2.0
-        alpha = sin(t) / 2.0 + 0.5
-        image = self.image.AdjustChannels(1.0, 1.0, 1.0, alpha)
-        bmp = wx.BitmapFromImage(image, 24)
-        deviceContext.DrawBitmap(bmp, x, y, True)
-        deviceContext.EndDrawing()
-

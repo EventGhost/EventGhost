@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
 from NewItem import NewItem
-
 
 class NewEvent(NewItem):
     name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
@@ -26,6 +26,7 @@ class NewEvent(NewItem):
     @eg.AssertInMainThread
     def Do(self, selection, pos=-1, label=None):
         document = self.document
+
         def ProcessInActionThread():
             parent = selection
             if not isinstance(selection, document.MacroItem):
@@ -56,11 +57,10 @@ class NewEvent(NewItem):
         item, needsConfigure = result
 
         if (
-            needsConfigure
-            and not eg.UndoHandler.Configure(document).Do(item, True)
+            needsConfigure and
+            not eg.UndoHandler.Configure(document).Do(item, True)
         ):
             eg.actionThread.Call(item.Delete)
             return None
         self.StoreItem(item)
         return item
-

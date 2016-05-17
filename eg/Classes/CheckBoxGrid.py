@@ -17,8 +17,9 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from RadioButtonGrid import RadioButtonGrid
 
+# Local imports
+from RadioButtonGrid import RadioButtonGrid
 
 class CheckBoxGrid(RadioButtonGrid):
     CtrlType = wx.CheckBox
@@ -33,10 +34,8 @@ class CheckBoxGrid(RadioButtonGrid):
             result.append(value)
         return result
 
-
     def SetValue(self, value):
         for x, val in enumerate(value):
             column = self.ctrlTable[x]
             for i, ctrl in enumerate(column):
                 ctrl.SetValue(val & (1 << i))
-

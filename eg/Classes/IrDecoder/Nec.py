@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
 from time import clock
 
+# Local imports
+from eg.Classes.IrDecoder import DecodeError, IrProtocolBase
 
 class Nec(IrProtocolBase):
     """
@@ -29,7 +30,6 @@ class Nec(IrProtocolBase):
     def __init__(self, controller):
         IrProtocolBase.__init__(self, controller)
         self.lastTime = 0
-
 
     def Decode(self, data):
         pulse = data[0]
@@ -63,4 +63,3 @@ class Nec(IrProtocolBase):
             buf <<= 1
         self.lastTime = clock()
         return "NEC.%08X" % buf
-

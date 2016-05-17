@@ -23,12 +23,12 @@ This way we trick py2exe to include all standard library files and some more
 packages and modules.
 """
 
-
 import os
 import sys
-from os.path import join
 import warnings
+from os.path import join
 
+# Local imports
 import builder
 
 MODULES_TO_IGNORE = [
@@ -70,57 +70,76 @@ HEADER = """\
 
 warnings.simplefilter('error', DeprecationWarning)
 
+class CreateImports(builder.Task):
+    description = "Build Imports.py"
 
-class DummyStdOut: #IGNORE:W0232 class has no __init__ method
+    def Setup(self):
+        self.outFileName = join(self.buildSetup.pyVersionDir, "Imports.py")
+        if self.buildSetup.showGui:
+            if os.path.exists(self.outFileName):
+                self.activated = False
+        else:
+            self.activated = bool(self.buildSetup.args.build)
+
+    def DoTask(self):
+        """
+        Starts the actual work.
+        """
+        buildSetup = self.buildSetup
+        MODULES_TO_IGNORE.extend(buildSetup.excludeModules)
+
+        globalModuleIndex, badModules = ReadGlobalModuleIndex(
+            join(buildSetup.pyVersionDir, "Global Module Index.txt")
+        )
+        MODULES_TO_IGNORE.extend(badModules)
+
+        pyDir = sys.real_prefix if hasattr(sys, "real_prefix") else sys.prefix
+        stdLibModules = (
+            FindModulesInPath(join(pyDir, "DLLs"), "", True) +
+            FindModulesInPath(join(pyDir, "Lib"), "", True)
+        )
+
+        notFoundModules = []
+        for module in globalModuleIndex:
+            if module in stdLibModules:
+                continue
+            if module in sys.builtin_module_names:
+                continue
+            if ShouldBeIgnored(module):
+                continue
+            notFoundModules.append(module)
+        if notFoundModules:
+            print "    Modules found in global module index but not in scan:"
+            for module in notFoundModules:
+                print "       ", module
+
+        #print "Modules found in scan but not in global module index:"
+        #for module in stdLibModules:
+        #    if module not in globalModuleIndex:
+        #        print "   ", module
+
+        outfile = open(self.outFileName, "wt")
+        outfile.write(HEADER)
+        for module in stdLibModules:
+            outfile.write("import %s\n" % module)
+        # add every .pyd of the current directory
+        for package in buildSetup.includeModules:
+            outfile.write("\n# modules found for package '%s'\n" % package)
+            for module in GetPackageModules(package):
+                outfile.write("import %s\n" % module)
+        outfile.write("\n")
+        outfile.close()
+
+
+class DummyStdOut:  #IGNORE:W0232 class has no __init__ method
     """
     Just a dummy stdout implementation, that suppresses all output.
     """
-
-    def write(self, dummyData): #IGNORE:C0103
-        """ A do-nothing write. """
+    def write(self, dummyData):  #IGNORE:C0103
+        """
+        A do-nothing write.
+        """
         pass
-
-
-
-def TestImport(moduleName, includeDeprecated=False):
-    """
-    Test if the given module can be imported without error.
-    """
-    #print "Testing", moduleName
-    oldStdOut = sys.stdout
-    oldStdErr = sys.stderr
-    sys.stdout = DummyStdOut()
-    try:
-        __import__(moduleName)
-        return (True, "", "")
-    except DeprecationWarning, exc:
-        return includeDeprecated, "DeprecationWarning", str(exc)
-    except ImportError, exc:
-        return False, "ImportError", str(exc)
-    except SyntaxError, exc:
-        return False, "SyntaxError", str(exc)
-    except Exception, exc:
-        return False, "Exception", str(exc)
-    finally:
-        sys.stdout = oldStdOut
-        sys.stderr = oldStdErr
-
-
-def ShouldBeIgnored(moduleName):
-    """
-    Return True if the supplied module should be ignored, because it is a
-    module or submodule in MODULES_TO_IGNORE.
-    """
-    moduleParts = moduleName.split(".")
-    modulePartsLength = len(moduleParts)
-    for module in MODULES_TO_IGNORE:
-        ignoreParts = module.split(".")
-        ignorePartsLength = len(ignoreParts)
-        if ignorePartsLength > modulePartsLength:
-            continue
-        if moduleParts[:ignorePartsLength] == ignoreParts:
-            return True
-    return False
 
 
 def FindModulesInPath(path, prefix="", includeDeprecated=False):
@@ -136,8 +155,8 @@ def FindModulesInPath(path, prefix="", includeDeprecated=False):
         package = prefix + package
         for directory in dirs[:]:
             if (
-                not os.path.exists(join(root, directory, "__init__.py"))
-                or ShouldBeIgnored(package + "." + directory)
+                not os.path.exists(join(root, directory, "__init__.py")) or
+                ShouldBeIgnored(package + "." + directory)
             ):
                 dirs.remove(directory)
         if ShouldBeIgnored(package) or package.rfind(".test") > 0:
@@ -164,6 +183,43 @@ def FindModulesInPath(path, prefix="", includeDeprecated=False):
             modules.append(moduleName)
     return modules
 
+def GetPackageModules(package):
+    """
+    Returns a list with all modules of the package.
+    """
+    moduleList = []
+    tail = join("Lib", "site-packages", package) + ".pth"
+    pthPaths = [join(sys.prefix, tail)]
+    if hasattr(sys, "real_prefix"):
+        pthPaths.append(join(sys.real_prefix, tail))
+    for pthPath in pthPaths:
+        if os.path.exists(pthPath):
+            for path in ReadPth(pthPath):
+                moduleList.extend(FindModulesInPath(path))
+            break
+    else:
+        mod = __import__(package)
+        moduleList.append(package)
+        if hasattr(mod, "__path__"):
+            paths = mod.__path__
+        else:
+            if mod.__file__.endswith(".pyd"):
+                return moduleList
+            paths = [os.path.dirname(mod.__file__)]
+        for path in paths:
+            moduleList.extend(FindModulesInPath(path, package))
+    return moduleList
+
+def GetPydFiles(path):
+    """
+    Returns a list of all .pyd modules in supplied path.
+    """
+    files = []
+    for filepath in os.listdir(path):
+        moduleName, extension = os.path.splitext(os.path.basename(filepath))
+        if extension.lower() == ".pyd":
+            files.append(moduleName)
+    return files
 
 def ReadGlobalModuleIndex(infile):
     """
@@ -187,10 +243,9 @@ def ReadGlobalModuleIndex(infile):
     inFile.close()
     return modules, badModules
 
-
 def ReadPth(path):
     """
-    Read a .PTH file and return the pathes inside as a list
+    Read a .PTH file and return the paths inside as a list
     """
     result = []
     pthFile = open(path, "rt")
@@ -200,107 +255,41 @@ def ReadPth(path):
         result.append(join(os.path.dirname(path), line.strip()))
     return result
 
-
-def GetPydFiles(path):
+def ShouldBeIgnored(moduleName):
     """
-    Returns a list of all .pyd modules in supplied path.
+    Return True if the supplied module should be ignored, because it is a
+    module or submodule in MODULES_TO_IGNORE.
     """
-    files = []
-    for filepath in os.listdir(path):
-        moduleName, extension = os.path.splitext(os.path.basename(filepath))
-        if extension.lower() == ".pyd":
-            files.append(moduleName)
-    return files
+    moduleParts = moduleName.split(".")
+    modulePartsLength = len(moduleParts)
+    for module in MODULES_TO_IGNORE:
+        ignoreParts = module.split(".")
+        ignorePartsLength = len(ignoreParts)
+        if ignorePartsLength > modulePartsLength:
+            continue
+        if moduleParts[:ignorePartsLength] == ignoreParts:
+            return True
+    return False
 
-
-def GetPackageModules(package):
+def TestImport(moduleName, includeDeprecated=False):
     """
-    Returns a list with all modules of the package.
+    Test if the given module can be imported without error.
     """
-    moduleList = []
-    tail = join("Lib", "site-packages", package) + ".pth"
-    pthPaths = [join(sys.prefix, tail)]
-    if hasattr(sys, "real_prefix"):
-        pthPaths.append(join(sys.real_prefix, tail))
-    for pthPath in pthPaths:
-        if os.path.exists(pthPath):
-            for path in ReadPth(pthPath):
-                moduleList.extend(FindModulesInPath(path))
-            break
-    else:
-        mod = __import__(package)
-        moduleList.append(package)
-        if hasattr(mod, "__path__"):
-            pathes = mod.__path__
-        else:
-            if mod.__file__.endswith(".pyd"):
-                return moduleList
-            pathes = [os.path.dirname(mod.__file__)]
-        for path in pathes:
-            moduleList.extend(FindModulesInPath(path, package))
-    return moduleList
-
-
-
-class CreateImports(builder.Task):
-    description = "Build Imports.py"
-
-    def Setup(self):
-        self.outFileName = join(self.buildSetup.pyVersionDir, "Imports.py")
-        if self.buildSetup.showGui:
-            if os.path.exists(self.outFileName):
-                self.activated = False
-        else:
-            self.activated = bool(self.buildSetup.args.build)
-
-    def DoTask(self):
-        """
-        Starts the actual work.
-        """
-        buildSetup = self.buildSetup
-        MODULES_TO_IGNORE.extend(buildSetup.excludeModules)
-
-        globalModuleIndex, badModules = ReadGlobalModuleIndex(
-            join(buildSetup.pyVersionDir, "Global Module Index.txt")
-        )
-        MODULES_TO_IGNORE.extend(badModules)
-
-        pyDir = sys.real_prefix if hasattr(sys, "real_prefix") else sys.prefix
-        stdLibModules = (
-            FindModulesInPath(join(pyDir, "DLLs"), "", True)
-            + FindModulesInPath(join(pyDir, "Lib"), "", True)
-        )
-
-        notFoundModules = []
-        for module in globalModuleIndex:
-            if module in stdLibModules:
-                continue
-            if module in sys.builtin_module_names:
-                continue
-            if ShouldBeIgnored(module):
-                continue
-            notFoundModules.append(module)
-        if notFoundModules:
-            print "    Modules found in global module index but not in scan:"
-            for module in notFoundModules:
-                print "       ", module
-
-
-
-        #print "Modules found in scan but not in global module index:"
-        #for module in stdLibModules:
-        #    if module not in globalModuleIndex:
-        #        print "   ", module
-
-        outfile = open(self.outFileName, "wt")
-        outfile.write(HEADER)
-        for module in stdLibModules:
-            outfile.write("import %s\n" % module)
-        # add every .pyd of the current directory
-        for package in buildSetup.includeModules:
-            outfile.write("\n# modules found for package '%s'\n" % package)
-            for module in GetPackageModules(package):
-                outfile.write("import %s\n" % module)
-        outfile.write("\n")
-        outfile.close()
-
+    #print "Testing", moduleName
+    oldStdOut = sys.stdout
+    oldStdErr = sys.stderr
+    sys.stdout = DummyStdOut()
+    try:
+        __import__(moduleName)
+        return (True, "", "")
+    except DeprecationWarning, exc:
+        return includeDeprecated, "DeprecationWarning", str(exc)
+    except ImportError, exc:
+        return False, "ImportError", str(exc)
+    except SyntaxError, exc:
+        return False, "SyntaxError", str(exc)
+    except Exception, exc:
+        return False, "Exception", str(exc)
+    finally:
+        sys.stdout = oldStdOut
+        sys.stderr = oldStdErr

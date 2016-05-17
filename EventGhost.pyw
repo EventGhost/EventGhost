@@ -52,4 +52,3 @@ else:
         __main__.isMain = True
         import eg
         eg.Main()
-

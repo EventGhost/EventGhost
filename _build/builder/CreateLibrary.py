@@ -21,11 +21,10 @@ import sys
 from glob import glob
 from os.path import basename, exists, join
 
+# Local imports
 import builder
 from builder.Utils import EncodePath
 
-
-RT_MANIFEST = 24
 DLL_EXCLUDES = [
     "DINPUT8.dll",
     "w9xpopen.exe",
@@ -90,78 +89,7 @@ DLL_EXCLUDES = [
     "api-ms-win-security-base-l1-2-0.dll",
 ]
 
-def RemoveAllManifests(scanDir):
-    """
-    Remove embedded manifest resource for all DLLs and PYDs in the supplied
-    directory.
-
-    This seems to be the only way how the setup can run with Python 2.6
-    on Vista and above.
-    """
-    import ctypes
-    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
-    UpdateResource = ctypes.windll.kernel32.UpdateResourceW
-    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceW
-
-    for name in os.listdir(scanDir):
-        path = os.path.join(scanDir, name)
-        if not os.path.isfile(path):
-            continue
-        ext = os.path.splitext(name)[1].lower()
-        if ext not in (".pyd", ".dll"):
-            continue
-        handle = BeginUpdateResource(path, 0)
-        if not handle:
-            raise ctypes.WinError()
-        res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
-        if not res:
-            continue
-        if not EndUpdateResource(handle, 0):
-            raise ctypes.WinError()
-
-
-
-def InstallPy2exePatch():
-    """
-    Tricks py2exe to include the win32com module.
-
-    ModuleFinder can't handle runtime changes to __path__, but win32com
-    uses them, particularly for people who build from sources.
-    """
-    try:
-        import modulefinder
-        import win32com
-        for path in win32com.__path__[1:]:
-            modulefinder.AddPackagePath("win32com", path)
-        for extra in ["win32com.shell"]:
-            __import__(extra)
-            module = sys.modules[extra]
-            for path in module.__path__[1:]:
-                modulefinder.AddPackagePath(extra, path)
-    except ImportError: #IGNORE:W0704
-        # no build path setup, no worries.
-        pass
-
-
-class Target:
-    def __init__(self, buildSetup):
-        self.icon_resources = []
-        iconPath = join(buildSetup.dataDir, "Main.ico")
-        if exists(iconPath):
-            self.icon_resources.append((1, iconPath))
-        manifest = file(
-            join(buildSetup.pyVersionDir, "Manifest.xml")
-        ).read() % buildSetup.__dict__
-        self.other_resources = [(RT_MANIFEST, 1, manifest)]
-        self.name = buildSetup.name
-        self.description = buildSetup.description
-        self.company_name = buildSetup.companyName
-        self.copyright = buildSetup.copyright
-        self.dest_base = buildSetup.name
-        self.version = buildSetup.appVersion
-        self.script = join(buildSetup.sourceDir, buildSetup.mainScript)
-
-
+RT_MANIFEST = 24
 
 class CreateLibrary(builder.Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
@@ -182,8 +110,8 @@ class CreateLibrary(builder.Task):
         sys.path.append(EncodePath(buildSetup.pyVersionDir))
         from distutils.core import setup
         InstallPy2exePatch()
-        import py2exe # pylint: disable-msg=W0612
-                      # looks like py2exe import is unneeded, but it isn't
+        # Looks like py2exe import is unneeded, but it isn't.
+        import py2exe  # pylint: disable-msg=W0612 # NOQA
         libraryDir = buildSetup.libraryDir
         if exists(libraryDir):
             for filename in os.listdir(libraryDir):
@@ -229,3 +157,72 @@ class CreateLibrary(builder.Task):
 
         #RemoveAllManifests(libraryDir)
 
+
+class Target:
+    def __init__(self, buildSetup):
+        self.icon_resources = []
+        iconPath = join(buildSetup.dataDir, "Main.ico")
+        if exists(iconPath):
+            self.icon_resources.append((1, iconPath))
+        manifest = file(
+            join(buildSetup.pyVersionDir, "Manifest.xml")
+        ).read() % buildSetup.__dict__
+        self.other_resources = [(RT_MANIFEST, 1, manifest)]
+        self.name = buildSetup.name
+        self.description = buildSetup.description
+        self.company_name = buildSetup.companyName
+        self.copyright = buildSetup.copyright
+        self.dest_base = buildSetup.name
+        self.version = buildSetup.appVersion
+        self.script = join(buildSetup.sourceDir, buildSetup.mainScript)
+
+
+def InstallPy2exePatch():
+    """
+    Tricks py2exe to include the win32com module.
+
+    ModuleFinder can't handle runtime changes to __path__, but win32com
+    uses them, particularly for people who build from sources.
+    """
+    try:
+        import modulefinder
+        import win32com
+        for path in win32com.__path__[1:]:
+            modulefinder.AddPackagePath("win32com", path)
+        for extra in ["win32com.shell"]:
+            __import__(extra)
+            module = sys.modules[extra]
+            for path in module.__path__[1:]:
+                modulefinder.AddPackagePath(extra, path)
+    except ImportError:  # IGNORE:W0704
+        # no build path setup, no worries.
+        pass
+
+def RemoveAllManifests(scanDir):
+    """
+    Remove embedded manifest resource for all DLLs and PYDs in the supplied
+    directory.
+
+    This seems to be the only way how the setup can run with Python 2.6
+    on Vista and above.
+    """
+    import ctypes
+    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
+    UpdateResource = ctypes.windll.kernel32.UpdateResourceW
+    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceW
+
+    for name in os.listdir(scanDir):
+        path = os.path.join(scanDir, name)
+        if not os.path.isfile(path):
+            continue
+        ext = os.path.splitext(name)[1].lower()
+        if ext not in (".pyd", ".dll"):
+            continue
+        handle = BeginUpdateResource(path, 0)
+        if not handle:
+            raise ctypes.WinError()
+        res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
+        if not res:
+            continue
+        if not EndUpdateResource(handle, 0):
+            raise ctypes.WinError()

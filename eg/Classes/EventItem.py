@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# Local imports
 import eg
-from TreeItem import TreeItem, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
+from TreeItem import HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, TreeItem
 
 class Text(eg.TranslatableStrings):
     eventItem = "Event Item"
@@ -26,7 +27,6 @@ class Text(eg.TranslatableStrings):
         "Note: You can also drag and drop events from the logger to a "
         "macro."
     )
-
 
 
 class EventItem(TreeItem):
@@ -44,42 +44,6 @@ class EventItem(TreeItem):
         TreeItem.__init__(self, parent, node)
         self.RegisterEvent(self.name)
 
-
-    def GetTypeName(self):
-        return Text.eventItem
-
-
-    def GetDescription(self):
-        return ""
-
-
-    def GetArgumentString(self):
-        return self.name
-
-
-    def SetArgumentString(self, argString):
-        self.RenameTo(argString)
-
-
-    def GetArguments(self):
-        return (self.name, )
-
-
-    def SetArguments(self, args):
-        newName = args[0]
-        self.RenameTo(newName)
-
-
-    def GetBasePath(self):
-        """
-        Returns the filesystem path, where additional files (like pictures)
-        should be found.
-        """
-        # currently an event item doesn't have any plugin assigned to it,
-        # so we also have no base path
-        return ""
-
-
     def Configure(self, name):
         panel = eg.ConfigPanel()
         staticText = panel.StaticText(Text.eventName)
@@ -92,18 +56,30 @@ class EventItem(TreeItem):
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue())
 
-
     def Delete(self):
         self.UnRegisterEvent(self.name)
         TreeItem.Delete(self)
 
+    def GetArguments(self):
+        return (self.name, )
 
-    @eg.AssertInActionThread
-    def RenameTo(self, newName):
-        self.UnRegisterEvent(self.name)
-        TreeItem.RenameTo(self, newName)
-        self.RegisterEvent(newName)
+    def GetArgumentString(self):
+        return self.name
 
+    def GetBasePath(self):
+        """
+        Returns the filesystem path, where additional files (like pictures)
+        should be found.
+        """
+        # currently an event item doesn't have any plugin assigned to it,
+        # so we also have no base path
+        return ""
+
+    def GetDescription(self):
+        return ""
+
+    def GetTypeName(self):
+        return Text.eventItem
 
     def RegisterEvent(self, eventString):
         eventTable = eg.eventTable
@@ -111,6 +87,18 @@ class EventItem(TreeItem):
             eventTable[eventString] = []
         eventTable[eventString].append(self)
 
+    @eg.AssertInActionThread
+    def RenameTo(self, newName):
+        self.UnRegisterEvent(self.name)
+        TreeItem.RenameTo(self, newName)
+        self.RegisterEvent(newName)
+
+    def SetArguments(self, args):
+        newName = args[0]
+        self.RenameTo(newName)
+
+    def SetArgumentString(self, argString):
+        self.RenameTo(argString)
 
     def UnRegisterEvent(self, eventString):
         eventTable = eg.eventTable
@@ -122,4 +110,3 @@ class EventItem(TreeItem):
             pass
         if len(eventTable[eventString]) == 0:
             del eventTable[eventString]
-

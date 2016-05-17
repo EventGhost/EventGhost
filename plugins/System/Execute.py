@@ -16,43 +16,45 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
-from os.path import basename, dirname, abspath, split, splitext
+from os.path import abspath, basename, dirname, split, splitext
 from threading import Thread
 from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
-from eg.WinApi import IsWin64
-from eg.WinApi.Dynamic import (
-    sizeof, byref, WaitForSingleObject, FormatError,
-    CloseHandle, INFINITE, GetExitCodeProcess, DWORD,
-    AttachThreadInput, GetCurrentThreadId, GetForegroundWindow,
-    GetWindowThreadProcessId, SHELLEXECUTEINFO, SEE_MASK_NOCLOSEPROCESS, windll
-)
 from win32process import GetPriorityClass, SetPriorityClass
 
+# Local imports
+import eg
+from eg.WinApi import IsWin64
+from eg.WinApi.Dynamic import (
+    AttachThreadInput, byref, CloseHandle, DWORD, FormatError,
+    GetCurrentThreadId, GetExitCodeProcess, GetForegroundWindow,
+    GetWindowThreadProcessId, INFINITE, SEE_MASK_NOCLOSEPROCESS,
+    SHELLEXECUTEINFO, sizeof, WaitForSingleObject, windll,
+)
+
 WINSTATE_FLAGS = (
-    1, # SW_SHOWNORMAL
-    6, # SW_MINIMIZE | SW_HIDE
-    3, # SW_SHOWMAXIMIZED
-    0, # SW_HIDE
+    1,  # SW_SHOWNORMAL
+    6,  # SW_MINIMIZE | SW_HIDE
+    3,  # SW_SHOWMAXIMIZED
+    0,  # SW_HIDE
 )
 
 PRIORITY_FLAGS = (
-    64,    # IDLE_PRIORITY_CLASS
-    16384, # BELOW_NORMAL_PRIORITY_CLASS
-    32,    # NORMAL_PRIORITY_CLASS
-    32768, # ABOVE_NORMAL_PRIORITY_CLASS
-    128,   # HIGH_PRIORITY_CLASS
-    256,   # REALTIME_PRIORITY_CLASS
+    64,     # IDLE_PRIORITY_CLASS
+    16384,  # BELOW_NORMAL_PRIORITY_CLASS
+    32,     # NORMAL_PRIORITY_CLASS
+    32768,  # ABOVE_NORMAL_PRIORITY_CLASS
+    128,    # HIGH_PRIORITY_CLASS
+    256,    # REALTIME_PRIORITY_CLASS
 )
 
-
 class Execute(eg.ActionBase):
-    name = "Start Application"
-    description = "Starts an executable file."
+    name = "Run Application"
+    description = "Runs an executable file."
     iconFile = "icons/Execute"
+
     class text:
-        label = "Start Program: %s"
+        label = "Run Application: %s"
         FilePath = "Executable:"
         WorkingDir = "Working directory:"
         Parameters = "Command line options:"
@@ -83,6 +85,25 @@ class Execute(eg.ActionBase):
         additionalSuffix = "Additional Suffix:"
         priorityIssue = "WARNING: Couldn't set priority!"
 
+    class TriggerEvent(Thread):
+        def __init__(self, processInformation, suffix, prefix):
+            Thread.__init__(self)
+            self.processInformation = processInformation
+            self.suffix = suffix
+            self.prefix = prefix
+
+        def run(self):
+            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                self.processInformation.hProcess,
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            CloseHandle(self.processInformation.hProcess)
+            if hasattr(self.processInformation, "hThread"):
+                CloseHandle(self.processInformation.hThread)
+            eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
     def __call__(
         self,
@@ -151,10 +172,10 @@ class Execute(eg.ActionBase):
                 if not windll.shell32.ShellExecuteExW(byref(pi)):
                     eg.PrintError(self.text.priorityIssue)
         suffix = "%s.%s" % (
-                self.text.eventSuffix,
-                splitext(split(pathname)[1])[0]
-            )
-        if additionalSuffix!="":
+            self.text.eventSuffix,
+            splitext(split(pathname)[1])[0]
+        )
+        if additionalSuffix != "":
             suffix = suffix + "." + additionalSuffix
         prefix = self.plugin.name.replace(' ', '')
         if waitForCompletion:
@@ -175,33 +196,6 @@ class Execute(eg.ActionBase):
             te.start()
         else:
             CloseHandle(processInformation.hProcess)
-
-
-    class TriggerEvent(Thread):
-
-        def __init__(self, processInformation, suffix, prefix):
-            Thread.__init__(self)
-            self.processInformation = processInformation
-            self.suffix = suffix
-            self.prefix = prefix
-
-        def run(self):
-            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
-            exitCode = DWORD()
-            if not GetExitCodeProcess(
-                self.processInformation.hProcess,
-                byref(exitCode)
-            ):
-                raise self.Exception(FormatError())
-            CloseHandle(self.processInformation.hProcess)
-            if hasattr(self.processInformation, "hThread"):
-                CloseHandle(self.processInformation.hThread)
-            eg.TriggerEvent(self.suffix, prefix = self.prefix)
-
-
-    def GetLabel(self, pathname='', *dummyArgs):
-        return self.text.label % basename(pathname)
-
 
     def Configure(
         self,
@@ -344,3 +338,5 @@ class Execute(eg.ActionBase):
                 runAsAdminCheckBox.GetValue()
             )
 
+    def GetLabel(self, pathname='', *dummyArgs):
+        return self.text.label % basename(pathname)
