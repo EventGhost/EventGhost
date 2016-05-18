@@ -68,5 +68,6 @@ For the good of the project, pull requests containing commits that don't comply 
 * Your code didn't align with our design philosophy. Try not to take it personally if this happens -- we're only doing what we think is best for everyone.
 * Your commits weren't up to par. Read the "Commits count!" section above and try again.
 * Your code doesn't work. Setting up a build environment is now easier than ever -- just run `python Build.py --make-env` from an administrative command prompt -- so there's no excuse for not testing your work.
+* Your code works, but doesn't fully validate with [`flake8`](https://flake8.readthedocs.io/). There's a `flake8` plugin available for every major code editor except Visual Studio, so again, there's no excuse for not validating your work.
 * You added yourself to a plugin's author list without doing substantial work on that plugin. Fixing a bug doesn't make you an author.
 * Your pull request contains merge commits. To remove merge commits from an existing branch, run `git rebase upstream/master && git push --force`. To ensure you don't get merge commits in the future, run `git config --global pull.rebase true`.
