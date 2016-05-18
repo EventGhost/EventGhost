@@ -37,15 +37,14 @@ from eg.WinApi import (
 from eg.WinApi.Dynamic import (
     _kernel32,
     # functions:
-    byref, GetAncestor, GetForegroundWindow, GetWindowLong, GetWindowRect,
-    IsWindow, MoveWindow, PostMessage as WinApiPostMessage,
-    SendMessage as WinApiSendMessage, SendNotifyMessage, SetWindowPos,
-    ShowWindow,
+    byref, GetAncestor, GetForegroundWindow, GetWindowRect, IsWindow,
+    MoveWindow, PostMessage as WinApiPostMessage,
+    SendMessage as WinApiSendMessage, SetWindowPos, ShowWindow,
     # types:
     RECT,
     # constants:
-    GA_ROOT, GWL_EXSTYLE, HWND_NOTOPMOST, HWND_TOPMOST, SW_MAXIMIZE,
-    SW_MINIMIZE, SW_RESTORE, SWP_NOMOVE, SWP_NOSIZE, WM_COMMAND, WS_EX_TOPMOST,
+    GA_ROOT, HWND_NOTOPMOST, HWND_TOPMOST, SW_MAXIMIZE, SW_MINIMIZE,
+    SW_RESTORE, SWP_NOMOVE, SWP_NOSIZE, WM_COMMAND,
 )
 from eg.WinApi.Utils import (
     BringHwndToFront, CloseHwnd, GetAlwaysOnTop, GetBestHwnd,

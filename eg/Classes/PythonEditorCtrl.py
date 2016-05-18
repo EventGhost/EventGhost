@@ -79,7 +79,6 @@ class PythonEditorCtrl(StyledTextCtrl):
         #self.RegisterImage(2, images.getFile1Bitmap())
         #self.RegisterImage(3, images.getCopy2Bitmap())
 
-
         self.SetLexer(STC_LEX_PYTHON)
         self.SetKeyWords(0, " ".join(keyword.kwlist))
 

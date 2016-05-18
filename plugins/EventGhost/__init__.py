@@ -23,7 +23,7 @@ from win32gui import FindWindow
 
 # Local imports
 import eg
-from eg import AutostartItem, ContainerItem, FolderItem, MacroItem, RootItem
+from eg import FolderItem, MacroItem
 from eg.WinApi.Utils import BringHwndToFront
 from JumpIfElse import JumpIfElse
 from NewJumpIf import NewJumpIf

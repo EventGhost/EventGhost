@@ -24,10 +24,10 @@ from eg.WinApi import GetClassName, GetTopLevelWindowList
 from eg.WinApi.Dynamic import (
     BOOL, byref, CDLL, DeregisterShellHookWindow, DWORD, EnumWindows,
     FreeLibrary, GA_ROOT, GetAncestor, GetShellWindow, GetWindowLong,
-    GetWindowThreadProcessId, GWL_HWNDPARENT, GWL_STYLE,
-    HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED,
-    HWND, IsWindowVisible, LPARAM, RegisterShellHookWindow,
-    RegisterWindowMessage, WINFUNCTYPE, WM_APP, WS_VISIBLE,
+    GetWindowThreadProcessId, GWL_HWNDPARENT, HSHELL_WINDOWACTIVATED,
+    HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HWND, IsWindowVisible,
+    LPARAM, RegisterShellHookWindow, RegisterWindowMessage, WINFUNCTYPE,
+    WM_APP,
 )
 from eg.WinApi.Utils import GetProcessName
 

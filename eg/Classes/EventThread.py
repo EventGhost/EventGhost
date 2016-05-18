@@ -17,7 +17,6 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import traceback
-from functools import partial
 from threading import Event
 from ThreadWorker import ThreadWorker
 

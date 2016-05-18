@@ -28,7 +28,6 @@ from eg.WinApi.Dynamic import (
     FormatError,
     pointer,
     sizeof,
-    WinError,
 
     # constants
     CLRDTR,
@@ -52,7 +51,6 @@ from eg.WinApi.Dynamic import (
     INFINITE,
     INVALID_HANDLE_VALUE,
     MARKPARITY,
-    MAXDWORD,
     NOPARITY,
     ODDPARITY,
     ONE5STOPBITS,

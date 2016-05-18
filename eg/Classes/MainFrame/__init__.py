@@ -503,7 +503,7 @@ class MainFrame(wx.Frame):
         focus = self.FindFocus()
         if focus is self.treeCtrl:
             getattr(self.document, command[2:])()
-        elif isinstance(focus, wx.TextCtrl):                   #Added by Pako
+        elif isinstance(focus, wx.TextCtrl):  # Added by Pako
             getattr(focus.GetParent().editControl, command)()
         else:
             getattr(focus, command)()

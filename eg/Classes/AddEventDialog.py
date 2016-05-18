@@ -44,17 +44,19 @@ class AddEventDialog(eg.TaskletDialog):
             parent,
             -1,
             Text.title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
         )
         splitterWindow = wx.SplitterWindow(
             self,
             -1,
-            style=wx.SP_LIVE_UPDATE
-                |wx.CLIP_CHILDREN
-                |wx.NO_FULL_REPAINT_ON_RESIZE
+            style=(
+                wx.SP_LIVE_UPDATE |
+                wx.CLIP_CHILDREN |
+                wx.NO_FULL_REPAINT_ON_RESIZE
+            )
         )
 
-        style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
+        style = wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT | wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
         tree.SetMinSize((100, 100))
         tree.SetImageList(eg.Icons.gImageList)
@@ -73,7 +75,7 @@ class AddEventDialog(eg.TaskletDialog):
 
         self.nameText = nameText = wx.StaticText(rightPanel)
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
-        rightSizer.Add(nameText, 0, wx.EXPAND|wx.LEFT|wx.BOTTOM, 5)
+        rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
             wx.StaticBox(rightPanel, label=Text.descriptionLabel),
@@ -92,7 +94,7 @@ class AddEventDialog(eg.TaskletDialog):
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)
+        mainSizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
 
         self.SetSizerAndFit(mainSizer)

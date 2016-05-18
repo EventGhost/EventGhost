@@ -140,7 +140,6 @@ class AddPluginDialog(eg.TaskletDialog):
             if info.path == Config.lastSelection:
                 itemToSelect = treeId
 
-
         for kind, treeId in typeIds.iteritems():
             if kind in Config.collapsed:
                 treeCtrl.Collapse(treeId)

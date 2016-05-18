@@ -160,7 +160,7 @@ class RegistryChange(eg.ActionBase):
         try:
             if (action == 0) or (action == 1):
                 if keyType == _winreg.REG_DWORD:
-                   newValue = int(newValue)
+                    newValue = int(newValue)
                 #change key
                 _winreg.SetValueEx(regHandle, valueName, 0, keyType, newValue)
             elif (action == 2):

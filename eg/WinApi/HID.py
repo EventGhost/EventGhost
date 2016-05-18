@@ -88,7 +88,6 @@ class HIDThread(threading.Thread):
             eg.PrintError(self.text.errorOpen + self.deviceName + " (" + strerror + ")")
             return
 
-
         hidDLL = ctypes.windll.hid
         #setupapiDLL = ctypes.windll.setupapi
 
@@ -153,7 +152,6 @@ class HIDThread(threading.Thread):
                 ii = bCapsArr[i].Info.NotRange.DataIndex
                 dataIndexType[ii] = 1
 
-
         for i in range(vCapsArrL.value):
             if vCapsArr[i].IsRange:
                 for ii in range(
@@ -182,8 +180,9 @@ class HIDThread(threading.Thread):
             while not self.abort:
                 if rc == 997:  #error_io_pending
                     win32event.WaitForSingleObject(
-                       self._overlappedRead.hEvent,
-                       win32event.INFINITE)
+                        self._overlappedRead.hEvent,
+                        win32event.INFINITE
+                    )
 
                 buf = newBuf
                 try:

@@ -177,7 +177,7 @@ def EnsureVisible(window):
     windowRect = RECT()
     GetWindowRect(hwnd, byref(windowRect))
 
-   # hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
+    #hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
     #if hMonitor:
     #    return
 

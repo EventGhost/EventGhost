@@ -297,7 +297,6 @@ class Execute(eg.ActionBase):
         eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
         onEventCheckBox()
 
-
         panel.sizer.AddMany([
             (SText(text.FilePath)),
             (filepathCtrl, 0, wx.EXPAND),

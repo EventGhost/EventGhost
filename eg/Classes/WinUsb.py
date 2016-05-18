@@ -56,7 +56,6 @@ from eg.WinApi.Dynamic.SetupApi import (
     DIGCF_DEVICEINTERFACE,
     DIGCF_PRESENT,
     ERROR_INSUFFICIENT_BUFFER,
-    ERROR_INVALID_DATA,
     PSP_DEVICE_INTERFACE_DETAIL_DATA,
     SetupDiBuildDriverInfoList,
     SetupDiEnumDeviceInfo,
@@ -332,7 +331,7 @@ class WinUsb(object):
 
     @staticmethod
     def GetDevicePaths():
-        classGuid  = GUID()
+        classGuid = GUID()
         CLSIDFromString(DRIVER_CLASS_GUID, byref(classGuid))
         hDevInfo = SetupDiGetClassDevs(
             classGuid, None, None, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE

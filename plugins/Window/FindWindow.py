@@ -207,8 +207,6 @@ class FindWindow(eg.ActionBase):
         stopMacroCtrl_1.Bind(wx.EVT_CHECKBOX, OnStopMacroCtrl)
         stopMacroCtrl_2.Bind(wx.EVT_CHECKBOX, OnStopMacroCtrl)
 
-
-
         finderTool = eg.WindowDragFinder(
             panel,
             self.OnFinderToolLeftClick,

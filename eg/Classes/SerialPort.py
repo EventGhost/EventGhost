@@ -17,4 +17,4 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 # Local imports
-from eg.WinApi.serial import Serial as SerialPort
+from eg.WinApi.serial import Serial as SerialPort  # NOQA
