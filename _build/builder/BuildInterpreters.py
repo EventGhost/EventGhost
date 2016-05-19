@@ -17,7 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Create py.exe and pyw.exe for EventGhost
+Build py.exe and pyw.exe for EventGhost
 """
 
 import shutil
@@ -38,7 +38,7 @@ PYVERSION = "%d%d" % sys.version_info[:2]
 PY_BASE_NAME = "py%s" % PYVERSION
 PYW_BASE_NAME = "pyw%s" % PYVERSION
 
-class CreatePyExe(builder.Task):
+class BuildInterpreters(builder.Task):
     description = "Build interpreters (py.exe, pyw.exe)"
 
     def Setup(self):

@@ -131,7 +131,7 @@ class Builder(object):
         parser.add_argument(
             "-c", "--check",
             action="store_true",
-            help="check source files for issues",
+            help="check source code for issues",
         )
         parser.add_argument(
             "-m", "--make-env",

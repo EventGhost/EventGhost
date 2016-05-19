@@ -80,8 +80,8 @@ HEADER = """# -*- coding: utf-8 -*-
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 """
 
-class CheckSources(builder.Task):
-    description = "Check source files"
+class CheckSourceCode(builder.Task):
+    description = "Check source code"
 
     def Setup(self):
         if not self.buildSetup.showGui:

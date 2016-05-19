@@ -47,8 +47,8 @@ HEADER = '''\
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This file was automatically created by the StaticImports.py script. Don't
-try to edit this file yourself.
+This file was automatically created by the BuildStaticImports.py script.
+Don't try to edit this file yourself.
 
 This module is not directly used by EventGhost. It only exists to help
 pylint and other tools to read the sources properly, as EventGhost is using
@@ -65,7 +65,7 @@ def RegisterPlugin(**dummyKwArgs):
     pass
 """
 
-class CreateStaticImports(builder.Task):
+class BuildStaticImports(builder.Task):
     description = "Build StaticImports.py"
 
     def Setup(self):

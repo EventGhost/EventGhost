@@ -17,7 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Creates a file that would import all used modules.
+Builds a file that would import all used modules.
 
 This way we trick py2exe to include all standard library files and some more
 packages and modules.
@@ -62,7 +62,7 @@ HEADER = """\
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 #-----------------------------------------------------------------------------
-# This file was automatically created by the CreateImports.py script.
+# This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
 #pylint: disable-msg=W0611,W0622,W0402,E0611,F0401
@@ -70,7 +70,7 @@ HEADER = """\
 
 warnings.simplefilter('error', DeprecationWarning)
 
-class CreateImports(builder.Task):
+class BuildImports(builder.Task):
     description = "Build Imports.py"
 
     def Setup(self):

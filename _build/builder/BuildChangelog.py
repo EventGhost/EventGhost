@@ -24,9 +24,9 @@ from os.path import join
 import builder
 from builder.Utils import NextPage
 
-class UpdateChangeLog(builder.Task):
+class BuildChangelog(builder.Task):
     """
-    Add a version header to CHANGELOG.TXT if needed.
+    Populate CHANGELOG.TXT with the latest changes from GitHub.
     """
     description = "Build changelog"
 

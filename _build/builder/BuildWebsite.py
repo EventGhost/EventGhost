@@ -26,7 +26,7 @@ from os.path import abspath, join
 # Local imports
 import builder
 
-class CreateWebsite(builder.Task):
+class BuildWebsite(builder.Task):
     description = "Build website"
 
     def Setup(self):

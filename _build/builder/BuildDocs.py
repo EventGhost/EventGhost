@@ -56,7 +56,7 @@ MAIN_CLASSES = [
     "-ControlProviderMixin",
 ]
 
-class CreateChmDocs(builder.Task):
+class BuildChmDocs(builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
@@ -101,7 +101,7 @@ class CreateChmDocs(builder.Task):
         shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
 
 
-class CreateHtmlDocs(builder.Task):
+class BuildHtmlDocs(builder.Task):
     description = "Build HTML docs"
 
     def Setup(self):
@@ -126,7 +126,7 @@ class CreateHtmlDocs(builder.Task):
         ])
 
 
-def CreateClsDocs(clsNames):
+def BuildClsDocs(clsNames):
     res = []
     for clsName in clsNames:
         if clsName.startswith("-"):
@@ -168,12 +168,12 @@ def Prepare():
 
     filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
     outfile = open(filepath, "wt")
-    outfile.write(CreateClsDocs(MAIN_CLASSES))
+    outfile.write(BuildClsDocs(MAIN_CLASSES))
     outfile.close()
 
     filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
     outfile = open(filepath, "wt")
-    outfile.write(CreateClsDocs(GUI_CLASSES))
+    outfile.write(BuildClsDocs(GUI_CLASSES))
     outfile.close()
 
 def WritePluginList(filepath):

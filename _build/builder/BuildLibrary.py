@@ -91,7 +91,7 @@ DLL_EXCLUDES = [
 
 RT_MANIFEST = 24
 
-class CreateLibrary(builder.Task):
+class BuildLibrary(builder.Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
 
     def Setup(self):
@@ -104,7 +104,7 @@ class CreateLibrary(builder.Task):
 
     def DoTask(self):
         """
-        Create the library and .exe files with py2exe.
+        Build the library and .exe files with py2exe.
         """
         buildSetup = self.buildSetup
         sys.path.append(EncodePath(buildSetup.pyVersionDir))

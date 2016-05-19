@@ -94,7 +94,7 @@ class MyBuilder(builder.Builder):
         "eg",
     ]
 
-    def CreateInstaller(self):
+    def BuildInstaller(self):
         """
         Create and compile the Inno Setup installer script.
         """

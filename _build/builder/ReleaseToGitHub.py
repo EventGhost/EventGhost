@@ -35,7 +35,7 @@ else:
     import urllib as urllib
     urllib.parse = urllib
 
-class CreateGitHubRelease(builder.Task):
+class ReleaseToGitHub(builder.Task):
     description = "Release to GitHub"
 
     def Setup(self):
