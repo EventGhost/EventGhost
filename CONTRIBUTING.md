@@ -47,6 +47,17 @@ If you're new to Git, we recommend the following:
 * To get a better feel for Git's command-line tools, run through [GitHub's 15-minute interactive Git tutorial](https://try.github.io/).
 * Read the first three chapters of [*Pro Git*](https://git-scm.com/book). *Pro Git* is the gold standard of Git books, written by GitHub's co-founder, and is available free of charge at the link provided.
 
+### Setting up your editor
+
+Before you begin working on EventGhost, please install the following plugins in your code editor/IDE:
+
+* [`EditorConfig`](http://editorconfig.org/)
+* [`flake8`](https://flake8.readthedocs.io/)
+
+These plugins will help guide you to producing the highest quality code possible. If you're not using `EditorConfig` or your code doesn't fully validate with `flake8`, don't be surprised when your pull request is rejected and you're pointed back to this document.
+
+Still using Notepad or another program without plugin support? Check out [Visual Studio Code](https://code.visualstudio.com/) or [Atom](https://atom.io/), both of which are free and come with full Git integration.
+
 ### Commits count!
 
 Good commits are just as important as good code. Every developer worth his or her salt should read and internalize the following two articles:
@@ -66,8 +77,8 @@ For the good of the project, pull requests containing commits that don't comply 
 
 * Your code wasn't up to par. In this case, we'll usually provide a list of changes we want made. Be sure to post a follow-up comment after adding new commits to your pull request, as GitHub doesn't notify us on new commits.
 * Your code didn't align with our design philosophy. Try not to take it personally if this happens -- we're only doing what we think is best for everyone.
+* Your code was too sloppy. Read the "Setting up your editor" section above and try again.
 * Your commits weren't up to par. Read the "Commits count!" section above and try again.
-* Your code doesn't work. Setting up a build environment is now easier than ever -- just run `python Build.py --make-env` from an administrative command prompt -- so there's no excuse for not testing your work.
-* Your code works, but doesn't fully validate with [`flake8`](https://flake8.readthedocs.io/). There's a `flake8` plugin available for every major code editor except Visual Studio, so again, there's no excuse for not validating your work.
+* Your code didn't work. Setting up a build environment is now easier than ever -- just run `python Build.py --make-env` from an administrative command prompt -- so there's no excuse for not testing your work.
 * You added yourself to a plugin's author list without doing substantial work on that plugin. Fixing a bug doesn't make you an author.
-* Your pull request contains merge commits. To remove merge commits from an existing branch, run `git rebase upstream/master && git push --force`. To ensure you don't get merge commits in the future, run `git config --global pull.rebase true`.
+* Your pull request contained merge commits. To remove merge commits from an existing branch, run `git rebase upstream/master && git push --force`. To ensure you don't get merge commits in the future, run `git config --global pull.rebase true`.
