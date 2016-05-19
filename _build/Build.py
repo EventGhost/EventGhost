@@ -27,20 +27,6 @@ from os.path import dirname, join
 import builder
 from builder.Utils import CaseInsensitiveList, ListDir
 
-ROOT_INCLUDES = CaseInsensitiveList(
-    "CHANGELOG.TXT",
-    "EventGhost.chm",
-    "EventGhost.exe",
-    "Example.xml",
-    "LICENSE.TXT",
-    "msvcm90.dll",
-    "msvcp90.dll",
-    "msvcr90.dll",
-    "py.exe",
-    "pyw.exe",
-    "python27.dll",
-)
-
 SKIP_IF_UNCHANGED = CaseInsensitiveList(
     r"plugins\Task\TaskHook.dll",
 )
@@ -172,8 +158,9 @@ class MyBuilder(builder.Builder):
 
         Plugins with a "noinclude" file are also skipped.
         """
-        srcDir = self.sourceDir
-        files = set(ListDir(srcDir, [], fullpath=False))
+        files = set(ListDir(self.sourceDir, [], fullpath=False))
+        with open(join(self.pyVersionDir, "Root Includes.txt"), "r") as f:
+            rootIncludes = CaseInsensitiveList(*f.read().strip().split("\n"))
 
         noincludes = [".", "_"]
         coreplugins = []
@@ -187,7 +174,7 @@ class MyBuilder(builder.Builder):
         installFiles = []
         for f in files:
             if not f.startswith(tuple(noincludes)):
-                if f.count("\\") == 0 and f not in ROOT_INCLUDES:
+                if f.count("\\") == 0 and f not in rootIncludes:
                     pass
                 else:
                     #if f.startswith(tuple(coreplugins)):
