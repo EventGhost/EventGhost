@@ -22,6 +22,13 @@
 
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.12 by Pako 2016-04-17 18:59 UTC+1
+#     - added option: "NowPlaying" event is only trigerred when the payload is changed
+#     - added action "Get play-state"
+# 2.11 by Pako 2016-04-17 07:31 UTC+1
+#     - bugfix - program crashes when you try to open the OSD menu in fullscreen
+# 2.10 by Pako 2016-03-19 09:12 UTC+1
+#     - bugfix - GetWindowState() - when fullscreen is set in a maximized state
 # 2.9 by Pako 2015-01-12 19:23 UTC+1
 #     - bugfix - Find_MPC() function now works also in 64-bit system
 # 2.8 by Pako 2014-12-26 10:38 UTC+1
@@ -74,7 +81,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.9",
+    version = "2.12",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -105,7 +112,7 @@ import eg
 import wx
 import _winreg
 from os import environ
-from os.path import dirname, join, exists, isfile, split, isabs
+from os.path import join, exists, isfile, split, isabs
 from subprocess import Popen
 from eg.WinApi import SendMessageTimeout, WM_COMMAND
 from eg.WinApi.Utils import GetMonitorDimensions
@@ -115,11 +122,11 @@ from eg.WinApi.Dynamic import CreateEvent, SetEvent, GetWindowLong
 from threading import Timer
 from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetWindowPlacement
 from win32gui import GetClassName, GetWindowText, IsWindowVisible, GetWindowRect
-from win32gui import GetDlgItem, SendMessage, FindWindow, IsWindow, GetWindow
+from win32gui import GetDlgItem, SendMessage, FindWindow, IsWindow
 from copy import deepcopy as cpy
 from time import sleep, strftime, gmtime
 from winsound import PlaySound, SND_ASYNC
-from ctypes import create_unicode_buffer, addressof, windll, c_int, c_buffer, byref, sizeof
+from ctypes import create_unicode_buffer, addressof, windll, c_int, c_buffer, sizeof
 import wx.grid as gridlib
 from eg.WinApi.Dynamic import COPYDATASTRUCT, PCOPYDATASTRUCT, WM_COPYDATA
 from ctypes import Structure, cast, wstring_at, c_wchar, c_void_p
@@ -134,11 +141,9 @@ MF_GRAYED        = 1
 MF_DISABLED      = 2
 MF_CHECKED       = 8
 MF_BYPOSITION    = 1024
-MF_SEPARATOR     = 2048
 SYS_VSCROLL_X    = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 SYS_HSCROLL_Y    = wx.SystemSettings.GetMetric(wx.SYS_HSCROLL_Y)
 arialInfoString  = "0;-35;0;0;0;700;0;0;0;0;3;2;1;34;Arial"
-GW_CHILD         = 5
 WM_CLOSE         = 16
 #===============================================================================
 
@@ -176,7 +181,7 @@ CMD_STATE              = 0x50000001 #Par 1 : current state /see MPC_LOADSTATE en
 
 CMD_PLAYMODE           = 0x50000002 #Par 1 : current play mode (see MPC_PLAYSTATE enum)
 
-CMD_NOWPLAYING		   = 0x50000003 #;   // Send after opening a new file
+CMD_NOWPLAYING         = 0x50000003 #;   // Send after opening a new file
                                     #   // Par 1 : title
                                     #   // Par 2 : author
                                     #   // Par 3 : description
@@ -207,18 +212,18 @@ CMD_PLAYLIST           = 0x50000006 #   // List of files in the playlist
                                     #   // ...
                                     #   // Par n : active file, -1 if no active file
 
-CMD_CURRENTPOSITION		= 0x50000007
+CMD_CURRENTPOSITION     = 0x50000007
      #Send current playback position in responce
      #of CMD_GETCURRENTPOSITION.
      #Par 1 : current position in seconds
 
 
-CMD_NOTIFYSEEK			= 0x50000008
+CMD_NOTIFYSEEK          = 0x50000008
      #Send the current playback position after a jump.
      #(Automatically sent after a seek event).
      #Par 1 : new playback position (in seconds).
 
-CMD_NOTIFYENDOFSTREAM	= 0x50000009
+CMD_NOTIFYENDOFSTREAM   = 0x50000009
      #Notify the end of current playback
      #(Automatically sent).
      #Par 1 : none.
@@ -227,102 +232,102 @@ CMD_NOTIFYENDOFSTREAM	= 0x50000009
 
 # Open new file
 # Par 1 : file path
-CMD_OPENFILE			= 0xA0000000
+CMD_OPENFILE            = 0xA0000000
 
 # Stop playback but keep file / playlist
-CMD_STOP				= 0xA0000001
+CMD_STOP                = 0xA0000001
 
 # Stop playback and close file / playlist
-CMD_CLOSEFILE			= 0xA0000002
+CMD_CLOSEFILE           = 0xA0000002
 
 # Pause or restart playback
-CMD_PLAYPAUSE			= 0xA0000003
+CMD_PLAYPAUSE           = 0xA0000003
 
 # Add a new file to playlist (did not start playing)
 # Par 1 : file path
-CMD_ADDTOPLAYLIST		= 0xA0001000
+CMD_ADDTOPLAYLIST       = 0xA0001000
 
 # Remove all files from playlist
-CMD_CLEARPLAYLIST		= 0xA0001001
+CMD_CLEARPLAYLIST       = 0xA0001001
 
 # Start playing playlist
-CMD_STARTPLAYLIST		= 0xA0001002
+CMD_STARTPLAYLIST       = 0xA0001002
 
-CMD_REMOVEFROMPLAYLIST	= 0xA0001003	# TODO
+CMD_REMOVEFROMPLAYLIST  = 0xA0001003    # TODO
 
 # Cue current file to specific position
 # Par 1 : new position in seconds
-CMD_SETPOSITION			= 0xA0002000
+CMD_SETPOSITION         = 0xA0002000
 
 # Set the audio delay
 # Par 1 : new audio delay in ms
-CMD_SETAUDIODELAY		= 0xA0002001
+CMD_SETAUDIODELAY       = 0xA0002001
 
 # Set the subtitle delay
 # Par 1 : new subtitle delay in ms
-CMD_SETSUBTITLEDELAY	= 0xA0002002
+CMD_SETSUBTITLEDELAY    = 0xA0002002
 
 # Set the active file in the playlist
 # Par 1 : index of the active file -1 for no file selected
 # DOESN'T WORK
-CMD_SETINDEXPLAYLIST	= 0xA0002003
+CMD_SETINDEXPLAYLIST    = 0xA0002003
 
 # Set the audio track
 # Par 1 : index of the audio track
-CMD_SETAUDIOTRACK		= 0xA0002004
+CMD_SETAUDIOTRACK       = 0xA0002004
 
 # Set the subtitle track
 # Par 1 : index of the subtitle track -1 for disabling subtitles
-CMD_SETSUBTITLETRACK	= 0xA0002005
+CMD_SETSUBTITLETRACK    = 0xA0002005
 
 # Ask for a list of the subtitles tracks of the file
 # return a CMD_LISTSUBTITLETRACKS
-CMD_GETSUBTITLETRACKS	= 0xA0003000
+CMD_GETSUBTITLETRACKS   = 0xA0003000
 
 # Ask for the current playback position
 # see CMD_CURRENTPOSITION.
 # Par 1 : current position in seconds
-CMD_GETCURRENTPOSITION	= 0xA0003004
+CMD_GETCURRENTPOSITION  = 0xA0003004
 
 # Jump forward/backward of N seconds
 # Par 1 : seconds (negative values for backward)
-CMD_JUMPOFNSECONDS		= 0xA0003005
+CMD_JUMPOFNSECONDS      = 0xA0003005
 
 # Ask for a list of the audio tracks of the file
 # return a CMD_LISTAUDIOTRACKS
-CMD_GETAUDIOTRACKS		= 0xA0003001
+CMD_GETAUDIOTRACKS      = 0xA0003001
 
 # Ask for the properties of the current loaded file
 # return a CMD_NOWPLAYING
-CMD_GETNOWPLAYING		= 0xA0003002
+CMD_GETNOWPLAYING       = 0xA0003002
 
 # Ask for the current playlist
 # return a CMD_PLAYLIST
-CMD_GETPLAYLIST			= 0xA0003003
+CMD_GETPLAYLIST         = 0xA0003003
 
 # Toggle FullScreen
-CMD_TOGGLEFULLSCREEN	= 0xA0004000
+CMD_TOGGLEFULLSCREEN    = 0xA0004000
 
 # Jump forward(medium)
-CMD_JUMPFORWARDMED		= 0xA0004001
+CMD_JUMPFORWARDMED      = 0xA0004001
 
 # Jump backward(medium)
-CMD_JUMPBACKWARDMED		= 0xA0004002
+CMD_JUMPBACKWARDMED     = 0xA0004002
 
 # Increase Volume
-CMD_INCREASEVOLUME		= 0xA0004003
+CMD_INCREASEVOLUME      = 0xA0004003
 
 # Decrease volume
-CMD_DECREASEVOLUME		= 0xA0004004
+CMD_DECREASEVOLUME      = 0xA0004004
 
 # Shader toggle
-CMD_SHADER_TOGGLE		= 0xA0004005
+CMD_SHADER_TOGGLE       = 0xA0004005
 
 # Close App
-CMD_CLOSEAPP			= 0xA0004006
+CMD_CLOSEAPP            = 0xA0004006
 
 # show host defined OSD message string
-CMD_OSDSHOWMESSAGE		= 0xA0005000
+CMD_OSDSHOWMESSAGE      = 0xA0005000
 #===============================================================================
 
 class FixedWidth(wx.FontEnumerator):
@@ -362,7 +367,6 @@ def GetItemList(menu, hWnd):
                                                c_int(i),
                                                MF_BYPOSITION)
         id = windll.user32.GetMenuItemID(c_int(menu), c_int(i))
-#        if menuState & (MF_GRAYED|MF_DISABLED|MF_SEPARATOR):
         if menuState & (MF_GRAYED|MF_DISABLED):
             continue
         item = itemName.value.replace("&","").split("\t")[0]
@@ -1111,27 +1115,16 @@ class Menu(wx.Frame):
             eg.Bind(evt, self.onRight)
         for evt in self.evtList[4]:
             eg.Bind(evt, self.onEscape)
-        child = GetWindow(self.hWnd, GW_CHILD)
-        clsName = GetClassName(child)
-        if clsName[:4] == "Afx:" and len(clsName) == 41:
-            childRect = GetWindowRect(child)
-            mons = EnumDisplayMonitors()
-            fullscreen = False
-            for mon in mons:
-                if childRect == mon[2]:
-                    fullscreen = True
-                    break
-            if fullscreen: # Fullscreen !
-                SendMessageTimeout(self.hWnd, WM_COMMAND, 830, 0)
-                self.messStack.append(830)
-                sleep(0.1)
-            childRect = GetWindowRect(child)
-            parRect = GetWindowRect(self.hWnd)
-            if childRect[1] - parRect[1] < 16: # Without menu !
-                SendMessageTimeout(self.hWnd, WM_COMMAND, 817, 0)
-                self.messStack.append(817)
-                sleep(0.1)
+        if self.plugin.GetWindowState() == 4: # Fullscreen !
+            SendMessageTimeout(self.hWnd, WM_COMMAND, 830, 0)
+            self.messStack.append(830)
+            sleep(0.1)
         self.menu = GetMenu(hWnd)
+        while not self.menu:
+            SendMessageTimeout(self.hWnd, WM_COMMAND, 817, 0)
+            self.messStack.append(817)
+            sleep(0.1)
+            self.menu = GetMenu(hWnd)
         self.items = GetItemList(self.menu, self.hWnd)
         self.choices = [item[0] for item in self.items]
         self.menuGridCtrl = MenuGrid(self,len(self.choices))
@@ -1281,9 +1274,12 @@ class Menu(wx.Frame):
 
 
     def destroyMenu(self, event = None):
-        for i in range(len(self.messStack)):
-            mess = self.messStack.pop()
-            SendMessageTimeout(self.hWnd, WM_COMMAND, mess, 0)
+        cnt = self.messStack.count(817)
+        if cnt:
+            for i in range(4 - cnt):
+                SendMessageTimeout(self.hWnd, WM_COMMAND, 817, 0)
+        if self.messStack.count(830):
+            SendMessageTimeout(self.hWnd, WM_COMMAND, 830, 0)
         for evt in self.evtList[0]:
             eg.Unbind(evt, self.onUp)
         for evt in self.evtList[1]:
@@ -1542,6 +1538,71 @@ class GetWindowState(eg.ActionBase):
                 state,
                 triggCtrl.GetValue(),
                 prefixCtrl.GetValue()
+            )
+#===============================================================================
+
+class GetPlayState(eg.ActionBase):
+
+    class text:
+        rbLabel = "Result type choice"
+        numVal = "Return a numeric value"
+        strVal = "Return a string value"
+        boolVal = "Return True when play state is "
+        states = ("Playing", "Paused", "Stopped", "Unknown")
+
+    def __call__(self, mode = 0, state = 0):
+        stt = self.plugin.playstate
+        if mode == 0:
+            return stt
+        elif mode == 1:
+            return self.text.states[stt]
+        else:
+            return stt == state
+
+
+    def Configure(self, mode = 0, state = 0):
+        self.stt = state
+        panel=eg.ConfigPanel(self)
+        topSizer = wx.StaticBoxSizer(
+            wx.StaticBox(panel, -1, self.text.rbLabel),
+            wx.VERTICAL
+        )
+        boolSizer = wx.BoxSizer(wx.HORIZONTAL)
+        rb0 = panel.RadioButton(mode==0, self.text.numVal, style=wx.RB_GROUP)
+        rb1 = panel.RadioButton(mode==1, self.text.strVal)
+        rb2 = panel.RadioButton(mode==2, self.text.boolVal)
+        statChoice = wx.Choice(panel, -1, choices = self.text.states)
+        statChoice.Select(state)
+        boolSizer.Add(rb2,0,wx.TOP,3)
+        boolSizer.Add(statChoice)
+        topSizer.Add(rb0,0,wx.TOP,3)
+        topSizer.Add(rb1,0,wx.TOP,7)
+        topSizer.Add(boolSizer,0,wx.TOP,5)
+        panel.sizer.Add(topSizer)
+
+
+        def onState(evt):
+            self.stt = evt.GetSelection()
+            evt.Skip()
+        statChoice.Bind(wx.EVT_CHOICE, onState)
+
+        def onRadio(evt = None):
+            flg = rb2.GetValue()
+            statChoice.Enable(flg)
+            sel = self.stt if flg else -1
+            statChoice.SetSelection(sel)
+            if evt:
+                evt.Skip()
+        rb0.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        rb1.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        rb2.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        onRadio()
+
+        while panel.Affirmed():
+            state = state if self.stt == -1 else self.stt
+            panel.SetResult(
+                (rb0.GetValue(),rb1.GetValue(),rb2.GetValue()).index(True),
+                state,
             )
 #===============================================================================
 
@@ -2252,6 +2313,8 @@ class MediaPlayerClassic(eg.PluginBase):
     myStart = None
     menuDlg = None
     state = None
+    playstate = 3
+    np_payload = None
     mpcHwnd = None
     event = None
     result = None
@@ -2273,7 +2336,7 @@ class MediaPlayerClassic(eg.PluginBase):
         label = "Path to MPC-HC executable:"
         fileMask = "MPC-HC executable|mpc-hc*.exe|All EXE files (*.exe)|*.exe"
         gotoLabel = "Go To..."
-
+        fltr='"NowPlaying" event is only trigerred when the payload is changed'
 
     def ParseMsg(self, msg):
         msg = msg.replace(u"\\|", u"\xb0*\u2734*\xb0")
@@ -2300,11 +2363,16 @@ class MediaPlayerClassic(eg.PluginBase):
                 self.state = state
                 eg.TriggerEvent("State."+MPC_LOADSTATE[state],prefix="MPC-HC")
         elif cmd == CMD_NOWPLAYING:
+            if self.playstate == 3: # if the plugin is started when the MPC-HC is already playing
+                self.playstate = 0
             msg = self.ParseMsg(msg)
-            eg.TriggerEvent("NowPlaying",prefix="MPC-HC", payload = msg)
+            if msg !=  self.np_payload:
+                self.np_payload = msg
+                eg.TriggerEvent("NowPlaying",prefix="MPC-HC", payload = msg)
 
         elif cmd == CMD_PLAYMODE:
-            eg.TriggerEvent("Playstate."+MPC_PLAYSTATE[int(msg)],prefix="MPC-HC")
+            self.playstate = int(msg)
+            eg.TriggerEvent("Playstate."+MPC_PLAYSTATE[self.playstate],prefix="MPC-HC")
 
         elif cmd == CMD_NOTIFYSEEK:
             eg.TriggerEvent("Seek",prefix="MPC-HC",payload = int(0.5+float(msg)))
@@ -2396,7 +2464,8 @@ class MediaPlayerClassic(eg.PluginBase):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
 
 
-    def __start__(self, mpcPath=None):
+    def __start__(self, mpcPath=None, fltr=True):
+        self.fltr=fltr
         self.mySched=None
         self.myStart=None
         self.menuDlg = None
@@ -2407,6 +2476,8 @@ class MediaPlayerClassic(eg.PluginBase):
         self.runFlg = False
         self.strtFlg = False
         self.connected = False
+        self.playstate = 3
+        self.np_payload = None
         if mpcPath is None:
             mpcPath = self.GetMpcHcPath()
         if not mpcPath or not exists(mpcPath):
@@ -2438,7 +2509,7 @@ class MediaPlayerClassic(eg.PluginBase):
         self.mr = None
 
 
-    def Configure(self, mpcPath=None):
+    def Configure(self, mpcPath=None,fltr=True):
         if mpcPath is None:
             mpcPath = self.GetMpcHcPath()
             if mpcPath is None:
@@ -2457,10 +2528,18 @@ class MediaPlayerClassic(eg.PluginBase):
             fileMask = self.text.fileMask,
             buttonText=eg.text.General.browse,
         )
-        panel.AddLabel(self.text.label)
-        panel.AddCtrl(filepathCtrl)
+        fltrCtrl = wx.CheckBox(panel, -1, self.text.fltr)
+        fltrCtrl.SetValue(fltr)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(wx.StaticText(panel,-1,self.text.label))
+        sizer.Add(filepathCtrl)
+        sizer.Add(fltrCtrl,0,wx.TOP,20)
+        panel.sizer.Add(sizer,0,wx.ALL,10)
         while panel.Affirmed():
-            panel.SetResult(filepathCtrl.GetValue())
+            panel.SetResult(
+                filepathCtrl.GetValue(),
+                fltrCtrl.GetValue()
+            )
 
 
     def GetMpcHcPath(self):
@@ -2496,7 +2575,7 @@ class MediaPlayerClassic(eg.PluginBase):
         border = GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_WINDOWEDGE
         if border:
             return state
-        rect = GetWindowPlacement(hWnd)[-1]
+        rect = GetWindowRect(hWnd)
         mons = EnumDisplayMonitors()
         fullscreen = False
         for mon in mons:
@@ -2868,6 +2947,7 @@ ACTIONS = (
     (GetInfo,"GetSubtitles","Get subtitles tracks","Asks for a list of the subtitles tracks of the file.",CMD_GETSUBTITLETRACKS),
     (GetInfo,"GetAdiotracks","Get audio tracks","Asks for a list of the audio tracks of the file.",CMD_GETAUDIOTRACKS),
     (GetInfo,"GetPlaylist","Get playlist","Asks for the current playlist.",CMD_GETPLAYLIST),
+    (GetPlayState,"GetPlaystate","Get play-state","Returns current play-state.",None),
 )),
 )
 #===============================================================================

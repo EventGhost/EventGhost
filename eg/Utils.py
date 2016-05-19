@@ -247,8 +247,10 @@ def GetBootTimestamp(unix_timestamp = True):
     GetTickCount64 = windll.kernel32.GetTickCount64
     GetTickCount64.restype = c_ulonglong
     up = GetTickCount64() / 1000.0
-    st = str(dt.fromtimestamp(now - up))
-    return now - up if unix_timestamp else st[:st.index(".")]
+    if not unix_timestamp:
+        st = str(dt.fromtimestamp(now - up))
+        return st if "." not in st else st[:st.index(".")]
+    return now - up
 
 def GetFirstParagraph(text):
     """
@@ -325,8 +327,10 @@ def GetUpTime(seconds = True):
     GetTickCount64 = windll.kernel32.GetTickCount64
     GetTickCount64.restype = c_ulonglong
     ticks = GetTickCount64() / 1000.0
-    delta = str(td(seconds = ticks))
-    return ticks if seconds else delta[:delta.index(".")]
+    if not seconds:
+        delta = str(td(seconds = ticks))
+        return delta if "." not in delta else delta[:delta.index(".")]
+    return ticks
 
 def LogIt(func):
     """

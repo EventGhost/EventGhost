@@ -22,6 +22,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.4 by Pako 2016-03-05 09:44 UTC+1
+#     - bugfix - command "text = Text" is missing (line 231)
 # 2.3 by Pako 2016-01-17 07:18 UTC+1
 #     - bugfix
 # 2.2 by Pako 2015-04-20 17:18 UTC+1
@@ -227,6 +229,7 @@ class Speaker(Thread):
 
 
 class Speech(eg.PluginClass):
+    text = Text
 
     def __init__(self):
         self.AddAction(TextToSpeech)
