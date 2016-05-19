@@ -37,6 +37,14 @@ from builder.subprocess2 import Popen
 class InvalidVersion(Exception):
     pass
 
+class CaseInsensitiveList(object):
+    def __init__(self, *args):
+        self.items = args
+
+    def __contains__(self, item):
+        return item.lower() in (i.lower() for i in self.items)
+
+
 def DecodePath(path):
     return path.decode('mbcs')
 
