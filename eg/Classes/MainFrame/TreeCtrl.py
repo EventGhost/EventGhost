@@ -794,10 +794,9 @@ class TreeCtrl(wx.TreeCtrl):
                 self.SetItemHasChildren(self.visibleNodes[parent], False)
                 self.expandedNodes.discard(parent)
         self.expandedNodes.discard(node)
-        self.Freeze()
-        self.SelectItem(self.visibleNodes[self.root])
-        self.SelectItem(self.visibleNodes[parent])
-        self.Thaw()
+        selected = self.GetSelection()
+        self.UnselectAll()
+        self.SelectItem(selected)
 
     @eg.AssertInMainThread
     def OnNodeMoveBegin(self, dummyNode):
