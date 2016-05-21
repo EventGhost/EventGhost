@@ -77,8 +77,8 @@ For the good of the project, pull requests containing commits that don't comply 
 
 * Your code wasn't up to par. In this case, we'll usually provide a list of changes we want made. Be sure to post a follow-up comment after adding new commits to your pull request, as GitHub doesn't notify us on new commits.
 * Your code didn't align with our design philosophy. Try not to take it personally if this happens -- we're only doing what we think is best for everyone.
-* Your code was too sloppy. Read the "Setting up your editor" section above and try again.
-* Your commits weren't up to par. Read the "Commits count!" section above and try again.
+* Your code was too sloppy. Read the [Setting up your editor](#setting-up-your-editor) section above and try again.
+* Your commits weren't up to par. Read the [Commits count!](#commits-count) section above and try again.
 * Your code didn't work. Setting up a build environment is now easier than ever -- just run `python Build.py --make-env` from an administrative command prompt -- so there's no excuse for not testing your work.
 * You added yourself to a plugin's author list without doing substantial work on that plugin. Fixing a bug doesn't make you an author.
 * Your pull request contained merge commits. To remove merge commits from an existing branch, run `git rebase upstream/master && git push --force`. To ensure you don't get merge commits in the future, run `git config --global pull.rebase true`.
