@@ -60,19 +60,6 @@ class InnoInstaller(object):
         Finishes the setup, writes the Inno Setup script and calls the
         Inno Setup compiler.
         """
-        srcDir = self.buildSetup.sourceDir
-        if self.buildSetup.pyVersionStr in ["26", "27"]:
-            self.AddFile(join(srcDir, "msvcr90.dll"))
-            self.AddFile(join(srcDir, "msvcp90.dll"))
-            self.AddFile(join(srcDir, "msvcm90.dll"))
-            self.AddFile(join(
-                srcDir,
-                "python{0}.dll".format(self.buildSetup.pyVersionStr)
-            ))
-        else:
-            print "Python version not supported."
-            return
-
         innoScriptTemplate = file(
             join(self.buildSetup.dataDir, "InnoSetup.template"),
             "rt"

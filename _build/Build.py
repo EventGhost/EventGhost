@@ -20,7 +20,6 @@
 This script creates the EventGhost setup installer.
 """
 
-from glob import glob
 from os.path import dirname, join
 
 # Local imports
@@ -100,28 +99,16 @@ class MyBuilder(builder.Builder):
         """
         from builder.InnoSetup import InnoInstaller
         inno = InnoInstaller(self)
-        plugins = {}
+        plugins = []
         for filename, prefix in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
-                pluginFolder = filename.split("\\")[1]
-                plugins[pluginFolder] = True
-            if (
-                filename.startswith("lib") and
-                not filename.startswith("lib%s\\" % self.pyVersionStr)
-            ) or (
-                len(filename) < 10 and
-                filename.startswith("py") and
-                filename.endswith(".exe")
-            ):
-                continue
+                plugins.append(filename.split("\\")[1])
             inno.AddFile(
                 join(self.sourceDir, filename),
                 dirname(filename),
                 ignoreversion=(filename not in SKIP_IF_UNCHANGED),
                 prefix=prefix
             )
-        for filename in glob(join(self.libraryDir, '*.*')):
-            inno.AddFile(filename, self.libraryName)
         inno.AddFile(
             join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
             destName="py.exe"
@@ -134,18 +121,16 @@ class MyBuilder(builder.Builder):
             join(self.tmpDir, "VersionInfo.py"),
             destDir="eg\\Classes"
         )
-        # create entries in the [InstallDelete] section of the Inno script to
+
+        # Create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new
         # plugins.
-        for plugin in plugins.keys():
+        for plugin in plugins:
             inno.Add(
                 "InstallDelete",
                 'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
             )
-        inno.Add(
-            "InstallDelete",
-            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersionStr
-        )
+
         inno.ExecuteInnoSetup()
 
     def GetSetupFiles(self):
