@@ -100,7 +100,9 @@ class Config(Section):
                     raise
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
-            eg.Utils.UpdateStartupShortcut(self.startWithWindows)
+
+        eg.Utils.UpdateStartupShortcut(self.startWithWindows)
+
         if self.language == "Deutsch":
             self.language = "de_DE"
 
