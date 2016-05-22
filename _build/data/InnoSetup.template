@@ -21,8 +21,13 @@ OutputDir=%(outputDir)s
 ShowLanguageDialog=auto
 SolidCompression=yes
 VersionInfoDescription=EventGhost Installer
-VersionInfoProductVersion=%(appVersionShort)s
-VersionInfoVersion=%(appVersionShort)s
+#if Pos('WIP-', '%(appVersion)s')
+VersionInfoVersion=0.0.0
+#elif Pos('-', '%(appVersion)s')
+VersionInfoVersion={#Copy('%(appVersion)s', 1, Pos('-', '%(appVersion)s') - 1)}
+#else
+VersionInfoVersion=%(appVersion)s
+#endif
 
 [Code]
 function InitializeSetup: Boolean;

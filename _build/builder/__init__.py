@@ -116,7 +116,6 @@ class Builder(object):
             }
 
         self.appVersion = None
-        self.appVersionShort = None
         self.appVersionInfo = None
         self.tmpDir = tempfile.mkdtemp()
         self.appName = self.name

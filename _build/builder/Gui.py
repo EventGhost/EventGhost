@@ -100,14 +100,15 @@ class MainDialog(wx.Dialog):
 
         sb = egSzr.GetStaticBox()
         lblVersion = wx.StaticText(sb, wx.ID_ANY, "Version to build:")
-        self.versionStr = wx.TextCtrl(sb, wx.ID_ANY,
-                                      value=buildSetup.appVersionShort)
+        self.versionStr = wx.TextCtrl(sb, wx.ID_ANY)
+        self.UpdateVersion()
+
         refreshVersion = wx.BitmapButton(sb, wx.ID_ANY, wx.ArtProvider.
                                          GetBitmap(wx.ART_GO_DOWN))
         refreshVersion.SetToolTip(wx.ToolTip(
             'Get Version from GitHub. Before using,\n'
             'please fill the github section above.'))
-        refreshVersion.Bind(wx.EVT_BUTTON, self.RefreshVersion)
+        refreshVersion.Bind(wx.EVT_BUTTON, self.OnRefreshVersion)
 
         egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
@@ -174,7 +175,6 @@ class MainDialog(wx.Dialog):
                 ctrl.Enable(False)
         (
             self.buildSetup.appVersion,
-            self.buildSetup.appVersionShort,
             self.buildSetup.appVersionInfo
         ) = (
             ParseVersion(self.versionStr.GetValue())
@@ -188,6 +188,10 @@ class MainDialog(wx.Dialog):
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 
+    def OnRefreshVersion(self, event):
+        GetVersion(self.buildSetup)
+        self.UpdateVersion()
+
     def OnRepoSelection(self, event):
         key = self.chcRepo.GetStringSelection()
         self.chcBranch.SetItems(
@@ -197,9 +201,9 @@ class MainDialog(wx.Dialog):
             self.buildSetup.gitConfig["all_repos"][key]["def_branch"]
         )
 
-    def RefreshVersion(self, event):
-        GetVersion(self.buildSetup)
-        self.versionStr.SetValue(self.buildSetup.appVersion)
+    def UpdateVersion(self):
+        if not self.buildSetup.appVersion.startswith("WIP-"):
+            self.versionStr.SetValue(self.buildSetup.appVersion)
 
 
 def Main(buildSetup):

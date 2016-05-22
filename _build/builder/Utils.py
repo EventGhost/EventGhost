@@ -256,12 +256,10 @@ def GetVersion(buildSetup):
             parts.append("0")
         parts[2] = int(parts[2]) + 1
         buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
-        buildSetup.appVersionShort = buildSetup.appVersion
         buildSetup.appVersionInfo = tuple(parts)
     else:
         (
             buildSetup.appVersion,
-            buildSetup.appVersionShort,
             buildSetup.appVersionInfo
         ) = (
             ParseVersion(buildSetup.args.version)
@@ -335,10 +333,10 @@ def NextPage(gh):
 
 def ParseVersion(ver):
     """
-    Return long, short, and tuple versions of the specified string.
+    Return string and tuple versions of the specified string.
     """
     if not ver or ver == "0.0.0":
-        return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), "0.0.0", ("0",) * 6)
+        return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), ("0",) * 6)
     else:
         match = re.search(
             "^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)" +
@@ -346,7 +344,7 @@ def ParseVersion(ver):
         )
         if match:
             ver_info = tuple(map(lambda x: x or "0", match.groups()))
-            return (ver, ".".join(ver_info[:3]), ver_info)
+            return (ver, ver_info)
         else:
             raise InvalidVersion
 
