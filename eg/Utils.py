@@ -494,5 +494,6 @@ def UpdateStartupShortcut(create):
         Shortcut.Create(
             path=path,
             target=os.path.abspath(sys.executable),
-            arguments="-h -e OnInitAfterBoot"
+            arguments="-h -e OnInitAfterBoot",
+            startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
