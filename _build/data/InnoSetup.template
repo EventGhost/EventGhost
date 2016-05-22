@@ -72,7 +72,7 @@ Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
-;Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Tasks: startupicon
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
@@ -96,6 +96,7 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Tasks]
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
+Name: "startupicon"; Description: {cm:AutoStartProgram,{#SetupSetting('AppName')}}; GroupDescription: {cm:AutoStartProgramGroupDescription}
 
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"

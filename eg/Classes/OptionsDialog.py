@@ -18,6 +18,7 @@
 
 import os
 import wx
+from os.path import exists, join
 from wx.combo import BitmapComboBox
 
 # Local imports
@@ -81,7 +82,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         # page 1 controls
         startWithWindowsCtrl = page1.CheckBox(
-            config.startWithWindows,
+            exists(join((eg.folderPath.Startup or ""), eg.APP_NAME + ".lnk")),
             text.StartWithWindows
         )
         if eg.folderPath.Startup is None:
@@ -197,8 +198,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         oldLanguage = config.language
         while self.Affirmed():
-            config.startWithWindows = startWithWindowsCtrl.GetValue()
-            eg.Utils.UpdateStartupShortcut(config.startWithWindows)
+            eg.Utils.UpdateStartupShortcut(startWithWindowsCtrl.GetValue())
 
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()

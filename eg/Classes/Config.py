@@ -70,7 +70,6 @@ class Config(Section):
     propResize = True
     refreshEnv = False
     scrollLog = True
-    startWithWindows = True
     useFixedFont = False
 
     class plugins:  #pylint: disable-msg=C0103
@@ -100,8 +99,6 @@ class Config(Section):
                     raise
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
-
-        eg.Utils.UpdateStartupShortcut(self.startWithWindows)
 
         if self.language == "Deutsch":
             self.language = "de_DE"
