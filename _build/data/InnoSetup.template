@@ -38,6 +38,20 @@ begin
     end
 end;
 
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+  Subkey: String;
+  Uninstall: String;
+begin
+  Subkey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\EventGhost_is1';
+  if (CurStep = ssInstall) then begin
+    if RegQueryStringValue(HKCU, Subkey, 'UninstallString', Uninstall) or RegQueryStringValue(HKLM, Subkey, 'UninstallString', Uninstall) then begin
+      Exec(RemoveQuotes(Uninstall), '/SILENT', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+    end;
+  end;
+end;
+
 [Icons]
 Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
