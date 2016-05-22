@@ -27,6 +27,7 @@ from datetime import datetime as dt, timedelta as td
 from docutils.core import publish_parts as ReSTPublishParts
 from docutils.writers.html4css1 import Writer
 from functools import update_wrapper
+from os.path import abspath, dirname, exists, join
 from types import ClassType
 
 # Local imports
@@ -251,6 +252,22 @@ def GetBootTimestamp(unix_timestamp = True):
         st = str(dt.fromtimestamp(now - up))
         return st if "." not in st else st[:st.index(".")]
     return now - up
+
+def GetClosestLanguage():
+    """
+    Returns the language file closest to system locale.
+    """
+    langDir = join(dirname(abspath(sys.executable)), "languages")
+    if exists(langDir):
+        locale = wx.Locale()
+        name = locale.GetLanguageCanonicalName(locale.GetSystemLanguage())
+        if exists(join(langDir, name + ".py")):
+            return name
+        else:
+            for f in [f for f in os.listdir(langDir) if f.endswith(".py")]:
+                if f.startswith(name[0:3]):
+                    return f[0:5]
+    return "en_EN"
 
 def GetFirstParagraph(text):
     """

@@ -18,14 +18,12 @@
 
 import os
 import sys
-import wx
 from os.path import exists
 from types import ClassType, InstanceType
 
 # Local imports
 import eg
-
-LOCALE = wx.Locale()
+from eg.Utils import GetClosestLanguage
 
 class Section:
     def __init__(self, defaults=None):
@@ -49,10 +47,7 @@ class Section:
 
 class Config(Section):
     version = eg.Version.string
-    if LOCALE.GetLanguageName(LOCALE.GetSystemLanguage()) == 'German':
-        language = 'de_DE'
-    else:
-        language = 'en_EN'
+    language = GetClosestLanguage()
     autoloadFilePath = False
     checkUpdate = True
     checkPreRelease = False
@@ -99,9 +94,6 @@ class Config(Section):
                     raise
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
-
-        if self.language == "Deutsch":
-            self.language = "de_DE"
 
     def Save(self):
         self.version = eg.Version.string
