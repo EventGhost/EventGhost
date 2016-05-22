@@ -162,8 +162,8 @@ class MainDialog(wx.Dialog):
             dlg.ShowModal()
             return
 
-        self.okButton.Enable(False)
-        self.cancelButton.Enable(False)
+        for child in self.GetChildren():
+            child.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
         for task in self.buildSetup.tasks:
             if not task.visible:
@@ -172,7 +172,6 @@ class MainDialog(wx.Dialog):
             if section in self.ctrls:
                 ctrl = self.ctrls[section]
                 task.activated = ctrl.GetValue()
-                ctrl.Enable(False)
         (
             self.buildSetup.appVersion,
             self.buildSetup.appVersionInfo
