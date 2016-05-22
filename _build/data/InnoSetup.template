@@ -60,10 +60,6 @@ Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
 ;Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists
 
-[InstallDelete]
-Type: filesandordirs; Name: "{app}\eg"
-Type: files; Name: "{app}\lib%(pyVersionStr)s\*.*"
-
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: Deutsch; MessagesFile: "compiler:Languages\German.isl"

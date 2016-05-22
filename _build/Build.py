@@ -99,10 +99,8 @@ class MyBuilder(builder.Builder):
         """
         from builder.InnoSetup import InnoInstaller
         inno = InnoInstaller(self)
-        plugins = []
+
         for filename, prefix in self.GetSetupFiles():
-            if filename.startswith("plugins\\"):
-                plugins.append(filename.split("\\")[1])
             inno.AddFile(
                 join(self.sourceDir, filename),
                 dirname(filename),
@@ -121,15 +119,6 @@ class MyBuilder(builder.Builder):
             join(self.tmpDir, "VersionInfo.py"),
             destDir="eg\\Classes"
         )
-
-        # Create entries in the [InstallDelete] section of the Inno script to
-        # remove all known plugin directories before installing the new
-        # plugins.
-        for plugin in plugins:
-            inno.Add(
-                "InstallDelete",
-                'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
-            )
 
         inno.ExecuteInnoSetup()
 
