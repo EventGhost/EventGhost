@@ -47,7 +47,16 @@ begin
   Subkey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\EventGhost_is1';
   if (CurStep = ssInstall) then begin
     if RegQueryStringValue(HKCU, Subkey, 'UninstallString', Uninstall) or RegQueryStringValue(HKLM, Subkey, 'UninstallString', Uninstall) then begin
+      // Rename folders that previous versions might remove on uninstall.
+      RenameFile(ExpandConstant('{commonappdata}\EventGhost'), ExpandConstant('{commonappdata}\EventGhost.bak'))
+      RenameFile(ExpandConstant('{userappdata}\EventGhost'), ExpandConstant('{userappdata}\EventGhost.bak'))
+
+      // Silently run uninstall command.
       Exec(RemoveQuotes(Uninstall), '/SILENT', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+
+      // Rename folders back.
+      RenameFile(ExpandConstant('{commonappdata}\EventGhost.bak'), ExpandConstant('{commonappdata}\EventGhost'))
+      RenameFile(ExpandConstant('{userappdata}\EventGhost.bak'), ExpandConstant('{userappdata}\EventGhost'))
     end;
   end;
 end;
