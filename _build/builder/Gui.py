@@ -39,11 +39,17 @@ class MainDialog(wx.Dialog):
                 continue
             section = task.GetId()
             ctrl = wx.CheckBox(self, -1, task.description)
+            if section.endswith(".BuildInstaller"):
+                checked = task.activated
+                ctrl.Bind(wx.EVT_CHECKBOX, self.OnInstallerCheck)
             ctrl.SetValue(task.activated)
             ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
             self.ctrls[section] = ctrl
             if not task.enabled:
                 ctrl.Enable(False)
+
+        if checked:
+            self.OnInstallerCheck(True)
 
         self.okButton = wx.Button(self, wx.ID_OK)
         self.okButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -146,6 +152,20 @@ class MainDialog(wx.Dialog):
     def OnExit(self):
         self.Destroy()
         sys.exit(0)
+
+    def OnInstallerCheck(self, event):
+        # We don't want releases going out without a current changelog (which
+        # is also included in the documentation), so let's force both to be
+        # built when building the installer.
+        for ctrl in (
+            self.ctrls["builder.BuildChangelog.BuildChangelog"],
+            self.ctrls["builder.BuildDocs.BuildChmDocs"],
+        ):
+            if event is True or event.Checked():
+                ctrl.Enable(False)
+                ctrl.SetValue(True)
+            else:
+                ctrl.Enable(True)
 
     def OnOk(self, dummyEvent):
         repository = self.chcRepo.GetStringSelection()
