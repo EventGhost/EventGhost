@@ -93,6 +93,7 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
 
 [UninstallDelete]
+Type: dirifempty; Name: "{app}"
 Type: files; Name: "{userstartup}\EventGhost.lnk"
 
 [UninstallRun]
