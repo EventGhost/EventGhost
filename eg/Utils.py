@@ -488,6 +488,9 @@ def UpdateStartupShortcut(create):
         os.remove(path)
 
     if create:
+        if not os.path.exists(eg.folderPath.Startup):
+            os.makedirs(eg.folderPath.Startup)
+
         Shortcut.Create(
             path=path,
             target=os.path.abspath(sys.executable),
