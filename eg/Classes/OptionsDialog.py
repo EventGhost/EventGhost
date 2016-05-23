@@ -124,6 +124,11 @@ class OptionsDialog(eg.TaskletDialog):
             text.refreshEnv
         )
 
+        propResizeCtrl = page1.CheckBox(
+            config.propResize,
+            text.propResize
+        )
+
         useFixedFontCtrl = page1.CheckBox(
             config.useFixedFont,
             text.UseFixedFont
@@ -132,11 +137,6 @@ class OptionsDialog(eg.TaskletDialog):
         def OnFixedFontBox(evt):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
-
-        propResizeCtrl = page1.CheckBox(
-            config.propResize,
-            text.propResize
-        )
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
