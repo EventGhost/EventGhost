@@ -113,7 +113,7 @@ class Default:
             Open = "&Open..."
             Save = "&Save"
             SaveAs = "Save &As..."
-            Options = "&Options..."
+            Options = "O&ptions..."
             Restart = "&Restart"
             Exit = "E&xit"
 
