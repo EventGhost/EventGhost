@@ -555,11 +555,11 @@ class RefreshEnvironment(eg.ActionBase):
             commands from the new folders you've added.
 
             In the past, the only solution to this problem was to restart
-            EventGhost. Now, with the aid of this action (or "Always
-            refresh environment before launching programs" in Options),
-            EventGhost can read the latest environment variables from the
-            registry, apply them to its own environment, and thereby pass
-            them along to anything it launches going forward.
+            EventGhost. Now, with the aid of this action (or "Refresh
+            environment before executing Run actions" in Options), EventGhost
+            can read the latest environment variables from the registry,
+            apply them to its own environment, and thereby pass them along
+            to anything it launches going forward.
         """
 
     def __call__(self):

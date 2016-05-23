@@ -24,28 +24,29 @@ from wx.combo import BitmapComboBox
 # Local imports
 import eg
 
+INDENT_WIDTH = 18
+
 class Text(eg.TranslatableStrings):
     Title = "Options"
     Tab1 = "General"
-    StartGroup = "On Start"
-    HideOnStartup = "Hide on startup"
-    HideOnClose = "Minimize to system tray on close"
-    UseAutoloadFile = "Autoload file"
-    UseFixedFont = "Use fixed font in the logger"
-    propResize = "Use proportional resize"
-    LanguageGroup = "Language"
+    CheckPreRelease = "Always notify about new pre-releases"
+    CheckUpdate = "Check for EventGhost updates at launch"
+    confirmDelete = "Confirm deletion of tree items"
     confirmRestart = (
         "Language changes only take effect after restarting the application."
         "\n\n"
         "Do you want to restart EventGhost now?"
     )
-    StartWithWindows = "Autostart EventGhost on system startup"
-    CheckUpdate = "Check for newer version on startup"
-    CheckPreRelease = "Always notify about new pre-releases"
+    HideOnClose = "Minimize to system tray on close"
+    HideOnStartup = "Hide on startup"
+    LanguageGroup = "Language"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
-    confirmDelete = "Confirm delete of tree items"
-    refreshEnv = "Always refresh environment before launching programs"
+    propResize = "Resize window proportionally"
+    refreshEnv = 'Refresh environment before executing "Run" actions'
+    StartWithWindows = 'Autostart EventGhost for user "%s"' % os.environ["USERNAME"]
+    UseAutoloadFile = "Autoload file"
+    UseFixedFont = 'Use fixed-size font in the "Log" pane'
 
 
 class OptionsDialog(eg.TaskletDialog):
@@ -88,23 +89,6 @@ class OptionsDialog(eg.TaskletDialog):
         if eg.folderPath.Startup is None:
             startWithWindowsCtrl.Enable(False)
 
-        hideOnCloseCtrl = page1.CheckBox(
-            config.hideOnClose,
-            text.HideOnClose
-        )
-        useFixedFontCtrl = page1.CheckBox(
-            config.useFixedFont,
-            text.UseFixedFont
-        )
-        propResizeCtrl = page1.CheckBox(
-            config.propResize,
-            text.propResize
-        )
-
-        def OnFixedFontBox(evt):
-            self.UpdateFont(evt.IsChecked())
-        useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
-
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
         checkPreReleaseCtrl.Enable(config.checkUpdate)
@@ -112,6 +96,11 @@ class OptionsDialog(eg.TaskletDialog):
         def OnCheckUpdateCheckBox(event):
             checkPreReleaseCtrl.Enable(event.IsChecked())
         checkUpdateCtrl.Bind(wx.EVT_CHECKBOX, OnCheckUpdateCheckBox)
+
+        confirmDeleteCtrl = page1.CheckBox(
+            config.confirmDelete,
+            text.confirmDelete
+        )
 
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
@@ -125,14 +114,28 @@ class OptionsDialog(eg.TaskletDialog):
         memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
         OnMemoryLimitCheckBox(None)
 
-        confirmDeleteCtrl = page1.CheckBox(
-            config.confirmDelete,
-            text.confirmDelete
+        hideOnCloseCtrl = page1.CheckBox(
+            config.hideOnClose,
+            text.HideOnClose
         )
 
         refreshEnvCtrl = page1.CheckBox(
             config.refreshEnv,
             text.refreshEnv
+        )
+
+        useFixedFontCtrl = page1.CheckBox(
+            config.useFixedFont,
+            text.UseFixedFont
+        )
+
+        def OnFixedFontBox(evt):
+            self.UpdateFont(evt.IsChecked())
+        useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
+
+        propResizeCtrl = page1.CheckBox(
+            config.propResize,
+            text.propResize
         )
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
@@ -163,20 +166,20 @@ class OptionsDialog(eg.TaskletDialog):
         startGroupSizer.AddMany(
             (
                 (startWithWindowsCtrl, 0, flags),
-                (hideOnCloseCtrl, 0, flags),
-                (useFixedFontCtrl, 0, flags),
-                (propResizeCtrl, 0, flags),
                 (checkUpdateCtrl, 0, flags),
-                (checkPreReleaseCtrl, 0, flags),
-                (memoryLimitSizer, 0, flags),
+                (checkPreReleaseCtrl, 0, flags | wx.LEFT, INDENT_WIDTH),
                 (confirmDeleteCtrl, 0, flags),
+                (memoryLimitSizer, 0, flags),
+                (hideOnCloseCtrl, 0, flags),
                 (refreshEnvCtrl, 0, flags),
+                (propResizeCtrl, 0, flags),
+                (useFixedFontCtrl, 0, flags),
             )
         )
 
         langGroupSizer = page1.VStaticBoxSizer(
             text.LanguageGroup,
-            (languageChoice, 0, wx.LEFT | wx.RIGHT, 18),
+            (languageChoice, 0, wx.LEFT | wx.RIGHT, INDENT_WIDTH),
         )
 
         page1Sizer = eg.VBoxSizer(
