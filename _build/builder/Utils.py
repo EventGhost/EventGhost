@@ -265,6 +265,12 @@ def GetVersion(buildSetup):
             ParseVersion(buildSetup.args.version)
         )
 
+def Is64bitInterpreter():
+    """
+    Determine whether or not we're running a 64-bit interpreter.
+    """
+    return (sys.maxsize > 2**32)
+
 def IsAdmin():
     """
     Determine whether or not we're running as Administrator.

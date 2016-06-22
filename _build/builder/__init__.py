@@ -26,7 +26,7 @@ from os.path import abspath, dirname, exists, join
 import builder
 from builder import VirtualEnv
 from builder.Logging import LogToFile
-from builder.Utils import GetGitHubConfig, GetVersion
+from builder.Utils import GetGitHubConfig, GetVersion, Is64bitInterpreter
 
 class Task(object):
     value = None
@@ -67,6 +67,19 @@ class Builder(object):
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.outputDir = join(self.buildDir, "output")
         self.websiteDir = join(self.outputDir, "website")
+
+        if Is64bitInterpreter():
+            print(
+                "ERROR: Sorry, EventGhost can't be built with the 64-bit "
+                "version of Python!"
+            )
+            sys.exit(1)
+        elif not exists(self.pyVersionDir):
+            print(
+                "ERROR: Sorry, EventGhost can't be built with Python %d.%d!"
+                % sys.version_info[:2]
+            )
+            sys.exit(1)
 
         sys.path.append(self.sourceDir)
         sys.path.append(join(self.libraryDir, "site-packages"))
