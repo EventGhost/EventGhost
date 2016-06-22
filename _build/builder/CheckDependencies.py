@@ -391,7 +391,7 @@ def CreateVirtualEnv():
 
     # Install virtualenv and virtualenvwrapper.
     #Pip("install", "pip", "-q")
-    Pip("install", "virtualenvwrapper-win", "-q")
+    Pip("install", "virtualenv==15.0.1", "virtualenvwrapper-win", "-q")
 
     # Install Stackless Python in virtualenv folder.
     url = [d.url for d in DEPENDENCIES if d.name == "Stackless Python"][0]
