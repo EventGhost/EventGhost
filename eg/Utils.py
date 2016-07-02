@@ -22,6 +22,7 @@ import sys
 import threading
 import time
 import wx
+from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
 from docutils.core import publish_parts as ReSTPublishParts
@@ -152,6 +153,9 @@ def AsTasklet(func):
     def Wrapper(*args, **kwargs):
         eg.Tasklet(func)(*args, **kwargs).run()
     return update_wrapper(Wrapper, func)
+
+def DecodeMarkdown(source):
+    return commonmark(source)
 
 def DecodeReST(source):
     #print repr(source)
