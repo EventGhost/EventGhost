@@ -29,7 +29,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 # Local imports
 import eg
 from eg.Classes.Dialog import Dialog
-from eg.Utils import DecodeReST
+from eg.Utils import DecodeMarkdown, DecodeReST
 
 TEMPLATE = u"""
 <FONT SIZE=5><b>{name}</b></FONT>
@@ -130,9 +130,10 @@ class PluginInstall(object):
 
     def GetPluginData(self, pluginInfo):
         description = pluginInfo.englishDescription
-        pos = description.find("<rst>")
-        if pos != -1:
-            description = DecodeReST(description[pos + 5:])
+        if description.startswith("<md>"):
+            description = DecodeMarkdown(description[4:])
+        elif description.startswith("<rst>"):
+            description = DecodeReST(description[5:])
         iconData = base64.b64encode(str(pluginInfo.icon.pil.tobytes()))
         return {
             "name": pluginInfo.englishName,

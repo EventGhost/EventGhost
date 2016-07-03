@@ -114,9 +114,11 @@ def AppUrl(description, url):
         )
     else:
         return description
-    pos = description.find("<rst>")
-    if pos != -1:
-        description = description[pos + 5:]
+    if description.startswith("<md>"):
+        description = description[4:]
+        description = DecodeMarkdown(description)
+    elif description.startswith("<rst>"):
+        description = description[5:]
         description = DecodeReST(description)
     return description + txt
 
@@ -281,9 +283,14 @@ def GetFirstParagraph(text):
     The paragraph is returned as HTML.
     """
     text = text.lstrip()
-    pos = text.find("<rst>")
-    if pos != -1:
-        text = text[pos + 5:]
+    if text.startswith("<md>"):
+        text = text[4:]
+        text = DecodeMarkdown(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return text[start + 3:end].replace("\n", " ")
+    elif text.startswith("<rst>"):
+        text = text[5:]
         text = DecodeReST(text)
         start = text.find("<p>")
         end = text.find("</p>")
@@ -459,9 +466,17 @@ def SplitFirstParagraph(text):
     The paragraph is returned as HTML.
     """
     text = text.lstrip()
-    pos = text.find("<rst>")
-    if pos != -1:
-        text = text[pos + 5:]
+    if text.startswith("<md>"):
+        text = text[4:]
+        text = DecodeMarkdown(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return (
+            text[start + 3:end].replace("\n", " "),
+            text[end + 4:].replace("\n", " ")
+        )
+    elif text.startswith("<rst>"):
+        text = text[5:]
         text = DecodeReST(text)
         start = text.find("<p>")
         end = text.find("</p>")
