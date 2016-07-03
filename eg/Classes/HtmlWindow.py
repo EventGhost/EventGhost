@@ -25,7 +25,7 @@ from wx.html import (
 )
 
 # Local imports
-from eg.Utils import DecodeReST
+from eg.Utils import DecodeMarkdown, DecodeReST
 
 class HtmlWindow(wxHtmlWindow):
     basePath = None
@@ -88,9 +88,10 @@ class HtmlWindow(wxHtmlWindow):
         self.basePath = basePath
 
     def SetPage(self, html):
-        pos = html.find("<rst>")
-        if pos != -1:
-            html = DecodeReST(html[pos + 5:])
+        if html.startswith("<md>"):
+            html = DecodeMarkdown(html[4:])
+        elif html.startswith("<rst>"):
+            html = DecodeReST(html[5:])
         wxHtmlWindow.SetPage(
             self,
             '<html><body bgcolor="%s" text="%s">%s</body></html>' % (

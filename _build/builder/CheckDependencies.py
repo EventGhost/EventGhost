@@ -18,6 +18,7 @@
 
 import glob
 import os
+import pip
 import platform
 import re
 import shutil
@@ -158,7 +159,15 @@ class ModuleDependency(DependencyBase):
         elif hasattr(module, "version"):
             version = module.version
         else:
-            raise Exception("Can't get version information")
+            result = [
+                p.version
+                for p in pip.get_installed_distributions()
+                if str(p).startswith(self.name + " ")
+            ]
+            if result:
+                version = result[0]
+            else:
+                raise Exception("Can't get version information")
         if not isinstance(version, str):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
@@ -202,6 +211,11 @@ DEPENDENCIES = [
         module = "agithub",
         version = "2.0",
         url = "https://eventghost.github.io/dist/dependencies/agithub-2.0-cp27-none-any.whl",
+    ),
+    ModuleDependency(
+        name = "CommonMark",
+        module = "CommonMark",
+        version = "0.7.0",
     ),
     ModuleDependency(
         name = "comtypes",

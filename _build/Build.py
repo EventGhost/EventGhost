@@ -38,16 +38,17 @@ class MyBuilder(builder.Builder):
     mainScript = "EventGhost.pyw"
 
     includeModules = [
-        "wx",
-        "PIL",
+        "CommonMark",
         "comtypes",
-        "pywin32",
-        "pythoncom",
-        "isapi",
-        "win32com",
-        "docutils",
         "Crypto",
+        "docutils",
+        "isapi",
         "jinja2",
+        "PIL",
+        "pythoncom",
+        "pywin32",
+        "win32com",
+        "wx",
     ]
 
     excludeModules = [

@@ -316,10 +316,10 @@ class ChangelogPanel(HtmlPanel):
     @eg.LogIt
     def UpdateChangelog(self, changelogDatPath, text, digest):
         """
-        Parses the reStructuredText and stores a copy of the result in the
+        Parses the Markdown and stores a copy of the result in the
         eg.configDir to speed up loading.
         """
-        text = eg.Utils.DecodeReST(text)
+        text = eg.Utils.DecodeMarkdown(text)
         changelogDatFile = open(changelogDatPath, "wt")
         changelogDatFile.write(digest + "\n")
         changelogDatFile.write(text)
