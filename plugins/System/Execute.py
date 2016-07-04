@@ -17,7 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from os.path import abspath, basename, dirname, split, splitext
+from os.path import abspath, basename, dirname, expandvars, split, splitext
 from threading import Thread
 from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
 from win32process import GetPriorityClass, SetPriorityClass
@@ -49,12 +49,12 @@ PRIORITY_FLAGS = (
 )
 
 class Execute(eg.ActionBase):
-    name = "Run Application"
-    description = "Runs an executable file."
+    name = "Open File/Folder"
+    description = "Opens a file or folder, be it executable or otherwise."
     iconFile = "icons/Execute"
 
     class text:
-        label = "Run Application: %s"
+        label = "Open File/Folder: %s"
         FilePath = "Executable:"
         WorkingDir = "Working directory:"
         Parameters = "Command line options:"
@@ -124,14 +124,17 @@ class Execute(eg.ActionBase):
         if eg.config.refreshEnv:
             eg.Environment.Refresh()
         returnValue = None
+        pathname = expandvars(pathname)
+        arguments = expandvars(arguments)
+        workingDir = expandvars(workingDir)
         if not disableParsingPathname:
             pathname = eg.ParseString(pathname)
-        if not workingDir:
-            workingDir = dirname(abspath(pathname))
         if not disableParsingArguments:
             arguments = eg.ParseString(arguments)
         if not disableParsingAdditionalSuffix:
             additionalSuffix = eg.ParseString(additionalSuffix)
+        if not workingDir:
+            workingDir = dirname(abspath(pathname))
         processInformation = self.processInformation = SHELLEXECUTEINFO()
         processInformation.cbSize = sizeof(processInformation)
         processInformation.hwnd = 0
