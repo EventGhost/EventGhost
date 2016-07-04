@@ -133,7 +133,7 @@ class Default:
             HideShowToolbar = "&Toolbar"
             ExpandAll = "&Expand All"
             CollapseAll = "&Collapse All"
-            ExpandOnEvents = "&Select Items on Execution"
+            ExpandOnEvents = "Select on E&xecution"
             LogMacros = "Log Macros"
             LogActions = "Log Actions"
             LogTime = "Log Times"
@@ -157,7 +157,7 @@ class Default:
             WebForum = "Support &Forums"
             WebWiki = "&Wiki"
             PythonShell = "P&ython Shell"
-            CheckUpdate = "Check for &Update..."
+            CheckUpdate = "Check for &Updates..."
             About = "&About EventGhost..."
 
             Apply = "&Apply Changes"
