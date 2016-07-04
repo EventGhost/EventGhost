@@ -183,7 +183,7 @@ class MainFrame(wx.Frame):
             .Caption(" " + Text.Logger.caption)
 
         # create an accelerator for the "Log only assigned and activated
-        # events" checkbox. An awfull hack.
+        # events" checkbox. An awful hack.
         @eg.LogIt
         def ToggleOnlyLogAssigned(dummyEvent):
             checkBox = self.statusBar.checkBox
@@ -202,6 +202,25 @@ class MainFrame(wx.Frame):
             hotKey = result.groups()[0].upper()
         else:
             hotKey = "L"
+
+        # create an accelerator for the "Scroll log" checkbox. An awful hack.
+        @eg.LogIt
+        def ToggleScrollLog(dummyEvent):
+            scrollCheckBox = self.statusBar.scrollCheckBox
+            flag = not scrollCheckBox.GetValue()
+            scrollCheckBox.SetValue(flag)
+            eg.config.scrollLog = flag
+
+        toggleScrollLogId = wx.NewId()
+        wx.EVT_MENU(self, toggleScrollLogId, ToggleScrollLog)
+
+        # find the accelerator key in the label of the checkbox
+        labelText = eg.text.MainFrame.scrollLog
+        result = re.search(r'&([a-z])', labelText, re.IGNORECASE)
+        if result:
+            scrollHotKey = result.groups()[0].upper()
+        else:
+            scrollHotKey = "S"
 
         # create an accelerator for the "Del" key. This way we can temporarily
         # disable it while editing a tree label.
@@ -223,6 +242,7 @@ class MainFrame(wx.Frame):
                 (wx.ACCEL_NORMAL, wx.WXK_DELETE, delId),
                 (wx.ACCEL_NORMAL, wx.WXK_RETURN, enterId),
                 (wx.ACCEL_ALT, ord(hotKey), toggleOnlyLogAssignedId),
+                (wx.ACCEL_ALT, ord(scrollHotKey), toggleScrollLogId),
             ]
         )
         self.SetAcceleratorTable(self.acceleratorTable)
