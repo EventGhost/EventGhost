@@ -16,10 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import wx
-from os.path import abspath, basename, dirname, expandvars, split, splitext
+from os.path import (
+    abspath, basename, dirname, expandvars, isdir, split, splitext
+)
 from threading import Thread
-from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+from win32file import (
+    Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+)
 from win32process import GetPriorityClass, SetPriorityClass
 
 # Local imports
@@ -32,12 +37,10 @@ from eg.WinApi.Dynamic import (
     SHELLEXECUTEINFO, sizeof, WaitForSingleObject, windll,
 )
 
-WINSTATE_FLAGS = (
-    1,  # SW_SHOWNORMAL
-    6,  # SW_MINIMIZE | SW_HIDE
-    3,  # SW_SHOWMAXIMIZED
-    0,  # SW_HIDE
-)
+PATHEXT = tuple(os.environ.get(
+    "PATHEXT",
+    ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
+).upper().split(os.path.pathsep) + [".MSC"])
 
 PRIORITY_FLAGS = (
     64,     # IDLE_PRIORITY_CLASS
@@ -48,14 +51,23 @@ PRIORITY_FLAGS = (
     256,    # REALTIME_PRIORITY_CLASS
 )
 
+WINSTATE_FLAGS = (
+    1,  # SW_SHOWNORMAL
+    6,  # SW_MINIMIZE | SW_HIDE
+    3,  # SW_SHOWMAXIMIZED
+    0,  # SW_HIDE
+)
+
 class Execute(eg.ActionBase):
-    name = "Open File/Folder"
-    description = "Opens a file or folder, be it executable or otherwise."
+    name = "Run Application"
+    description = "Runs an executable file or opens any file or folder."
     iconFile = "icons/Execute"
 
     class text:
-        label = "Open File/Folder: %s"
-        FilePath = "Executable:"
+        label = "Run Application: %s"
+        labelFile = "Open File: %s"
+        labelFolder = "Open Folder: %s"
+        FilePath = "File or folder to open:"
         WorkingDir = "Working directory:"
         Parameters = "Command line options:"
         WindowOptionsDesc = "Window options:"
@@ -76,8 +88,12 @@ class Execute(eg.ActionBase):
         )
         waitCheckbox = "Wait until application is terminated before proceeding"
         eventCheckbox = "Trigger event when application is terminated"
-        wow64Checkbox = "Disable WOW64 filesystem redirection for this application"
-        runAsAdminCheckbox = "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
+        wow64Checkbox = (
+            "Disable WOW64 filesystem redirection for this application"
+        )
+        runAsAdminCheckbox = (
+            "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
+        )
         eventSuffix = "Application.Terminated"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
@@ -162,15 +178,22 @@ class Execute(eg.ActionBase):
             Wow64RevertWow64FsRedirection(prevVal)
         if priority != 2:
             try:
-                SetPriorityClass(processInformation.hProcess, PRIORITY_FLAGS[priority])
-                if GetPriorityClass(processInformation.hProcess) != PRIORITY_FLAGS[priority]:
+                SetPriorityClass(
+                    processInformation.hProcess,
+                    PRIORITY_FLAGS[priority]
+                )
+                priorityClass = GetPriorityClass(processInformation.hProcess)
+                if priorityClass != PRIORITY_FLAGS[priority]:
                     raise
             except:
                 pid = windll.kernel32.GetProcessId(processInformation.hProcess)
                 pi = SHELLEXECUTEINFO()
                 pi.cbSize = sizeof(pi)
                 pi.lpFile = r"C:\Windows\System32\wbem\wmic.exe"
-                pi.lpParameters = "process where processid=%d CALL setpriority %d" % (pid, PRIORITY_FLAGS[priority])
+                pi.lpParameters = (
+                    "process where processid=%d CALL setpriority %d"
+                    % (pid, PRIORITY_FLAGS[priority])
+                )
                 pi.lpVerb = "runas"
                 if not windll.shell32.ShellExecuteExW(byref(pi)):
                     eg.PrintError(self.text.priorityIssue)
@@ -288,7 +311,23 @@ class Execute(eg.ActionBase):
         lowerSizer2.AddGrowableCol(1)
         lowerSizer2.AddGrowableCol(3)
 
-        def onEventCheckBox(evt = None):
+        def OnPathnameChanged(evt = None):
+            path = filepathCtrl.GetValue().upper()
+            if path.endswith(PATHEXT) and not isdir(path):
+                enable = True
+            else:
+                enable = False
+                wow64CheckBox.SetValue(False)
+                runAsAdminCheckBox.SetValue(False)
+            argumentsCtrl.Enable(enable)
+            disableParsingArgumentsBox.Enable(enable)
+            workingDirCtrl.Enable(enable)
+            wow64CheckBox.Enable(enable)
+            runAsAdminCheckBox.Enable(enable)
+        filepathCtrl.changeCallback = OnPathnameChanged
+        OnPathnameChanged()
+
+        def OnEventCheckBox(evt = None):
             enable = eventCheckBox.GetValue()
             stTxt.Enable(enable)
             additionalSuffixCtrl.Enable(enable)
@@ -297,8 +336,8 @@ class Execute(eg.ActionBase):
                 additionalSuffixCtrl.ChangeValue("")
             if evt:
                 evt.Skip()
-        eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
-        onEventCheckBox()
+        eventCheckBox.Bind(wx.EVT_CHECKBOX, OnEventCheckBox)
+        OnEventCheckBox()
 
         panel.sizer.AddMany([
             (SText(text.FilePath)),
@@ -341,4 +380,10 @@ class Execute(eg.ActionBase):
             )
 
     def GetLabel(self, pathname='', *dummyArgs):
-        return self.text.label % basename(pathname)
+        path = expandvars(pathname).upper()
+        if isdir(path):
+            return self.text.labelFolder % basename(pathname)
+        elif path.endswith(PATHEXT):
+            return self.text.label % basename(pathname)
+        else:
+            return self.text.labelFile % basename(pathname)
