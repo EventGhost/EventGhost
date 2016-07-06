@@ -377,6 +377,7 @@ setattr(eg, "ActionClass", eg.ActionBase)
 
 eg.taskBarIcon = eg.TaskBarIcon(
     eg.startupArguments.isMain and
+    eg.config.showTrayIcon and
     not eg.startupArguments.translate and
     not eg.startupArguments.install and
     not eg.startupArguments.pluginFile

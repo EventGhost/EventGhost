@@ -37,13 +37,14 @@ class Text(eg.TranslatableStrings):
         "\n\n"
         "Do you want to restart EventGhost now?"
     )
-    HideOnClose = "Minimize to system tray on close"
+    HideOnClose = "Keep running in background when window closed"
     HideOnStartup = "Hide on startup"
     LanguageGroup = "Language"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     propResize = "Resize window proportionally"
     refreshEnv = 'Refresh environment before executing "Run" actions'
+    showTrayIcon = "Display EventGhost icon in system tray"
     StartWithWindows = 'Autostart EventGhost for user "%s"' % os.environ["USERNAME"]
     UseAutoloadFile = "Autoload file"
     UseFixedFont = 'Use fixed-size font in the "Log" pane'
@@ -102,6 +103,16 @@ class OptionsDialog(eg.TaskletDialog):
             text.confirmDelete
         )
 
+        showTrayIconCtrl = page1.CheckBox(
+            config.showTrayIcon,
+            text.showTrayIcon
+        )
+
+        hideOnCloseCtrl = page1.CheckBox(
+            config.hideOnClose,
+            text.HideOnClose
+        )
+
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,
@@ -113,11 +124,6 @@ class OptionsDialog(eg.TaskletDialog):
             memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
         memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
         OnMemoryLimitCheckBox(None)
-
-        hideOnCloseCtrl = page1.CheckBox(
-            config.hideOnClose,
-            text.HideOnClose
-        )
 
         refreshEnvCtrl = page1.CheckBox(
             config.refreshEnv,
@@ -169,8 +175,9 @@ class OptionsDialog(eg.TaskletDialog):
                 (checkUpdateCtrl, 0, flags),
                 (checkPreReleaseCtrl, 0, flags | wx.LEFT, INDENT_WIDTH),
                 (confirmDeleteCtrl, 0, flags),
-                (memoryLimitSizer, 0, flags),
+                (showTrayIconCtrl, 0, flags),
                 (hideOnCloseCtrl, 0, flags),
+                (memoryLimitSizer, 0, flags),
                 (refreshEnvCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
@@ -200,24 +207,32 @@ class OptionsDialog(eg.TaskletDialog):
         notebook.ChangeSelection(0)
 
         oldLanguage = config.language
-        while self.Affirmed():
-            eg.Utils.UpdateStartupShortcut(startWithWindowsCtrl.GetValue())
 
-            config.hideOnClose = hideOnCloseCtrl.GetValue()
-            config.useFixedFont = useFixedFontCtrl.GetValue()
-            config.propResize = propResizeCtrl.GetValue()
+        while self.Affirmed():
             config.checkUpdate = checkUpdateCtrl.GetValue()
             config.checkPreRelease = checkPreReleaseCtrl.GetValue()
+            config.confirmDelete = confirmDeleteCtrl.GetValue()
+            config.showTrayIcon = showTrayIconCtrl.GetValue()
+            config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
-            config.confirmDelete = confirmDeleteCtrl.GetValue()
             config.refreshEnv = refreshEnvCtrl.GetValue()
-
+            config.propResize = propResizeCtrl.GetValue()
+            config.useFixedFont = useFixedFontCtrl.GetValue()
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()
+
+        eg.Utils.UpdateStartupShortcut(startWithWindowsCtrl.GetValue())
+
+        if config.showTrayIcon:
+            eg.taskBarIcon.Show()
+        else:
+            eg.taskBarIcon.Hide()
+
         if config.language != oldLanguage:
             wx.CallAfter(self.ShowLanguageWarning)
+
         OptionsDialog.instance = None
 
     @eg.LogItWithReturn
