@@ -25,6 +25,7 @@ from win32gui import FindWindow
 import eg
 from eg import FolderItem, MacroItem
 from eg.WinApi.Utils import BringHwndToFront
+from eg.WinApi.Dynamic import GetForegroundWindow
 from JumpIfElse import JumpIfElse
 from NewJumpIf import NewJumpIf
 from PythonScript import PythonScript
@@ -59,6 +60,7 @@ class EventGhost(eg.PluginBase):
         self.AddAction(JumpIfDoubleEvent)
         self.AddAction(JumpIfLongPress)
         self.AddAction(OpenConfig)
+        self.AddAction(OpenEventGhost)
         self.AddAction(ShowMessageBox)
         self.AddAction(ShowOSD)
         self.AddAction(StopProcessing)
@@ -510,6 +512,48 @@ class OpenConfig(eg.ActionBase):
     def GetLabel(self, link):
         label = link.target.GetLabel() if link else ""
         return "%s: %s" % (self.name, label)
+
+
+class OpenEventGhost(eg.ActionBase):
+    class text:
+        name = "Open EventGhost"
+        description = (
+            "Opens, closes, or toggles EventGhost's main window. "
+            "Particularly helpful when system tray icon is hidden."
+        )
+        label = (
+            "Open EventGhost",
+            "Close EventGhost",
+            "Toggle EventGhost",
+        )
+
+    def __call__(self, action = 0):
+        if action == 0:
+            show = True
+        elif action == 1:
+            show = False
+        elif action == 2:
+            if eg.document.frame:
+                if eg.document.frame.GetHandle() == GetForegroundWindow():
+                    show = False
+                else:
+                    show = True
+            else:
+                show = True
+        else:
+            return False
+        func = (eg.document.ShowFrame if show else eg.document.HideFrame)
+        wx.CallAfter(func)
+
+    def Configure(self, action = 0):
+        panel = eg.ConfigPanel()
+        choice = panel.RadioBox(action, self.text.label)
+        panel.sizer.Add(choice, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(choice.GetValue())
+
+    def GetLabel(self, action = 0):
+        return self.text.label[action]
 
 
 class PythonCommand(eg.ActionWithStringParameter):
