@@ -39,7 +39,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         # SetIcon *must* be called immediately after creation, as otherwise
         # it won't appear on Vista restricted user accounts. (who knows why?)
         if show:
-            self.SetIcon(self.stateIcons[0], self.tooltip)
+            self.Show()
         self.currentEvent = None
         self.processingEvent = None
         self.currentState = 0
@@ -58,9 +58,9 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
 
     def Close(self):
-        eg.Unbind("ProcessingChange", self.OnProcessingChange)
-        # remove the TaskBarIcon, as it would otherwise stay as a ghost
-        # icon in the system-tray.
+        self.Hide()
+
+    def Hide(self):
         self.RemoveIcon()
 
     def OnCmdExit(self, event):
@@ -73,11 +73,15 @@ class TaskBarIcon(wx.TaskBarIcon):
         eg.document.ShowFrame()
 
     def OnProcessingChange(self, state):
-        self.SetIcon(self.stateIcons[state], self.tooltip)
+        if self.IsIconInstalled():
+            self.SetIcon(self.stateIcons[state], self.tooltip)
 
     def OnTaskBarMenu(self, dummyEvent):
         self.menu.Enable(ID_HIDE, eg.document.frame is not None)
         self.PopupMenu(self.menu)
+
+    def Open(self):
+        self.Show()
 
     def SetProcessingState(self, state, event):
         self.reentrantLock.acquire()
@@ -107,3 +111,6 @@ class TaskBarIcon(wx.TaskBarIcon):
     def SetToolTip(self, tooltip):
         self.tooltip = tooltip
         wx.CallAfter(self.SetIcon, self.stateIcons[self.currentState], tooltip)
+
+    def Show(self):
+        self.SetIcon(self.stateIcons[0], self.tooltip)
