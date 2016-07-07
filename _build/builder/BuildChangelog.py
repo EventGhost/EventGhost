@@ -37,8 +37,6 @@ class BuildChangelog(builder.Task):
     def DoTask(self):
         buildSetup = self.buildSetup
         changelog_path = join(buildSetup.sourceDir, "CHANGELOG.TXT")
-        appVer = buildSetup.appVersion
-        bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
 
         token = buildSetup.gitConfig["token"]
         user = buildSetup.gitConfig["user"]
@@ -48,41 +46,106 @@ class BuildChangelog(builder.Task):
         gh = GitHub(token=token)
         rc, data = gh.repos[user][repo].releases.latest.get()
         if rc != 200:
-            # no latest release
-            to_commit = self.get_alternative_release(gh, user, repo)
+            # in case of no latest release
+            old_release_date = self.get_alternative_release(gh, user, repo)
         else:
-            to_commit = data['target_commitish']
-        new_logs = ['**{0} ({1})**\n'.format(appVer, bldDate), '\n']
+            old_release_date = data["created_at"]
 
-        # get commits since last release
+        pulls = []
         page = 1
         while page > 0:
-            rc, data = gh.repos[user][repo].commits.get(
-                sha=branch,
+            rc, data = gh.repos[user][repo].pulls.get(
+                state="all",  # or just "closed" ?
+                base = branch,
+                direction="asc",
+                since=old_release_date,
                 per_page=100,
-                page=page
+                page=page,
             )
             if rc != 200:
-                print "INFO: couldn't get commits."
+                print "INFO: couldn't get pull requests."
                 return
-            for item in data:
-                if item['sha'] == to_commit:
-                    break
-                author = item['commit']['author']['name']
-                try:
-                    msg = item['commit']['message'].splitlines()[0]
-                    if msg.startswith("Merge pull request #"):
-                        continue
-                    newline = "- {0} ({1})\n".format(msg, author)
-                    new_logs.append(newline)
-                except IndexError:
-                    pass
-
-            if item['sha'] == to_commit:
-                break
-            hdr = gh.getheaders()
-            header = {item[0].strip(): item[1].strip() for item in hdr}  # NOQA
+            pulls.extend(data)
             page = NextPage(gh)
+
+        print "--------------------------------------------------------"
+        pr_notice = []
+        pr_enhancement = []
+        pr_bug = []
+        pr_other = []
+        for pr in pulls:
+            if not pr["merged_at"]:
+                print "not merged yet: #{0} {1}".format(
+                    pr["number"], pr["title"])
+                continue
+            elif pr["merged_at"] < old_release_date:
+                print "merged in older release: #{0} {1}".format(
+                    pr["number"], pr["title"])
+                continue
+            rc, data = gh.repos[user][repo].issues[pr["number"]].get()
+            if rc != 200:
+                print "couldn't get additional info for pr #{0} {1]".format(
+                    pr["number"], pr["title"])
+                continue
+            labels = [l["name"] for l in data["labels"]]
+            if "internal" in labels:
+                # This pull request should not be listed in changelog
+                print "skipped internal #{0} {1}".format(pr["number"], pr["title"])
+                continue
+            elif "notice" in labels:
+                pr_notice.append(pr)
+            elif "enhancement" in labels:
+                pr_enhancement.append(pr)
+            elif "bug" in labels:
+                pr_bug.append(pr)
+            else:
+                pr_other.append(pr)
+
+        print "--------------------------------------------------------"
+        # appVer = buildSetup.appVersion
+        # bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
+        new_logs = [""]  # "['## {0} ({1})\n'.format(appVer, bldDate), '\n']
+        if pr_notice:
+            print "# Notices"
+            new_logs.append("### Notices\n")
+            for pr in pr_notice:
+                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                print txt
+                new_logs.append(txt + "\n")
+            new_logs.append("\n")
+            print ""
+        if pr_enhancement:
+            print "# Enhancements"
+            new_logs.append("### Enhancement\n")
+            for pr in pr_enhancement:
+                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                print txt
+                new_logs.append(txt + "\n")
+            new_logs.append("\n")
+            print ""
+        if pr_bug:
+            print "# Fixed bugs"
+            new_logs.append("### Fixed bugs\n")
+            for pr in pr_bug:
+                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                print txt
+                new_logs.append(txt + "\n")
+            new_logs.append("\n")
+            print ""
+        if pr_other:
+            print "# Other changes"
+            new_logs.append("### Other changes\n")
+            for pr in pr_other:
+                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                print txt
+                new_logs.append(txt + "\n")
+            new_logs.append("\n")
+            print ""
+
+        print "--------------------------------------------------------"
+        print "Total merged pull requests in this release: {0}".format(
+           len(pr_notice) + len(pr_enhancement) + len(pr_bug) + len(pr_other))
+        print "--------------------------------------------------------"
 
         # read the existing changelog...
         try:
