@@ -23,6 +23,7 @@ import sys
 import time
 import wx
 import _winreg
+from cgi import escape
 from StringIO import StringIO
 
 # Local imports
@@ -293,7 +294,7 @@ class ChangelogPanel(HtmlPanel):
     def __init__(self, parent):
         try:
             infile = open(os.path.join(eg.mainDir, "CHANGELOG.TXT"))
-            text = infile.read()
+            text = escape(infile.read())
         except IOError:
             text = ""
 
