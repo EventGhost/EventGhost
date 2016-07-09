@@ -12,7 +12,7 @@ For this plugin to work you need the `XBCDRC drivers <http://www.redcl0ud.com/xb
 """
 
 eg.RegisterPlugin(
-    name = "Xbox remote control",
+    name = "Xbox Remote Control",
     author = (
         "jinxdone",
         "Bartman",

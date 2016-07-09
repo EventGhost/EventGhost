@@ -26,7 +26,7 @@
 
 
 eg.RegisterPlugin(
-    name = "Foobar2000",
+    name = "foobar2000",
     author = "MonsterMagnet",
     version = "1.3.1488",
     kind = "program",

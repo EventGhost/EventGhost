@@ -1,4 +1,4 @@
-"""EventGhost Plugin for BT8x8 GPIO based remotes.
+"""EventGhost Plugin for BT8x8 GPIO-based remotes.
 
 Requires DScaler to be installed.
 
@@ -13,7 +13,7 @@ on most (but not all) BT8x8 cards.
 
 This plugin was developed for the AverTvStudio card. The concepts are
 fairly simple and with minor changes it should be possible to adapt the
-plugin to many different BT8x8 based devices.
+plugin to many different BT8x8-based devices.
 
 If you want to adapt the plugin to a differnt BT8x8 card, the only essential
 details that you need to figure out are the _KEY_MASK and KEYMAP, _DOWN_BIT
@@ -36,7 +36,7 @@ cards and the impending doom of analog TV, it might not be worth the trouble.
 """
 
 eg.RegisterPlugin(
-    name = "BT8x8 based remote",
+    name = "BT8x8-based Remote",
     author = "Chris B",
     version = "0.0.0",
     kind = "remote",

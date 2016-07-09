@@ -37,7 +37,7 @@ else:
     IMAGES_DIR = eg.IMAGES_DIR
 
 eg.RegisterPlugin(
-    name = "Remote event mapper",
+    name = "Remote Event Mapper",
     author = "Pako",
     version = version,
     kind = "other",

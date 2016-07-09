@@ -19,7 +19,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 eg.RegisterPlugin(
-    name = "Microsoft MCE Remote - Vista/Win7",
+    name = "Microsoft MCE Remote (Vista+)",
     author = (
         "Brett Stottlemyer",
         "Sem;colon",

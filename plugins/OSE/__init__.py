@@ -60,7 +60,7 @@
 #      - Added option "Delete folder"
 
 eg.RegisterPlugin(
-    name = "On screen explorer",
+    name = "On Screen Explorer",
     author = "Pako",
     version = "0.2.14",
     kind = "other",
