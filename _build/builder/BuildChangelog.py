@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import time
+from collections import OrderedDict
 from agithub.GitHub import GitHub
 from os.path import join
 
@@ -55,7 +55,7 @@ class BuildChangelog(builder.Task):
         page = 1
         while page > 0:
             rc, data = gh.repos[user][repo].pulls.get(
-                state="all",  # or just "closed" ?
+                state="closed",
                 base = branch,
                 direction="asc",
                 since=old_release_date,
@@ -69,10 +69,15 @@ class BuildChangelog(builder.Task):
             page = NextPage(gh)
 
         print "--------------------------------------------------------"
-        pr_notice = []
-        pr_enhancement = []
-        pr_bug = []
-        pr_other = []
+        title_notice = "Important changes for plugin developers:"
+        title_enhancement = "Features added:"
+        title_bug = "Bugs fixed:"
+        title_other = "Other changes:"
+        prs = OrderedDict()
+        prs[title_notice] = []
+        prs[title_enhancement] = []
+        prs[title_bug] = []
+        prs[title_other] = []
         for pr in pulls:
             if not pr["merged_at"]:
                 print "not merged yet: #{0} {1}".format(
@@ -93,59 +98,26 @@ class BuildChangelog(builder.Task):
                 print "skipped internal #{0} {1}".format(pr["number"], pr["title"])
                 continue
             elif "notice" in labels:
-                pr_notice.append(pr)
+                prs[title_notice].append(pr)
             elif "enhancement" in labels:
-                pr_enhancement.append(pr)
+                prs[title_enhancement].append(pr)
             elif "bug" in labels:
-                pr_bug.append(pr)
+                prs[title_bug].append(pr)
             else:
-                pr_other.append(pr)
+                prs[title_other].append(pr)
 
         print "--------------------------------------------------------"
-        # appVer = buildSetup.appVersion
-        # bldDate = time.strftime("%Y-%m-%d", time.gmtime(buildSetup.buildTime))
-        new_logs = [""]  # "['## {0} ({1})\n'.format(appVer, bldDate), '\n']
-        if pr_notice:
-            print "# Notices"
-            new_logs.append("### Notices\n")
-            for pr in pr_notice:
-                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
-                print txt
-                new_logs.append(txt + "\n")
-            new_logs.append("\n")
-            print ""
-        if pr_enhancement:
-            print "# Enhancements"
-            new_logs.append("### Enhancement\n")
-            for pr in pr_enhancement:
-                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
-                print txt
-                new_logs.append(txt + "\n")
-            new_logs.append("\n")
-            print ""
-        if pr_bug:
-            print "# Fixed bugs"
-            new_logs.append("### Fixed bugs\n")
-            for pr in pr_bug:
-                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
-                print txt
-                new_logs.append(txt + "\n")
-            new_logs.append("\n")
-            print ""
-        if pr_other:
-            print "# Other changes"
-            new_logs.append("### Other changes\n")
-            for pr in pr_other:
-                txt = "  - #{0} {1}".format(pr["number"], pr["title"])
-                print txt
-                new_logs.append(txt + "\n")
-            new_logs.append("\n")
-            print ""
-
-        print "--------------------------------------------------------"
-        print "Total merged pull requests in this release: {0}".format(
-           len(pr_notice) + len(pr_enhancement) + len(pr_bug) + len(pr_other))
-        print "--------------------------------------------------------"
+        new_logs = [""]
+        for title, items in prs.iteritems():
+            if items:
+                print "# {0}".format(title)
+                new_logs.append("### {0}\n".format(title))
+                for pr in items:
+                    txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                    print txt
+                    new_logs.append(txt + "\n")
+                new_logs.append("\n")
+                print ""
 
         # read the existing changelog...
         try:
