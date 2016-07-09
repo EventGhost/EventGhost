@@ -141,16 +141,12 @@ if args.isMain:
                 else:
                     e.BringToFront()
             except pywintypes.com_error as err:
-                if err[0] == -2147024156 or err[0] == -2147467259:
+                if err[0] in (-2147024156, -2147467259):
                     msg = (
-                        "Unable to launch unelevated while already running "
-                        "elevated."
+                        "Unable to run elevated and unelevated simultaneously."
                     )
-                elif err[0] == -2147352567:
-                    msg = (
-                        "Unable to launch elevated while already running "
-                        "unelevated."
-                    )
+                elif err[2]:
+                    msg = "%s:\n\n%s" % (str(err[2][1]), str(err[2][2]))
                 else:
                     msg = "Failed to launch for unknown reasons: %s" % err
                 ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
