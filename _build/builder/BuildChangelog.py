@@ -47,10 +47,37 @@ class BuildChangelog(builder.Task):
         rc, data = gh.repos[user][repo].releases.latest.get()
         if rc != 200:
             # in case of no latest release
-            old_release_date = self.get_alternative_release(gh, user, repo)
+            to_commit = self.get_alternative_release(gh, user, repo)
         else:
-            old_release_date = data["created_at"]
+            to_commit = data['target_commitish']
 
+        # get commits since last release
+        page = 1
+        included_prs = []
+        item = {}
+        while page > 0:
+            rc, data = gh.repos[user][repo].commits.get(
+                sha=branch,
+                per_page=100,
+                page=page
+            )
+            if rc != 200:
+                print "INFO: couldn't get commits."
+                return
+            for item in data:
+                if item['sha'] == to_commit:
+                    break
+                try:
+                    msg = item['commit']['message'].splitlines()[0]
+                    if msg.startswith("Merge pull request #"):
+                        included_prs.append(int(msg.split()[3][1:]))
+                except IndexError:
+                    pass
+            if item.get('sha') == to_commit:
+                break
+            page = NextPage(gh)
+
+        # get all closed pull requests for the repo
         pulls = []
         page = 1
         while page > 0:
@@ -58,7 +85,6 @@ class BuildChangelog(builder.Task):
                 state="closed",
                 base = branch,
                 direction="asc",
-                since=old_release_date,
                 per_page=100,
                 page=page,
             )
@@ -68,6 +94,7 @@ class BuildChangelog(builder.Task):
             pulls.extend(data)
             page = NextPage(gh)
 
+        # now filter and group the pull requests
         print "--------------------------------------------------------"
         title_notice = "Important changes for plugin developers:"
         title_enhancement = "Features added:"
@@ -79,18 +106,12 @@ class BuildChangelog(builder.Task):
         prs[title_bug] = []
         prs[title_other] = []
         for pr in pulls:
-            if not pr["merged_at"]:
-                print "not merged yet: #{0} {1}".format(
-                    pr["number"], pr["title"])
-                continue
-            elif pr["merged_at"] < old_release_date:
-                print "merged in older release: #{0} {1}".format(
-                    pr["number"], pr["title"])
+            if not pr["number"] in included_prs:
                 continue
             rc, data = gh.repos[user][repo].issues[pr["number"]].get()
             if rc != 200:
-                print "couldn't get additional info for pr #{0} {1]".format(
-                    pr["number"], pr["title"])
+                print "couldn't get additional info for pr #{0} {1}" \
+                      "\n   --> skipping #{0}".format(pr["number"], pr["title"])
                 continue
             labels = [l["name"] for l in data["labels"]]
             if "internal" in labels:
@@ -106,6 +127,7 @@ class BuildChangelog(builder.Task):
             else:
                 prs[title_other].append(pr)
 
+        # prepare the grouped output
         print "--------------------------------------------------------"
         new_logs = [""]
         for title, items in prs.iteritems():
