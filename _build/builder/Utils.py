@@ -126,6 +126,18 @@ def GetGitHubConfig():
     if "token" not in gitcfg or "user" not in gitcfg:
         raise ValueError
 
+    # try to get local active branch
+    cmd = r"git status -b"
+    proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    while True:
+        line = proc.stdout.readline()
+        if not line:
+            break
+        elif line.startswith("On branch"):
+            local_branch = line.split()[2]
+    proc.wait()
+
     # try to get some defaults for repo and branch
     gh = GitHub(token=gitcfg["token"])
     gitcfg["all_repos"] = {}
@@ -137,25 +149,28 @@ def GetGitHubConfig():
         if rc == 200:
             for repo in data:
                 if repo["name"] == "EventGhost":
-                    gitcfg.update({
-                        "repo": repo["name"],
-                        "repo_full": repo["full_name"],
-                        "branch": repo["default_branch"]
-                    })
                     page2 = 1
                     branches = []
                     while page2 > 0:
                         rc2, data2 = gh.repos[gitcfg["user"]][repo["name"]].branches.get(page=page2)
-                        page2 = NextPage(gh)
                         if rc2 == 200:
                             for br in data2:
                                 branches.append(br["name"])
+                        page2 = NextPage(gh)
+
                     gitcfg["all_repos"].update({
                         repo["full_name"]: {
                             "name": repo["name"],
                             "all_branches": branches,
-                            "def_branch": repo["default_branch"]
+                            "def_branch": local_branch if local_branch in
+                                          branches else repo["default_branch"]
                         }
+                    })
+                    gitcfg.update({
+                        "repo": repo["name"],
+                        "repo_full": repo["full_name"],
+                        "branch": local_branch if local_branch in
+                                          branches else repo["default_branch"]
                     })
     return gitcfg
 

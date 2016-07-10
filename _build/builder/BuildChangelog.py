@@ -16,13 +16,30 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from collections import OrderedDict
 from agithub.GitHub import GitHub
+from collections import OrderedDict
 from os.path import join
+import re
+import time
 
 # Local imports
 import builder
 from builder.Utils import NextPage
+from eg import systemEncoding
+
+
+def encapsulate_string(string):
+    '''
+    Encapsulate characters to make markdown look as expected.
+
+    @param [String] string
+    @return [String] encapsulated input string
+    '''
+
+    string.replace('\\', '\\\\')
+    string = re.sub("([<>*_()\[\]#])", r"\\\1", string)
+    return string
+
 
 class BuildChangelog(builder.Task):
     """
@@ -44,12 +61,11 @@ class BuildChangelog(builder.Task):
         branch = buildSetup.gitConfig["branch"]
 
         gh = GitHub(token=token)
-        rc, data = gh.repos[user][repo].releases.latest.get()
+        rc, data = gh.repos[user][repo].git.refs.tags.get()
         if rc != 200:
-            # in case of no latest release
-            to_commit = self.get_alternative_release(gh, user, repo)
-        else:
-            to_commit = data['target_commitish']
+            print "INFO: couldn't get tags."
+            return
+        to_commits = [i["object"]["sha"] for i in data]
 
         # get commits since last release
         page = 1
@@ -65,7 +81,7 @@ class BuildChangelog(builder.Task):
                 print "INFO: couldn't get commits."
                 return
             for item in data:
-                if item['sha'] == to_commit:
+                if item['sha'] in to_commits:
                     break
                 try:
                     msg = item['commit']['message'].splitlines()[0]
@@ -73,7 +89,7 @@ class BuildChangelog(builder.Task):
                         included_prs.append(int(msg.split()[3][1:]))
                 except IndexError:
                     pass
-            if item.get('sha') == to_commit:
+            if item['sha'] in to_commits:
                 break
             page = NextPage(gh)
 
@@ -95,7 +111,6 @@ class BuildChangelog(builder.Task):
             page = NextPage(gh)
 
         # now filter and group the pull requests
-        print "--------------------------------------------------------"
         title_notice = "Important changes for plugin developers:"
         title_enhancement = "Features added:"
         title_bug = "Bugs fixed:"
@@ -105,18 +120,33 @@ class BuildChangelog(builder.Task):
         prs[title_enhancement] = []
         prs[title_bug] = []
         prs[title_other] = []
+
+        page = 1
+        pulls = []
+        while page > 0:
+            rc, data = gh.search.issues.get(
+                q='type:pr is:merged '
+                  '-label:internal '
+                  'user:EventGhost '
+                  'repo:EventGhost',
+                sort="created",
+                order="asc",
+            )
+            if rc != 200:
+                print "INFO: couldn't get additional info."
+                return
+            elif data.get("incomplete_results") == True:
+                print "INFO: incomplete search result."
+                return
+            pulls.extend(data["items"])
+            page = NextPage(gh)
+
         for pr in pulls:
             if not pr["number"] in included_prs:
                 continue
-            rc, data = gh.repos[user][repo].issues[pr["number"]].get()
-            if rc != 200:
-                print "couldn't get additional info for pr #{0} {1}" \
-                      "\n   --> skipping #{0}".format(pr["number"], pr["title"])
-                continue
-            labels = [l["name"] for l in data["labels"]]
+            labels = [l["name"] for l in pr["labels"]]
             if "internal" in labels:
                 # This pull request should not be listed in changelog
-                print "skipped internal #{0} {1}".format(pr["number"], pr["title"])
                 continue
             elif "notice" in labels:
                 prs[title_notice].append(pr)
@@ -128,17 +158,32 @@ class BuildChangelog(builder.Task):
                 prs[title_other].append(pr)
 
         # prepare the grouped output
-        print "--------------------------------------------------------"
-        new_logs = [""]
+
+        buildTime = time.strftime(
+            "%Y-%m-%d", time.gmtime(buildSetup.buildTime)
+        ).decode(systemEncoding)
+
+        new_logs = ["# [{0}]({1}) ({2})\n".format(
+            buildSetup.appVersion,
+            "https://github.com/{0}/{1}/releases/tag/{2}".format(
+                user, repo, buildSetup.appVersion),
+            buildTime
+        )]
+        print new_logs[0]
         for title, items in prs.iteritems():
             if items:
-                print "# {0}".format(title)
-                new_logs.append("### {0}\n".format(title))
+                print "**{0}**\n".format(title)
+                new_logs.append("\n**{0}**\n\n".format(title))
                 for pr in items:
-                    txt = "  - #{0} {1}".format(pr["number"], pr["title"])
+                    txt = "  - {0} [#{1}]({2}) ([{3}]({4}))".format(
+                        encapsulate_string(pr["title"]),
+                        pr["number"],
+                        pr["html_url"],
+                        pr["user"]["login"],
+                        pr["user"]["html_url"]
+                    )
                     print txt
                     new_logs.append(txt + "\n")
-                new_logs.append("\n")
                 print ""
 
         # read the existing changelog...
@@ -170,26 +215,3 @@ class BuildChangelog(builder.Task):
                 outfile.write('\n\n')
                 outfile.write(old_changelog)
             outfile.close()
-
-    def get_alternative_release(self, gh, user, repo):
-        # try to find any release
-        rc, data = gh.repos[user][repo].releases.get()
-        if rc != 200:
-            #print "INFO: couldn't get latest release info."
-            return None
-
-        latestRelName = ''
-        latestSha = None
-        for item in data:
-            if item['name'] > latestRelName:
-                latestRelName = item['name']
-                latestSha = item['target_commitish']
-        # no releases yet, try to find a tag.
-        if not latestSha:
-            rc, data = gh.repos[user][repo].git.refs.tags.get()
-            if rc == 200:
-                for item in data:
-                    if item['ref'][11:] > latestRelName:
-                        latestRelName = item['ref'][11:]
-                        latestSha = item['object']['sha']
-        return latestSha
