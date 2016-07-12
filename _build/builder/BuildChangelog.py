@@ -16,30 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import re
+import time
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
-import re
-import time
 
 # Local imports
 import builder
 from builder.Utils import NextPage
 from eg import systemEncoding
-
-
-def encapsulate_string(string):
-    '''
-    Encapsulate characters to make markdown look as expected.
-
-    @param [String] string
-    @return [String] encapsulated input string
-    '''
-
-    string.replace('\\', '\\\\')
-    string = re.sub("([<>*_()\[\]#])", r"\\\1", string)
-    return string
-
 
 class BuildChangelog(builder.Task):
     """
@@ -93,34 +79,7 @@ class BuildChangelog(builder.Task):
                 break
             page = NextPage(gh)
 
-        # get all closed pull requests for the repo
-        pulls = []
-        page = 1
-        while page > 0:
-            rc, data = gh.repos[user][repo].pulls.get(
-                state="closed",
-                base = branch,
-                direction="asc",
-                per_page=100,
-                page=page,
-            )
-            if rc != 200:
-                print "INFO: couldn't get pull requests."
-                return
-            pulls.extend(data)
-            page = NextPage(gh)
-
         # now filter and group the pull requests
-        title_notice = "Important changes for plugin developers:"
-        title_enhancement = "Features added:"
-        title_bug = "Bugs fixed:"
-        title_other = "Other changes:"
-        prs = OrderedDict()
-        prs[title_notice] = []
-        prs[title_enhancement] = []
-        prs[title_bug] = []
-        prs[title_other] = []
-
         page = 1
         pulls = []
         while page > 0:
@@ -131,6 +90,8 @@ class BuildChangelog(builder.Task):
                   'repo:EventGhost',
                 sort="created",
                 order="asc",
+                per_page=100,
+                page=page
             )
             if rc != 200:
                 print "INFO: couldn't get additional info."
@@ -140,6 +101,16 @@ class BuildChangelog(builder.Task):
                 return
             pulls.extend(data["items"])
             page = NextPage(gh)
+
+        title_notice = "Important changes for plugin developers:"
+        title_enhancement = "Features added:"
+        title_bug = "Bugs fixed:"
+        title_other = "Other changes:"
+        prs = OrderedDict()
+        prs[title_notice] = []
+        prs[title_enhancement] = []
+        prs[title_bug] = []
+        prs[title_other] = []
 
         for pr in pulls:
             if not pr["number"] in included_prs:
@@ -165,7 +136,7 @@ class BuildChangelog(builder.Task):
 
         new_logs = ["# [{0}]({1}) ({2})\n".format(
             buildSetup.appVersion,
-            "https://github.com/{0}/{1}/releases/tag/{2}".format(
+            "https://github.com/{0}/{1}/releases/tag/v{2}".format(
                 user, repo, buildSetup.appVersion),
             buildTime
         )]
@@ -215,3 +186,16 @@ class BuildChangelog(builder.Task):
                 outfile.write('\n\n')
                 outfile.write(old_changelog)
             outfile.close()
+
+
+def encapsulate_string(string):
+    '''
+    Encapsulate characters to make markdown look as expected.
+
+    @param [String] string
+    @return [String] encapsulated input string
+    '''
+
+    string.replace('\\', '\\\\')
+    string = re.sub("([<>*_()\[\]#])", r"\\\1", string)
+    return string

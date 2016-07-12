@@ -127,16 +127,12 @@ def GetGitHubConfig():
         raise ValueError
 
     # try to get local active branch
-    cmd = r"git status -b"
-    proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    while True:
-        line = proc.stdout.readline()
-        if not line:
-            break
-        elif line.startswith("On branch"):
-            local_branch = line.split()[2]
-    proc.wait()
+    try:
+        result = subprocess.check_output(r"git status -b --porcelain")
+    except subprocess.CalledProcessError:
+        local_branch = ""
+    else:
+        local_branch = result.split()[1].split("...")[0]
 
     # try to get some defaults for repo and branch
     gh = GitHub(token=gitcfg["token"])
