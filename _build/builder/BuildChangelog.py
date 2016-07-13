@@ -195,7 +195,27 @@ def encapsulate_string(string):
     @param [String] string
     @return [String] encapsulated input string
     '''
+    def enc(txt):
+        txt.replace('\\', '\\\\')
+        txt = re.sub("([<>*_()\[\]#])", r"\\\1", txt)
+        return txt
 
-    string.replace('\\', '\\\\')
-    string = re.sub("([<>*_()\[\]#])", r"\\\1", string)
-    return string
+    def func(txt, start=0):
+        result = ""
+        start = txt.find("`", start)
+        if start == -1:
+            return txt
+        elif start > 0:
+            result += enc(txt[:start])
+        end = txt.find("`", start+1)
+        if end > -1:
+            result += txt[start:end+1]
+            result += func(txt[end+1:])
+        return result
+
+    return func(string)
+
+
+if __name__ == "__main__":
+    t = "`Search` for modules in `[python-install]\Lib\site-packages` and `%PYTHONPATH%`"
+    print encapsulate_string(t)
