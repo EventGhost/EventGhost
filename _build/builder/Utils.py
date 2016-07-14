@@ -52,10 +52,9 @@ def EncodePath(path):
     return path.encode('mbcs')
 
 def EscapeMarkdown(text):
-    text.replace('\\', '\\\\')
     text = text.split("`")
     for i in xrange(0, len(text), 2):
-        text[i] = re.sub("([<>*_()\[\]#])", r"\\\1", text[i])
+        text[i] = re.sub(r"([<>*_()\[\]#\\])", r"\\\1", text[i])
     text = "`".join(text)
     return text
 
