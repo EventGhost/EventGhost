@@ -207,12 +207,6 @@ class StacklessDependency(DependencyBase):
 
 DEPENDENCIES = [
     ModuleDependency(
-        name = "agithub",
-        module = "agithub",
-        version = "2.0",
-        url = "https://eventghost.github.io/dist/dependencies/agithub-2.0-cp27-none-any.whl",
-    ),
-    ModuleDependency(
         name = "CommonMark",
         module = "CommonMark",
         version = "0.7.0",
