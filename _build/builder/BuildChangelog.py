@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import re
 import time
 from agithub.GitHub import GitHub
 from collections import OrderedDict
@@ -24,7 +23,7 @@ from os.path import join
 
 # Local imports
 import builder
-from builder.Utils import NextPage
+from builder.Utils import EscapeMarkdown, NextPage
 from eg import systemEncoding
 
 class BuildChangelog(builder.Task):
@@ -147,7 +146,7 @@ class BuildChangelog(builder.Task):
                 new_logs.append("\n**{0}**\n\n".format(title))
                 for pr in items:
                     txt = "  - {0} [#{1}]({2}) ([{3}]({4}))".format(
-                        encapsulate_string(pr["title"]),
+                        EscapeMarkdown(pr["title"]),
                         pr["number"],
                         pr["html_url"],
                         pr["user"]["login"],
@@ -186,36 +185,3 @@ class BuildChangelog(builder.Task):
                 outfile.write('\n\n')
                 outfile.write(old_changelog)
             outfile.close()
-
-
-def encapsulate_string(string):
-    '''
-    Encapsulate characters to make markdown look as expected.
-
-    @param [String] string
-    @return [String] encapsulated input string
-    '''
-    def enc(txt):
-        txt.replace('\\', '\\\\')
-        txt = re.sub("([<>*_()\[\]#])", r"\\\1", txt)
-        return txt
-
-    def func(txt, start=0):
-        result = ""
-        start = txt.find("`", start)
-        if start == -1:
-            return txt
-        elif start > 0:
-            result += enc(txt[:start])
-        end = txt.find("`", start+1)
-        if end > -1:
-            result += txt[start:end+1]
-            result += func(txt[end+1:])
-        return result
-
-    return func(string)
-
-
-if __name__ == "__main__":
-    t = "`Search` for modules in `[python-install]\Lib\site-packages` and `%PYTHONPATH%`"
-    print encapsulate_string(t)
