@@ -197,7 +197,7 @@ class ReleaseToGitHub(builder.Task):
             chgLines = changelog.splitlines(True)
             try:
                 for i in range(1, len(chgLines)):
-                    if chgLines[i].startswith('**'):
+                    if chgLines[i].startswith('# ['):
                         break
                     else:
                         relChglog += chgLines[i]
