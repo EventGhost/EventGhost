@@ -139,7 +139,7 @@ class LogCtrl(wx.ListCtrl):
         eg.log.data.clear()
         eg.Print(eg.text.MainFrame.Logger.welcomeText)
         self.FocusLastItem()
-        self.ScrollList(0, 1000000)
+        self.Scroll()
         self.Refresh()
 
     def OnCmdCopy(self, dummyEvent=None):
@@ -263,13 +263,17 @@ class LogCtrl(wx.ListCtrl):
         if result == wx.DragMove:
             self.Refresh()
 
+    def Scroll(self):
+        if len(self.data) <= (self.GetTopItem() + self.GetCountPerPage() + 1):
+            self.ScrollList(0, 1000000)
+
     @eg.AssertInMainThread
     def SetData(self, data):
         #self.Freeze()
         self.data = collections.deque(data)
         self.SetItemCount(len(data))
         #self.Thaw()
-        self.ScrollList(0, 1000000)
+        self.Scroll()
 
     def SetIndent(self, shouldIndent):
         if shouldIndent:
@@ -297,6 +301,5 @@ class LogCtrl(wx.ListCtrl):
             self.Thaw()
         data.append((line, icon, wRef, when, indent))
         self.SetItemCount(len(data))
-        if eg.config.scrollLog:
-            self.ScrollList(0, 1000000)
+        self.Scroll()
         self.Update()
