@@ -49,13 +49,6 @@ class StatusBar(wx.StatusBar):
         checkBox.SetPosition((rect.x + 2, rect.y + 2))
         checkBox.SetToolTipString(eg.text.MainFrame.onlyLogAssignedToolTip)
 
-        scrollCheckBox = wx.CheckBox(self, -1, eg.text.MainFrame.scrollLog)
-        self.scrollCheckBox = scrollCheckBox
-        colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR)
-        scrollCheckBox.SetValue(eg.config.scrollLog)
-        scrollCheckBox.Bind(wx.EVT_CHECKBOX, self.OnScrollCheckBox)
-        scrollCheckBox.SetPosition((rect.x + checkBox.GetSizeTuple()[0] + 8, rect.y + 2))
-
         eg.Bind("ProcessingChange", self.OnProcessingChange)
         self.Reposition()
 
@@ -80,10 +73,6 @@ class StatusBar(wx.StatusBar):
 
     def OnProcessingChange(self, state):
         self.icon.SetBitmap(self.icons[state])
-
-    @eg.LogIt
-    def OnScrollCheckBox(self, dummyEvent):
-        eg.config.scrollLog = self.scrollCheckBox.GetValue()
 
     def OnSize(self, dummyEvent):
         self.Reposition()  # for normal size events

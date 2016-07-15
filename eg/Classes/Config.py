@@ -64,7 +64,6 @@ class Config(Section):
     onlyLogAssigned = False
     propResize = True
     refreshEnv = False
-    scrollLog = True
     showTrayIcon = True
     useFixedFont = False
 
