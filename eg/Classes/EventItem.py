@@ -34,7 +34,7 @@ class EventItem(TreeItem):
     icon = eg.Icons.EVENT_ICON
     isConfigurable = True
     openConfigDialog = None
-    isRenameable = False
+    isRenameable = True
     dropBehaviour = {
         "Event": HINT_MOVE_BEFORE_OR_AFTER,
         "Action": HINT_MOVE_AFTER,

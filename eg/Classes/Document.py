@@ -221,9 +221,7 @@ class Document(object):
 
     @eg.AssertInMainThread
     def CmdRename(self):
-        if self.selection.__class__ == self.EventItem:  #2012-12-02
-            self.frame.treeCtrl.EditNodeLabel(self.selection)
-        elif not self.selection.isRenameable:
+        if not self.selection.isRenameable:
             self.DisplayError("cantRename")
         else:
             self.frame.treeCtrl.EditNodeLabel(self.selection)
