@@ -32,7 +32,7 @@ from eg.WinApi.Dynamic import (
 from eg.WinApi.Utils import GetProcessName
 
 eg.RegisterPlugin(
-    name = "Task Create/Switch Events",
+    name = "Task Monitor",
     author = (
         "Bitmonster",
         "blackwind",
@@ -40,8 +40,8 @@ eg.RegisterPlugin(
     version = "1.0.4",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (
-        "Generates events if an application starts, exits or "
-        "gets switched into focus."
+        "Generates events when an application starts, exits, flashes the "
+        "taskbar, or gets switched into focus."
     ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABuklEQVR42o1Sv0tCYRQ9"
