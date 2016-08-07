@@ -12,4 +12,3 @@ End-user documentation
    faq
    commandline
    contributing
-   changelog
