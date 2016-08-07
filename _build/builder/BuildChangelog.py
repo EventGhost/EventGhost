@@ -157,6 +157,11 @@ class BuildChangelog(builder.Task):
                     )
                 print ""
 
+        if len(changes) == 1:
+            text = "\nOnly minor changes in this release.\n"
+            changes.append(text)
+            print text
+
         # read the existing changelog...
         try:
             infile = open(changelog_path, "r")
