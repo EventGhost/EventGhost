@@ -20,7 +20,7 @@ import os
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
-from shutil import copyfile
+from shutil import copy2
 from time import localtime, strftime
 
 # Local imports
@@ -42,7 +42,7 @@ class BuildChangelog(builder.Task):
     def DoTask(self):
         buildSetup = self.buildSetup
         changelog_path = join(buildSetup.outputDir, "CHANGELOG.TXT")
-        copyfile(
+        copy2(
             join(buildSetup.sourceDir, "CHANGELOG.TXT"),
             changelog_path
         )

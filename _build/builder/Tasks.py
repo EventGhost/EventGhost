@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import shutil
 import time
 from os.path import join
+from shutil import copy2
 
 # Local imports
 import builder
@@ -80,8 +80,7 @@ class ReleaseToWeb(builder.Task):
         src = join(buildSetup.sourceDir, filename)
         dst = join(buildSetup.websiteDir, "downloads", filename)
         builder.Upload.Upload(src, self.options["url"])
-        shutil.copyfile(src, dst)
-        shutil.copystat(src, dst)
+        copy2(src, dst)
 
 
 class SynchronizeWebsite(builder.Task):
