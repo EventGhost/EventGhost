@@ -105,9 +105,11 @@ class PluginInstall(object):
         #if result == wx.ID_CANCEL:
         #    return
         filename = pluginInfo.englishName.replace("/", "-")
+        title = eg.text.MainFrame.Menu.Export.translate(None, "&.")
         dialog = wx.FileDialog(
             eg.document.frame,
             defaultFile=filename,
+            message=title,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
         )
