@@ -91,30 +91,22 @@ class PluginInstall(object):
         zipfile.close()
 
     @eg.LogItWithReturn
-    def Export(self, mainFrame=None):
-        result = eg.AddPluginDialog.GetModalResult(
-            mainFrame,
-            checkMultiLoad = False,
-            title="Please select the plugin to export",
-        )
-        if not result:
-            return
-        pluginInfo = result[0]
+    def Export(self, pluginInfo):
         pluginData = self.GetPluginData(pluginInfo)
-        dialog = PluginOverviewDialog(
-            mainFrame,
-            "Plugin Information",
-            pluginData=pluginData,
-            basePath=pluginInfo.path,
-            message="Do you want to save this plugin as a plugin file?"
-        )
-        result = dialog.ShowModal()
-        dialog.Destroy()
-        if result == wx.ID_CANCEL:
-            return
+        #dialog = PluginOverviewDialog(
+        #    eg.document.frame,
+        #    "Plugin Information",
+        #    pluginData=pluginData,
+        #    basePath=pluginInfo.path,
+        #    message="Do you want to save this plugin as a plugin file?"
+        #)
+        #result = dialog.ShowModal()
+        #dialog.Destroy()
+        #if result == wx.ID_CANCEL:
+        #    return
         filename = pluginInfo.englishName.replace("/", "-")
         dialog = wx.FileDialog(
-            mainFrame,
+            eg.document.frame,
             defaultFile=filename,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
