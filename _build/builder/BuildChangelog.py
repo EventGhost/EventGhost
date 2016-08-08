@@ -20,6 +20,7 @@ import os
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
+from shutil import copyfile
 from time import gmtime, strftime
 
 # Local imports
@@ -40,7 +41,11 @@ class BuildChangelog(builder.Task):
 
     def DoTask(self):
         buildSetup = self.buildSetup
-        changelog_path = join(buildSetup.sourceDir, "CHANGELOG.TXT")
+        changelog_path = join(buildSetup.outputDir, "CHANGELOG.TXT")
+        copyfile(
+            join(buildSetup.sourceDir, "CHANGELOG.TXT"),
+            changelog_path
+        )
 
         token = buildSetup.gitConfig["token"]
         user = buildSetup.gitConfig["user"]

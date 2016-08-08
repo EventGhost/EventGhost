@@ -58,11 +58,12 @@ class ReleaseToGitHub(builder.Task):
         ref = 'heads/{0}'.format(branch)
         setupFile = 'EventGhost_{0}_Setup.exe'.format(appVer)
         setupPath = join(buildSetup.outputDir, setupFile)
-        chglogFile = 'CHANGELOG.TXT'
+        chglogFile = "CHANGELOG.TXT"
+        chglogPath = join(buildSetup.outputDir, chglogFile)
 
         print "reading changelog"
         try:
-            f = open(join(buildSetup.sourceDir, chglogFile), 'r')
+            f = open(chglogPath, 'r')
         except IOError:
             print "ERROR: couldn't read changelog file ({0}).".format(chglogFile)
             return
