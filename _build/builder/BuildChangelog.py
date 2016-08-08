@@ -21,7 +21,7 @@ from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
 from shutil import copyfile
-from time import gmtime, strftime
+from time import localtime, strftime
 
 # Local imports
 import builder
@@ -135,7 +135,7 @@ class BuildChangelog(builder.Task):
                 prs[title_other].append(pr)
 
         # prepare the grouped output
-        buildDate = strftime("%Y-%m-%d", gmtime(buildSetup.buildTime))
+        buildDate = strftime("%Y-%m-%d", localtime(buildSetup.buildTime))
         releaseUrl = "https://github.com/{0}/{1}/releases/tag/v{2}".format(
             user, repo, buildSetup.appVersion
         )
