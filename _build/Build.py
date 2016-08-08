@@ -20,7 +20,7 @@
 This script creates the EventGhost setup installer.
 """
 
-from os.path import dirname, join
+from os.path import dirname, exists, join
 
 # Local imports
 import builder
@@ -108,7 +108,10 @@ class MyBuilder(builder.Builder):
                 ignoreversion=(filename not in SKIP_IF_UNCHANGED),
                 prefix=prefix
             )
-        inno.AddFile(join(self.outputDir, "CHANGELOG.TXT"))
+        if exists(join(self.outputDir, "CHANGELOG.TXT")):
+            inno.AddFile(join(self.outputDir, "CHANGELOG.TXT"))
+        else:
+            inno.AddFile(join(self.sourceDir, "CHANGELOG.TXT"))
         inno.AddFile(
             join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
             destName="py.exe"
