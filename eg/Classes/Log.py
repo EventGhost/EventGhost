@@ -137,11 +137,11 @@ class Log(object):
     def Print(self, *args, **kwargs):
         self._Print(args, **kwargs)
 
-    if eg.debugLevel:
-        def PrintDebugNotice(self, *args):
-            """
-            Logs a message if eg.debugLevel is set.
-            """
+    def PrintDebugNotice(self, *args):
+        """
+        Logs a message if eg.debugLevel is set.
+        """
+        if eg.debugLevel:
             threadName = str(currentThread().getName())
             taskletName = str(eg.Tasklet.GetCurrentId())
             strs = [strftime("%H:%M:%S:")]
@@ -150,9 +150,6 @@ class Log(object):
             for arg in args:
                 strs.append(str(arg))
             sys.stderr.write(" ".join(strs) + "\n")
-    else:
-        def PrintDebugNotice(self, *args):
-            pass
 
     def PrintError(self, *args, **kwargs):
         """

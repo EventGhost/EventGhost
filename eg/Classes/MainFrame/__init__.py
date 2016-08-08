@@ -321,6 +321,7 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
+        Append("LogDebug", kind=wx.ITEM_CHECK).Check(eg.config.logDebug)
         Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
         menu.AppendSeparator()
@@ -875,6 +876,11 @@ class MainFrame(wx.Frame):
     def OnCmdLogActions(self):
         eg.config.logActions = not eg.config.logActions
         self.menuBar.Check(ID["LogActions"], eg.config.logActions)
+
+    def OnCmdLogDebug(self):
+        eg.config.logDebug = not eg.config.logDebug
+        self.menuBar.Check(ID["LogDebug"], eg.config.logDebug)
+        eg.debugLevel = int(eg.config.logDebug)
 
     def OnCmdLogTime(self):
         flag = self.menuBar.IsChecked(ID["LogTime"])
