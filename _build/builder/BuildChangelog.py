@@ -56,7 +56,7 @@ class BuildChangelog(builder.Task):
         rc, data = gh.repos[user][repo].git.refs.tags.get()
         if rc != 200:
             print "INFO: couldn't get tags."
-            return
+            exit(1)
         to_commits = [i["object"]["sha"] for i in data]
 
         # get commits since last release
@@ -71,7 +71,7 @@ class BuildChangelog(builder.Task):
             )
             if rc != 200:
                 print "INFO: couldn't get commits."
-                return
+                exit(1)
             for item in data:
                 if item['sha'] in to_commits:
                     break
@@ -101,10 +101,10 @@ class BuildChangelog(builder.Task):
             )
             if rc != 200:
                 print "INFO: couldn't get additional info."
-                return
+                exit(1)
             elif data.get("incomplete_results") == True:
                 print "INFO: incomplete search result."
-                return
+                exit(1)
             pulls.extend(data["items"])
             page = NextPage(gh)
 
