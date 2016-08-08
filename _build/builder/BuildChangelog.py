@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
@@ -32,7 +33,9 @@ class BuildChangelog(builder.Task):
     description = "Build changelog"
 
     def Setup(self):
-        if not self.buildSetup.showGui:
+        if os.environ.get("USERNAME") == "appveyor":
+            self.activated = False
+        elif not self.buildSetup.showGui:
             self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
