@@ -2,6 +2,7 @@ eg.RegisterPlugin(
     name = "Sidewinder Game Voice",
     author = "Bartman",
     version = "0.1.614",
+    guid = "{B66C27F5-26C0-47DE-B74A-50A3A483D71E}",
     kind = "remote",
     canMultiLoad = False,
     description = (

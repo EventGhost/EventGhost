@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     "Sem;colon",
   ),
   version = "0.0.3",
+  guid = "{59C111B9-EF9E-48DA-A57D-6231BC9AB2FD}",
   kind = "other",
   description = "This plugin generates events when an host become available or unavailable on your LAN. It uses the ping commands of windows. Please, have a look at the readme file !"
 )
