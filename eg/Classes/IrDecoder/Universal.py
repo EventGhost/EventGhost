@@ -16,8 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
-from eg.Classes.IrDecoder import IrProtocolBase
+class IrProtocolBase(object):
+    lastCode = None
+    timeout = 150
+
+    def __init__(self, controller):
+        self.controller = controller
+
+    def Decode(self, data):
+        raise NotImplementedError
+
 
 class Universal(IrProtocolBase):
     """

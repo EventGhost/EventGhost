@@ -21,6 +21,7 @@ import eg
 eg.RegisterPlugin(
     name = "Raw Input",
     author = "Bitmonster",
+    guid = "{07601B3B-BC6E-4E15-81A2-07E15A88DDC2}",
 )
 
 import time

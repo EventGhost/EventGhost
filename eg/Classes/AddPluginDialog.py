@@ -148,6 +148,17 @@ class AddPluginDialog(eg.TaskletDialog):
 
         treeCtrl.ScrollTo(itemToSelect)
 
+        def OnCmdExport(dummyEvent=None):
+            info = self.treeCtrl.GetPyData(self.treeCtrl.GetSelection())
+            if info:
+                eg.PluginInstall.Export(info)
+        menu = wx.Menu()
+        menuId = wx.NewId()
+        menu.Append(menuId, eg.text.MainFrame.Menu.Export)
+        self.Bind(wx.EVT_MENU, OnCmdExport, id=menuId)
+        self.contextMenu = menu
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnItemRightClick)
+
         rightPanel = wx.Panel(splitterWindow)
         rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
@@ -220,6 +231,16 @@ class AddPluginDialog(eg.TaskletDialog):
             self.OnOK(wx.CommandEvent())
             return
         event.Skip()
+
+    def OnItemRightClick(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
+        """
+        item = event.GetItem()
+        self.treeCtrl.SelectItem(item)
+        info = self.treeCtrl.GetPyData(item)
+        if info:
+            self.PopupMenu(self.contextMenu)
 
     def OnSelectionChanged(self, event):
         """

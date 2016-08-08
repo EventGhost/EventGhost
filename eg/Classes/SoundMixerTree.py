@@ -19,7 +19,6 @@
 import wx
 
 # Local imports
-from eg.SoundMixer import SoundMixerException
 from eg.WinApi.Dynamic.Mmsystem import (
     byref,
     c_void_p,
@@ -91,6 +90,7 @@ from eg.WinApi.Dynamic.Mmsystem import (
     pointer,
     sizeof,
 )
+from eg.WinApi.SoundMixer import SoundMixerException
 
 MCD_UNSIGNED = MIXERCONTROLDETAILS_UNSIGNED
 MCD_SIGNED = MIXERCONTROLDETAILS_SIGNED

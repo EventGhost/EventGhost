@@ -38,27 +38,22 @@ mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 # determine the commandline parameters
 import __main__  # NOQA
 class args:
-    hideOnStartup = False
-    startupEvent = None
-    startupFile = None
     allowMultiLoad = False
-    debugLevel = 0
-    translate = False
     configDir = None
+    hideOnStartup = False
     install = False
     isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
-    pluginFile = None
     pluginDir = None
+    pluginFile = None
+    startupEvent = None
+    startupFile = None
+    translate = False
 
 
 if args.isMain:
     for arg in argvIter:
         arg = arg.lower()
-        if arg.startswith('-debug'):
-            args.debugLevel = 1
-            if len(arg) > 6:
-                args.debugLevel = int(arg[6:])
-        elif arg in ("-n", "-netsend"):
+        if arg in ("-n", "-netsend"):
             from Classes.NetworkSend import Main
             Main(list(argvIter))
             sys.exit(0)
@@ -152,7 +147,3 @@ if args.isMain:
                 ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
             finally:
                 ctypes.windll.kernel32.ExitProcess(0)
-
-    # change working directory to program directory
-    if args.debugLevel < 1 and args.isMain:
-        os.chdir(mainDir)

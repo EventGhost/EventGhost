@@ -22,7 +22,7 @@ from glob import glob
 
 # Local imports
 import eg
-from eg.Classes.IrDecoder.Universal import Universal
+from eg.Classes.IrDecoder.Universal import IrProtocolBase, Universal
 
 DECODERS_DIR = os.path.dirname(__file__.decode('mbcs'))
 DEBUG = eg.debugLevel
@@ -111,17 +111,6 @@ class IrDecoder(object):
         self.event.SetShouldEnd()
 #        if DEBUG:
 #            print "timeout"
-
-
-class IrProtocolBase(object):
-    lastCode = None
-    timeout = 150
-
-    def __init__(self, controller):
-        self.controller = controller
-
-    def Decode(self, data):
-        raise NotImplementedError
 
 
 class ManchesterBase(IrProtocolBase):

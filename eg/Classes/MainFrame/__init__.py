@@ -39,7 +39,6 @@ ADD_FOLDER_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.FOLDER_ICON)
 ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
 ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
-RESET_ICON = eg.Icons.ERROR_ICON.GetBitmap()
 
 ID_DISABLED = wx.NewId()
 ID_EXECUTE = wx.NewId()
@@ -322,6 +321,7 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
+        Append("LogDebug", kind=wx.ITEM_CHECK).Check(eg.config.logDebug)
         Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
         menu.AppendSeparator()
@@ -356,20 +356,6 @@ class MainFrame(wx.Frame):
         Append("PythonShell", "\tShift+Ctrl+I")
         menu.AppendSeparator()
         Append("About")
-        if eg.debugLevel:
-            menu = wx.Menu()
-            menuBar.Append(menu, "Debug")
-            Append("Export")
-            Append("Import")
-            menu.AppendSeparator()
-            Append("Reload")
-            Append("CollectGarbage")
-            Append("Reset", "\tPause")
-            Append("AddEventDialog")
-            menu.AppendSeparator()
-            Append("ExportPlugin")
-            Append("VirtualTree")
-            Append("RestartProgram")
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -413,8 +399,6 @@ class MainFrame(wx.Frame):
             GetInternalBitmap("Execute"),
             getattr(text, "Execute")
         )
-        if eg.debugLevel:
-            Append("Reset", GetInternalBitmap("error"))
 
         toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
@@ -893,6 +877,11 @@ class MainFrame(wx.Frame):
         eg.config.logActions = not eg.config.logActions
         self.menuBar.Check(ID["LogActions"], eg.config.logActions)
 
+    def OnCmdLogDebug(self):
+        eg.config.logDebug = not eg.config.logDebug
+        self.menuBar.Check(ID["LogDebug"], eg.config.logDebug)
+        eg.debugLevel = int(eg.config.logDebug)
+
     def OnCmdLogTime(self):
         flag = self.menuBar.IsChecked(ID["LogTime"])
         Config.logTime = flag
@@ -1054,69 +1043,3 @@ class MainFrame(wx.Frame):
     @eg.LogItWithReturn
     def OnCmdAbout(self):
         eg.AboutDialog.GetResult(self)
-
-    #---- Debug --------------------------------------------------------------
-    @eg.AsTasklet
-    def OnCmdExport(self):
-        result = eg.ExportDialog.GetResult()
-        if result is not None:
-            for item in result[0]:
-                print item.GetLabel()
-
-    def OnCmdImport(self):
-        pass
-
-    def OnCmdReload(self):
-        if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            return wx.ID_CANCEL
-        self.document.StartSession(self.document.filePath)
-
-    def OnCmdCollectGarbage(self):
-        import gc
-        #gc.set_debug(gc.DEBUG_SAVEALL)
-        #gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
-        from pprint import pprint
-        print "threshold:", gc.get_threshold()
-        print "unreachable object count:", gc.collect()
-        garbageList = gc.garbage[:]
-        for i, obj in enumerate(garbageList):
-            print "Object Num %d:" % i
-            pprint(obj)
-            #print "Referrers:"
-            #print(gc.get_referrers(o))
-            #print "Referents:"
-            #print(gc.get_referents(o))
-        print "Done."
-        #print "unreachable object count:", gc.collect()
-        #from pprint import pprint
-        #pprint(gc.garbage)
-
-    def OnCmdReset(self):
-        eg.stopExecutionFlag = True
-        eg.programCounter = None
-        del eg.programReturnStack[:]
-        eg.eventThread.ClearPendingEvents()
-        eg.actionThread.ClearPendingEvents()
-        eg.PrintError("Execution stopped by user")
-
-    @eg.AsTasklet
-    def OnCmdAddEventDialog(self):
-        result = eg.AddEventDialog.GetResult(self)
-        if result is None:
-            return
-        label = result[0]
-        eg.UndoHandler.NewEvent(self.document).Do(
-            self.treeCtrl.GetSelectedNode(),
-            label=label
-        )
-
-    def OnCmdExportPlugin(self):
-        eg.PluginInstall.Export(self)
-
-    def OnCmdVirtualTree(self):
-        frame = wx.Frame(None, size=(500, 600))
-        TreeCtrl(frame, self.document)
-        frame.Show()
-
-    def OnCmdRestartProgram(self):
-        eg.app.Restart()

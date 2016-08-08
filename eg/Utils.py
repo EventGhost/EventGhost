@@ -156,6 +156,26 @@ def AsTasklet(func):
         eg.Tasklet(func)(*args, **kwargs).run()
     return update_wrapper(Wrapper, func)
 
+def CollectGarbage():
+    import gc
+    #gc.set_debug(gc.DEBUG_SAVEALL)
+    #gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
+    from pprint import pprint
+    print "threshold:", gc.get_threshold()
+    print "unreachable object count:", gc.collect()
+    garbageList = gc.garbage[:]
+    for i, obj in enumerate(garbageList):
+        print "Object Num %d:" % i
+        pprint(obj)
+        #print "Referrers:"
+        #print(gc.get_referrers(o))
+        #print "Referents:"
+        #print(gc.get_referents(o))
+    print "Done."
+    #print "unreachable object count:", gc.collect()
+    #from pprint import pprint
+    #pprint(gc.garbage)
+
 def DecodeMarkdown(source):
     return commonmark(source)
 
@@ -449,6 +469,14 @@ def PrepareDocstring(docstring):
     if lines and lines[-1]:
         lines.append('')
     return "\n".join(lines)
+
+def Reset():
+    eg.stopExecutionFlag = True
+    eg.programCounter = None
+    del eg.programReturnStack[:]
+    eg.eventThread.ClearPendingEvents()
+    eg.actionThread.ClearPendingEvents()
+    eg.PrintError("Execution stopped by user")
 
 def SetDefault(targetCls, defaultCls):
     targetDict = targetCls.__dict__

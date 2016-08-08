@@ -135,6 +135,7 @@ class Default:
             ExpandOnEvents = "Select on E&xecution"
             LogMacros = "Log Macros"
             LogActions = "Log Actions"
+            LogDebug = "Log Debug Info"
             LogTime = "Log Times"
             IndentLog = "&Indent Log"
             ClearLog = "Clear &Log"

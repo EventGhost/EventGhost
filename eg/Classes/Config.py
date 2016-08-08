@@ -60,6 +60,7 @@ class Config(Section):
     limitMemory = False
     limitMemorySize = 8
     logActions = True
+    logDebug = False
     logMacros = True
     onlyLogAssigned = False
     propResize = True

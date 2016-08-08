@@ -192,9 +192,6 @@ class App(wx.App):
             if sys.argv[0] != sys.executable:
                 args.append(sys.argv[0])
             args.append("-restart")
-            if eg.debugLevel:
-                args.append("-debug")
-                args.append(str(eg.debugLevel))
             if eg.startupArguments.configDir:
                 args.append("-configdir")
                 args.append(eg.startupArguments.configDir)

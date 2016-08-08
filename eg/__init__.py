@@ -73,7 +73,10 @@ class DynamicModule(object):
         else:
             eg.Init.InitGui()
         if eg.debugLevel:
-            eg.Init.ImportAll()
+            try:
+                eg.Init.ImportAll()
+            except:
+                eg.PrintDebugNotice(sys.exc_info()[1])
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
 

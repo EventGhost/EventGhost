@@ -32,13 +32,14 @@
 .. autofunction:: eg.DummyFunc
 """
 
-import wx
-import sys
 import asyncore
-import socket
-import time
-import threading
 import locale
+import os
+import socket
+import sys
+import threading
+import time
+import wx
 from os.path import join
 
 # Local imports
@@ -63,7 +64,7 @@ eg.sitePackagesDir = join(
 )
 eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
-eg.debugLevel = eg.startupArguments.debugLevel
+eg.debugLevel = 0
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
 eg.result = None
@@ -117,6 +118,7 @@ if eg.startupArguments.configDir is None:
     eg.configDir = join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
+os.chdir(eg.configDir)
 eg.localPluginDir = join(eg.folderPath.ProgramData, eg.APP_NAME, "plugins")
 eg.corePluginDir = join(eg.mainDir, "plugins")
 eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
@@ -357,6 +359,7 @@ sys.excepthook = TracebackHook
 
 eg.colour = eg.Colour()
 eg.config = eg.Config()
+eg.debugLevel = int(eg.config.logDebug)
 if eg.startupArguments.isMain and not eg.startupArguments.translate:
     eg.text = eg.Text(eg.config.language)
 else:
