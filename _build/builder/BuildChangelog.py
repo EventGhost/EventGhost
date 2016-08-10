@@ -151,11 +151,11 @@ class BuildChangelog(builder.Task):
                 changes.append("\n**{0}:**\n\n".format(title))
                 print "{0}:".format(title)
                 for pr in items:
-                    changes.append("* {0} [#{1}]({2}) ([{3}]({4}))\n".format(
+                    changes.append("* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
                         EscapeMarkdown(pr["title"]),
                         pr["number"],
                         pr["html_url"],
-                        pr["user"]["login"],
+                        EscapeMarkdown(pr["user"]["login"]),
                         pr["user"]["html_url"],
                     ))
                     print "* {0} #{1} ({2})".format(
