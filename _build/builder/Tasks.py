@@ -77,7 +77,7 @@ class ReleaseToWeb(builder.Task):
         filename = (
             buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
         )
-        src = join(buildSetup.sourceDir, filename)
+        src = join(buildSetup.outputDir, filename)
         dst = join(buildSetup.websiteDir, "downloads", filename)
         builder.Upload.Upload(src, self.options["url"])
         copy2(src, dst)
