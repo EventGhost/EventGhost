@@ -79,6 +79,7 @@ For the good of the project, pull requests containing commits that don't comply 
 * Your code didn't align with our design philosophy. Try not to take it personally if this happens -- we're only doing what we think is best for everyone.
 * Your code was too sloppy. Read the [Setting up your editor](#setting-up-your-editor) section above and try again.
 * Your commits weren't up to par. Read the [Commits count!](#commits-count) section above and try again.
+* Your coding style didn't match ours. Read the [Coding Style Guidelines](https://github.com/EventGhost/EventGhost/blob/master/_build/data/docs/codingstyle.rst) section of our manual and try again.
 * Your code didn't work. Setting up a build environment is now easier than ever -- just run `python Build.py --make-env` from an administrative command prompt -- so there's no excuse for not testing your work.
 * You added yourself to a plugin's author list without doing substantial work on that plugin. Fixing a bug doesn't make you an author.
 * Your pull request contained merge commits. To remove merge commits from an existing branch, run `git rebase upstream/master && git push --force`. To ensure you don't get merge commits in the future, run `git config --global pull.rebase true`.
