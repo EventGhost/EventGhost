@@ -27,18 +27,18 @@ class Default:
         configTree = "Configuration Tree"
         deleteQuestion = "Are you sure you want to delete this item?"
         deleteManyQuestion = (
-            "This element has %s subelements.\n"
+            "This element has %s subelements.\n\n"
             "Are you sure you want to delete them all?"
         )
         deletePlugin = (
-            "This plugin is used by actions in your configuration.\n"
-            "You cannot remove it before all actions that are using this "
-            "plugin have been removed."
+            "This plugin is used by actions in your configuration. You "
+            "cannot remove it before all actions that are using this plugin "
+            "have been removed."
         )
         deleteLinkedItems = (
             "At least one item outside your selection refers to an "
             "item inside your selection. If you continue to delete "
-            "this selection, the referring item won't properly work "
+            "this selection, the referring item won't work properly "
             "anymore.\n\n"
             "Are you sure you want to delete the selection?"
         )
@@ -57,7 +57,7 @@ class Default:
         unnamedMacro = "<unnamed macro>"
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
-    #    moreTag = "more..."
+        #moreTag = "more..."
         supportSentence = "Support for this plugin can be found"
         supportLink = "here"
         settingsPluginCaption = "Plugin Item Settings"
@@ -80,14 +80,17 @@ class Default:
             'Change control to "Text" with {eg.event.payload}',
             'Change control to (empty) "Text"'
         )
-        smartSpinTooltip = "Use the right mouse button\nto get the context menu !"
+        smartSpinTooltip = (
+            "Use the right mouse button\n"
+            "to open the context menu!"
+        )
 
     class Error:
         FileNotFound = "File \"%s\" couldn't be found."
         InAction = 'Error in Action: "%s"'
         pluginNotActivated = 'Plugin "%s" is not activated'
         pluginStartError = "Error starting plugin: %s"
-        pluginLoadError = "Error while loading plugin-file %s."
+        pluginLoadError = "Error loading plugin file: %s"
         configureError = "Error while configuring: %s"
 
     class Plugin:
@@ -96,9 +99,9 @@ class Default:
     class MainFrame:
         onlyLogAssigned = "&Log only assigned and activated events"
         onlyLogAssignedToolTip = (
-            "If checked, the log will only show events, that would actually\n"
-            "execute in the current configuration. So you should *not* check\n"
-            "this, while you want to assign new events."
+            "If checked, the log will only show events that would actually\n"
+            "execute in the current configuration, so you should uncheck\n"
+            "this when you want to assign new events."
         )
 
         class TaskBarMenu:
@@ -169,8 +172,8 @@ class Default:
 
         class SaveChanges:
             mesg = (
-                "The file was altered.\n\n"
-                "Do you want to save the changes?\n"
+                "Configuration contains unsaved changed.\n\n"
+                "Do you want to save before continuing?"
             )
             saveButton = "&Save"
             dontSaveButton = "Do&n't Save"
@@ -184,28 +187,22 @@ class Default:
 
         class Messages:
             cantAddEvent = (
-                "You can't add an event item here.\n\n"
-                "Please select a macro item where "
-                "you would like the event item to be added to."
+                "Events can only be added to macros."
             )
             cantAddAction = (
-                "You can't add an action item here.\n\n"
-                "Please select a macro item or a location inside a macro "
-                "item where you would like the event item be to added to."
+                "Actions can only be added to macros and Autostart."
             )
             cantDisable = (
-                "The root item and the autostart item can't be disabled."
+                "The root item and Autostart can't be disabled."
             )
             cantRename = (
-                "Only folders, macros and actions can be renamed."
+                "The root item, Autostart, and plugins can't be renamed."
             )
             cantExecute = (
-                "The root item, folder items and event items can't be "
-                "executed."
+                "The root item, folders, and events can't be executed."
             )
             cantConfigure = (
-                "You can't configure this item.\n\n"
-                "Only action, event and plugin items are configurable."
+                "Only plugins, events, and actions can be configured."
             )
 
 
