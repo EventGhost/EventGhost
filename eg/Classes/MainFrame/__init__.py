@@ -322,8 +322,9 @@ class MainFrame(wx.Frame):
         Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
         Append("LogDebug", kind=wx.ITEM_CHECK).Check(eg.config.logDebug)
-        Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
+        menu.AppendSeparator()
         Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
+        Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         menu.AppendSeparator()
         Append("ClearLog")
 
