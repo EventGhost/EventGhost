@@ -137,7 +137,7 @@ class Default:
             LogActions = "Log &Actions"
             LogDebug = "Log &Debug Info"
             IndentLog = "&Indent Log"
-            LogTime = "&Show Timestamps"
+            LogTime = "Time&stamp Log"
             ClearLog = "Clear &Log"
 
             ConfigurationMenu = "&Configuration"
