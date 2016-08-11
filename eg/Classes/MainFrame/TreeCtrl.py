@@ -369,8 +369,6 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Bind("NodeDeleted", self.OnNodeDeleted)
         eg.Bind("NodeChanged", self.OnNodeChanged)
         eg.Bind("NodeSelected", self.OnNodeSelected)
-        eg.Bind("NodeMoveBegin", self.OnNodeMoveBegin)
-        eg.Bind("NodeMoveEnd", self.OnNodeMoveEnd)
         eg.Bind("DocumentNewRoot", self.OnNewRoot)
         if document.root:
             self.OnNewRoot(document.root)
@@ -456,8 +454,6 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Unbind("NodeDeleted", self.OnNodeDeleted)
         eg.Unbind("NodeChanged", self.OnNodeChanged)
         eg.Unbind("NodeSelected", self.OnNodeSelected)
-        eg.Unbind("NodeMoveBegin", self.OnNodeMoveBegin)
-        eg.Unbind("NodeMoveEnd", self.OnNodeMoveEnd)
         eg.Unbind("DocumentNewRoot", self.OnNewRoot)
 
     @eg.AssertInMainThread
@@ -795,14 +791,6 @@ class TreeCtrl(wx.TreeCtrl):
         selected = self.GetSelection()
         self.UnselectAll()
         self.SelectItem(selected)
-
-    @eg.AssertInMainThread
-    def OnNodeMoveBegin(self, dummyNode):
-        self.Freeze()
-
-    @eg.AssertInMainThread
-    def OnNodeMoveEnd(self, dummyNode):
-        self.Thaw()
 
     @eg.AssertInMainThread
     def OnNodeSelected(self, node):
