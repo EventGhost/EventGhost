@@ -196,6 +196,6 @@ class BuildChangelog(builder.Task):
         else:
             outfile.writelines(changes)
             if old_changes:
-                outfile.write('\n---\n\n')
+                outfile.write('\n\n')
                 outfile.write(old_changes)
             outfile.close()
