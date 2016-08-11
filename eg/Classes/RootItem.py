@@ -48,9 +48,7 @@ class RootItem(ContainerItem):
         ContainerItem.__init__(self, parent, node)
         self.guid = node.attrib.get("guid", "0")
         self.time = node.attrib.get("time", "0")
-        self.name = (
-            os.environ.get("COMPUTERNAME") or eg.text.General.configTree
-        )
+        self.name = os.environ.get("COMPUTERNAME", eg.text.General.configTree)
         self.expanded = True
 
     def CanCopy(self):
