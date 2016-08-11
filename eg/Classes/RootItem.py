@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import time
 
 # Local imports
@@ -47,7 +48,9 @@ class RootItem(ContainerItem):
         ContainerItem.__init__(self, parent, node)
         self.guid = node.attrib.get("guid", "0")
         self.time = node.attrib.get("time", "0")
-        self.name = eg.text.General.configTree
+        self.name = (
+            os.environ.get("COMPUTERNAME") or eg.text.General.configTree
+        )
         self.expanded = True
 
     def CanCopy(self):
