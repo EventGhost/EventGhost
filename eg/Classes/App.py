@@ -43,6 +43,7 @@ class App(wx.App):
     def __init__(self):
         self.onExitFuncs = []
         wx.App.__init__(self, 0)
+        self.locale = wx.Locale(wx.Locale.GetSystemLanguage())
         self.shouldVeto = False
         self.firstQuery = True
         self.endSession = False
