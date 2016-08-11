@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.15"
+version="0.1.16"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -24,6 +24,8 @@ version="0.1.15"
 #
 # Revision history:
 # -----------------
+# 0.1.16 by Sem;colon 2016-03-26 01:15 UTC+1
+#     - bugfix "Do also trigger events for a non-chosen day if the next day happens to be a holiday" wasn't working
 # 0.1.15 by Sem;colon 2015-12-07 20:30 UTC+1
 #     - added option "Do not trigger events for a chosen day if the next day happens to be a holiday" to schedule type "Weekly" and "Monthly / weekday"
 #     - added option "Do also trigger events for a non-chosen day if the next day happens to be a holiday" to schedule type "Weekly"
@@ -2011,7 +2013,7 @@ class SchedulGhost(eg.PluginBase):
             return str(runDateTime)
         elif type == 2: # weekly
             if not data[2] and (len(self.holidays[0])==0 or not data[3] and not data[5]):
-                print len(self.holidays[0])
+                #print len(self.holidays[0])
                 return ""
             runDateTime = dt.combine(now.date(), runTime)
             weekdaysLower = []
@@ -2102,17 +2104,17 @@ class SchedulGhost(eg.PluginBase):
                     if Delta!=-1 and delta>=Delta:
                         tmpRunDT = runDateTime + td(days = Delta)
                         break
+                    tmpRunDT = runDateTime + td(days = delta)
                     if data[3]:
-                        tmpRunDT = runDateTime + td(days = delta)
                         if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
                             break
                         elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
                             break
                     if data[5]:
-                        tmpRunDT = runDateTime + td(days = (delta+1))
-                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                        tmpRunDT2 = runDateTime + td(days = (delta+1))
+                        if (tmpRunDT2.month, tmpRunDT2.day) in self.holidays[0]:
                             break
-                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                        elif (tmpRunDT2.year, tmpRunDT2.month, tmpRunDT2.day) in self.holidays[1]:
                             break
                     delta+=1
             return str(tmpRunDT)
