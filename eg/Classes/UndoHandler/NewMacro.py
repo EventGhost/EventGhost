@@ -64,5 +64,7 @@ class NewMacro(NewItem):
         if actionItem:
             label = actionItem.GetLabel()
             eg.actionThread.Func(macroItem.RenameTo)(label)
+            macroItem.Expand()
+            actionItem.Select()
             macroItem.Select()
         return macroItem
