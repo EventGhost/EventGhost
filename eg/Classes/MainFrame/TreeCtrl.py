@@ -772,9 +772,11 @@ class TreeCtrl(wx.TreeCtrl):
         self.SetItemHasChildren(itemId, bool(node.childs))
         node.SetAttributes(self, itemId)
         if node in self.expandedNodes:
-            self.Expand(itemId)
+            if not self.IsExpanded(itemId):
+                self.Expand(itemId)
         else:
-            self.Collapse(itemId)
+            if self.IsExpanded(itemId):
+                self.Collapse(itemId)
 
     @eg.AssertInMainThread
     @eg.LogIt
