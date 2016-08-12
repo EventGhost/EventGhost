@@ -27,11 +27,10 @@ import eg
 
 class Text(eg.TranslatableStrings):
     newVersionMesg = \
-        "A newer version of EventGhost has been released.\n\n"\
-        "\tYour version:\t%s\n"\
-        "\tNewest version:\t%s\n\n"\
+        "A new version of EventGhost has been released!\n\n"\
+        "Your version:\tv%s\n"\
+        "Newest version:\t%s\n\n"\
         "Do you want to visit the download page now?"
-    downloadButton = "Visit download page"
     waitMesg = "Please wait while EventGhost retrieves update information."
     ManOkMesg = "There is currently no newer version of EventGhost available."
     ManErrorMesg = \
@@ -65,7 +64,7 @@ class MessageDialog(eg.Dialog):
         staticText = self.StaticText(
             Text.newVersionMesg % (eg.Version.string, version)
         )
-        downloadButton = wx.Button(self, -1, Text.downloadButton)
+        downloadButton = wx.Button(self, -1, eg.text.General.ok)
         downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
         cancelButton = wx.Button(self, -1, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
