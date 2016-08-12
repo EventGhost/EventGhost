@@ -183,10 +183,10 @@ class ReleaseToGitHub(builder.Task):
             if rc != 201:
                 print "ERROR: couldn't create commit for changelog update."
                 return
-            CommitSha = data['sha']
+            newCommitSha = data['sha']
 
             print "updating reference for branch to new commit"
-            body = {'sha': CommitSha}
+            body = {'sha': newCommitSha}
             rc, data = gh.repos[user][repo].git.refs[ref].patch(body=body)
             if rc != 200:
                 print "ERROR: couldn't update reference ({0}) with new commit.".format(ref)
@@ -208,7 +208,7 @@ class ReleaseToGitHub(builder.Task):
 
             print "creating release"
             body = {'tag_name': 'v{0}'.format(appVer),
-                    'target_commitish': commitSha,
+                    'target_commitish': newCommitSha,
                     'name': 'v{0}'.format(appVer),
                     'body': relChglog,
                     #'draft': False,
