@@ -43,7 +43,7 @@ class Config(object):
                         )
                 else:
                     task.options[option] = configParser.get(section, option)
-                    print section, option, configParser.get(section, option)
+                    #print section, option, configParser.get(section, option)
 
         if configParser.has_option("GitHub", "Repository"):
             repository = configParser.get('GitHub', "Repository")
