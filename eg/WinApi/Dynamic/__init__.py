@@ -36,7 +36,7 @@ _Advapi32 = WinDLL("Advapi32")
 #_setupapi = WinDLL("setupapi")
 _htmlhelp = WinDLL("hhctrl.ocx")
 #_difxapi = WinDLL("DIFxAPI.dll")
-if not hasattr(sys, "frozen"):  # detect py2exe
+if __name__ == "__main__":
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
     except ImportError:

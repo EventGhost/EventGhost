@@ -27,7 +27,7 @@ import sys
 from eg.WinApi.Dynamic import *
 
 _setupapi = WinDLL("setupapi")
-if not hasattr(sys, "frozen"):  # detect py2exe
+if __name__ == "__main__":
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
     except ImportError:
