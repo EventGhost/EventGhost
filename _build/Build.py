@@ -45,6 +45,7 @@ class MyBuilder(builder.Builder):
         "isapi",
         "jinja2",
         "PIL",
+        "pkg_resources",
         "pythoncom",
         "pywin32",
         "win32com",

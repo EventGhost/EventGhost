@@ -17,10 +17,10 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-import time
 import webbrowser
 import wx
 from agithub.GitHub import GitHub
+from pkg_resources import parse_version
 
 # Local imports
 import eg
@@ -28,7 +28,7 @@ import eg
 class Text(eg.TranslatableStrings):
     newVersionMesg = \
         "A new version of EventGhost has been released!\n\n"\
-        "Your version:\tv%s\n"\
+        "Your version:\t%s\n"\
         "Newest version:\t%s\n\n"\
         "Do you want to visit the download page now?"
     waitMesg = "Please wait while EventGhost retrieves update information."
@@ -151,11 +151,11 @@ def _checkUpdate(manually=False):
             dialog.Destroy()
             dialog = None
 
-        time_release = time.strptime(
-            rel["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-        time_local_eg = time.gmtime(eg.Version.buildTime)
-        if rc == 200 and time_release > time_local_eg:
-            wx.CallAfter(MessageDialog, rel["name"], rel["html_url"])
+        ver = rel["name"].lstrip("v")
+        url = rel["html_url"]
+
+        if rc == 200 and parse_version(ver) > parse_version(eg.Version.string):
+            wx.CallAfter(MessageDialog, ver, url)
         else:
             if manually:
                 dlg = wx.MessageDialog(
