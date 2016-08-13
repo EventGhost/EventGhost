@@ -26,7 +26,9 @@ from os.path import abspath, dirname, exists, join
 import builder
 from builder import VirtualEnv
 from builder.Logging import LogToFile
-from builder.Utils import GetGitHubConfig, GetVersion, Is64bitInterpreter
+from builder.Utils import (
+    GetGitHubConfig, GetVersion, Is64bitInterpreter, IsCIBuild
+)
 
 class Task(object):
     value = None
@@ -107,12 +109,14 @@ class Builder(object):
         try:
             self.gitConfig = GetGitHubConfig()
         except:
-            print(
+            gitWarning = (
                 "WARNING: Can't release to GitHub until you do the following:\n"
                 "    $ git config --global github.user <your github username>\n"
                 "    $ git config --global github.token <your github token>\n"
                 "To create a token, go to: https://github.com/settings/tokens\n"
             )
+            if not IsCIBuild():
+                print gitWarning
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {
