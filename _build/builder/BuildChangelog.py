@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
@@ -25,7 +24,7 @@ from time import localtime, strftime
 
 # Local imports
 import builder
-from builder.Utils import EscapeMarkdown, NextPage
+from builder.Utils import EscapeMarkdown, IsCIBuild, NextPage
 
 class BuildChangelog(builder.Task):
     """
@@ -34,7 +33,7 @@ class BuildChangelog(builder.Task):
     description = "Build changelog"
 
     def Setup(self):
-        if os.environ.get("USERNAME") == "appveyor":
+        if IsCIBuild():
             self.activated = False
         elif not self.buildSetup.showGui:
             self.activated = bool(self.buildSetup.args.package)

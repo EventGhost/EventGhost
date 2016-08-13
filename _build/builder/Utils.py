@@ -299,6 +299,12 @@ def IsAdmin():
     except:
         return False
 
+def IsCIBuild():
+    """
+    Determine whether or not this is a continuous integration build.
+    """
+    return (os.environ.get("USERNAME") == "appveyor")
+
 def ListDir(path, skip_dirs=[], fullpath=True):
     """
     Return a list with all files in given path (including subdirs).
