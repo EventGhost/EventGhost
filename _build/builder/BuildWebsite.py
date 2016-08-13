@@ -105,7 +105,7 @@ class ForumPage(Page):
 
 class WikiPage(Page):
     name = "Wiki"
-    target = "/wiki/"
+    target = "/mediawiki/"
     outfile = "css/header_wiki.html"
     template = "header_only.tmpl"
 
