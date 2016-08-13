@@ -325,8 +325,6 @@ def CheckDependencies(buildSetup):
                     "and try again."
                 )
             print ""
-        print "---"
-        print ""
         VirtualEnv.Restart()
 
     if failedDeps:
