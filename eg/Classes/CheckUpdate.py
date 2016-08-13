@@ -151,10 +151,17 @@ def _checkUpdate(manually=False):
             dialog.Destroy()
             dialog = None
 
-        time_release = time.strptime(
-            rel["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-        time_local_eg = time.gmtime(eg.Version.buildTime)
-        if rc == 200 and time_release > time_local_eg:
+        def cmp_version(rel, loc):
+            # add '-r' if it's not a prerelease. That way the compare
+            # will fail if it's the same release or the final release
+            # (because r > a(lpha) or b(eta))
+            if "-" not in rel:
+                rel += "-r"
+            if "-" not in loc:
+                loc += "-r"
+            return rel.lstrip("v") > loc.lstrip("v")
+
+        if rc == 200 and cmp_version(rel["name"], eg.Version.string):
             wx.CallAfter(MessageDialog, rel["name"], rel["html_url"])
         else:
             if manually:
