@@ -56,6 +56,7 @@ class MyBuilder(builder.Builder):
         "eg",
         "_imagingtk",
         "_tkinter",
+        "cffi",  # bundled for no reason
         "comtypes.gen",
         #"ctypes.macholib",  # seems to be for Apple
         "curses",
@@ -68,15 +69,20 @@ class MyBuilder(builder.Builder):
         "ImageGL",
         "ImageQt",
         "ImageTk",  # py2exe seems to hang if not removed
+        "ipaddr",  # bundled for no reason
+        "ipaddress",  # bundled for no reason
         "lib2to3",
         "PIL._imagingtk",
         "PIL.ImageTk",
         "pyasn1",  # bundles a broken version if not removed
+        "pycparser",  # bundled for no reason
         "pywin",
+        "simplejson",  # bundled for no reason
         "tcl",
         "test",
         "Tix",
         "Tkconstants",
+        "tkinter",  # from `future`
         "Tkinter",
         "turtle",  # another Tkinter module
         "WalImageFile",  # odd syntax error in file
