@@ -53,46 +53,42 @@ class MyBuilder(builder.Builder):
     ]
 
     excludeModules = [
-        "lib2to3",
-        "idlelib",
-        "gopherlib",
-        "Tix",
-        "test",
-        "Tkinter",
+        "eg",
+        "_imagingtk",
         "_tkinter",
-        "Tkconstants",
-        "FixTk",
-        "tcl",
-        "turtle",  # another Tkinter module
-
+        "comtypes.gen",
+        #"ctypes.macholib",  # seems to be for Apple
+        "curses",
         "distutils.command.bdist_packager",
         "distutils.mwerkscompiler",
-        "curses",
-        #"ctypes.macholib",  # seems to be for Apple
-
+        "FixTk",
+        "FixTk",
+        "gopherlib",
+        "idlelib",
+        "ImageGL",
+        "ImageQt",
+        "ImageTk",  # py2exe seems to hang if not removed
+        "lib2to3",
+        "PIL._imagingtk",
+        "PIL.ImageTk",
+        "pyasn1",  # bundles a broken version if not removed
+        "pywin",
+        "tcl",
+        "test",
+        "Tix",
+        "Tkconstants",
+        "Tkinter",
+        "turtle",  # another Tkinter module
+        "WalImageFile",  # odd syntax error in file
+        "win32com.axdebug",
+        "win32com.axscript",
+        "win32com.demos",
+        "win32com.gen_py",
+        "wx.lib.floatcanvas",  # needs NumPy
+        "wx.lib.plot",  # needs NumPy
         "wx.lib.vtk",
         "wx.tools.Editra",
         "wx.tools.XRCed",
-        "wx.lib.plot",  # needs NumPy
-        "wx.lib.floatcanvas",  # needs NumPy
-
-        "ImageTk",  # py2exe seems to hang if not removed
-        "ImageGL",
-        "ImageQt",
-        "WalImageFile",  # odd syntax error in file
-        # and no TCL through PIL
-        "_imagingtk",
-        "PIL._imagingtk",
-        "PIL.ImageTk",
-        "FixTk",
-
-        "win32com.gen_py",
-        "win32com.demos",
-        "win32com.axdebug",
-        "win32com.axscript",
-        "pywin",
-        "comtypes.gen",
-        "eg",
     ]
 
     def BuildInstaller(self):
