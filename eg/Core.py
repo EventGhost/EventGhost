@@ -40,7 +40,7 @@ import sys
 import threading
 import time
 import wx
-from os.path import join
+from os.path import exists, join
 
 # Local imports
 import eg
@@ -118,8 +118,16 @@ if eg.startupArguments.configDir is None:
     eg.configDir = join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
+if not exists(eg.configDir):
+    try:
+        os.makedirs(eg.configDir)
+    except:
+        pass
 if eg.startupArguments.isMain:
-    os.chdir(eg.configDir)
+    if exists(eg.configDir):
+        os.chdir(eg.configDir)
+    else:
+        os.chdir(eg.mainDir)
 eg.localPluginDir = join(eg.folderPath.ProgramData, eg.APP_NAME, "plugins")
 eg.corePluginDir = join(eg.mainDir, "plugins")
 eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
