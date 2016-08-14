@@ -292,7 +292,7 @@ class ChangelogPanel(HtmlPanel):
     @eg.TimeIt
     def __init__(self, parent):
         try:
-            infile = open(os.path.join(eg.mainDir, "CHANGELOG.TXT"))
+            infile = open(os.path.join(eg.mainDir, "CHANGELOG.md"))
             text = infile.read()
         except IOError:
             text = ""

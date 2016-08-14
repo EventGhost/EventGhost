@@ -1,4 +1,4 @@
-//CHANGELOG.TXT
+//CHANGELOG.md
 EventGhost.chm
 EventGhost.exe
 Example.xml

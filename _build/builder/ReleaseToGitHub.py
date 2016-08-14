@@ -58,7 +58,7 @@ class ReleaseToGitHub(builder.Task):
         ref = 'heads/{0}'.format(branch)
         setupFile = 'EventGhost_{0}_Setup.exe'.format(appVer)
         setupPath = join(buildSetup.outputDir, setupFile)
-        chglogFile = "CHANGELOG.TXT"
+        chglogFile = "CHANGELOG.md"
         chglogPath = join(buildSetup.outputDir, chglogFile)
 
         print "reading changelog"

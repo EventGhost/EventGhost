@@ -28,7 +28,7 @@ from builder.Utils import EscapeMarkdown, IsCIBuild, NextPage
 
 class BuildChangelog(builder.Task):
     """
-    Populate CHANGELOG.TXT with the latest changes from GitHub.
+    Populate CHANGELOG.md with the latest changes from GitHub.
     """
     description = "Build changelog"
 
@@ -40,9 +40,9 @@ class BuildChangelog(builder.Task):
 
     def DoTask(self):
         buildSetup = self.buildSetup
-        changelog_path = join(buildSetup.outputDir, "CHANGELOG.TXT")
+        changelog_path = join(buildSetup.outputDir, "CHANGELOG.md")
         copy2(
-            join(buildSetup.sourceDir, "CHANGELOG.TXT"),
+            join(buildSetup.sourceDir, "CHANGELOG.md"),
             changelog_path
         )
 
@@ -186,7 +186,7 @@ class BuildChangelog(builder.Task):
             import wx
             parent = wx.GetApp().GetTopWindow()
 
-            msg = "CHANGELOG.TXT couldn't be written.\n({0})".format(
+            msg = "CHANGELOG.md couldn't be written.\n({0})".format(
                 sys.exc_value
             )
             dlg = wx.MessageDialog(parent, msg, caption="Error",

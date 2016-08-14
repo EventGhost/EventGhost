@@ -111,10 +111,10 @@ class MyBuilder(builder.Builder):
                 ignoreversion=(filename not in SKIP_IF_UNCHANGED),
                 prefix=prefix
             )
-        if exists(join(self.outputDir, "CHANGELOG.TXT")):
-            inno.AddFile(join(self.outputDir, "CHANGELOG.TXT"))
+        if exists(join(self.outputDir, "CHANGELOG.md")):
+            inno.AddFile(join(self.outputDir, "CHANGELOG.md"))
         else:
-            inno.AddFile(join(self.sourceDir, "CHANGELOG.TXT"))
+            inno.AddFile(join(self.sourceDir, "CHANGELOG.md"))
         inno.AddFile(
             join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
             destName="py.exe"
