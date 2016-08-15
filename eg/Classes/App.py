@@ -59,10 +59,12 @@ class App(wx.App):
         eg.document.Close()
         eg.taskBarIcon.Close()
         if not eg.startupArguments.translate:
-            eg.PrintDebugNotice("Triggering OnClose")
-            egEvent = eg.eventThread.TriggerEvent("OnClose")
-            while not egEvent.isEnded:
-                self.Yield()
+            def DoOnClose():
+                eg.PrintDebugNotice("Triggering OnClose")
+                egEvent = eg.eventThread.TriggerEvent("OnClose")
+                while not egEvent.isEnded:
+                    self.Yield()
+            wx.CallAfter(DoOnClose)
         self.ExitMainLoop()
         return True
 
