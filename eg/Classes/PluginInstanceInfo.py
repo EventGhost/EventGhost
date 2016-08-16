@@ -149,7 +149,7 @@ class PluginInstanceInfo(PluginModuleInfo):
                 "Error while loading plugin-file %s." % self.path,
                 1
             )
-            return None
+            raise eg.Exceptions.PluginLoadError()
         pluginCls = module.__pluginCls__
         self.module = module
         self.pluginCls = pluginCls
