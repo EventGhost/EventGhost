@@ -189,7 +189,10 @@ class Document(object):
     def CmdAddPlugin(self):
         result = eg.AddPluginDialog.GetModalResult(self.frame)
         if result:
-            eg.UndoHandler.NewPlugin(self).Do(result[0])
+            try:
+                eg.UndoHandler.NewPlugin(self).Do(result[0])
+            except eg.Exceptions.PluginLoadError:
+                wx.MessageBox(eg.Exceptions.PluginLoadError.text, eg.APP_NAME)
 
     @eg.AssertInMainThread
     def CmdConfigure(self, item=None, isFirstConfigure=False):
