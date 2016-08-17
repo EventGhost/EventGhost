@@ -70,10 +70,10 @@ begin
           Iterations := 0
           Success := False
           repeat
-            Success := RenameFile(Dirs[i][0], Dirs[i][1])
             if Iterations > 0 then begin
               Sleep(500)
             end;
+            Success := RenameFile(Dirs[i][0], Dirs[i][1])
             Inc(Iterations)
           until (Iterations = 20) or (Success = True);
           if Iterations = 20 then begin
@@ -92,10 +92,10 @@ begin
           Iterations := 0
           Success := False
           repeat
-            Success := RenameFile(Dirs[i][1], Dirs[i][0])
             if Iterations > 0 then begin
               Sleep(500)
             end;
+            Success := RenameFile(Dirs[i][1], Dirs[i][0])
             Inc(Iterations)
           until (Iterations = 20) or (Success = True);
           if Iterations = 20 then begin
