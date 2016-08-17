@@ -60,9 +60,9 @@ begin
       SetLength(Dirs[0], 2)
       SetLength(Dirs[1], 2)
       Dirs[0][0] := ExpandConstant('{commonappdata}\EventGhost')
-      Dirs[0][1] := ExpandConstant('{commonappdata}\EventGhost.bak')
+      Dirs[0][1] := ExpandConstant('{commonappdata}\EventGhost.SetupBackup')
       Dirs[1][0] := ExpandConstant('{userappdata}\EventGhost')
-      Dirs[1][1] := ExpandConstant('{userappdata}\EventGhost.bak')
+      Dirs[1][1] := ExpandConstant('{userappdata}\EventGhost.SetupBackup')
 
       // Rename folders that previous versions might remove on uninstall.
       for i := 0 to 1 do begin
