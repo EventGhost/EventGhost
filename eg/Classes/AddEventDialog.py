@@ -30,7 +30,7 @@ class Config(eg.PersistentData):
 
 
 class Text(eg.TranslatableStrings):
-    title = "Select an event to add..."
+    title = "Add Event..."
     descriptionLabel = "Description"
 
 

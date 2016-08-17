@@ -28,7 +28,7 @@ class Config(eg.PersistentData):
 
 
 class Text(eg.TranslatableStrings):
-    title = "Select an action to add..."
+    title = "Add Action..."
     descriptionLabel = "Description"
 
 

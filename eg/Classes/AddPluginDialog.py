@@ -32,7 +32,7 @@ class Config(eg.PersistentData):
 
 
 class Text(eg.TranslatableStrings):
-    title = "Choose a plugin to add..."
+    title = "Add Plugin..."
     noInfo = "No information available."
     noMultiloadTitle = "No multiload possible"
     noMultiload = (
