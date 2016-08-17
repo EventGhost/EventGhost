@@ -75,7 +75,10 @@ class LanguageEditor(wx.Frame):
         def LoadPlugins():
             for plugin in os.listdir(eg.corePluginDir):
                 if not plugin.startswith("."):
-                    eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
+                    try:
+                        eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
+                    except:
+                        pass
         eg.actionThread.CallWait(LoadPlugins)
 
         rightPanel = wx.Panel(splitter)
