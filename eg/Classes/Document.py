@@ -192,7 +192,7 @@ class Document(object):
             try:
                 eg.UndoHandler.NewPlugin(self).Do(result[0])
             except eg.Exceptions.PluginLoadError:
-                wx.MessageBox(eg.Exceptions.PluginLoadError.text, eg.APP_NAME)
+                pass
 
     @eg.AssertInMainThread
     def CmdConfigure(self, item=None, isFirstConfigure=False):
