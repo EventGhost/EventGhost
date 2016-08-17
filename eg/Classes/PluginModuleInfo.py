@@ -68,7 +68,8 @@ class PluginModuleInfo(object):
             # inside the module
             self.valid = True
         except:
-            eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
+            if eg.debugLevel:
+                eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
         finally:
             del sys.path[0]
             eg.RegisterPlugin = originalRegisterPlugin
