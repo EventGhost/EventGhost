@@ -50,7 +50,7 @@ class PluginModuleInfo(object):
 
     def __init__(self, path):
         self.description = self.path = path
-        self.pluginName = os.path.basename(path)
+        self.name = self.pluginName = os.path.basename(path)
         originalRegisterPlugin = eg.RegisterPlugin
         eg.RegisterPlugin = self.RegisterPlugin
         sys.path.insert(0, self.path)
