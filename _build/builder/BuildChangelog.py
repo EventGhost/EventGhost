@@ -167,7 +167,7 @@ class BuildChangelog(builder.Task):
         if len(changes) == 1:
             text = "\nOnly minor changes in this release.\n"
             changes.append(text)
-            print text
+            print text.lstrip()
 
         # read the existing changelog...
         try:
