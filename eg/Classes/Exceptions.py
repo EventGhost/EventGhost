@@ -29,7 +29,7 @@ class Text(eg.TranslatableStrings):
     DeviceInitFailed = "Unable to initialise device!"
     DeviceNotReady = "Device is not ready!"
     SerialOpenFailed = "Can't open serial port!"
-    PluginNotFound = "Plugin not found!"
+    PluginNotFound = "Plugin start error!"
     PluginLoadError = "Plugin load error!"
 
 

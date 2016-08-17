@@ -146,7 +146,7 @@ class PluginInstanceInfo(PluginModuleInfo):
                 module = __import__(moduleName, None, None, [''])
         except:
             eg.PrintTraceback(
-                "Error while loading plugin-file %s." % self.path,
+                eg.text.Error.pluginLoadError % self.path,
                 1
             )
             raise eg.Exceptions.PluginLoadError()

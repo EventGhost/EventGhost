@@ -49,17 +49,15 @@ class PluginManager:
         moduleInfo = self.GetPluginInfo(ident)
         if moduleInfo is None:
             # we don't have such plugin
-            clsInfo = NonexistentPluginInfo()
-            clsInfo.guid = ident
-            clsInfo.name = evalName
-            clsInfo.pluginName = evalName
-
-            class Plugin(NonexistentPlugin):
-                pass
-            Plugin.__name__ = evalName
-            clsInfo.pluginCls = Plugin
+            clsInfo = NonexistentPluginInfo(ident, evalName)
         else:
-            clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
+            try:
+                clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
+            except eg.Exceptions.PluginLoadError:
+                if evalName:
+                    clsInfo = NonexistentPluginInfo(ident, evalName)
+                else:
+                    raise
         info = clsInfo.CreateInstance(args, evalName, treeItem)
         if moduleInfo is None:
             info.actions = ActionsMapping(info)
@@ -131,4 +129,13 @@ class NonexistentPlugin(eg.PluginBase):
 
 
 class NonexistentPluginInfo(eg.PluginInstanceInfo):
-    pass
+    def __init__(self, guid, name):
+        self.guid = guid
+        self.name = name
+        self.pluginName = name
+
+        class Plugin(NonexistentPlugin):
+            pass
+
+        Plugin.__name__ = name
+        self.pluginCls = Plugin
