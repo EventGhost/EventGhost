@@ -21,7 +21,7 @@ import wx
 # Local imports
 import eg
 
-KIND_TAGS = ["remote", "program", "external", "other"]
+KIND_TAGS = ["other", "remote", "program", "external"]
 
 class Config(eg.PersistentData):
     position = None
@@ -39,10 +39,10 @@ class Text(eg.TranslatableStrings):
         "This plugin doesn't support multiload and you already have one "
         "instance of this plugin in your configuration."
     )
-    remotePlugins = "Remote Receiver"
-    programPlugins = "Program Control"
-    externalPlugins = "External Equipment"
-    otherPlugins = "Other"
+    otherPlugins = "General Plugins"
+    remotePlugins = "Input Devices"
+    programPlugins = "Software Control"
+    externalPlugins = "Hardware Control"
     author = "Author:"
     version = "Version:"
     descriptionBox = "Description"
@@ -117,13 +117,21 @@ class AddPluginDialog(eg.TaskletDialog):
 
         root = treeCtrl.AddRoot("")
         typeIds = {
-            KIND_TAGS[0]: treeCtrl.AppendItem(root, Text.remotePlugins, 1),
-            KIND_TAGS[1]: treeCtrl.AppendItem(root, Text.programPlugins, 1),
-            KIND_TAGS[2]: treeCtrl.AppendItem(root, Text.externalPlugins, 1),
-            KIND_TAGS[3]: treeCtrl.AppendItem(root, Text.otherPlugins, 1),
+            KIND_TAGS[0]: treeCtrl.AppendItem(
+                root, getattr(Text, KIND_TAGS[0] + "Plugins"), 1
+            ),
+            KIND_TAGS[1]: treeCtrl.AppendItem(
+                root, getattr(Text, KIND_TAGS[1] + "Plugins"), 1
+            ),
+            KIND_TAGS[2]: treeCtrl.AppendItem(
+                root, getattr(Text, KIND_TAGS[2] + "Plugins"), 1
+            ),
+            KIND_TAGS[3]: treeCtrl.AppendItem(
+                root, getattr(Text, KIND_TAGS[3] + "Plugins"), 1
+            ),
         }
         self.typeIds = typeIds
-        itemToSelect = typeIds["remote"]
+        itemToSelect = typeIds[KIND_TAGS[0]]
 
         for info in eg.pluginManager.GetPluginInfoList():
             if info.kind in ("hidden", "core"):
