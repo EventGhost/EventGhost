@@ -136,6 +136,8 @@ class AddPluginDialog(eg.TaskletDialog):
                 idx = 0
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
+            if not info.valid:
+                treeCtrl.SetItemTextColour(treeId, eg.colour.pluginError)
             treeCtrl.SetPyData(treeId, info)
             if info.path == Config.lastSelection:
                 itemToSelect = treeId

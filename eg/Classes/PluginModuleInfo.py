@@ -46,6 +46,7 @@ class PluginModuleInfo(object):
     path = None
     pluginName = None
     hardwareId = ""
+    valid = False
 
     def __init__(self, path):
         self.description = self.path = path
@@ -65,7 +66,7 @@ class PluginModuleInfo(object):
             # It is expected that the loading will raise
             # RegisterPluginException because eg.RegisterPlugin() is called
             # inside the module
-            pass
+            self.valid = True
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
         finally:
