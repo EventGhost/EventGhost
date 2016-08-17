@@ -77,7 +77,7 @@ class LanguageEditor(wx.Frame):
                 if not plugin.startswith("."):
                     try:
                         eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
-                    except:
+                    except eg.Exceptions.PluginLoadError:
                         pass
         eg.actionThread.CallWait(LoadPlugins)
 
