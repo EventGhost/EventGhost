@@ -77,7 +77,7 @@ begin
             Inc(Iterations)
           until (Iterations = 20) or (Success = True);
           if Iterations = 20 then begin
-            MsgBox('Unable to backup user data. Setup cannot continue.', mbCriticalError, MB_OK)
+            MsgBox('Unable to backup user data, so setup cannot continue. Please reboot and try again.', mbCriticalError, MB_OK)
             Abort()
           end;
         end;
