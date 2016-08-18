@@ -154,7 +154,12 @@ def _checkUpdate(manually=False):
         ver = rel["name"].lstrip("v")
         url = rel["html_url"]
 
-        if rc == 200 and parse_version(ver) > parse_version(eg.Version.string):
+        if (
+            rc == 200 and
+            parse_version(ver) > parse_version(eg.Version.string) and
+            (manually or ver != eg.config.lastUpdateCheckVersion)
+        ):
+            eg.config.lastUpdateCheckVersion = ver
             wx.CallAfter(MessageDialog, ver, url)
         else:
             if manually:
