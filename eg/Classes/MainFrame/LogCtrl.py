@@ -264,7 +264,7 @@ class LogCtrl(wx.ListCtrl):
             self.Refresh()
 
     def Scroll(self):
-        if len(self.data) <= (self.GetTopItem() + self.GetCountPerPage() + 1):
+        if len(self.data) <= (self.GetTopItem() + self.GetCountPerPage() + 2):
             self.ScrollList(0, 1000000)
 
     @eg.AssertInMainThread
