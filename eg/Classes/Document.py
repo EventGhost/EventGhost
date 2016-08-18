@@ -95,7 +95,7 @@ class Document(object):
         fileDialog = wx.FileDialog(
             self.frame,
             message="",
-            wildcard="EventGhost Tree|*.xml;*.egtree",
+            wildcard="EventGhost Tree (*.egtree; *.xml)|*.egtree;*.xml",
             style=style
         )
         try:
