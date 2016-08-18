@@ -104,7 +104,7 @@ class PluginInstall(object):
         #dialog.Destroy()
         #if result == wx.ID_CANCEL:
         #    return
-        filename = pluginInfo.englishName.replace("/", "-")
+        filename = os.path.basename(pluginInfo.path)
         title = eg.text.MainFrame.Menu.Export.translate(None, "&.")
         dialog = wx.FileDialog(
             eg.document.frame,
