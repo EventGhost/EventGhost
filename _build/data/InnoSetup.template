@@ -47,9 +47,10 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   i: Integer;
   Dirs: Array of Array of String;
+  DisplayVersion: String;
   Iterations: Integer;
-  MajorVersion: Cardinal;
-  MinorVersion: Cardinal;
+  MajorVersion: Integer;
+  MinorVersion: Integer;
   ResultCode: Integer;
   Subkey: String;
   Success: Boolean;
@@ -68,12 +69,15 @@ begin
       MajorVersion := 0
       MinorVersion := 0
 
-      // Query major and minor version.
-      RegQueryDWordValue(HKCU, Subkey, 'MajorVersion', MajorVersion)
-      RegQueryDWordValue(HKCU, Subkey, 'MinorVersion', MinorVersion)
-      if (MajorVersion = 0) and (MinorVersion = 0) then begin
-        RegQueryDWordValue(HKLM, Subkey, 'MajorVersion', MajorVersion)
-        RegQueryDWordValue(HKLM, Subkey, 'MinorVersion', MinorVersion)
+      // Read current major and minor version.
+      if not (RegQueryStringValue(HKCU, Subkey, 'DisplayVersion', DisplayVersion)) then begin
+        RegQueryStringValue(HKLM, Subkey, 'DisplayVersion', DisplayVersion)
+      end;
+      MajorVersion := StrToInt(DisplayVersion[1])
+      MinorVersion := StrToInt(DisplayVersion[3])
+      if (MajorVersion = -1) or (MinorVersion = -1) then begin
+        MsgBox('Unable to read current version, so setup cannot continue. Please reinstall your current version of EventGhost and try again.', mbCriticalError, MB_OK)
+        Abort()
       end;
 
       // Backup user data if it will be removed on uninstall.
