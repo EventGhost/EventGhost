@@ -30,15 +30,36 @@ VersionInfoVersion=%(appVersion)s
 #endif
 
 [Code]
-function InitializeSetup: Boolean;
+function GetValue(Value: String): String;
 var
-  MS, LS: Cardinal;
+  Subkey: String;
 begin
-  if (GetVersionNumbers(ExpandConstant('{sys}\gdiplus.dll'), MS, LS)) then begin
-    Result := true
-  end else begin
-    Result := false;
-    MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK);
+  Subkey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\EventGhost_is1'
+  if not (RegQueryStringValue(HKCU, Subkey, Value, Result)) then begin
+    RegQueryStringValue(HKLM, Subkey, Value, Result)
+  end;
+end;
+
+function SafeRename(Src: String; Dest: String): Boolean;
+var
+  i: Integer;
+  Success: Boolean;
+begin
+  if (DirExists(Src)) then begin
+    i := 0
+    Success := False
+    repeat
+      if (i > 0) then begin
+        Sleep(500)
+      end;
+      Success := RenameFile(Src, Dest)
+      Inc(i)
+    until (i = 20) or (Success = True);
+    if (i = 20) then begin
+      Result := False
+    end else begin
+      Result := True
+    end;
   end;
 end;
 
@@ -63,37 +84,41 @@ begin
   Result := Dest
 end;
 
+function InitializeSetup: Boolean;
+var
+  MS, LS: Cardinal;
+begin
+  if (GetVersionNumbers(ExpandConstant('{sys}\gdiplus.dll'), MS, LS)) then begin
+    Result := True
+  end else begin
+    Result := False
+    MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK)
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   i: Integer;
-  Dirs: Array of Array of String;
+  Dirs: Array [0..1] of Array [0..1] of String;
   DisplayVersion: String;
-  Iterations: Integer;
   MajorVersion: Integer;
   MinorVersion: Integer;
   ResultCode: Integer;
   SplitVersion: TArrayOfString;
-  Subkey: String;
-  Success: Boolean;
   UninstallString: String;
 begin
-  Subkey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\EventGhost_is1';
   if (CurStep = ssInstall) then begin
-    if (RegQueryStringValue(HKCU, Subkey, 'UninstallString', UninstallString)) or (RegQueryStringValue(HKLM, Subkey, 'UninstallString', UninstallString)) then begin
-      SetLength(Dirs, 2)
-      SetLength(Dirs[0], 2)
-      SetLength(Dirs[1], 2)
+    UninstallString := GetValue('UninstallString')
+    if (UninstallString <> '') then begin
       Dirs[0][0] := ExpandConstant('{commonappdata}\EventGhost')
       Dirs[0][1] := ExpandConstant('{commonappdata}\EventGhost.SetupBackup')
       Dirs[1][0] := ExpandConstant('{userappdata}\EventGhost')
       Dirs[1][1] := ExpandConstant('{userappdata}\EventGhost.SetupBackup')
-      MajorVersion := 0
-      MinorVersion := 0
+      MajorVersion := -1
+      MinorVersion := -1
 
       // Read current major and minor version.
-      if not (RegQueryStringValue(HKCU, Subkey, 'DisplayVersion', DisplayVersion)) then begin
-        RegQueryStringValue(HKLM, Subkey, 'DisplayVersion', DisplayVersion)
-      end;
+      DisplayVersion := GetValue('DisplayVersion')
       StringChange(DisplayVersion, 'WIP-', '')
       SplitVersion := Split(DisplayVersion, '.')
       MajorVersion := StrToInt(SplitVersion[0])
@@ -106,20 +131,9 @@ begin
       // Backup user data if it will be removed on uninstall.
       if (MajorVersion = 0) and (MinorVersion <= 4) then begin
         for i := 0 to 1 do begin
-          if (DirExists(Dirs[i][0])) then begin
-            Iterations := 0
-            Success := False
-            repeat
-              if (Iterations > 0) then begin
-                Sleep(500)
-              end;
-              Success := RenameFile(Dirs[i][0], Dirs[i][1])
-              Inc(Iterations)
-            until (Iterations = 20) or (Success = True);
-            if (Iterations = 20) then begin
-              MsgBox('Unable to backup user data, so setup cannot continue. Please reboot and try again.', mbCriticalError, MB_OK)
-              Abort()
-            end;
+          if not (SafeRename(Dirs[i][0], Dirs[i][1])) then begin
+            MsgBox('Unable to backup user data, so setup cannot continue. Please reboot and try again.', mbCriticalError, MB_OK)
+            Abort()
           end;
         end;
       end;
@@ -130,19 +144,8 @@ begin
       // Restore user data.
       if (MajorVersion = 0) and (MinorVersion <= 4) then begin
         for i := 0 to 1 do begin
-          if (DirExists(Dirs[i][1])) then begin
-            Iterations := 0
-            Success := False
-            repeat
-              if (Iterations > 0) then begin
-                Sleep(500)
-              end;
-              Success := RenameFile(Dirs[i][1], Dirs[i][0])
-              Inc(Iterations)
-            until (Iterations = 20) or (Success = True);
-            if (Iterations = 20) then begin
-              MsgBox('Unable to restore user data. Please manually rename "' + Dirs[i][1] + '" to "' + Dirs[i][0] + '".', mbError, MB_OK)
-            end;
+          if not (SafeRename(Dirs[i][1], Dirs[i][0])) then begin
+            MsgBox('Unable to restore user data. Please manually rename "' + Dirs[i][1] + '" to "' + Dirs[i][0] + '".', mbError, MB_OK)
           end;
         end;
       end;
