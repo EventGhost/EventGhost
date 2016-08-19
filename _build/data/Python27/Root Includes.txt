@@ -1,7 +1,7 @@
 //CHANGELOG.md
 EventGhost.chm
 EventGhost.exe
-Example.xml
+Example.egtree
 LICENSE.TXT
 msvcm90.dll
 msvcp90.dll

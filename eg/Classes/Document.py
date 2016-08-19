@@ -286,7 +286,7 @@ class Document(object):
         if self.filePath is None:
             filename = eg.text.General.unnamedFile
         elif not self.filePath:
-            filename = "Example.xml"
+            filename = "Example"
         else:
             filename = os.path.splitext(os.path.basename(self.filePath))[0]
         return "EventGhost %s - %s" % (eg.Version.string, filename)
@@ -316,7 +316,7 @@ class Document(object):
 #        if self.root:
 #            self.root.Delete()
         if not filePath:
-            filePath = os.path.join(eg.mainDir, "Example.xml")
+            filePath = os.path.join(eg.mainDir, "Example.egtree")
             self.SetFilePath(False)
         else:
             self.SetFilePath(filePath)
