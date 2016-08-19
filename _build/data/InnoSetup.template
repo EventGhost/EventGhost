@@ -34,13 +34,33 @@ function InitializeSetup: Boolean;
 var
   MS, LS: Cardinal;
 begin
-  if (GetVersionNumbers(ExpandConstant('{sys}\gdiplus.dll'), MS, LS)) then
+  if (GetVersionNumbers(ExpandConstant('{sys}\gdiplus.dll'), MS, LS)) then begin
     Result := true
-  else
-    begin
-      Result := false;
-      MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK);
+  end else begin
+    Result := false;
+    MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK);
+  end;
+end;
+
+function Split(Text: String; Separator: String): TArrayOfString;
+var
+  i, p: Integer;
+  Dest: TArrayOfString;
+begin
+  i := 0
+  repeat
+    SetArrayLength(Dest, i + 1)
+    p := Pos(Separator, Text)
+    if (p > 0) then begin
+      Dest[i] := Copy(Text, 1, p - 1)
+      Text := Copy(Text, p + Length(Separator), Length(Text))
+      i := i + 1
+    end else begin
+      Dest[i] := Text
+      Text := ''
     end;
+  until (Length(Text) = 0)
+  Result := Dest
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -52,6 +72,7 @@ var
   MajorVersion: Integer;
   MinorVersion: Integer;
   ResultCode: Integer;
+  SplitVersion: TArrayOfString;
   Subkey: String;
   Success: Boolean;
   UninstallString: String;
@@ -73,8 +94,10 @@ begin
       if not (RegQueryStringValue(HKCU, Subkey, 'DisplayVersion', DisplayVersion)) then begin
         RegQueryStringValue(HKLM, Subkey, 'DisplayVersion', DisplayVersion)
       end;
-      MajorVersion := StrToInt(DisplayVersion[1])
-      MinorVersion := StrToInt(DisplayVersion[3])
+      StringChange(DisplayVersion, 'WIP-', '')
+      SplitVersion := Split(DisplayVersion, '.')
+      MajorVersion := StrToInt(SplitVersion[0])
+      MinorVersion := StrToInt(SplitVersion[1])
       if (MajorVersion = -1) or (MinorVersion = -1) then begin
         MsgBox('Unable to read current version, so setup cannot continue. Please reinstall your current version of EventGhost and try again.', mbCriticalError, MB_OK)
         Abort()
