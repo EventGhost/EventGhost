@@ -105,7 +105,7 @@ class PluginInstall(object):
         #if result == wx.ID_CANCEL:
         #    return
         filename = os.path.basename(pluginInfo.path)
-        title = eg.text.MainFrame.Menu.Export.translate(None, "&.")
+        title = eg.text.MainFrame.Menu.Export.replace("&", "").replace(".", "")
         dialog = wx.FileDialog(
             eg.document.frame,
             defaultFile=filename,
