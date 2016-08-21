@@ -43,14 +43,6 @@ TEMPLATE = u"""
         <td><b>Version:</b>&nbsp;</td>
         <td>{version}</td>
     </tr>
-    <tr>
-        <td><b>Support:</b>&nbsp;</td>
-        <td>
-            <a href="http://www.eventghost.net/forum/viewforum.php?f=9">
-                Forum Thread
-            </a>
-        </td>
-    </tr>
 </TABLE>
 <P>
 <b>Description:</b>"""
