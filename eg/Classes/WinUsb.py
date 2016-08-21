@@ -21,7 +21,6 @@ import hashlib
 import os
 import Queue
 import string
-import sys
 import threading
 import wx
 from ctypes import (
@@ -424,7 +423,7 @@ class WinUsb(object):
             try:
                 result = ExecAs(
                     "subprocess",
-                    sys.getwindowsversion()[0] > 5 or not IsAdmin(),
+                    eg.Utils.IsVista() or not IsAdmin(),
                     "call",
                     cmdLine.encode('mbcs'),
                 )

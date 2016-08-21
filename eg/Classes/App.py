@@ -25,7 +25,7 @@ import wx
 import eg
 from eg.WinApi.Dynamic import ExitProcess, SetProcessShutdownParameters
 
-IS_VISTA = sys.getwindowsversion()[0] > 5
+IS_VISTA = eg.Utils.IsVista()
 
 if IS_VISTA:
     from eg.WinApi.Dynamic import _user32, BOOL, HWND, LPCWSTR

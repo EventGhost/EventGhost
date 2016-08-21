@@ -380,6 +380,18 @@ def GetUpTime(seconds = True):
         return delta if "." not in delta else delta[:delta.index(".")]
     return ticks
 
+def IsVista():
+    """
+    Determine if we're running Vista or higher.
+    """
+    return (sys.getwindowsversion()[0] >= 6)
+
+def IsXP():
+    """
+    Determine if we're running XP or higher.
+    """
+    return (sys.getwindowsversion()[0:2] >= (5, 1))
+
 def LogIt(func):
     """
     Logs the function call, if eg.debugLevel is set.

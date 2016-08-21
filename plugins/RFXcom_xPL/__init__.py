@@ -34,7 +34,7 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2077",
 )
 
-import os, sys, time, string, select, re
+import os, time, string, select, re
 from socket import *
 from threading import Event, Thread
 
@@ -261,10 +261,9 @@ class RFXcom(eg.PluginClass):
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         )
         logStr = timeStamp+"\t"+s+"<br\n>"
-        majorVersion, minorVersion = sys.getwindowsversion()[0:2]
         fileHandle = None
 
-        if majorVersion > 5:
+        if eg.Utils.IsVista():
             progData = os.environ['ALLUSERSPROFILE']
             if (
                 not os.path.exists(progData+"/EventGhost/Log")
