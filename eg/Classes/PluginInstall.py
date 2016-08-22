@@ -199,7 +199,7 @@ class PluginOverviewDialog(Dialog):
     ):
         Dialog.__init__(
             self,
-            eg.document.frame,
+            None,  #eg.document.frame,
             -1,
             title,
             size=(400, 300),
@@ -239,6 +239,7 @@ class PluginOverviewDialog(Dialog):
 
         self.SetSize((400, 500))
         self.SetMinSize(self.GetSize())
+        self.Center()
 #        self.SetSizerAndFit(mainSizer)
 #        self.Bind(wx.EVT_SIZE, self.OnSize)
 #        self.Layout()
