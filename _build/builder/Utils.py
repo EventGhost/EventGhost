@@ -206,11 +206,6 @@ def GetLastReleaseOrTagName(buildSetup):
     gh = GitHub(token=token)
 
     # first try if there's already a latest release
-    rc, data = gh.repos[user][repo].releases.latest.get()
-    if rc == 200:
-        return data['name']
-
-    # if not, let's try if there's any release
     lastRelease = ''
     page = 1
     while page > 0:
@@ -220,8 +215,8 @@ def GetLastReleaseOrTagName(buildSetup):
             break
         page = NextPage(gh)
         for release in data:
-            if release['name'] > lastRelease:
-                lastRelease = release['name']
+            if release["name"] and not release["draft"]:
+                return release["name"].lstrip("v")
 
     # ok, no releases, let's check the tags.
     if lastRelease == '':
@@ -268,13 +263,13 @@ def GetVersion(buildSetup):
     """
     #print "getting version from GitHub."
     if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
-        parts = GetLastReleaseOrTagName(buildSetup).split('.')[:3]
-        parts[0] = parts[0].strip('v')
-        while len(parts) < 6:
-            parts.append("0")
-        parts[2] = int(parts[2]) + 1
-        buildSetup.appVersion = '{0}.{1}.{2}'.format(*parts)
-        buildSetup.appVersionInfo = tuple(parts)
+        latestVersion = GetLastReleaseOrTagName(buildSetup)
+        def Increment(match):
+            if match.group(1):
+                return str(int(match.group(1)) + 1)
+        newVersion = ParseVersion(re.sub("(\d+)$", Increment, latestVersion))
+        buildSetup.appVersion = newVersion[0]
+        buildSetup.appVersionInfo = newVersion[1]
     else:
         (
             buildSetup.appVersion,
