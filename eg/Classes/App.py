@@ -25,7 +25,7 @@ import wx
 import eg
 from eg.WinApi.Dynamic import ExitProcess, SetProcessShutdownParameters
 
-IS_VISTA = sys.getwindowsversion()[0] > 5
+IS_VISTA = eg.Utils.IsVista()
 
 if IS_VISTA:
     from eg.WinApi.Dynamic import _user32, BOOL, HWND, LPCWSTR
@@ -67,6 +67,15 @@ class App(wx.App):
             wx.CallAfter(DoOnClose)
         self.ExitMainLoop()
         return True
+
+    def GetArguments(self):
+        args = []
+        if sys.argv[0] != sys.executable:
+            args.append(sys.argv[0])
+        if eg.startupArguments.configDir:
+            args.append("-configdir")
+            args.append(eg.startupArguments.configDir)
+        return args
 
     @eg.LogItWithReturn
     def OnEndSession(self, dummyEvent):
@@ -191,13 +200,8 @@ class App(wx.App):
     def Restart(self):
         def Do():
             from eg.WinApi.PipedProcess import RunAs
-            args = []
-            if sys.argv[0] != sys.executable:
-                args.append(sys.argv[0])
+            args = self.GetArguments()
             args.append("-restart")
-            if eg.startupArguments.configDir:
-                args.append("-configdir")
-                args.append(eg.startupArguments.configDir)
             if self.Exit():
                 RunAs(sys.executable, False, *args)
                 return True

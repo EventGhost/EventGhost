@@ -140,7 +140,7 @@ Plugin version: %s
 import wx
 import socket
 from os import curdir, pardir
-from sys import getwindowsversion, path as syspath
+from sys import path as syspath
 from ssl import wrap_socket, CERT_NONE
 from posixpath import splitext, normpath
 from time import sleep, strftime
@@ -881,7 +881,7 @@ class MyServer(ThreadingMixIn, HTTPServer):
 
     def server_bind(self):
         """Called by constructor to bind the socket."""
-        if socket.has_ipv6 and getwindowsversion()[0] > 5:
+        if socket.has_ipv6 and eg.Utils.IsVista():
             # make it a dual-stack socket if OS is Vista/Win7
             IPPROTO_IPV6 = 41
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
