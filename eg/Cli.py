@@ -65,7 +65,7 @@ if args.isMain:
         elif arg == '-uninstall':
             for root, dirs, files in os.walk(mainDir):
                 for name in files:
-                    if name.lower().endswith(".pyc"):
+                    if name.lower().endswith((".pyc", ".pyo")):
                         os.remove(join(root, name))
             sys.exit(0)
         elif arg in ('-m', '-multiload'):

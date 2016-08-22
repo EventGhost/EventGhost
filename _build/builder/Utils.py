@@ -323,7 +323,7 @@ def ListDir(path, skip_dirs=[], fullpath=True):
             continue
         if len(item[2]) > 0:
             for name in item[2]:
-                if name[-4:] not in ('.pyc',):
+                if not name.lower().endswith((".pyc", ".pyo")):
                     filename = normpath(join(item[0], name))
                     files.append(filename)
         if len(item[1]) > 0:
