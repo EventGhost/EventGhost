@@ -21,6 +21,7 @@ import site
 import sys
 import winreg
 import wx
+from ctypes import windll
 from time import gmtime
 from types import ModuleType
 
@@ -112,12 +113,18 @@ def InitGui():
         eg.eventThread.StartSession,
         startupFile
     )
+
     if config.checkUpdate:
         # avoid more than one check per day
         today = gmtime()[:3]
         if config.lastUpdateCheckDate != today:
             config.lastUpdateCheckDate = today
             wx.CallAfter(eg.CheckUpdate.Start)
+
+    # Register restart handler for easy crash recovery.
+    if eg.Utils.IsVista():
+        args = " ".join(eg.app.GetArguments())
+        windll.kernel32.RegisterApplicationRestart(args, 8)
 
     eg.Print(eg.text.MainFrame.Logger.welcomeText)
 
