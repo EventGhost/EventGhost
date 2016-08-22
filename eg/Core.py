@@ -131,8 +131,6 @@ if eg.startupArguments.isMain:
 eg.localPluginDir = join(eg.folderPath.ProgramData, eg.APP_NAME, "plugins")
 eg.corePluginDir = join(eg.mainDir, "plugins")
 eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
-if eg.startupArguments.pluginDir is not None:
-    eg.pluginDirs.append(eg.startupArguments.pluginDir)
 Init.InitPathsAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId  # NOQA
 eg.processId = GetCurrentProcessId()

@@ -43,7 +43,6 @@ class args:
     hideOnStartup = False
     install = False
     isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
-    pluginDir = None
     pluginFile = None
     startupEvent = None
     startupFile = None
@@ -82,8 +81,6 @@ if args.isMain:
         elif arg in ('-p', '-plugin'):
             args.pluginFile = abspath(argvIter.next())
             #args.isMain = False
-        elif arg == '-plugindir':
-            args.plugindir = argvIter.next()
         elif arg == '-configdir':
             args.configDir = argvIter.next()
         elif arg == '-translate':
