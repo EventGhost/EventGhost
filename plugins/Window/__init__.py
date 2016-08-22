@@ -53,6 +53,7 @@ from eg.WinApi.Utils import (
 )
 from FindWindow import FindWindow
 from SendKeys import SendKeys
+from win32_ctrls import win32_ctrls
 
 eg.RegisterPlugin(
     name = "Window",
@@ -232,7 +233,6 @@ class GrabText(eg.ActionBase):
 
     def __call__(self, only_sel = False):
         self.only_sel = only_sel
-        from win32_ctrls import win32_ctrls
         res = []
         for hwnd in GetTargetWindows():
             if not IsWindow(hwnd):
