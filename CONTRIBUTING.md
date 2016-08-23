@@ -56,7 +56,7 @@ Before you begin working on EventGhost, please install the following plugins in 
 
 These plugins will help guide you to producing the highest quality code possible. If you're not using `EditorConfig` or your code doesn't fully validate with `flake8`, don't be surprised when your pull request is rejected and you're pointed back to this document.
 
-Still using Notepad or another program without plugin support? Check out [Visual Studio Code](https://code.visualstudio.com/) or [Atom](https://atom.io/), both of which are free and come with full Git integration.
+Still using Notepad or another program without plugin support? Check out [Visual Studio Code](https://code.visualstudio.com/), which is free, comes with full Git integration, and has a robust Python plugin with debugging(!).
 
 ### Commits count!
 
