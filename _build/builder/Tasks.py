@@ -148,4 +148,5 @@ def Main(buildSetup):
         if task.activated:
             print "---", task.description
             task.DoTask()
+            print ""
     print "--- All done!"

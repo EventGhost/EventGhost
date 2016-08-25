@@ -144,11 +144,11 @@ class BuildChangelog(builder.Task):
             releaseUrl,
             buildDate,
         )]
-        print "## {0} ({1})\n".format(buildSetup.appVersion, buildDate)
+        print "## {0} ({1})".format(buildSetup.appVersion, buildDate)
         for title, items in prs.iteritems():
             if items:
                 changes.append("\n**{0}:**\n\n".format(title))
-                print "{0}:".format(title)
+                print "\n{0}:\n".format(title)
                 for pr in items:
                     changes.append("* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
                         EscapeMarkdown(pr["title"]),
@@ -162,12 +162,11 @@ class BuildChangelog(builder.Task):
                         pr["number"],
                         pr["user"]["login"],
                     )
-                print ""
 
         if len(changes) == 1:
             text = "\nOnly minor changes in this release.\n"
             changes.append(text)
-            print text.lstrip()
+            print text.strip()
 
         # read the existing changelog...
         try:
