@@ -108,15 +108,17 @@ class Builder(object):
 
         try:
             self.gitConfig = GetGitHubConfig()
-        except:
-            gitWarning = (
+        except Exception as e:
+            msg = (
                 "WARNING: Can't release to GitHub until you do the following:\n"
                 "    $ git config --global github.user <your github username>\n"
                 "    $ git config --global github.token <your github token>\n"
                 "To create a token, go to: https://github.com/settings/tokens\n"
             )
+            if type(e) is ValueError:
+                msg = "WARNING: Specified `github.token` is invalid!\n" + msg
             if not IsCIBuild():
-                print gitWarning
+                print msg
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {

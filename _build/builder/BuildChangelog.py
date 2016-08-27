@@ -24,7 +24,7 @@ from time import localtime, strftime
 
 # Local imports
 import builder
-from builder.Utils import EscapeMarkdown, IsCIBuild, NextPage
+from builder.Utils import BuildError, EscapeMarkdown, IsCIBuild, NextPage
 
 class BuildChangelog(builder.Task):
     """
@@ -54,8 +54,7 @@ class BuildChangelog(builder.Task):
         gh = GitHub(token=token)
         rc, data = gh.repos[user][repo].git.refs.tags.get()
         if rc != 200:
-            print "INFO: couldn't get tags."
-            exit(1)
+            raise BuildError("Couldn't get tags, probably due to invalid token.")
         to_commits = [i["object"]["sha"] for i in data]
 
         # get commits since last release
@@ -69,8 +68,7 @@ class BuildChangelog(builder.Task):
                 page=page
             )
             if rc != 200:
-                print "INFO: couldn't get commits."
-                exit(1)
+                raise BuildError("Couldn't get commits.")
             for item in data:
                 if item['sha'] in to_commits:
                     break
@@ -99,11 +97,9 @@ class BuildChangelog(builder.Task):
                 page=page
             )
             if rc != 200:
-                print "INFO: couldn't get additional info."
-                exit(1)
+                raise BuildError("Couldn't get additional info.")
             elif data.get("incomplete_results") == True:
-                print "INFO: incomplete search result."
-                exit(1)
+                raise BuildError("Incomplete search result.")
             pulls.extend(data["items"])
             page = NextPage(gh)
 
