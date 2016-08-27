@@ -20,6 +20,7 @@ import argparse
 import os
 import sys
 import tempfile
+import threading
 from os.path import abspath, dirname, exists, join
 
 # Local imports
@@ -190,4 +191,5 @@ class Builder(object):
             import Gui
             Gui.Main(self)
         else:
-            builder.Tasks.Main(self)
+            thread = threading.Thread(target=builder.Tasks.Main, args=[self])
+            thread.start()
