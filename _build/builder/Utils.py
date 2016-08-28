@@ -274,22 +274,17 @@ def GetVersion(buildSetup):
     """
     Get the app version.
     """
-    #print "getting version from GitHub."
-    if buildSetup.gitConfig["token"] and buildSetup.args.version is None:
-        latestVersion = GetLastReleaseOrTagName(buildSetup)
-        def Increment(match):
-            if match.group(1):
-                return str(int(match.group(1)) + 1)
-        newVersion = ParseVersion(re.sub("(\d+)$", Increment, latestVersion))
-        buildSetup.appVersion = newVersion[0]
-        buildSetup.appVersionInfo = newVersion[1]
+    if buildSetup.gitConfig["token"]:
+        if buildSetup.args.version is None:
+            ver = GetLastReleaseOrTagName(buildSetup)
+            def Increment(match):
+                if match.group(1):
+                    return str(int(match.group(1)) + 1)
+            return ParseVersion(re.sub("(\d+)$", Increment, ver))
+        else:
+            return ParseVersion(buildSetup.args.version)
     else:
-        (
-            buildSetup.appVersion,
-            buildSetup.appVersionInfo
-        ) = (
-            ParseVersion(buildSetup.args.version)
-        )
+        return ParseVersion("")
 
 def Is64bitInterpreter():
     """

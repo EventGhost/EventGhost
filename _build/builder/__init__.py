@@ -111,7 +111,7 @@ class Builder(object):
             self.gitConfig = GetGitHubConfig()
         except Exception as e:
             msg = (
-                "WARNING: Can't release to GitHub until you do the following:\n"
+                "WARNING: To change version or release to GitHub, you must:\n"
                 "    $ git config --global github.user <your github username>\n"
                 "    $ git config --global github.token <your github token>\n"
                 "To create a token, go to: https://github.com/settings/tokens\n"
@@ -186,7 +186,7 @@ class Builder(object):
         self.config = Config(self, join(self.outputDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
-        GetVersion(self)
+        (self.appVersion, self.appVersionInfo) = GetVersion(self)
         if self.showGui:
             import Gui
             Gui.Main(self)

@@ -116,6 +116,9 @@ class MainDialog(wx.Dialog):
             'please fill the github section above.'))
         refreshVersion.Bind(wx.EVT_BUTTON, self.OnRefreshVersion)
 
+        if not self.buildSetup.gitConfig["token"]:
+            sb.Disable()
+
         egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
         egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |

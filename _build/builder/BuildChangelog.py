@@ -24,7 +24,7 @@ from time import localtime, strftime
 
 # Local imports
 import builder
-from builder.Utils import BuildError, EscapeMarkdown, IsCIBuild, NextPage
+from builder.Utils import BuildError, EscapeMarkdown, NextPage
 
 class BuildChangelog(builder.Task):
     """
@@ -33,12 +33,14 @@ class BuildChangelog(builder.Task):
     description = "Build changelog"
 
     def Setup(self):
-        if IsCIBuild():
-            self.activated = False
-        elif not self.buildSetup.showGui:
+        if not self.buildSetup.showGui:
             self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
+        if not self.buildSetup.gitConfig["token"]:
+            print "WARNING: Skipping changelog build due to invalid token."
+            return
+
         buildSetup = self.buildSetup
         changelog_path = join(buildSetup.outputDir, "CHANGELOG.md")
         copy2(
