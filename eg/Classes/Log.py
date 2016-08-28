@@ -54,27 +54,24 @@ class Log(object):
         self.maxlength = 5000
         self.ctrl = DummyLogCtrl()
         log = self
-        if eg.debugLevel:
-            class StdOut:
-                def write(self, data):
-                    log.Write(data, INFO_ICON)
+
+        class StdOut:
+            def write(self, data):
+                log.Write(data, INFO_ICON)
+                if eg.debugLevel:
                     try:
                         oldStdOut.write(data)
                     except:
-                        oldStdOut.write(data.decode('mbcs'))
+                        oldStdOut.write(data.decode("mbcs"))
 
-            class StdErr:
-                def write(self, data):
-                    oldStdErr.write(data.decode("mbcs"))
-                    #self.Write(data, ERROR_ICON)
-        else:
-            class StdOut:
-                def write(self, data):
-                    log.Write(data, INFO_ICON)
-
-            class StdErr:
-                def write(self, data):
-                    log.Write(data, ERROR_ICON)
+        class StdErr:
+            def write(self, data):
+                log.Write(data, ERROR_ICON)
+                if eg.debugLevel:
+                    try:
+                        oldStdErr.write(data)
+                    except:
+                        oldStdErr.write(data.decode("mbcs"))
 
         if eg.startupArguments.isMain:
             sys.stdout = StdOut()
@@ -165,7 +162,9 @@ class Log(object):
         self._Print(args, **kwargs)
 
     def PrintStack(self, skip=0):
-        strs = ['Stack trace (most recent call last) (%s):\n' % eg.Version.string]
+        strs = [
+            'Stack trace (most recent call last) (%s):\n' % eg.Version.string
+        ]
         strs += format_stack(sys._getframe().f_back)[skip:]
         error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
@@ -178,7 +177,9 @@ class Log(object):
         if excInfo is None:
             excInfo = sys.exc_info()
         tbType, tbValue, tbTraceback = excInfo
-        slist = ['Traceback (most recent call last) (%s):\n' % eg.Version.string]
+        slist = [
+            'Traceback (most recent call last) (%s):\n' % eg.Version.string
+        ]
         if tbTraceback:
             decode = codecs.getdecoder('mbcs')
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
