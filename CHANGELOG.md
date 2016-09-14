@@ -1,3 +1,18 @@
+## [0.5.0-beta4](https://github.com/blackwind/EventGhost/releases/tag/v0.5.0-beta4) (2016-09-14)
+
+**Enhancements:**
+
+* Register restart handler for easy crash recovery [\#103](https://github.com/EventGhost/EventGhost/pull/103) ([blackwind](https://github.com/blackwind))
+
+**Fixed bugs:**
+
+* Make automatic log scrolling work at all window sizes [\#98](https://github.com/EventGhost/EventGhost/pull/98) ([blackwind](https://github.com/blackwind))
+* Make plugin export work for non-English users [\#101](https://github.com/EventGhost/EventGhost/pull/101) ([blackwind](https://github.com/blackwind))
+* Prevent traceback in PyCrust when a plugin imports its own modules [\#102](https://github.com/EventGhost/EventGhost/pull/102) ([blackwind](https://github.com/blackwind))
+* Open plugin installer even if program isn't running [\#104](https://github.com/EventGhost/EventGhost/pull/104) ([blackwind](https://github.com/blackwind))
+* \[Window\] Prevent random traceback on Grab Text Item\(s\) action [\#105](https://github.com/EventGhost/EventGhost/pull/105) ([blackwind](https://github.com/blackwind))
+
+
 ## [0.5.0-beta3](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-beta3) (2016-08-16)
 
 **Fixed bugs:**
