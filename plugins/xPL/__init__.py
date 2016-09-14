@@ -3,7 +3,7 @@
 # plugins/xPL/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,7 @@ eg.RegisterPlugin(
     kind = "external",
     guid = "{E462E85F-D366-40B2-B230-36D2A2A7CA6E}",
     description = "Send and receive xPL messages.",
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1119",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1119",
 )
 
 import sys, string, select, re

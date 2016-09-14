@@ -4,9 +4,9 @@ AppId=EventGhost
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 AppName=EventGhost
 AppPublisher=EventGhost Project
-AppPublisherURL=http://www.eventghost.net/
-AppSupportURL=http://www.eventghost.net/
-AppUpdatesURL=http://www.eventghost.net/
+AppPublisherURL=http://www.eventghost.org/
+AppSupportURL=http://www.eventghost.org/
+AppUpdatesURL=http://www.eventghost.org/
 AppVerName=EventGhost %(appVersion)s
 AppVersion=%(appVersion)s
 ChangesAssociations=yes
@@ -94,7 +94,7 @@ begin
     Result := True
   end else begin
     Result := False
-    MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK)
+    MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.org/docs/faq.html for instructions.', MBError, MB_OK)
   end;
 end;
 
@@ -158,7 +158,7 @@ end;
 [Icons]
 Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
-Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
+Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
 Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Tasks: startupicon

@@ -4,7 +4,7 @@
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -79,7 +79,7 @@ to explicitly use the **"Stop processing this event"**,
 Only it is necessary to place the folder with the OSE as high
 as possible in the configuration tree.""",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2194",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2194",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAADT7f+34f+s"
         "2v+n1/+r2P/F4//G5v/F5P/Z7v/e7//e7v/V6/+y1/+t0P/S7P/E5P/f7//Q6f/G5P/D"

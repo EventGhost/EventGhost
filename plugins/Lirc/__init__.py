@@ -133,7 +133,7 @@ eg.RegisterPlugin(
     kind=kind,
     canMultiLoad=True,
     guid="{17A77662-BB69-4C37-AA43-71213958C5C4}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=219",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=219",
     icon = (
       "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI"
       "WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1wEDFyY0FznCDQAAAP9JREFUeNqVUrGRhDAMXP3Qh9sg"

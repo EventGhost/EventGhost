@@ -5,7 +5,7 @@ version="0.1.7"
 # Copyright (C)  2008-2011 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -52,7 +52,7 @@ eg.RegisterPlugin(
     description = (
         "File Operations (reading, periodical reading and writing)."
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=1011"
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=1011"
 )
 #===============================================================================
 

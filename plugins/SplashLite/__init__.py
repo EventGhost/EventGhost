@@ -7,7 +7,7 @@ version="0.0.1"
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,7 @@ It takes about one second to start application and High Definition video playbac
 .. _Splash Lite: http://www.mirillis.com/splash.html
 """,
     createMacrosOnAdd = True,
-    #url = "http://www.eventghost.net/forum/viewtopic.php?t=XXXX",
+    #url = "http://www.eventghost.org/forum/viewtopic.php?t=XXXX",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAADAFBMVEX+/v6zs7OEhIRy"
         "cnKTk5Oampujo6OLjIxbW1vLy8vDw8Pc3Nxra2tjY2NTU1NCQkI7OzvZ3uTW2uHT09Os"

@@ -5,7 +5,7 @@
 # Copyright (C) 2008 Stefan Gollmer
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ eg.RegisterPlugin(
                     'of this dll must be at least 2.45.<br><br>'
                     'The Hauppauge program "Ir.exe" should not be started anymore.'
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=821",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=821",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42mNkoBAwYhH7"
         "DyIcHBwYDhw4AKdxqWfEphlmAAwgGYChB6cBxLoawwCYzQ8ePGBQUFCA00guwW9AQ0MD"

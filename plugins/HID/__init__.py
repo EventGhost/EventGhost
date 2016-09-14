@@ -9,7 +9,7 @@ eg.RegisterPlugin(
         'Communication with devices that follow the '
         'Human Interface Device (HID) standard.'
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=571",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
 
 import time

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -97,7 +97,7 @@ eg.RegisterPlugin(
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
     guid = "{460D31E6-231D-483D-8B9B-2781F9D2377A}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=447",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=447",
     canMultiLoad = True,
 )
 

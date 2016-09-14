@@ -5,7 +5,7 @@ version="0.3.5"
 # Plugins/Billy/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ eg.RegisterPlugin(
         'mode!</p>'
     ),
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=537",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=537",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMz+tPz+/AAAABkEFSEAAAAAAAAAAGECDR4AAAAAAAAAAAAADQ"
         "AAABUAAAAAAA0AyAAAHgAAEAAAagAAXQIABAAAhQAAAwAAFwMAAAAAAAAAAIgBAeIAABIA"

@@ -7,7 +7,7 @@ version="0.1.16"
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ version="0.1.16"
 # 0.1.9 by Pako 2014-05-17 18:15 UTC+1
 #     - added option to abort egg-timer by name
 # 0.1.8 by Pako 2014-03-09 10:48 UTC+1
-#     - http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740&start=75#p30126
+#     - http://www.eventghost.org/forum/viewtopic.php?f=9&t=2740&start=75#p30126
 # 0.1.7 by Pako 2013-05-05 11:06 UTC+1
 #     - added ReloadXML action (rekall request)
 # 0.1.6 by Pako 2012-09-06 06:46 UTC+1
@@ -94,7 +94,7 @@ eg.RegisterPlugin(
 Events can be scheduled to be triggered periodically,
 once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2740",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUA//+tra1+fn5q"
         "ampnZ2ePj49mZmYuLi4ICAgAAAAvLy+lpaVPT08PDw8QEBCGhoYmJiYAAgACHAEIPgMO"

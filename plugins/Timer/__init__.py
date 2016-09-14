@@ -8,7 +8,7 @@ eg.RegisterPlugin(
         "Triggers an event after an adjustable time and optionally repeats it "
         "after an interval."
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=572",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=572",
 )
 
 import time

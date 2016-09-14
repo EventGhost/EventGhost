@@ -38,7 +38,7 @@ eg.RegisterPlugin(
     guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=10&t=1562",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=10&t=1562",
     description = "Adds actions buttons to control <a href='http://www.xbmc.org/'>XBMC</a>.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsRAAALEQF/ZF+RAAAA"

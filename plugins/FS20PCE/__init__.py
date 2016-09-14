@@ -23,7 +23,7 @@ eg.RegisterPlugin(
     kind = "remote",
     canMultiLoad = False,
     description = __doc__,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1945",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1945",
     guid = '{5EF0F083-8281-4aec-8399-9675DB0D8C58}'
 )
 

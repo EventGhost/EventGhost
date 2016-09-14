@@ -5,7 +5,7 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ eg.RegisterPlugin(
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=6828",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=6828",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAADh0lEQVR4nIXSW0yTBxgG4P/GxRkZ2+gWtR2YCBoOlsL/87fQg4WldkLHqQZo"

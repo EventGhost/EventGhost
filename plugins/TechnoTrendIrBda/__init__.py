@@ -5,7 +5,7 @@
 # Copyright (C) 2009 Mika Fischer <mika.fischer@zoopnet.de>
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ eg.RegisterPlugin(
                         'Hardware plugin for TechnoTrend IR receivers '
                         'delivered with TechnoTrend TV cards.'
                       ),
-    url             = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2275",
+    url             = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2275",
 )
 
 import os

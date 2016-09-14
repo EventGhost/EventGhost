@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ eg.RegisterPlugin(
     kind = "core",
     guid = "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",
     icon = ICON,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=5481",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=5481",
 )
 
 class Mouse(eg.PluginBase):

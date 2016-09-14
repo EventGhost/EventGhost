@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -127,7 +127,7 @@ class AboutPanel(wx.Panel):
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebHomepage.replace("&", ""),
-            URL="http://www.eventghost.net/"
+            URL="http://www.eventghost.org/"
         )
         font = hypelink1.GetFont()
         font.SetPointSize(11)
@@ -137,14 +137,14 @@ class AboutPanel(wx.Panel):
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebForum.replace("&", ""),
-            URL="http://www.eventghost.net/forum/"
+            URL="http://www.eventghost.org/forum/"
         )
         hypelink2.SetFont(font)
         hypelink3 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebWiki.replace("&", ""),
-            URL="http://www.eventghost.net/mediawiki/"
+            URL="http://www.eventghost.org/mediawiki/"
         )
         hypelink3.SetFont(font)
 
@@ -481,7 +481,7 @@ SPECIAL_THANKS_DATA = (
             (
                 'Benjamin Webb',
                 (
-                    'for the nice <a href="http://www.eventghost.net/mediawiki/'
+                    'for the nice <a href="http://www.eventghost.org/mediawiki/'
                     'Controlling%20your%20living%20room%20with%20EventGhost">'
                     'wiki article</a>'
                 )

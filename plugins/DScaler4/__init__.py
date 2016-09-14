@@ -34,7 +34,7 @@ eg.RegisterPlugin(
         '<a href="http://deinterlace.sourceforge.net/">'
         'DScaler 4</a>.'
     ),
-    url="http://www.eventghost.net/forum/viewtopic.php?t=807",
+    url="http://www.eventghost.org/forum/viewtopic.php?t=807",
     createMacrosOnAdd = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAlUlEQVR4nO2TUQoDMQhE"

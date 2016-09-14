@@ -5,7 +5,7 @@
 # Written by Silviu Marghescu
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,7 @@ eg.RegisterPlugin(
     kind = "external",
     guid = "{7D5FF697-3094-4209-AEF6-E3DA575FB657}",
     description = "Control a CM11A device via the serial interface",
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1235",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1235",
     help = help,
     canMultiLoad = True,
     createMacrosOnAdd = False,

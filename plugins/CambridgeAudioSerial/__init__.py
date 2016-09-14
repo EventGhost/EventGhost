@@ -3,7 +3,7 @@
 # plugins/CambridgeAudioSerial/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ eg.RegisterPlugin(
     kind = 'external',
     guid = "{C1B266B0-005B-4A97-8F33-8D12512A2050}",
     description = 'Control Cambridge Audio Amps via RS232',
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1990",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1990",
     help = help,
     canMultiLoad = True,
     createMacrosOnAdd = True,

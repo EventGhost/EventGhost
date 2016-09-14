@@ -3,7 +3,7 @@
 # plugins/XBMCEventReceiver/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ eg.RegisterPlugin(
     description = (
         "Receives events from XBMC Host UDP Broadcasts."
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=10&t=2140",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=10&t=2140",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsRAAALEQF/ZF+RAAAA"
         "BGdBTUEAALGeYUxB9wAAACBjSFJNAAB6fAAAfosAAPoBAACHPAAAbUoAAPFDAAA2IAAAHlNX4WK7"

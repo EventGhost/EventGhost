@@ -5,7 +5,7 @@ version = "0.1.14"
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -70,7 +70,7 @@ eg.RegisterPlugin(
     description = (
         "Adds Multitapper actions."
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1024",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1024",
 )
 from eg.WinApi.Utils import GetMonitorDimensions
 from threading import Timer

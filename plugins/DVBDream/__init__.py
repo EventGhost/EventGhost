@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     version = "4.1.1093",
     kind = "program",
     guid = "{9D8E0000-E1BE-4767-A4E5-8EC4687CECE1}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=612",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '

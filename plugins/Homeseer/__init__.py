@@ -3,7 +3,7 @@
 # plugins/Homeseer/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     version = "0.0.4",
     kind = "external",
     description = "Homeseer plugin. More info on http://smart-living.geoblog.be/",
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=10&t=2692",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=10&t=2692",
 )
 
 import eg

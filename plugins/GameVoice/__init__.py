@@ -9,7 +9,7 @@ eg.RegisterPlugin(
         'Allows the communication with the Microsoft Sidewinder Game Voice.<br/>'
         'This plug in also demonstrates how to use EventGhost\'s HID API.'
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=571",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
 
 from eg.WinApi.HID import HIDThread

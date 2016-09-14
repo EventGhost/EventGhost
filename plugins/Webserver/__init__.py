@@ -2,7 +2,7 @@
 version = "3.12"
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -134,7 +134,7 @@ Plugin version: %s
         "V6o9Jv2beq++WywWf3IcZ/hgmNKh9JnVk4+d31CCyRXDljEAx9T6zrC+dzYrribCcn9z"
         "c/ObTqdzALjiIQmNArF76gcMYAB0gT7g3l/+ByWIP9hU8ktfAAAAAElFTkSuQmCC"
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1663",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1663",
 )
 
 import wx

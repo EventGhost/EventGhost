@@ -6,7 +6,7 @@ SUPPORTED_DVBVIEWER_VERSIONS         = '4.9.x (older versions might work but are
 SUPPORTED_RECORDING_SERVICE_VERSIONS = '1.10.x (older versions might work but are untested)'
 
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -93,7 +93,7 @@ eg.RegisterPlugin(
     kind = "program",
     guid = "{747B54F6-59F6-4602-A777-984EA76D2D8C}",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1564",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1564",
     description = (
         'Adds support functions to control <a href="http://www.dvbviewer.com/">'
         'DVBViewer Pro/GE and DVBViewerService</a> and returns events.'

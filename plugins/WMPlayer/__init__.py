@@ -5,7 +5,7 @@
 # Copyright (C) 2007 Oystein Hansen
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,7 @@ eg.RegisterPlugin(
     kind = "program",
     guid = "{87D26B8D-990C-457C-85C2-8D634868E1D2}",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=284",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=284",
     description = (
         'Adds actions to control the '
         '<a href="http://www.microsoft.com/windows/windowsmedia/">'

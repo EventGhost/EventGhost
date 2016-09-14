@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,7 @@ eg.RegisterPlugin(
     kind = "program",
     guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=201",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=201",
     description = (
         'Adds actions to control <a href="http://www.winamp.com/">Winamp</a>.'
     ),

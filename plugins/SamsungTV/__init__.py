@@ -3,7 +3,7 @@
 # plugins/SamsungTV/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@ eg.RegisterPlugin(
     kind = "external",
     guid = "{ADA3F327-DA18-44E0-A712-8C1C90B52DEC}",
     description = "Control Samsung TV via RS232",
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2059",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2059",
     help = help,
     canMultiLoad = True,
     createMacrosOnAdd = True,

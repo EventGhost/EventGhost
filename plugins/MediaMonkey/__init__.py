@@ -5,7 +5,7 @@
 # Copyright (C)  2009-2011 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -110,7 +110,7 @@ For example, if you try to add a track to a playlist 'test', the payload will be
 | Number 220 indicates, that there are 220 tracks in the library that match your query.
 
 .. _MediaMonkey: http://www.MediaMonkey.com/ ''',
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=563",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAS9klEQVR42u1bCXhUVZb+"
         "X+1r9spOyEZkU1CJ4NYgihBXXLAHN0ZtcW+nRW0Rp21b+utu7REdxXEZddgEFW3bdoMG"

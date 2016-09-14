@@ -3,7 +3,7 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,7 @@ Enable the RC Interface or start VLC with:
 If you are using "MyCommand" remember that you can only execute commands that
 are enabled in VLC!
 
-`Help and bugreports <http://www.eventghost.net/forum/viewtopic.php?t=693>`_
+`Help and bugreports <http://www.eventghost.org/forum/viewtopic.php?t=693>`_
 
 .. _VLC media player: http://www.videolan.org/
 """
@@ -60,7 +60,7 @@ eg.RegisterPlugin(
         "Hdn5XEojkgbFIE6sJwWm6hDwYr/okIz367GENRMtqihs9Df+Brue2BE7hqGjAAAAAElF"
         "TkSuQmCC"
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=693",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=693",
 )
 
 

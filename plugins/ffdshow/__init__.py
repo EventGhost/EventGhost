@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     version = "1.0.1454",
     kind = "program",
     guid = "{4CBEB5C8-97E2-4F65-A355-E72FCED4951F}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=613",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=613",
     description = (
         'Adds actions to control the '
         '<a href="http://ffdshow-tryout.sourceforge.net/">'

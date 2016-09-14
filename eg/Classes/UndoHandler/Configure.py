@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@ class Configure(UndoHandlerBase):
         ActionThreadFunc = eg.actionThread.Func
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
         #oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
-        newArgs = ActionThreadFunc(item.GetArguments)()  # bugfix: http://www.eventghost.net/forum/viewtopic.php?f=4&t=3676
+        newArgs = ActionThreadFunc(item.GetArguments)()  # bugfix: http://www.eventghost.org/forum/viewtopic.php?f=4&t=3676
         oldArgs = DeepCopy(newArgs)                      # bugfix
         revertOnCancel = False
         dialog = eg.ConfigDialog.Create(item, *oldArgs)

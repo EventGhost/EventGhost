@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     guid = "{A35CC4DC-BC72-4EF8-BC8E-27F88A2686D4}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=650",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=650",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
         "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"

@@ -5,7 +5,7 @@
 # Copyright (C) 2008 CHeitkamp
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@ eg.RegisterPlugin(
         "<p>The plugin may not work with other versions of GOM Player!</p>"
         "<p><a href=\"http://www.gomplayer.com/\">GOM Player Homepage</a></p>"
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=854",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=854",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACQUlEQVR4nKWTTUhVQRSA"
         "v7n/plj+BYKFKAlGi8pwEVZgLkqiRS0DSXla4MLaWFRuBFvloo1kGVSuo8gQoqhFWYtK"

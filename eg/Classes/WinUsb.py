@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -84,7 +84,7 @@ DRIVER_VERSION = "1.0.2.0"
 DRIVER_PROVIDER = "EventGhost"
 DRIVER_CLASS_GUID = "{FE050E98-31CD-47EA-AC39-CB143EF208B2}"
 PLATFORM = "x64" if IsWin64() else "x86"
-DOWNLOAD_ROOT = "http://www.eventghost.net/downloads/winusb/%s/" % PLATFORM
+DOWNLOAD_ROOT = "http://www.eventghost.org/downloads/winusb/%s/" % PLATFORM
 INSTALLATION_ROOT = join(
     eg.folderPath.ProgramData, "eventghost", "drivers", "winusb", PLATFORM
 )

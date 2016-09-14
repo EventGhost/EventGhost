@@ -5,7 +5,7 @@ eg.RegisterPlugin(
     kind = "program",
     guid = "{654FC50A-3052-42F7-AE26-84A752FFDCA6}",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=795",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=795",
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'
         'SageTV Media Center</a>.'

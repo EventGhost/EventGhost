@@ -5,7 +5,7 @@
 # Marius van der Spek
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     author="WharfRat",
     version="3.0.1",
     kind="remote",
-    url="http://www.eventghost.net/forum/viewtopic.php?f=9&t=5927",
+    url="http://www.eventghost.org/forum/viewtopic.php?f=9&t=5927",
     guid="{0B5511F9-6E8D-447D-9BD7-340E2C3548DD}",
     hardwareId = "USB\\VID_0755&PID_2626",
 )

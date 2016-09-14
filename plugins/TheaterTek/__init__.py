@@ -6,7 +6,7 @@
 # by Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@ eg.RegisterPlugin(
         '\n\n<p><b>Notice:</b><br>'
         'To make it work, you have to enable TCP control in TheaterTek. '
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=559",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=559",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACGElEQVR42m1RPWhaURQ+"
         "gg6lCjooxnZIH9iARAi9QqwQTcBmioNQcWskwxV5i+AgDqHERZdsEfreUE3BDFJI4XUq"

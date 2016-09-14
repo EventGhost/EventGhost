@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -940,15 +940,15 @@ class MainFrame(wx.Frame):
 
     def OnCmdWebHomepage(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.net/", 2, 1)
+        webbrowser.open("http://www.eventghost.org/", 2, 1)
 
     def OnCmdWebForum(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.net/forum/", 2, 1)
+        webbrowser.open("http://www.eventghost.org/forum/", 2, 1)
 
     def OnCmdWebWiki(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.net/mediawiki/", 2, 1)
+        webbrowser.open("http://www.eventghost.org/mediawiki/", 2, 1)
 
     def OnCmdCheckUpdate(self):
         eg.CheckUpdate.CheckUpdateManually()

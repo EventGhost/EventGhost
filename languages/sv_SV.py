@@ -658,7 +658,7 @@ class Plugin:
         description = u"Detta plugin genererar händelser vid knapptryckningar (Hotkeys)"
     class MediaPlayerClassic:
         name = u"Media Player Classic"
-        description = u'Kontrollera <a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic</a>.\n\n<p>Endast för version <b>6.4.8.9</b> eller senare. Pluginet fungerar inte med äldre versioner!>/p>\n<p><a href=http://www.eventghost.net/forum/viewtopic.php?t=17>Bugrapporter</a></p>\n<p><a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic SourceForge Projekt</a></p>'
+        description = u'Kontrollera <a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic</a>.\n\n<p>Endast för version <b>6.4.8.9</b> eller senare. Pluginet fungerar inte med äldre versioner!>/p>\n<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Bugrapporter</a></p>\n<p><a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic SourceForge Projekt</a></p>'
         class AlwaysOnTop:
             name = u"Alltid överst"
             description = u"Alltid överst"

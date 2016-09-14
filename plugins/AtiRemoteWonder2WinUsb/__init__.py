@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,7 @@ import eg
 eg.RegisterPlugin(
     name="ATI Remote Wonder II (WinUSB)",
     description=__doc__,
-    url="http://www.eventghost.net/forum/viewtopic.php?t=915",
+    url="http://www.eventghost.org/forum/viewtopic.php?t=915",
     author="Bitmonster",
     version="1.0.2",
     kind="remote",

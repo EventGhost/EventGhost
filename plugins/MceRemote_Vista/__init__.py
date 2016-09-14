@@ -3,7 +3,7 @@
 # plugins/MceRemote_Vista/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     kind = "remote",
     guid = "{A7DB04BB-9F0A-486A-BCA1-CA87B9620D54}",
     description = 'Plugin for the Microsoft MCE remote.  Requires installation of AlternateMceIrService.',
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=6044",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=6044",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfklEQVR42q2TS2gTQRyH"
         "f5N9NNlts20abYyxVirWShGLUh8XoSpUUBEVUU+5CXoQr+LNm14UtRCpRcGLHnqoiooN"

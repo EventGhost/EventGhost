@@ -11,7 +11,7 @@ eg.RegisterPlugin(
     version = "1.2.2",
     kind = "external",
     guid = "{9ECBA250-AF41-4372-B64B-E42F2C2F2975}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=455",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=455",
     description = 'Plugin to control TellStick devices.',
     help = """
         <a href="http://www.telldus.se">Telldus Hompage</a>
