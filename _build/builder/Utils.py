@@ -246,7 +246,7 @@ def GetLastReleaseOrTagName(buildSetup):
             for tag in data:
                 if tag['ref'][10:] > lastRelease:
                     lastRelease = tag['ref'][10:]
-        return lastRelease
+        return lastRelease.lstrip("v")
 
 def GetTerminalSize(fallback=(80, 24)):
     """
