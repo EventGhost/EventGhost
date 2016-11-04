@@ -19,7 +19,7 @@ Configuration Pane
 |RootSymbol| Configuration Tree
 -------------------------------
 The Configuration Tree contains the complete EventGhost configuration and is 
-made up of Containers and Items.
+made up of containers and items.
 
 All containers and items except Autostart can be enabled/disabled manually 
 and by Actions. 
@@ -28,7 +28,7 @@ and by Actions.
 |AutostartSymbol| Autostart
 ---------------------------
 
-Autostart is a special Container that can hold Plugins to load and Actions to 
+Autostart is a special container that can hold Plugins to load and Actions to 
 execute every time the Configuration Tree is loaded (eg EventGhost is started).
 There is always a single Autostart item in the Configuration Tree and it 
 cannot be removed or disabled. 
@@ -101,8 +101,8 @@ Assigning Events to Macros
 
 There are three ways you can assign trigger Events to a Macro:
 
-#. Drag-and-drop an Event from the Log to an existing Macro in the C
-   onfiguration Tree.
+#. Drag-and-drop an Event from the Log to an existing Macro in the 
+   Configuration Tree.
 #. Select an Event in the Log and copy it to the clipboard using Ctrl+C, 
    Right-Click->Copy, or Edit->Copy, then select an existing Macro in the 
    Configuration Tree and paste the Event using Ctrl+V, Right-Click->Paste, or 
@@ -110,7 +110,7 @@ There are three ways you can assign trigger Events to a Macro:
 #. Select an existing Macro in the Configuration Tree and then add a new Event 
    using :menuselection:`Right-Click-->Add Event`, 
    :menuselection:`Configuration-->Add Event` 
-   or clicking the Add Event tool bar button. 
+   or clicking the Add Event toolbar button. 
 
 You can rename any existing Event by selecting it and pressing F2, or 
 selecting Right-Click->Rename Item or 
