@@ -48,5 +48,3 @@ EventGhost is written mostly in Python with some low-level parts in C.
 Plugins can be written in any language that can produce DLLs, like C, C++, 
 Delphi and Visual Basic. But of course they can (and mostly are) be written in 
 Python. 
-
-

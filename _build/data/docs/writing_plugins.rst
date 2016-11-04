@@ -569,5 +569,3 @@ plugin. Then you should take a look at the definition of
 :class:`eg.PluginBase` and :class:`eg.ActionBase` in the EventGhost API 
 Documentation. There you can see which members of the classes are defined, so 
 you won't accidentally overwrite them in your own plugin. 
-
-

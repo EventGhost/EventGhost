@@ -95,6 +95,3 @@ ones used in Microsoft's Win32 API.
     
 **Constants**
     *ALL_CAPS_WITH_UNDERSCORES* is used. 
-    
-
-    

@@ -56,5 +56,3 @@ You can download the driver here:
 
 * `X10 driver for 32-bit Windows <http://www.eventghost.org/downloads/x10drivers_x86.exe>`_.
 * `X10 driver for 64-bit Windows <http://www.eventghost.org/downloads/x10drivers_x64.exe>`_.
-
-

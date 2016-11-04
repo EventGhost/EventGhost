@@ -137,5 +137,3 @@ selecting Right-Click->Rename Item or
 
 .. |EventSymbol| image:: event.png
    :alt:
-
-

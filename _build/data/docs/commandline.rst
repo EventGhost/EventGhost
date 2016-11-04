@@ -60,5 +60,3 @@ The EventGhost main executable accepts the following command line arguments:
     the application data folder of your machine for storing its settings.
     Through this option you can change the folder to a location on an USB
     stick for example, to make EventGhost portable.
-
-

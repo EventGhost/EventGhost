@@ -78,5 +78,3 @@ here <http://www.eventghost.org/forum/viewtopic.php?f=2&t=219>`_.
 If your device is not listed here, feel free to ask on the
 `EventGhost Support Forum <http://www.eventghost.org/forum/>`_
 if a plugin can be written for it.
-
-

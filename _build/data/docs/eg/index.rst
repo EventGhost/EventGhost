@@ -55,4 +55,3 @@ Functions
 .. autofunction:: eg.RegisterPlugin
 
 .. autofunction:: eg.PrintError
-
