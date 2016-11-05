@@ -41,7 +41,8 @@ NOTICE_ICON = eg.Icons.NOTICE_ICON
 
 class DummyLogCtrl(object):
     def WriteLine(self, line, icon, wRef, when, indent):
-        oldStdOut.write("%s\n" % line)
+        #oldStdOut.write("%s\n" % line)
+        pass
 
 
 class Log(object):
