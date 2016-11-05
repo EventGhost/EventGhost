@@ -104,16 +104,17 @@ There are three ways you can assign trigger Events to a Macro:
 #. Drag-and-drop an Event from the Log to an existing Macro in the 
    Configuration Tree.
 #. Select an Event in the Log and copy it to the clipboard using Ctrl+C, 
-   Right-Click->Copy, or Edit->Copy, then select an existing Macro in the 
-   Configuration Tree and paste the Event using Ctrl+V, Right-Click->Paste, or 
-   Edit->Paste.
+   :menuselection:`Right-Click->Copy`, or :menuselection:`Edit->Copy`, then 
+   select an existing Macro in the Configuration Tree and paste the Event 
+   using Ctrl+V, :menuselection:`Right-Click->Paste`, or 
+   :menuselection:`Edit->Paste`.
 #. Select an existing Macro in the Configuration Tree and then add a new Event 
    using :menuselection:`Right-Click-->Add Event`, 
    :menuselection:`Configuration-->Add Event` 
-   or clicking the Add Event toolbar button. 
+   or clicking the :guilabel:`Add Event` toolbar button. 
 
 You can rename any existing Event by selecting it and pressing F2, or 
-selecting Right-Click->Rename Item or 
+selecting :menuselection:`Right-Click->Rename` Item or 
 :menuselection:`Configuration-->Rename Item`, and typing the new Event name. 
 
 

@@ -73,8 +73,8 @@ Basics
 ------
 
 EventGhost is a very interesting program. You install plugins that enable 
-different events to be displayed on the logger. Simply click the Add Plugin 
-button to gain access to the plugin listing screen.
+different events to be displayed on the logger. Simply click the 
+:guilabel:`Add Plugin` button to gain access to the plugin listing screen.
 
 .. image:: CYLRWE_pluginlisting.png
     :align: center
@@ -109,9 +109,9 @@ additional properties of the action.
 
 From there navigate the file path to the program you want to open. In my case, 
 the path was :file:`C:\\Program Files\\iTunes\\iTunes.exe`. After you have 
-pressed the OK button, you will see your newly added macro with the action in 
-your configuration. Then drag and drop the IR event code you want to use from 
-the logger to the macro you just created.
+pressed the :guilabel:`OK` button, you will see your newly added macro with 
+the action in your configuration. Then drag and drop the IR event code you 
+want to use from the logger to the macro you just created.
 
 .. image:: CYLRWE_launch_program_action.png
     :align: center
@@ -134,9 +134,9 @@ Enabling Items Exclusively
 
 The Enable Item Exclusively action enables the specified macro or folder and 
 disables all other macros and folders at the same folder level. The action can 
-be added by right clicking and select Add Action. You then proceed to open up 
-the EventGhost folder. You have to select the folder/macro to make active 
-after adding the exclusive. 
+be added by right clicking and select :guilabel:`Add Action`. You then proceed 
+to open up the EventGhost folder. You have to select the folder/macro to make 
+active after adding the exclusive. 
 
 
 .. figure:: CYLRWE_enable_exclusive_config.png

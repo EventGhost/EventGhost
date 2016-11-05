@@ -40,7 +40,7 @@ folder doesn't matter but should be unique and descriptive.
 
 The next step is to create a __init__.py file in your plugin folder. This 
 will be the starting point of your plugin code. The first line should call 
-eg.RegisterPlugin(). Here is a typical start of a __init__.py::
+`eg.RegisterPlugin()`. Here is a typical start of a __init__.py::
 
     import eg
     
@@ -80,16 +80,16 @@ completely as you can.
 
 *kind*
     This parameter defines where EventGhost will insert your plugin in the 
-    Add Plugin dialog. Possible values are currently ``"receiver"`` (for remote
-    receiver plugins), ``"program"`` (for program control plugins),
-    ``"external"`` (for plugins handling external hardware equipment) and
-    ``"other"`` (if none of the other categories match). 
+    :guilabel:`Add Plugin` dialog. Possible values are currently 
+    ``"receiver"`` (for remote receiver plugins), ``"program"`` (for program 
+    control plugins), ``"external"`` (for plugins handling external hardware 
+    equipment) and ``"other"`` (if none of the other categories match). 
     This parameter defaults to ``"other"``. 
 
 *description*
     This value can be a HTML string and therefore include formatting, table, 
     image and URL tags. This 'description' will be shown on the right side of 
-    the Add Plugin dialog and also in the Plugin Item Settings dialog. 
+    the :guilabel:`Add Plugin` dialog and also in the :guilabel:`Plugin Item Settings` dialog. 
 
 
 .. note::
@@ -104,8 +104,8 @@ completely as you can.
 
 .. note::
 
-    To create a GUID for your plugin, open the "Python Shell" under
-    the "Help" menu. Then type:
+    To create a GUID for your plugin, open the :guilabel:`Python Shell` under
+    the :guilabel:`Help` menu. Then type:
     
        >>> import pythoncom
        >>> pythoncom.CreateGuid()
@@ -175,10 +175,10 @@ For our simple example we just do a print-statement here with the well known
 string.
 
 Now you can try if this really works. Start EventGhost, add your plugin to 
-the tree and fire up the Add Action dialog. There you will now find a new group 
-named "My New Plugin" and a single action named "HelloWorld" inside it. After 
-you have added this action to your tree, you can execute it and you will then 
-see the message "Hello World!" appearing in the logger.
+the tree and fire up the :guilabel:`Add Action` dialog. There you will now 
+find a new group named "My New Plugin" and a single action named "HelloWorld" 
+inside it. After you have added this action to your tree, you can execute it 
+and you will then see the message "Hello World!" appearing in the logger.
 
 You may have noticed that the action is listed as "HelloWorld" because 
 EventGhost has simply used the name of the class, but you might prefer to 
@@ -239,11 +239,11 @@ Grouping of actions
 -------------------
 
 Some plugins have so many actions that they prefer to group the actions 
-inside folders in the Add Action dialog. Take a look at the 'Media Player 
-Classic' plugin for an example, even if you don't have or use this media 
-player. Such grouping is easily done. You only have to learn one new method of 
-a plugin called :meth:`AddGroup() <eg.PluginBase.AddGroup>`. I will show you a 
-small example with only three actions and two groups::
+inside folders in the :guilabel:`Add Action` dialog. Take a look at the 'Media 
+Player Classic' plugin for an example, even if you don't have or use this 
+media player. Such grouping is easily done. You only have to learn one new 
+method of a plugin called :meth:`AddGroup() <eg.PluginBase.AddGroup>`. I will 
+show you a small example with only three actions and two groups::
     
     import eg
     
@@ -349,13 +349,14 @@ Nearly all configuration dialogs follow the same scheme.
    the user has made through panel.SetResult(...). In this case we get the 
    current setting of the text box by using GetValue() on it. 
 
-If you now type something into this text box and press OK, you will find that 
-if you reconfigure the plugin this text is already set. It will even survive 
-if you save your EventGhost configuration and restart EventGhost.
+If you now type something into this text box and press :guilabel:`OK`, you 
+will find that if you reconfigure the plugin this text is already set. It will 
+even survive if you save your EventGhost configuration and restart EventGhost.
 
 It is needed to use panel.Affirmed() and panel.SetResult(...) in a loop, 
-because the user might also use the Apply button and EventGhost needs to know 
-the current settings from the panel without dismissing it completely.
+because the user might also use the :guilabel:`Apply button` and EventGhost 
+needs to know the current settings from the panel without dismissing it 
+completely.
 
 Before I can show you how to actually use this parameter you have to learn 
 some more methods of a plugin:
@@ -415,14 +416,14 @@ If the user adds this plugin to its configuration the call order is as follows:
    AddAction() in its __init__() method.
 3. If the plugin has any parameters that need to be set up, the Configure() 
    method is called and the user has to make the appropriate settings. As 
-   soon as the user presses the OK button, EventGhost will receive the 
-   parameters and store them.
+   soon as the user presses the :guilabel:`OK` button, EventGhost will receive 
+   the parameters and store them.
 4. Now the :meth:`~eg.PluginBase.__start__` method is called 
    and the plugin will receive the stored parameters. So it will receive the 
    same parameters that Configure() has returned.
 5. If EventGhost is about to quit or the plugin gets deleted by the user, the 
    :meth:`~eg.PluginBase.__stop__` method is called and then the 
-   __close__() method immediately after that. 
+   :meth:`~eg.PluginBase.__close__` method immediately after that. 
 
 If the user now disables your running plugin in the tree, your 
 :meth:`~eg.PluginBase.__stop__` method gets called. If he re-enables the 
@@ -446,10 +447,10 @@ If the user wants to change some parameters of the plugin, the following will
 happen:
 
 1. Configure() is called (with the old parameters).
-2. If the user presses the Cancel button inside the configuration dialog, 
-   nothing more will happen.
-3. If the user presses the OK button the Configure() method has to return the 
-   new parameters. If the plugin is enabled already, the plugins 
+2. If the user presses the :guilabel:`Cancel` button inside the configuration 
+   dialog, nothing more will happen.
+3. If the user presses the :guilabel:`OK` button the Configure() method has to 
+   return the new parameters. If the plugin is enabled already, the plugin's 
    :meth:`~eg.PluginBase.__stop__` method will be called and 
    immediately after that the :meth:`~eg.PluginBase.__start__` 
    method with the new parameters. 
@@ -464,7 +465,7 @@ Making actions configurable
 
 To make actions configurable you basically do the same as for the plugin 
 configuration. Again you have to define a Configure() method, but this time 
-for the eg.ActionBase. Instead of a special method like __start__(), an 
+for the eg.ActionBase. Instead of a special method like :meth:`~eg.PluginBase.__start__`, an 
 action will receive the parameters directly through the __call__() method.
 ::
 
@@ -544,11 +545,12 @@ seconds to EventGhost::
                 stopThreadEvent.wait(10.0)
 
 One important thing you should notice, is the starting of the thread in the 
-__start__() method of the plugin and stopping it in the __stop__() method. A 
-plugin should only generate events if its __start__() method was called, so 
-it will not generate events if the plugin was disabled by the user. Please 
-follow this convention, to only generate events after __start__() is called 
-and stop event generation if __stop__() is called.
+:meth:`~eg.PluginBase.__start__` method of the plugin and stopping it in the 
+:meth:`~eg.PluginBase.__stop__` method. A plugin should only generate events 
+if its :meth:`~eg.PluginBase.__start__` method was called, so it will not 
+generate events if the plugin was disabled by the user. Please follow this 
+convention, to only generate events after :meth:`~eg.PluginBase.__start__` is 
+called and stop event generation if :meth:`~eg.PluginBase.__stop__` is called.
 
 
 Enduring events

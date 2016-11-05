@@ -39,7 +39,7 @@ The EventGhost main executable accepts the following command line arguments:
 
 .. cmdoption:: -n <host>:<port> <password> <eventname> [<payload> ...]
 
-    This one is similar to the *-event* option, but sends the event 
+    This one is similar to the :option:`-event` option, but sends the event 
     <eventname> through TCP/IP like the 'Network Event Sender' plugin does. It 
     will not start EventGhost, so it can be used as a little helper tool for 
     other applications or .BAT files to send events to a remote machine. 
