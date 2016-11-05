@@ -64,7 +64,7 @@ eg.sitePackagesDir = join(
 )
 eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
-eg.debugLevel = 0
+eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
 eg.result = None
@@ -352,6 +352,9 @@ eg.app = eg.App()
 import Icons  # NOQA
 eg.Icons = Icons
 
+eg.config = eg.Config()
+eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
+
 eg.log = eg.Log()
 eg.Print = eg.log.Print
 eg.PrintError = eg.log.PrintError
@@ -365,8 +368,6 @@ def TracebackHook(tType, tValue, traceback):
 sys.excepthook = TracebackHook
 
 eg.colour = eg.Colour()
-eg.config = eg.Config()
-eg.debugLevel = int(eg.config.logDebug)
 if eg.startupArguments.isMain and not eg.startupArguments.translate:
     eg.text = eg.Text(eg.config.language)
 else:
