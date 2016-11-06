@@ -166,15 +166,13 @@ class Document(object):
         if not self.selection.DropTest(eg.EventItem):
             self.DisplayError("cantAddEvent")
             return
-        #result = eg.AddEventDialog.GetResult(self)
-        #if result is None:
-        #    return
-        #label = result[0]
-        #return eg.UndoHandler.NewEvent(self.document).Do(
-        #    self.treeCtrl.GetSelectedNode(),
-        #    label=label
-        #)
-        return eg.UndoHandler.NewEvent(self).Do(self.selection)
+        result = eg.AddEventDialog.GetResult(self.frame)
+        if result is None:
+           return
+        return eg.UndoHandler.NewEvent(self).Do(
+            self.selection,
+            label=result[0]
+        )
 
     @eg.AssertInMainThread
     def CmdAddFolder(self):
