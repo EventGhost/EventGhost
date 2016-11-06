@@ -352,9 +352,6 @@ eg.app = eg.App()
 import Icons  # NOQA
 eg.Icons = Icons
 
-eg.config = eg.Config()
-eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
-
 eg.log = eg.Log()
 eg.Print = eg.log.Print
 eg.PrintError = eg.log.PrintError
