@@ -64,23 +64,31 @@ class BuildChangelog(builder.Task):
         included_prs = []
         item = {}
         while page > 0:
-            rc, data = gh.repos[user][repo].commits.get(
+            rc, data = gh.repos[user][repo].pulls.get(
+                state="closed",
+                base="master",
                 sha=branch,
                 per_page=100,
                 page=page
             )
+            # rc, data = gh.repos[user][repo].commits.get(
+            #     sha=branch,
+            #     per_page=100,
+            #     page=page
+            # )
             if rc != 200:
                 raise BuildError("Couldn't get commits.")
             for item in data:
-                if item['sha'] in to_commits:
+                if item['merge_commit_sha'] in to_commits:
                     break
-                try:
-                    msg = item['commit']['message'].splitlines()[0]
-                    if msg.startswith("Merge pull request #"):
-                        included_prs.append(int(msg.split()[3][1:]))
-                except IndexError:
-                    pass
-            if item['sha'] in to_commits:
+                included_prs.append(item["number"])
+                # try:
+                #     msg = item['commit']['message'].splitlines()[0]
+                #     if msg.startswith("Merge pull request #"):
+                #         included_prs.append(int(msg.split()[3][1:]))
+                # except IndexError:
+                #     pass
+            if item['merge_commit_sha'] in to_commits:
                 break
             page = NextPage(gh)
 
@@ -91,8 +99,8 @@ class BuildChangelog(builder.Task):
             rc, data = gh.search.issues.get(
                 q='type:pr is:merged '
                   '-label:internal '
-                  'user:EventGhost '
-                  'repo:EventGhost',
+                  # 'user:{0} '
+                   'repo:{0}/{1}'.format(user, repo),
                 sort="created",
                 order="asc",
                 per_page=100,
