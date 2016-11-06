@@ -360,6 +360,9 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
+eg.config = eg.Config()
+eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
+
 def TracebackHook(tType, tValue, traceback):
     eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
 sys.excepthook = TracebackHook
