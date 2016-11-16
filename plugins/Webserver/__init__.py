@@ -19,6 +19,8 @@ version = "3.13"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 3.13.2 by david-mark 2016-11-18 20:00 UTC+1
+#     - bugfix (Fixed incorrect "latin1" decoding)
 # 3.13.1 by Sem;colon 2016-11-06 01:00 UTC+1
 #     - bugfix (Added "self.protocol_version = 'HTTP/1.1'" for ws connections)
 # 3.13 by Sem;colon 2016-10-29 01:00 UTC+1
@@ -1404,7 +1406,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         path, dummy, remaining = self.path.partition("?")
         if remaining:
             queries = remaining.split("#", 1)[0].split("&")
-            queries = [unquote_plus(part).decode("latin1") for part in queries]
+            queries = [unquote_plus(part).decode("utf-8") for part in queries]
             if len(queries) > 0:
                 event = queries.pop(0).strip()
                 if "withoutRelease" in queries:
