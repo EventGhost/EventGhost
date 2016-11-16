@@ -1407,7 +1407,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         if remaining:
             queries = remaining.split("#", 1)[0].split("&")
             #print "queries =",queries
-            queries = [unquote_plus(part).decode("latin1") for part in queries]
+            queries = [unquote_plus(part).decode("utf-8") for part in queries]
             if len(queries) > 0:
                 event = queries.pop(0).strip()
                 if "withoutRelease" in queries:
