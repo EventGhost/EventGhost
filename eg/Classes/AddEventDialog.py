@@ -32,6 +32,10 @@ class Config(eg.PersistentData):
 class Text(eg.TranslatableStrings):
     title = "Add Event..."
     descriptionLabel = "Description"
+    noDescription = "<i>No description available</i>"
+    userEventLabel = "Manually enter event"
+    userEvent = "If an event is not in the list of available events," \
+                " it can be manually entered here."
 
 
 class AddEventDialog(eg.TaskletDialog):
@@ -39,12 +43,9 @@ class AddEventDialog(eg.TaskletDialog):
     def Configure(self, parent):
         global gLastSelected
         self.resultData = None
-        eg.TaskletDialog.__init__(
-            self,
-            parent,
-            -1,
-            Text.title,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
+        super(AddEventDialog, self).__init__(
+            parent=parent, id=wx.ID_ANY, title=Text.title,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
         splitterWindow = wx.SplitterWindow(
             self,
@@ -56,17 +57,31 @@ class AddEventDialog(eg.TaskletDialog):
             )
         )
 
-        style = wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT | wx.TR_FULL_ROW_HIGHLIGHT
-        tree = wx.TreeCtrl(splitterWindow, -1, style=style)
+        leftPanel = wx.Panel(splitterWindow)
+        self.tree = tree = wx.TreeCtrl(leftPanel, -1,
+                           style=wx.TR_DEFAULT_STYLE |
+                                 wx.TR_HIDE_ROOT |
+                                 wx.TR_FULL_ROW_HIGHLIGHT
+                           )
         tree.SetMinSize((100, 100))
         tree.SetImageList(eg.Icons.gImageList)
-        self.tree = tree
 
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivated)
         tree.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
         tree.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnStartDrag)
+        tree.Bind(wx.EVT_SET_FOCUS, self.OnFocusTree)
+
+        self.userEvent = wx.TextCtrl(leftPanel, wx.ID_ANY,
+                                     style=wx.TE_PROCESS_ENTER)
+        self.userEvent.Bind(wx.EVT_TEXT_ENTER, self.OnTextEnter)
+        self.userEvent.Bind(wx.EVT_SET_FOCUS, self.OnFocusUserEvent)
+
+        leftSizer =  wx.BoxSizer(wx.VERTICAL)
+        leftSizer.Add(tree, 1, wx.EXPAND)
+        leftSizer.Add(self.userEvent, 0, wx.EXPAND)
+        leftPanel.SetSizer(leftSizer)
 
         rightPanel = self.rightPanel = wx.Panel(splitterWindow)
         rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
@@ -87,7 +102,7 @@ class AddEventDialog(eg.TaskletDialog):
         staticBoxSizer.Add(self.docText, 1, wx.EXPAND)
         rightSizer.Add(staticBoxSizer, 1, wx.EXPAND, 5)
 
-        splitterWindow.SplitVertically(self.tree, rightPanel)
+        splitterWindow.SplitVertically(leftPanel, rightPanel)
         splitterWindow.SetMinimumPaneSize(60)
         splitterWindow.UpdateSize()
 
@@ -117,7 +132,7 @@ class AddEventDialog(eg.TaskletDialog):
         tree = self.tree
         for plugin in eg.pluginList:
             eventList = plugin.info.eventList
-            if eventList is None:
+            if not eventList:
                 continue
             item = tree.AppendItem(self.root, plugin.name)
             tree.SetPyData(item, plugin.info)
@@ -133,7 +148,7 @@ class AddEventDialog(eg.TaskletDialog):
         item = self.tree.GetSelection()
         data = self.tree.GetPyData(item)
         if isinstance(data, EventInfo):
-            self.OnOK()
+            self.OnOK(event)
         else:
             event.Skip()
 
@@ -142,6 +157,20 @@ class AddEventDialog(eg.TaskletDialog):
 
     def OnExpanded(self, event):
         self.tree.GetPyData(event.GetItem()).expanded = True
+
+    def OnFocusTree(self, event):
+        item = self.tree.GetSelection()
+        try:
+            self.DoSelectionChanged(item)
+        except AssertionError:
+            pass
+        event.Skip()
+
+    def OnFocusUserEvent(self, event):
+        self.nameText.SetLabel(Text.userEventLabel)
+        self.docText.SetBasePath("")
+        self.docText.SetPage(Text.userEvent)
+        event.Skip()
 
     @eg.LogItWithReturn
     def OnStartDrag(self, event):
@@ -164,35 +193,43 @@ class AddEventDialog(eg.TaskletDialog):
         item = event.GetItem()
         if not item.IsOk():
             return
-        data = self.tree.GetPyData(item)
+        self.DoSelectionChanged(item)
+
+    def DoSelectionChanged(self, item):
+        try:
+            data = self.tree.GetPyData(item)
+        except RuntimeError:
+            return
         if isinstance(data, EventInfo):
             self.resultData = data.info.eventPrefix + "." + data.name
             self.buttonRow.okButton.Enable(True)
+            self.userEvent.SetValue(self.resultData)
             path = data.info.path
         else:
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
+            self.userEvent.SetValue("")
             path = data.path
         self.nameText.SetLabel(data.name)
         self.docText.SetBasePath(path)
-        self.docText.SetPage(data.description)
+        self.docText.SetPage(
+            data.description if data.description else Text.noDescription
+        )
+
+    def OnTextEnter(self, event):
+        value = event.GetString()
+        if value:
+            self.resultData = value
+            self.buttonRow.okButton.Enable(True)
+        else:
+            self.resultData = None
+            self.buttonRow.okButton.Enable(False)
 
     def ReloadTree(self):
         tree = self.tree
         tree.DeleteAllItems()
         self.root = tree.AddRoot("Functions")
-        self.lastSelectedTreeItem = None
         self.FillTree()
-
-        if self.lastSelectedTreeItem:
-            item = self.lastSelectedTreeItem
-            while True:
-                item = tree.GetItemParent(item)
-                if item == self.root:
-                    break
-                tree.EnsureVisible(item)
-            tree.SelectItem(self.lastSelectedTreeItem)
-
 
 class EventInfo:
     icon = eg.Icons.EVENT_ICON
