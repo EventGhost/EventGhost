@@ -41,7 +41,8 @@ NOTICE_ICON = eg.Icons.NOTICE_ICON
 
 class DummyLogCtrl(object):
     def WriteLine(self, line, icon, wRef, when, indent):
-        oldStdOut.write("%s\n" % line)
+        #oldStdOut.write("%s\n" % line)
+        pass
 
 
 class Log(object):
@@ -80,12 +81,25 @@ class Log(object):
             if hasattr(_oldStdErr, "_displayMessage"):
                 _oldStdErr._displayMessage = False
         if eg.debugLevel:
+            import platform
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
             self.PrintDebugNotice("----------------------------------------")
-            self.PrintDebugNotice("        EventGhost started")
+            self.PrintDebugNotice("        {0} started".format(eg.APP_NAME))
             self.PrintDebugNotice("----------------------------------------")
-            self.PrintDebugNotice("Version:", eg.Version.string)
+            self.PrintDebugNotice(eg.APP_NAME, "Version:", eg.Version.string)
+            self.PrintDebugNotice("Machine type:", platform.machine())
+            self.PrintDebugNotice("Processor:", platform.processor())
+            self.PrintDebugNotice("Architecture:", platform.architecture())
+            self.PrintDebugNotice(
+                "Python:",
+                platform.python_branch(),
+                platform.python_version(),
+                platform.python_implementation(),
+                platform.python_build(),
+                "[{0}]".format(platform.python_compiler())
+            )
+            self.PrintDebugNotice("----------------------------------------")
 
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
@@ -109,7 +123,7 @@ class Log(object):
             start = 0
             end = len(self.data)
         elif numLines > len(self.data):
-            numLines = len(self.data)
+            end = len(self.data)
         data = list(self.data)
         return data[start:end]
 

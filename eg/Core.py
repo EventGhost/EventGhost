@@ -64,7 +64,7 @@ eg.sitePackagesDir = join(
 )
 eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
-eg.debugLevel = 0
+eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
 eg.result = None
@@ -360,13 +360,14 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
+eg.config = eg.Config()
+eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
+
 def TracebackHook(tType, tValue, traceback):
     eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
 sys.excepthook = TracebackHook
 
 eg.colour = eg.Colour()
-eg.config = eg.Config()
-eg.debugLevel = int(eg.config.logDebug)
 if eg.startupArguments.isMain and not eg.startupArguments.translate:
     eg.text = eg.Text(eg.config.language)
 else:

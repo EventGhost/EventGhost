@@ -37,9 +37,12 @@ mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 
 # determine the commandline parameters
 import __main__  # NOQA
+
+
 class args:
     allowMultiLoad = False
     configDir = None
+    debugLevel = 0
     hideOnStartup = False
     install = False
     isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
@@ -52,7 +55,11 @@ class args:
 if args.isMain:
     for arg in argvIter:
         arg = arg.lower()
-        if arg in ("-n", "-netsend"):
+        if arg.startswith('-debug'):
+            args.debugLevel = 1
+            if len(arg) > 6:
+                args.debugLevel = int(arg[6:])
+        elif arg in ("-n", "-netsend"):
             from Classes.NetworkSend import Main
             Main(list(argvIter))
             sys.exit(0)
