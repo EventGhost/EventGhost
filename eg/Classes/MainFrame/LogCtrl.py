@@ -79,6 +79,8 @@ class LogCtrl(wx.ListCtrl):
 
         # logger popup menu
         menu = wx.Menu()
+        menu.Append(wx.ID_SELECTALL, eg.text.MainFrame.Menu.SelectAll)
+        self.Bind(wx.EVT_MENU, self.OnCmdSelectAll, id=wx.ID_SELECTALL)
         menu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
         self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
         menu.AppendSeparator()
@@ -97,6 +99,12 @@ class LogCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
+
+        accel_entries = [
+            wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('A'), wx.ID_SELECTALL)
+        ]
+        accel = wx.AcceleratorTable(accel_entries)
+        self.SetAcceleratorTable(accel)
 
         self.logTimes = True
         self.__inSelection = False
@@ -190,6 +198,10 @@ class LogCtrl(wx.ListCtrl):
                 payload = literal_eval(parts[1]) if len(parts) == 2 else None
                 eg.TriggerEvent(suffix, payload, prefix)
             item = self.GetNextSelected(item)
+
+    def OnCmdSelectAll(self, dummyEvent=None):
+        for idx in range(self.GetItemCount()):
+            self.Select(idx)
 
     def OnDoubleClick(self, event):
         item, flags = self.HitTest(event.GetPosition())
