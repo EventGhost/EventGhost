@@ -202,7 +202,7 @@ class Broadcast(eg.ActionWithStringParameter):
             UDPSock.sendto(eg.ParseString(eventString).encode('utf-8'),addr)
         else:
             bits = payload.split(self.plugin.payDelim)
-            bits = [bit.encode('utf-8') for bit in bits]
+            bits = [eg.ParseString(bit).encode('utf-8') for bit in bits]
             payload = self.plugin.payDelim.join(bits);
             
             UDPSock.sendto(eg.ParseString(eventString).encode('utf-8') + self.plugin.payDelim + payload,addr)
