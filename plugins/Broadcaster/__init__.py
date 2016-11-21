@@ -202,7 +202,7 @@ class Broadcast(eg.ActionWithStringParameter):
         UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if (payload==None):
-            UDPSock.sendto(eg.ParseString(eventString),addr)
+            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding),addr)
         else:
             bits = payload.split(self.plugin.payDelim);
             bits = [eg.ParseString(bit) for bit in bits];
