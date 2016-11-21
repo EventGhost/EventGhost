@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# $LastChangedDate: 2008-06-29 21:09:03 +0100 (So, 18 Nov 2007) $
-# $LastChangedRevision: 501 $
-# $LastChangedBy: jitterjames $
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Broadcaster",
-    author = "Kingtd/Bitmonster",
-    version = "2.2." + "$LastChangedRevision: 500 $".split()[1],
+    author = (
+        "Kingtd",
+        "Bitmonster",
+    ),
+    version = "2.2.501",
     description = (
         "Listens for and Transmits UDP Broadcasts"
     ),
@@ -71,7 +71,7 @@ class Server(asyncore.dispatcher):
         else:
             addrs = socket.gethostbyname_ex(socket.gethostname())[2]
             self.listenAddr = addrs[0]
-        
+
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         eg.RestartAsyncore()
@@ -79,9 +79,7 @@ class Server(asyncore.dispatcher):
         self.bind((self.listenAddr, self.port))
 
     def handle_connect(self):
-        print "%s %s:%s. %s %s."  % (self.plugin.text.message_1, self.listenAddr, str(self.port), 
-
-self.plugin.text.message_2, str(self.selfBroadcast))
+        print "%s %s:%s. %s %s."  % (self.plugin.text.message_1, self.listenAddr, str(self.port), self.plugin.text.message_2, str(self.selfBroadcast))
         pass
 
     def handle_read(self):
@@ -91,7 +89,6 @@ self.plugin.text.message_2, str(self.selfBroadcast))
         my_addr = addr[0] in self.addresses
 
         if (not my_addr) or self.selfBroadcast:
-
             data = data.decode(eg.systemEncoding)
 
             bits = data.split(self.payDelim);
@@ -102,11 +99,11 @@ self.plugin.text.message_2, str(self.selfBroadcast))
             if commandSize==2:
                 self.plugin.TriggerEvent(bits[0],bits[1])
             if commandSize>2:
-                self.plugin.TriggerEvent(bits[0],bits[1:])  
+                self.plugin.TriggerEvent(bits[0],bits[1:])
 
     def writable(self):
         return False  # we don't have anything to send !
-        
+
 
 class BroadcastListener(eg.PluginBase):
 
@@ -122,10 +119,10 @@ class BroadcastListener(eg.PluginBase):
 
     text = Text
     canMultiLoad = True
-   
+
     def __init__(self):
         self.AddAction(Broadcast)
-  
+
     def __start__(self, prefix=None, zone="255.255.255.255", port=33333, selfBroadcast=False, payDelim="&&", listenAddr=""):
         self.info.eventPrefix = prefix
         self.port = port
@@ -144,9 +141,7 @@ class BroadcastListener(eg.PluginBase):
             self.server.close()
         self.server = None
 
-    def Configure(self, prefix="Broadcast", zone="255.255.255.255", port=33333, selfBroadcast=False, payDelim="&&", 
-
-listenAddr=""):
+    def Configure(self, prefix="Broadcast", zone="255.255.255.255", port=33333, selfBroadcast=False, payDelim="&&", listenAddr=""):
         text = self.text
         panel = eg.ConfigPanel(self)
 
@@ -160,7 +155,7 @@ listenAddr=""):
 
         editCtrl = panel.TextCtrl(prefix)
         zoneCtrl = panel.TextCtrl(zone)
-        portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)        
+        portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         listenAddrCtrl = panel.Choice(addr, addrs)
         selfBroadcastCtrl=panel.CheckBox(selfBroadcast)
         payDelimCtrl = panel.TextCtrl(payDelim)
@@ -200,14 +195,14 @@ class Broadcast(eg.ActionWithStringParameter):
     def bcastSend(self, eventString, payload="", port=0):
         if (port==None):
             sendToPort=self.plugin.port
-        else:                
+        else:
             sendToPort=int(port)
-        
+
         addr = (self.plugin.zone, sendToPort)
         UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if (payload==None):
-            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding),addr)
+            UDPSock.sendto(eg.ParseString(eventString),addr)
         else:
             bits = payload.split(self.plugin.payDelim);
             bits = [eg.ParseString(bit) for bit in bits];
@@ -216,28 +211,28 @@ class Broadcast(eg.ActionWithStringParameter):
 
             UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding) + self.plugin.payDelim.encode(eg.systemEncoding) + payload,addr)
         UDPSock.close()
-    
-        
+
+
     def Configure(self, command="", payload="", port=""):
         text = self.text
         panel = eg.ConfigPanel(self)
-        
+
         commandCtrl = panel.TextCtrl(command)
         payloadCtrl = panel.TextCtrl(payload)
         portCtrl = panel.SpinIntCtrl(port, min=0, max=65535)
-        commandlabel = panel.StaticText(text.command) 
+        commandlabel = panel.StaticText(text.command)
         payloadlabel = panel.StaticText(text.payload)
         portlabel =panel.StaticText(text.sendport)
-        panel.sizer.Add(commandlabel,0,wx.EXPAND) 
+        panel.sizer.Add(commandlabel,0,wx.EXPAND)
         panel.sizer.Add(commandCtrl,0,wx.EXPAND)
         panel.sizer.Add((20, 20))
-        panel.sizer.Add(payloadlabel,0,wx.EXPAND) 
+        panel.sizer.Add(payloadlabel,0,wx.EXPAND)
         panel.sizer.Add(payloadCtrl,0,wx.EXPAND)
         panel.sizer.Add((20, 20))
-        panel.sizer.Add(portlabel,0) 
+        panel.sizer.Add(portlabel,0)
         panel.sizer.Add(portCtrl,0)
         panel.sizer.Add((20, 20))
 
-        
+
         while panel.Affirmed():
             panel.SetResult(commandCtrl.GetValue(), payloadCtrl.GetValue(), portCtrl.GetValue())
