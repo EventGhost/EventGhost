@@ -17,12 +17,12 @@ Objects
 
 .. attribute:: event
 
-    The :class:`eg.EventGhostEvent` instance, that is currently
-    been processed.
+    The :class:`eg.EventGhostEvent` instance that is currently
+    being processed.
     
 .. attribute:: globals
 
-    Namespace, that holds all global variables used by
+    Namespace that holds all global variables used by
     PythonCommand actions. PythonScripts (and all other code) can access
     these globals through :obj:`eg.globals`.
 
@@ -55,4 +55,3 @@ Functions
 .. autofunction:: eg.RegisterPlugin
 
 .. autofunction:: eg.PrintError
-

@@ -18,7 +18,7 @@ The EventGhost main executable accepts the following command line arguments:
 .. cmdoption:: -hide
 
     Starts EventGhost hidden in the system tray. Otherwise it would start in
-    the state it had as it was closed.
+    the state it had when it was closed.
 
 
 .. cmdoption:: -h
@@ -39,13 +39,13 @@ The EventGhost main executable accepts the following command line arguments:
 
 .. cmdoption:: -n <host>:<port> <password> <eventname> [<payload> ...]
 
-    This one is similar to the *-event* option, but sends the event <eventname> 
-    through TCP/IP like the 'Network Event Sender' plugin does. It will not 
-    start EventGhost, so it can be used as a little helper tool for other 
-    applications or .BAT files to send events to a remote machine. <host> has 
-    to be the IP or host name of the target machine. <port> and <password> 
-    are the options that you have configured on the target machine's 'Network 
-    Event Receiver' plugin. 
+    This one is similar to the :option:`-event` option, but sends the event 
+    <eventname> through TCP/IP like the 'Network Event Sender' plugin does. It 
+    will not start EventGhost, so it can be used as a little helper tool for 
+    other applications or .BAT files to send events to a remote machine. 
+    <host> has to be the IP or host name of the target machine. <port> and 
+    <password> are the options that you have configured on the target 
+    machine's 'Network Event Receiver' plugin. 
 
 
 .. cmdoption:: -translate
@@ -58,7 +58,5 @@ The EventGhost main executable accepts the following command line arguments:
     Instructs EventGhost to use the directory <directory> to store and
     retrieve its settings. Without this option EventGhost uses a directory in
     the application data folder of your machine for storing its settings.
-    Through this option you can change the folder to a location on an USB
-    stick for example, to make EventGhost portable.
-
-
+    For example, through this option you can change the folder to a location 
+    on a USB stick to make EventGhost portable.

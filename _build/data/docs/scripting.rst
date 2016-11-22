@@ -18,25 +18,25 @@ PythonCommands execute a single-line Python statement or expression. All
 PythonCommands share a single global namespace, so you can create a global 
 variable with one PythonCommand and directly modify this variable with another 
 PythonCommand later. The global namespace includes all Python built-in objects 
-and the special object 'eg', that we will explain later.
+and the special object :mod:`eg`, that we will explain later.
 
 
 PythonScript
 ------------
 
 Every PythonScript in EventGhost has its own global namespace. The global 
-namespace includes all Python built-in objects and the special object 'eg'.
+namespace includes all Python built-in objects and the special object :mod:`eg`.
 
 
 The one and all 'eg' object
 ===========================
 
 Everything special that is needed from EventGhost for scripting and writing 
-plugins is stuffed into the 'eg' object. It includes many functions, 
-variables, classes and objects. You could actually say 'eg' is EventGhost 
+plugins is stuffed into the :mod:`eg` object. It includes many functions, 
+variables, classes and objects. You could actually say :mod:`eg` is EventGhost 
 itself.
 
-So we will explain some of the members of 'eg' here in more detail: 
+So we will explain some of the members of :mod:`eg` here in more detail: 
 
 Useful members
 --------------
@@ -49,7 +49,7 @@ is actually eg.globals. Since every PythonScript has its own global namespace,
 you can't directly access a value defined with a PythonCommand from a 
 PythonScript and vice versa, but you can access it through eg.globals.
 
-If you made for example a PythonCommand like 'myVar = 123', you can later 
+If you made, for example, a PythonCommand like 'myVar = 123', you can later 
 write in a PythonScript::
 
     print eg.globals.myVar
@@ -76,7 +76,7 @@ eg.plugins, when it is loaded. And every action is a named member of a plugin.
 To find out the name of the action (and its plugin) you can simply create an 
 action in EventGhost's tree, copy this action-item and paste it to a text 
 editor like Notepad (or even EventGhost's built-in PythonScript editor). As an 
-example you will see this for 'System/Turn Off Mute'::
+example, you will see something like this for 'System/Turn Mute Off'::
 
     <?xml version="1.0" encoding="UTF-8" ?>
     <EventGhost Version="532">
@@ -91,7 +91,7 @@ PythonScript::
 
     eg.plugins.System.MuteOff()
 
-and it will exactly do the same as a 'System/Turn Off Mute' action.
+and it will exactly do the same as a 'System/Turn Mute Off' action.
 
 Actions might also have parameters, so you will find that a 'Window/Resize' 
 action, that should resize a window to 200 pixels width and 300 pixels height 
@@ -126,10 +126,10 @@ eg.event.time
     The time the event was generated as a floating point number in seconds (as returned by the clock() function of Python's time module). Since most events are processed very quickly, this is most likely nearly the current time. But in some situations it might be more clever to use this time, instead of the current time, since even small differences might matter (for example if you want to determine a double-press). 
 
 eg.event.source
-    This is the object, that has generated the event. For most events, the source is a plugin-object but for some built-in events and events generated through eg.TriggerEvent(), this will be our beloved 'eg' object. 
+    This is the object that has generated the event. For most events, the source is a plugin-object but for some built-in events and events generated through eg.TriggerEvent(), this will be our beloved :mod:`eg` object. 
 
 eg.event.isEnded
-    This boolean value indicates if the event is an enduring event and is still active. Some plugins (e.g. most of the remote receiver plugins) indicate if a button is pressed longer. As long as the button is pressed, this flag is 'False' and in the moment the user releases the button the flag turns to 'True'. So you can poll this flag to see, if the button is still pressed. 
+    This boolean value indicates if the event is an enduring event and is still active. Some plugins (e.g. most of the remote receiver plugins) indicate if a button is pressed longer. As long as the button is pressed, this flag is 'False' and in the moment the user releases the button the flag turns to 'True'. So you can poll this flag to see if the button is still pressed. 
 
     
 eg.result
@@ -137,7 +137,7 @@ eg.result
 
 Every action in EventGhost returns a result. For most actions this is simply 
 Python's None, but some might return a result that is useful for later 
-evaluation. For example the 'Window/Find Window' action returns a list of the 
+evaluation. For example, the 'Window/Find Window' action returns a list of the 
 window-handles it has found (or an empty list if it hasn't found anything). So 
 you can place a PythonScript directly after the 'Find Window' action and do 
 something with this list.
@@ -168,7 +168,7 @@ usage::
 This will generate a "Main.MyEvent" event. Actually you could also use the 
 'EventGhost/TriggerEvent' action with 
 eg.plugins.EventGhost.TriggerEvent("MyEvent"), following the pattern described 
-above, but for convenience this function is also exposed directly from 'eg'. 
+above, but for convenience this function is also exposed directly from :mod:`eg`. 
 
 
 .. function:: eg.Exit()

@@ -2,15 +2,15 @@
 X10 Remotes
 ===========
 
-If you notice, that your remote sends keystrokes even if EventGhost is not
+If you notice that your remote sends keystrokes even if EventGhost is not
 started, you most likely have installed the wrong driver. Some manufacturers
-deliver a driver, that registers the remote as a HID (Human Interface Device).
-Even though HID might be fine, if you really don't won't to use any third party
-program, it gives you trouble with tools like EventGhost, because they are not
+deliver a driver that registers the remote as a HID (Human Interface Device).
+Even though HID might be fine if you really don't want to use any third party
+program, it gives you trouble with tools like EventGhost because they are not
 able to stop these drivers from sending keystrokes.
 
-To make sure which driver your remote currently uses, open the device manager
-and look for a category "Human Interface Devices". If you find an entry named
+To make sure which driver your remote currently uses, open Device Manager and
+look for a category "Human Interface Devices". If you find an entry named
 "X10 Hid Device" there, you have the wrong driver.
 
 .. image:: _static/x10_hid_device_manager.png
@@ -39,16 +39,16 @@ have to use some tricks:
    and select :guilabel:`(Standard system devices)`.
 #. The first entry on the right side should now be :guilabel:`2-axis, 2-button
    joystick`. Select this entry and press :guilabel:`Next`.
-#. You will now get a warning dialog, that it is not recommended to install
+#. You will now get a warning dialog that it is not recommended to install
    this driver. Ignore it and press :guilabel:`Yes`.
-#. Now press :guilabel:`Finish` on the last page and if you are asked to
+#. Now press :guilabel:`Finish` on the last page. If you are asked to
    restart your computer now, affirm it with :guilabel:`Yes` and let the
    computer reboot.
-#. After your computer is back, open the device manager again. You will now
-   see the joystick entry with a yellow exclamation mark. Right click this
-   entry to open the context menu and choose :guilabel:`Uninstall`. Affirm
-   that you really want to uninstall it on the next dialog and the entry
-   should disappear.
+#. After your computer is back, open Device Manager again. You will now see 
+   the joystick entry with a yellow exclamation mark. Right click this entry 
+   to open the context menu and choose :guilabel:`Uninstall`. Affirm that you 
+   really want to uninstall it on the next dialog and the entry should 
+   disappear.
 
 Now you should install the proper driver before you reconnect your receiver.
 
@@ -56,5 +56,3 @@ You can download the driver here:
 
 * `X10 driver for 32-bit Windows <http://www.eventghost.org/downloads/x10drivers_x86.exe>`_.
 * `X10 driver for 64-bit Windows <http://www.eventghost.org/downloads/x10drivers_x64.exe>`_.
-
-

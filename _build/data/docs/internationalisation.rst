@@ -9,7 +9,7 @@ straightforward.
 
 Somewhere in your code (preferable at the beginning) you should create a class 
 for all strings you need. You can use any attribute name freely inside this 
-class, except *name* and *description* as these attributes are used to set and 
+class except *name* and *description* as these attributes are used to set and 
 translate the corresponding fields of your :class:`eg.PluginBase` and the 
 :class:`eg.ActionBase` subclasses you might have. For every 
 :class:`eg.ActionBase` you define, you can create a class inside your 'Text' 
@@ -26,14 +26,14 @@ As an example look at this (quite useless) code::
         class Message1:
             name = "Print first Message"
             description = (
-                "This is a quite useless action, that will print a message "
+                "This is a quite useless action that will print a message "
                 "to the logger"
             )
             message = "This is just a message"
         class Message2:
             name = "Print second Message"
             description = (
-                "This is another quite useless action, that will print a "
+                "This is another quite useless action that will print a "
                 "message to the logger"
             )
             message = "This is another message"
@@ -97,7 +97,7 @@ the same as the above::
     class Message1(eg.ActionBase):
         name = "Print first Message"
         description = (
-            "This is a quite useless action, that will print a message to "
+            "This is a quite useless action that will print a message to "
             "the logger"
         )
         text = Message1Text # <- setting the 'text' attribute for the action
@@ -107,7 +107,7 @@ the same as the above::
     
     
     class Message2(eg.ActionBase):
-        # You can also define directly a nested class, if you name it 'text'.
+        # You can also define directly a nested class if you name it 'text'.
         # If the action class has no attribute 'name' or 'description', 
         # EventGhost will look inside the 'text' class and use them if they 
         # are defined there. So you can piece together everything in the 
@@ -115,7 +115,7 @@ the same as the above::
         class text:
             name = "Print second Message" 
             description = (
-                "This is another quite useless action, that will print a "
+                "This is another quite useless action that will print a "
                 "message to the logger"
             )
             message = "This is another message"
@@ -123,7 +123,7 @@ the same as the above::
         def __call__(self):
             print self.text.message
 
-It is also important to note, that your plugin should be able to get imported 
+It is also important to note that your plugin should be able to get imported 
 and the __init__() method should be able to be called under all circumstances. 
 If a translator uses the translation editing tool of EventGhost, this tool 
 will import every plugin and call the __init__() method of every plugin, to 
