@@ -89,7 +89,9 @@ class Server(asyncore.dispatcher):
         my_addr = addr[0] in self.addresses
 
         if (not my_addr) or self.selfBroadcast:
-            bits = data.split(str(self.payDelim))
+            bits = data.split(self.payDelim)
+            bits = [bit.decode(eg.systemEncoding) for bit in bits]
+            
             commandSize=len(bits)
             if commandSize==1:
                 self.plugin.TriggerEvent(bits[0])
