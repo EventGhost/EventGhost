@@ -199,9 +199,13 @@ class Broadcast(eg.ActionWithStringParameter):
         UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if (payload==None):
-            UDPSock.sendto(eg.ParseString(eventString),addr)
+            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding),addr)
         else:
-            UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
+            bits = payload.split(self.plugin.payDelim)
+            bits = [eg.ParseString(bit).encode(eg.systemEncoding) for bit in bits]
+            payload = self.plugin.payDelim.join(bits);
+            
+            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding) + self.plugin.payDelim + payload,addr)
         UDPSock.close()
 
 
