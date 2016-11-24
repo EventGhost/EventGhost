@@ -17,20 +17,6 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-# $LastChangedDate: 2016-07-13 00:51:00 -0600 $
-# $LastChangedRevision: 501 $
-# $LastChangedBy: K $
-
-
-# this widget is a modified version of the wx.Slider Widget.
-# It accepts all the same parameters as the wx Slider Widget. except one added
-# parameter you can set an increment value so if you want to have the slider
-# skip by a specified amount it will, this widget also has fully functioning
-# labels and ticks. with 2 modifications. it shows the float value and float
-# min and max, but i also added a little "flare" to it and the value moves with
-# the thumb control. there is 2 added functions as well one called GetIncrement
-# and the other is SetIncrement i think the name is pretty self explanatory.
-# enjoy the float slider
 
 import wx
 
@@ -51,6 +37,35 @@ class FloatSliderCtrl(wx.Panel):
         name=wx.SliderNameStr,
         **kwargs
     ):
+        """
+        This widget is a modified version of the wx.Slider Widget. It accepts
+        all the same parameters as the wx Slider Widget. Except one added
+        parameter you can set an increment value so if you want to have the
+        slider skip by a specified amount it will, this widget also has fully
+        functioning labels and ticks. with 2 modifications. it shows the float
+        value and float min and max, but i also added a little "flare" to it
+        and the value moves with the thumb control. there is 2 added functions
+        as well one called GetIncrement and the other is SetIncrement i think
+        the name is pretty self explanatory. enjoy the float slider
+
+        :param parent: a wx.Window item
+        :param id: defaulted to -1 which will automaically generate a new
+         wx.Id()
+        :param value: Starting value of the slider has to be a float()
+        :param minValue: The minimum the slider can move to. Has to be a
+        float()
+        :param maxValue: The maximum the slider can move to. Has to be a
+        float()
+        :param pos: Tuple for where you want the widget to be placed.
+        Defaulted to wx.DefaultPosition
+        :param size: Tuple for the displayed size of the widget. Defaulted to
+         wx.DefaultSize
+        :param style: same styles as the wx.Slider class
+        :param validator: wx.DefaultValidator
+        :param name: identifier for the widget. Defaulted to wx.SliderNameStr
+        :param kwargs: any additional keyword arguments that wx.Slider may
+         have
+        """
         if style | wx.SL_HORIZONTAL == style:
             horizontal = True
         elif style | wx.SL_VERTICAL == style:
