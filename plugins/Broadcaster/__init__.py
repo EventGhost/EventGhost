@@ -89,7 +89,10 @@ class Server(asyncore.dispatcher):
         my_addr = addr[0] in self.addresses
 
         if (not my_addr) or self.selfBroadcast:
-            bits = data.split(str(self.payDelim))
+            data = data.decode(eg.systemEncoding)
+
+            bits = data.split(self.payDelim);
+
             commandSize=len(bits)
             if commandSize==1:
                 self.plugin.TriggerEvent(bits[0])
@@ -199,9 +202,14 @@ class Broadcast(eg.ActionWithStringParameter):
         UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create socket
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if (payload==None):
-            UDPSock.sendto(eg.ParseString(eventString),addr)
+            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding),addr)
         else:
-            UDPSock.sendto(eg.ParseString(eventString)+self.plugin.payDelim+eg.ParseString(payload),addr)
+            bits = payload.split(self.plugin.payDelim);
+            bits = [eg.ParseString(bit) for bit in bits];
+
+            payload = self.plugin.payDelim.join(bits).encode(eg.systemEncoding);
+
+            UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding) + self.plugin.payDelim.encode(eg.systemEncoding) + payload,addr)
         UDPSock.close()
 
 
