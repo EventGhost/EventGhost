@@ -17,11 +17,26 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
+# CHANGELOG
+# added: keyword increment
+# changed: modified the docstring to have more detail for the styles and also
+#          added an entry for the increment keyword
+# fixed:   the value label was not tracking the thumb properly some new math
+#          fixed the issue
+# added:   event binding and unbinding - uses the wx.ScrollEvent to create a
+#          an event for the different scroll event types and properly attaches
+#          the FloatSlider instance as an event object
+# fixed:   some adjustment on the min/max/value labels to have them properly
+#          line up
+# added:   foreground and background colour changing
+# fixed:   gray background behind the widget is not set to the system window
+#          default
+# fixed:   if there was no style used and the size was set the widget wouldn't
+#          display
 
 import wx
 
-
-class FloatSliderCtrl(wx.Panel):
+class FloatSliderCtrl(wx.PyPanel):
 
     def __init__(
         self,
@@ -30,6 +45,7 @@ class FloatSliderCtrl(wx.Panel):
         value=-1,
         minValue=-1,
         maxValue=100.0,
+        increment=None,
         pos=wx.DefaultPosition,
         size=wx.DefaultSize,
         style=wx.SL_HORIZONTAL,
@@ -56,16 +72,39 @@ class FloatSliderCtrl(wx.Panel):
         float()
         :param maxValue: The maximum the slider can move to. Has to be a
         float()
+        :param increment: How much to increment the by when the slider is
+         moved. Default is None and if left at default there wil be some math
+         performed to set an increment amount.
         :param pos: Tuple for where you want the widget to be placed.
         Defaulted to wx.DefaultPosition
         :param size: Tuple for the displayed size of the widget. Defaulted to
          wx.DefaultSize
-        :param style: same styles as the wx.Slider class
+        :param style:
+        wx.SL_HORIZONTAL: Displays the slider horizontally (this is the default).
+        wx.SL_VERTICAL: Displays the slider vertically.
+        wx.SL_AUTOTICKS: Displays tick marks. Windows only.
+        wx.SL_MIN_MAX_LABELS: Displays minimum, maximum labels.
+        wx.SL_VALUE_LABEL: Displays value label.
+        wx.SL_LABELS: Displays minimum, maximum and value labels.
+        wx.SL_LEFT: Displays ticks on the left and forces the slider to be vertical.
+        wx.SL_RIGHT: Displays ticks on the right and forces the slider to be vertical.
+        wx.SL_TOP: Displays ticks on the top and forces slider to be horizontal.
+        wx.SL_BOTTOM: Displays ticks on the bottom and forces the slider to be horizontal.
+        wx.SL_SELRANGE: Allows the user to select a range on the slider. Windows only.
+        wx.SL_INVERSE: Inverses the minimum and maximum endpoints on the slider.
+         Not compatible with wx.SL_SELRANGE.
+
+        Notice:
+        SL_LEFT , SL_TOP , SL_RIGHT and SL_BOTTOM specify the position of the
+        slider ticks in MSW implementation and that the min/max labels,
+        if any, are positioned on the opposite side. So, to have a label on
+        the left side of a vertical slider, wx.SL_RIGHT must be used.
         :param validator: wx.DefaultValidator
         :param name: identifier for the widget. Defaulted to wx.SliderNameStr
         :param kwargs: any additional keyword arguments that wx.Slider may
          have
         """
+
         if style | wx.SL_HORIZONTAL == style:
             horizontal = True
         elif style | wx.SL_VERTICAL == style:
@@ -124,33 +163,27 @@ class FloatSliderCtrl(wx.Panel):
         if minValue == -1:
             minValue = 0.0
 
-        if 'increment' in kwargs:
-            increment = kwargs.pop('increment')
-        else:
+        if increment is None:
             increment = 100 / (maxValue - minValue)
 
-        if vLabel or mLabel:
-            if size == wx.DefaultSize:
-                if horizontal:
-                    size = (-1, 80)
-                else:
-                    size = (110, -1)
-            elif size[0] == -1:
-                if not horizontal:
-                    size = (110, size[1])
-            elif size[1] == -1:
-                if horizontal:
-                    size = (size[0], 80)
+        if size == wx.DefaultSize and horizontal:
+            size = (-1, 80)
+        elif size == wx.DefaultSize:
+            size = (110, -1)
+        elif size[0] == -1 and not horizontal:
+            size = (110, size[1])
+        elif size[1] == -1 and horizontal:
+            size = (size[0], 80)
 
         if horizontal:
-            slidersize = (size[0], size[1] * 0.20)
+            sliderSize = (size[0], size[1] * 0.20)
         else:
-            slidersize = (size[0] * 0.43, size[1])
+            sliderSize = (size[0] * 0.27, size[1])
 
-        if slidersize[1] < 30 <= size[1]:
-            slidersize = (slidersize[0], 30)
+        if horizontal and sliderSize[1] < 30 <= size[1]:
+            sliderSize = (sliderSize[0], 30)
 
-        wx.Panel.__init__(self, parent, -1, size=size, pos=pos)
+        wx.PyPanel.__init__(self, parent, -1, size=size, pos=pos)
 
         sliderval, slidermin, slidermax = [
             round(v / increment) for v in (value, minValue, maxValue)
@@ -159,16 +192,16 @@ class FloatSliderCtrl(wx.Panel):
         self.Slider = wx.Slider(
             self,
             id,
+            size=sliderSize,
             value=sliderval,
             minValue=slidermin,
             maxValue=slidermax,
-            size=slidersize,
             style=style,
             name=name
         )
 
-        self.minValue = minValue
-        self.maxValue = maxValue
+        self.minValue = float(minValue)
+        self.maxValue = float(maxValue)
         self.value = value
         self.top = top
         self.left = left
@@ -180,9 +213,6 @@ class FloatSliderCtrl(wx.Panel):
         self.selEnd = None
         self.increment = increment
 
-        self.Slider.Bind(wx.EVT_SCROLL, self.OnSlider)
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-
         if horizontal:
             panelSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -193,10 +223,69 @@ class FloatSliderCtrl(wx.Panel):
         panelSizer.Add(self.Slider, 0, wx.EXPAND | wx.ALIGN_CENTER)
         panelSizer.AddStretchSpacer()
 
+        self.SetBackgroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+        )
+
+        self.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        )
+
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+
+        self.Slider.Bind(wx.EVT_SCROLL_TOP, self.OnTop)
+        self.Slider.Bind(wx.EVT_SCROLL_BOTTOM, self.OnBottom)
+        self.Slider.Bind(wx.EVT_SCROLL_LINEUP, self.OnLineUp)
+        self.Slider.Bind(wx.EVT_SCROLL_LINEDOWN, self.OnLineDown)
+        self.Slider.Bind(wx.EVT_SCROLL_PAGEUP, self.OnPageUp)
+        self.Slider.Bind(wx.EVT_SCROLL_PAGEDOWN, self.OnPageDown)
+        self.Slider.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnThumbTrack)
+        self.Slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnThumbRelease)
+        self.Slider.Bind(wx.EVT_SCROLL_CHANGED, self.OnChanged)
+
         self.SetSizer(panelSizer)
         self.Refresh()
+
+    def CreateEvent(self, event):
+        self.OnSlider()
+        event = wx.ScrollEvent(event, self.GetId())
+        event.SetEventObject(self)
+        self.GetEventHandler().ProcessEvent(event)
+        self.Slider.Refresh()
+        self.Refresh()
+
+    def OnTop(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_TOP)
+
+    def OnBottom(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_BOTTOM)
+
+    def OnLineUp(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_LINEUP)
+
+    def OnLineDown(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_LINEDOWN)
+
+    def OnPageUp(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_PAGEUP)
+
+    def OnPageDown(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_PAGEDOWN)
+
+    def OnThumbTrack(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_THUMBTRACK)
+
+    def OnThumbRelease(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_THUMBRELEASE)
+
+    def OnChanged(self, evt):
+        self.CreateEvent(wx.wxEVT_SCROLL_CHANGED)
+
+    def OnSize(self, evt):
+        self.Refresh()
+        evt.Skip()
 
     def __getattr__(self, item):
         if item in self.__dict__:
@@ -210,18 +299,25 @@ class FloatSliderCtrl(wx.Panel):
     def OnEraseBackground(self, dummyEvent):
         pass
 
-    def OnSize(self, evt):
-        self.Refresh()
-        evt.Skip()
-
     def OnPaint(self, evt):
-        value = float(self.value)
-        minValue = float(self.minValue)
-        maxValue = float(self.maxValue)
-        forecolour = self.Slider.GetForegroundColour()
-        backcolour = self.Slider.GetBackgroundColour()
+        value = self.value
+        if self.inverse:
+            maxValue = self.minValue
+            minValue = self.maxValue
+            sliderRange = minValue - maxValue
+        else:
+            minValue = self.minValue
+            maxValue = self.maxValue
+            sliderRange = maxValue - minValue
+
+        forecolour = self.GetForegroundColour()
+        backcolour = self.GetBackgroundColour()
+        self.Slider.SetForegroundColour(forecolour)
+        self.Slider.SetBackgroundColour(backcolour)
+
         bmp = wx.EmptyBitmap(*self.GetSizeTuple())
         font = self.Slider.GetFont()
+
         panelW, panelH = self.GetSize()
         sliderW, sliderH = self.Slider.GetSize()
         sliderX, sliderY = self.Slider.GetPosition()
@@ -241,75 +337,60 @@ class FloatSliderCtrl(wx.Panel):
             maxText = '%3.2f' % maxValue
             minText = '%3.2f' % minValue
 
-            if self.inverse:
-                minText, maxText = maxText, minText
-
             minW, minH = dc.GetTextExtent(maxText)
             maxW, maxH = dc.GetTextExtent(minText)
+
             if self.horizontal:
-                minX = sliderX
-                maxX = sliderX + sliderW - maxW
+                maxW += dc.GetTextExtent(maxText.split('.')[1])[0]
                 if self.top:
                     y = sliderY + sliderH
-                    minY = y
-                    maxY = y
                 else:
                     y = sliderY - minH
-                    minY = y
-                    maxY = y
-                maxX -= 4
+                minX = sliderX
+                maxX = panelW - maxW
+                minY = y
+                maxY = y
             else:
-                minY = sliderY
-                maxY = sliderY + sliderH - maxH
                 if self.left:
-                    x = sliderX + sliderW
-                    minX = x
-                    maxX = x
-                    maxY -= 5
-                    minY += 1
+                    x = sliderX + sliderW + 3
                 else:
                     x = sliderX - minW
-                    minX = x
-                    maxX = x
-                    maxY -= 1
-                    minY += 1
+                minY = sliderY
+                maxY = sliderY + sliderH - maxH
+                minX = x
+                maxX = x
             dc.DrawText(minText, minX, minY)
             dc.DrawText(maxText, maxX, maxY)
 
         if self.vLabel:
             valText = '%3.2f' % value
             valW, valH = dc.GetTextExtent(valText)
-            locRatio = value / (maxValue - minValue)
 
             if self.horizontal:
-                loc = sliderW * locRatio
-                if locRatio == 0:
-                    valX = 1
-                elif locRatio == 1:
-                    valX = sliderW - valW - 3
-                else:
-                    valX = loc - (valW % locRatio) - (valW * locRatio)
-
-                if self.top:
-                    valY = sliderY - valH
-                else:
-                    valY = (panelH / 2) + (sliderH * 0.65)
-
+                slider = float(sliderW)
+                val = valW
             else:
-                loc = sliderH * locRatio
-                if locRatio == 0:
-                    valY = 1
-                elif locRatio == 1:
-                    valY = sliderH - valH - 3
-                else:
-                    valY = loc - (valH * locRatio)
+                slider = float(sliderH)
+                val = valH
+            sldRatio = float(slider) / sliderRange
+            loc = sldRatio * value
 
-                if self.left:
-                    valX = sliderX - valW - 3
-                else:
-                    valX = sliderX + sliderW
+            if value == minValue:
+                pos = 0
+            elif value == maxValue:
+                pos = slider - val
+            else:
+                pos = loc - (val * (loc / slider))
 
-            dc.DrawText(valText, valX, valY)
+            if self.top:
+                pos = (pos, sliderY - valH)
+            elif self.left:
+                pos = (sliderX - valW - 3, pos)
+            elif self.horizontal:
+                pos = (pos, (panelH / 2) + (sliderH * 0.65))
+            else:
+                pos = (sliderX + sliderW, pos)
+            dc.DrawText(valText, *pos)
 
         dc.Destroy()
         del dc
@@ -328,19 +409,16 @@ class FloatSliderCtrl(wx.Panel):
         self.minTextCtrl.SetLabel('%3.2f' % minValue)
         self.maxTextCtrl.SetLabel('%3.2f' % maxValue)
 
-    def OnSlider(self, evt=None):
-        sliderval = self.Slider.GetValue()
-        slidermin = self.Slider.GetMin()
-        slidermax = self.Slider.GetMax()
-        if sliderval == slidermin:
+    def OnSlider(self):
+        sliderVal = self.Slider.GetValue()
+        sliderMin = self.Slider.GetMin()
+        sliderMax = self.Slider.GetMax()
+        if sliderVal == sliderMin:
             self.value = self.minValue
-        elif sliderval == slidermax:
+        elif sliderVal == sliderMax:
             self.value = self.maxValue
         else:
-            self.value = sliderval * self.increment
-        self.Refresh()
-        if evt is not None:
-            evt.Skip()
+            self.value = float(float(sliderVal) * self.increment)
 
     def SetMinMaxLabel(self, flag=True):
         self.mLabel = flag
@@ -386,20 +464,21 @@ class FloatSliderCtrl(wx.Panel):
 
     def SetValue(self, value):
         self.Slider.SetValue(round(value / self.increment))
-        self.value = value
+        self.value = float(value)
         self.Refresh()
 
     def SetMin(self, minValue):
         self.Slider.SetMin(round(minValue / self.increment))
-        self.minValue = minValue
+        self.minValue = float(minValue)
         self.UpdatePanel()
 
     def SetMax(self, maxValue):
         self.Slider.SetMax(round(maxValue / self.increment))
-        self.maxValue = maxValue
+        self.maxValue = float(maxValue)
         self.UpdatePanel()
 
     def SetIncrement(self, increment):
+        increment = float(increment)
         self.Slider.SetRange(
             round(self.minValue / increment),
             round(self.maxValue / increment)
@@ -409,6 +488,8 @@ class FloatSliderCtrl(wx.Panel):
         self.UpdatePanel()
 
     def SetRange(self, minValue, maxValue):
+        minValue = float(minValue)
+        maxValue = float(maxValue)
         self.Slider.SetRange(
             round(minValue / self.increment),
             round(maxValue / self.increment)
