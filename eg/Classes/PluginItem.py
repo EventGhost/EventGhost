@@ -83,11 +83,13 @@ class PluginItem(ActionItem):
     @eg.AssertInActionThread
     def Delete(self):
         info = self.info
+        guid = self.guid
 
         def DoIt():
             info.Close()
             info.instance.OnDelete()
             info.RemovePluginInstance()
+            eg.pluginManager.UninstallPackages(guid)
         eg.actionThread.Call(DoIt)
 
         ActionItem.Delete(self)
