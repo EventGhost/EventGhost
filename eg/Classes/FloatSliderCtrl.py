@@ -33,8 +33,13 @@
 #          default
 # fixed:   if there was no style used and the size was set the widget wouldn't
 #          display
+# changed: Swapped out the use of wx.Panel for use of wx.PyPanel since this is
+#          a custom control
+# added:   added almost all docstrings and also added comments on the voodoo
+#          code
 
 import wx
+
 
 class FloatSliderCtrl(wx.PyPanel):
 
@@ -42,8 +47,8 @@ class FloatSliderCtrl(wx.PyPanel):
         self,
         parent,
         id=-1,
-        value=-1,
-        minValue=-1,
+        value=None,
+        minValue=None,
         maxValue=100.0,
         increment=None,
         pos=wx.DefaultPosition,
@@ -105,6 +110,8 @@ class FloatSliderCtrl(wx.PyPanel):
          have
         """
 
+        # checking the styles and making changes as necessary to pass to the
+        # wxSlider widget
         if style | wx.SL_HORIZONTAL == style:
             horizontal = True
         elif style | wx.SL_VERTICAL == style:
@@ -133,6 +140,9 @@ class FloatSliderCtrl(wx.PyPanel):
         if style | wx.SL_SELRANGE == style:
             style = style ^ wx.SL_SELRANGE
 
+        # checking for styles that set the labels and remove them if there
+        # because we do not want the wxSlider to generate the labels as we are
+        # going to do that our selves
         if style | wx.SL_LABELS == style:
             style = style ^ wx.SL_LABELS
             mLabel = True
@@ -154,18 +164,23 @@ class FloatSliderCtrl(wx.PyPanel):
         else:
             inverse = False
 
-        if value == -1:
-            if minValue != -1:
-                value = minValue
-            else:
+        # here we check if the value was set. and if not we set it to minValue
+        # if that was not set to make the value 0.0
+        if value is None:
+            if minValue is None:
                 value = 0.0
+            else:
+                value = minValue
 
-        if minValue == -1:
+        if minValue is None:
             minValue = 0.0
 
+        # check to see if the increment was set and if not to set a generic one
         if increment is None:
             increment = 100 / (maxValue - minValue)
 
+        # checking the size and if either the width or height is -1 to plug in
+        # the numbers that will assure the widget gets fully displayed
         if size == wx.DefaultSize and horizontal:
             size = (-1, 80)
         elif size == wx.DefaultSize:
@@ -185,6 +200,8 @@ class FloatSliderCtrl(wx.PyPanel):
 
         wx.PyPanel.__init__(self, parent, -1, size=size, pos=pos)
 
+        # converting the minValue/maxValue/value so we can pass the modified
+        # values to the constructor of the wxSlider
         sliderval, slidermin, slidermax = [
             round(v / increment) for v in (value, minValue, maxValue)
         ]
@@ -213,6 +230,9 @@ class FloatSliderCtrl(wx.PyPanel):
         self.selEnd = None
         self.increment = increment
 
+        # create a sizer to place the wxSlider into this will control any of
+        # the sizing automatically. we add a stretch spacer before and after
+        # to ensure we have space to place our labels
         if horizontal:
             panelSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -223,6 +243,11 @@ class FloatSliderCtrl(wx.PyPanel):
         panelSizer.Add(self.Slider, 0, wx.EXPAND | wx.ALIGN_CENTER)
         panelSizer.AddStretchSpacer()
 
+        # setting the colors of wxPyPanel to the system default doing a redraw
+        # the slider will grab the colors and set them for the slider. this is
+        # done so if the user wants to set the colors it will propagate to the
+        # wxSlider
+
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
@@ -232,62 +257,104 @@ class FloatSliderCtrl(wx.PyPanel):
         )
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind(wx.EVT_SIZE, self._OnSize)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 
-        self.Slider.Bind(wx.EVT_SCROLL_TOP, self.OnTop)
-        self.Slider.Bind(wx.EVT_SCROLL_BOTTOM, self.OnBottom)
-        self.Slider.Bind(wx.EVT_SCROLL_LINEUP, self.OnLineUp)
-        self.Slider.Bind(wx.EVT_SCROLL_LINEDOWN, self.OnLineDown)
-        self.Slider.Bind(wx.EVT_SCROLL_PAGEUP, self.OnPageUp)
-        self.Slider.Bind(wx.EVT_SCROLL_PAGEDOWN, self.OnPageDown)
-        self.Slider.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnThumbTrack)
-        self.Slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnThumbRelease)
-        self.Slider.Bind(wx.EVT_SCROLL_CHANGED, self.OnChanged)
+        # binding to the various events the wxSlider can generate so when
+        # generated we can create a new event with this class set as the
+        # event object
+        self.Slider.Bind(wx.EVT_SCROLL_TOP, self._OnTop)
+        self.Slider.Bind(wx.EVT_SCROLL_BOTTOM, self._OnBottom)
+        self.Slider.Bind(wx.EVT_SCROLL_LINEUP, self._OnLineUp)
+        self.Slider.Bind(wx.EVT_SCROLL_LINEDOWN, self._OnLineDown)
+        self.Slider.Bind(wx.EVT_SCROLL_PAGEUP, self._OnPageUp)
+        self.Slider.Bind(wx.EVT_SCROLL_PAGEDOWN, self._OnPageDown)
+        self.Slider.Bind(wx.EVT_SCROLL_THUMBTRACK, self._OnThumbTrack)
+        self.Slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self._OnThumbRelease)
+        self.Slider.Bind(wx.EVT_SCROLL_CHANGED, self._OnChanged)
 
         self.SetSizer(panelSizer)
         self.Refresh()
 
-    def CreateEvent(self, event):
-        self.OnSlider()
+# --------------------Event Handling and Private Methods------------------
+    def _CreateEvent(self, event):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._UpdateValues()
         event = wx.ScrollEvent(event, self.GetId())
         event.SetEventObject(self)
         self.GetEventHandler().ProcessEvent(event)
         self.Slider.Refresh()
         self.Refresh()
 
-    def OnTop(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_TOP)
+    def _OnTop(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_TOP)
 
-    def OnBottom(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_BOTTOM)
+    def _OnBottom(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_BOTTOM)
 
-    def OnLineUp(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_LINEUP)
+    def _OnLineUp(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_LINEUP)
 
-    def OnLineDown(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_LINEDOWN)
+    def _OnLineDown(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_LINEDOWN)
 
-    def OnPageUp(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_PAGEUP)
+    def _OnPageUp(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_PAGEUP)
 
-    def OnPageDown(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_PAGEDOWN)
+    def _OnPageDown(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_PAGEDOWN)
 
-    def OnThumbTrack(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_THUMBTRACK)
+    def _OnThumbTrack(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_THUMBTRACK)
 
-    def OnThumbRelease(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_THUMBRELEASE)
+    def _OnThumbRelease(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_THUMBRELEASE)
 
-    def OnChanged(self, evt):
-        self.CreateEvent(wx.wxEVT_SCROLL_CHANGED)
+    def _OnChanged(self, evt):
+        """
+        Internal use, generation of the events for the egFloatSliderCtrl.
+        """
+        self._CreateEvent(wx.wxEVT_SCROLL_CHANGED)
 
-    def OnSize(self, evt):
+    def _OnSize(self, evt):
+        """
+        Internal use, refreshes the widget.
+        """
         self.Refresh()
         evt.Skip()
 
     def __getattr__(self, item):
+        """
+        Checks to see if the wxSlider instance has the attribute and if not
+        raise AttributeError.
+        """
+
         if item in self.__dict__:
             return self.__dict__[item]
 
@@ -296,11 +363,35 @@ class FloatSliderCtrl(wx.PyPanel):
 
         raise AttributeError('FloatSliderCtrl does not have attribute ' + item)
 
+    def _UpdateValues(self):
+        """
+        Internal use, converting the wxSlider values to the values to be
+        returned.
+        """
+        sliderVal = self.Slider.GetValue()
+        sliderMin = self.Slider.GetMin()
+        sliderMax = self.Slider.GetMax()
+        if sliderVal == sliderMin:
+            self.value = self.minValue
+        elif sliderVal == sliderMax:
+            self.value = self.maxValue
+        else:
+            self.value = float(float(sliderVal) * self.increment)
+
+# ----------------Drawing the Widget-------------------
+
     def OnEraseBackground(self, dummyEvent):
+        """
+        Stops the widget from flickering when redrawn, this is an empty method.
+        """
         pass
 
     def OnPaint(self, evt):
+        """
+        Handles the drawing of the widget.
+        """
         value = self.value
+        # reversing the max/min if wx.SL_INVERSE was set
         if self.inverse:
             maxValue = self.minValue
             minValue = self.maxValue
@@ -310,6 +401,8 @@ class FloatSliderCtrl(wx.PyPanel):
             maxValue = self.maxValue
             sliderRange = maxValue - minValue
 
+        # grabbing the colours and setting the wxSlider as the same and the
+        # colours will also be used in the drawing of the labels
         forecolour = self.GetForegroundColour()
         backcolour = self.GetBackgroundColour()
         self.Slider.SetForegroundColour(forecolour)
@@ -327,6 +420,8 @@ class FloatSliderCtrl(wx.PyPanel):
         dc.SetFont(font)
         # dc = wx.GCDC(dc)
 
+        # drawing the background for the labels but setting it to completely
+        # transparent
         dc.SetBrush(wx.Brush(wx.Colour(*backcolour)))
         dc.SetPen(wx.Pen(wx.Colour(*backcolour), 0))
         dc.DrawRectangle(0, 0, panelW, panelH)
@@ -334,13 +429,20 @@ class FloatSliderCtrl(wx.PyPanel):
         dc.SetTextBackground(wx.Colour(*backcolour))
 
         if self.mLabel:
+            # converting the max/min to strings
             maxText = '%3.2f' % maxValue
             minText = '%3.2f' % minValue
 
+            # getting the size in pixels of the max/min values
             minW, minH = dc.GetTextExtent(maxText)
             maxW, maxH = dc.GetTextExtent(minText)
 
             if self.horizontal:
+                # there was an odd issue of everything after the '.' being
+                # painted outside the paintable area even tho we took the panel
+                # size and subtracted the maxValue width. so i grabbed
+                # everything after the '.' and got it's size and added that to
+                # the maxValue size so it can properly be displayed
                 maxW += dc.GetTextExtent(maxText.split('.')[1])[0]
                 if self.top:
                     y = sliderY + sliderH
@@ -400,52 +502,71 @@ class FloatSliderCtrl(wx.PyPanel):
 
         evt.Skip()
 
-    def UpdatePanel(self):
-        if self.inverse:
-            minValue, maxValue = self.maxValue, self.minValue
-        else:
-            minValue, maxValue = self.minValue, self.maxValue
-
-        self.minTextCtrl.SetLabel('%3.2f' % minValue)
-        self.maxTextCtrl.SetLabel('%3.2f' % maxValue)
-
-    def OnSlider(self):
-        sliderVal = self.Slider.GetValue()
-        sliderMin = self.Slider.GetMin()
-        sliderMax = self.Slider.GetMax()
-        if sliderVal == sliderMin:
-            self.value = self.minValue
-        elif sliderVal == sliderMax:
-            self.value = self.maxValue
-        else:
-            self.value = float(float(sliderVal) * self.increment)
-
+# -----------------Public Methods---------------------
     def SetMinMaxLabel(self, flag=True):
+        """
+        This allows for dynamic displaying of the min/max labels.
+        :param flag: True/False, default is True.
+        :return: None
+        """
         self.mLabel = flag
 
     def SetValueLabel(self, flag=True):
+        """
+        This allows for dynamic displaying of the value label.
+        :param flag: True/False, default is True.
+        :return: None
+        """
         self.vLabel = flag
 
     def IsMinMaxLabel(self):
+        """
+        Retruns whether or not the min/max labels are displayed.
+        :return: bool()
+        """
         return self.mLabel
 
     def IsValueLabel(self):
+        """
+        Retruns whether or not the value label is displayed.
+        :return: bool()
+        """
         return self.vLabel
 
     def IsInverse(self):
+        """
+        Retruns whether or not the wx.SL_INVERSE was set.
+        :return: bool()
+        """
         return self.inverse
 
     def GetValue(self):
-        self.OnSlider()
+        """
+        Retruns a float of the current slider value.
+        :return: float()
+        """
+        self._UpdateValues()
         return self.value
 
     def GetMin(self):
+        """
+        Retruns a float of the current min value.
+        :return: float()
+        """
         return self.minValue
 
     def GetMax(self):
+        """
+        Retruns a float of the current max value.
+        :return: float()
+        """
         return self.maxValue
 
     def GetIncrement(self):
+        """
+        Retruns a float of the current increment value.
+        :return: float()
+        """
         return self.increment
 
     def GetSelStart(self):
@@ -463,21 +584,46 @@ class FloatSliderCtrl(wx.PyPanel):
         )
 
     def SetValue(self, value):
+        """
+        Sets the value for the slider. Will convert to a float if a
+        str of a float or an int is passed.
+        :param value: float() int() or a str() of a float.
+        :return: None
+        """
+        value = float(value)
         self.Slider.SetValue(round(value / self.increment))
-        self.value = float(value)
+        self.value = value
         self.Refresh()
 
     def SetMin(self, minValue):
+        """
+        Sets the min value for the slider. Will convert to a float if a
+        str of a float or an int is passed.
+        :param minValue: float() int() or a str() of a float.
+        :return: None
+        """
         self.Slider.SetMin(round(minValue / self.increment))
         self.minValue = float(minValue)
-        self.UpdatePanel()
+        self.Refresh()
 
     def SetMax(self, maxValue):
+        """
+        Sets the max value for the slider. Will convert to a float if a
+        str of a float or an int is passed.
+        :param maxValue: float() int() or a str() of a float.
+        :return: None
+        """
         self.Slider.SetMax(round(maxValue / self.increment))
         self.maxValue = float(maxValue)
-        self.UpdatePanel()
+        self.Refresh()
 
     def SetIncrement(self, increment):
+        """
+        Sets the increment for the slider. Will convert to a float if a
+        str of a float or an int is passed.
+        :param increment: float() int() or a str() of a float.
+        :return: None
+        """
         increment = float(increment)
         self.Slider.SetRange(
             round(self.minValue / increment),
@@ -485,9 +631,16 @@ class FloatSliderCtrl(wx.PyPanel):
         )
         self.Slider.SetValue(round(self.value / increment))
         self.increment = increment
-        self.UpdatePanel()
+        self.Refresh()
 
     def SetRange(self, minValue, maxValue):
+        """
+        Sets the min and max values for the slider. Will convert to a float if
+        a str of a float or an int is passed.
+        :param minValue: float() int() or a str() of a float.
+        :param maxValue: float() int() or a str() of a float.
+        :return: None
+        """
         minValue = float(minValue)
         maxValue = float(maxValue)
         self.Slider.SetRange(
@@ -496,4 +649,4 @@ class FloatSliderCtrl(wx.PyPanel):
         )
         self.minValue = minValue
         self.maxValue = maxValue
-        self.UpdatePanel()
+        self.Refresh()
