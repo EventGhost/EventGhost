@@ -6,8 +6,8 @@ cache:
   - '%PYTHON%\Lib\site-packages'
  
 install:
-  - ps: Start-FileDownload "https://github.com/appveyor/ci/raw/master/scripts/enable-rdp.ps1" -Timeout 60000
-  - enable-rdp.ps1
+  # - ps: Start-FileDownload "https://github.com/appveyor/ci/raw/master/scripts/enable-rdp.ps1" -Timeout 60000
+  # - enable-rdp.ps1
   
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
   - is-unicode.exe /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS
@@ -30,9 +30,9 @@ build: off
 
 after_test:
   - "python.exe _build\\Build.py --build --package"
-  - dir _build\output\*.exe /B > setup-exe.txt
-  - set /P setup-exe= < setup-exe.txt
-  - START /WAIT %setup-exe% /VERYSILENT /SUPPRESSMSGBOXES /NOCLOSEAPPLICATIONS
+  # - dir _build\output\*.exe /B > setup-exe.txt
+  # - set /P setup-exe= < setup-exe.txt
+  # - START /WAIT %setup-exe% /VERYSILENT /SUPPRESSMSGBOXES /NOCLOSEAPPLICATIONS
   
 artifacts:
   - path: "_build\\output\\*Setup.exe"
