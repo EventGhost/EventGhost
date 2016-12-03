@@ -27,7 +27,7 @@ build: off
 
 after_test:
   - "python.exe _build\\Build.py --build --package"
-  - dir -build\output\*.exe /B > setup-exe.txt
+  - dir _build\output\*.exe /B > setup-exe.txt
   - set /P setup-exe= < setup-exe.txt
   - START /WAIT %setup-exe% /VERYSILENT
   
