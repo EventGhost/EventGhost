@@ -3,7 +3,7 @@ environment:
     - PYTHON: "C:\\Python27"
     
 cache:
-  - '%PYTHON%\\Lib\site-packages
+  - '%PYTHON%\\Lib\site-packages'
  
 install:
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
