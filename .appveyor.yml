@@ -3,7 +3,7 @@ environment:
     - PYTHON: "C:\\Python27"
     
 cache:
-  - '%PYTHON%\\Lib\site-packages'
+  - "%PYTHON%\Lib\site-packages"
  
 install:
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
@@ -26,7 +26,9 @@ install:
 build: off
 
 after_test:
-  - "%PYTHON%\\python.exe _build\\Build.py --build --package"
-
+  - "python.exe _build\\Build.py --build --package"
+  - START /WAIT EventGhost.exe -install -quiet
+  - IF EXIST %ERROR_LOG% (TYPE %ERROR_LOG% & EXIT /B 1)
+  
 artifacts:
   - path: "_build\\output\\*Setup.exe"
