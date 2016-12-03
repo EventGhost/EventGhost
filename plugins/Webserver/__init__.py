@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-version = "3.13.2"
+version = "3.13.3"
 #
 # This file is part of EventGhost.
 # Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
@@ -19,6 +19,8 @@ version = "3.13.2"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 3.13.3 by Sem;colon 2016-12-03 11:00 UTC+1
+#     - some fixes and cleanup
 # 3.13.2 by david-mark 2016-11-18 20:00 UTC+1
 #     - bugfix (Fixed incorrect "latin1" decoding)
 # 3.13.1 by Sem;colon 2016-11-06 01:00 UTC+1
@@ -149,7 +151,7 @@ Plugin version: %s
 import wx
 import socket
 from os import curdir, pardir
-from sys import path as syspath
+from sys import path
 from ssl import wrap_socket, CERT_NONE
 from posixpath import splitext, normpath
 from time import sleep, strftime
@@ -158,7 +160,6 @@ from urllib import unquote, unquote_plus
 from urllib2 import urlopen, Request as urlRequest
 from httplib import HTTPResponse
 from jinja2 import BaseLoader, TemplateNotFound, Environment
-from copy import deepcopy as cpy
 from json import dumps, loads
 from re import IGNORECASE, compile as re_compile
 from struct import pack, unpack
@@ -172,7 +173,7 @@ from os.path import getmtime, isfile, isdir, join, exists, splitdrive, split
 from wx.lib.mixins.listctrl import TextEditMixin
 try:
     from websocket import WebSocketApp
-except:
+except ImportError:
     from websocket import WebSocket as WebSocketApp
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 ACV = wx.ALIGN_CENTER_VERTICAL
@@ -2195,7 +2196,7 @@ class WsBroadcastUniversal(eg.ActionBase):
         
 
     def Task(self, _, cond, method, othArgs, kwArgs):
-        if plugin.info.isStarted:
+        if self.plugin.info.isStarted:
             self.task = eg.scheduler.AddTask(
                 self.period,
                 self.Task,
@@ -2249,8 +2250,8 @@ class WsBroadcastUniversal(eg.ActionBase):
         cond = replInstVal(cond)
         if self.value:
             self.period = period
-            self.args = args
-            self.kwargs = kwargs
+            self.args = None
+            self.kwargs = None
             self.Task(
                 None,
                 cond,
@@ -3494,7 +3495,7 @@ class WsSendUniversal(eg.ActionBase):
 
 
     def Task(self, client, cond, method, othArgs, kwArgs):
-        if plugin.info.isStarted:
+        if self.plugin.info.isStarted:
             self.task = eg.scheduler.AddTask(
                 self.period,
                 self.Task,
@@ -3559,8 +3560,8 @@ class WsSendUniversal(eg.ActionBase):
 
         if self.value:
             self.period = period
-            self.args = args
-            self.kwargs = kwargs
+            self.args = None
+            self.kwargs = None
             self.Task(
                 client,
                 cond,
