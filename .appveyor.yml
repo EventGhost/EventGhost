@@ -3,8 +3,6 @@ environment:
     - PYTHON: "C:\\Python27"
 
 install:
-  - git config --global github.user Project-EventGhost
-
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
   - is-unicode.exe /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS
 
