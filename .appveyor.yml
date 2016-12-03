@@ -4,7 +4,6 @@ environment:
 
 install:
   - git config --global github.user Project-EventGhost
-  - git config --global github.token %gh_token%
 
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
   - is-unicode.exe /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS
