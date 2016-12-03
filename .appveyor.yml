@@ -1,7 +1,10 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-
+    
+cache:
+  - '%PYTHON%\\Lib\site-packages
+ 
 install:
   - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "is-unicode.exe"
   - is-unicode.exe /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS
