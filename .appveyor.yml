@@ -13,22 +13,23 @@ install:
   - stackless-setup.msi /quiet /passive /qn /norestart
 
   - pip install commonmark==0.7.0
-  - pip install comtypes  # ==1.1.2
-  - pip install http://svn.python.org/projects/ctypes/trunk/ctypeslib/  # ==0.5.6
-  - pip install future  # ==0.15.2
-  - pip install pillow  # ==3.1.1
-  - pip install py2exe_py2  # ==0.6.9
-  - pip install pycrypto  # ==2.6.1
+  - pip install comtypes==1.1.2
+  - pip install https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl
+  - pip install future==0.15.2
+  - pip install pillow==3.1.1
+  - pip install py2exe_py2==0.6.9
+  - pip install pycrypto==2.6.1
   - pip install https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl
-  - pip install sphinx  # ==1.3.5
+  - pip install sphinx==1.3.5
   - pip install https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl
 
 build: off
 
 after_test:
   - "python.exe _build\\Build.py --build --package"
-  - START /WAIT EventGhost.exe -install -quiet
-  - IF EXIST %ERROR_LOG% (TYPE %ERROR_LOG% & EXIT /B 1)
+  - dir -build\output\*.exe /B > setup-exe.txt
+  - set /P setup-exe= < setup-exe.txt
+  - START /WAIT %setup-exe% /VERYSILENT
   
 artifacts:
   - path: "_build\\output\\*Setup.exe"
