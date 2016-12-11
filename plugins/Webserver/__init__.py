@@ -19,6 +19,8 @@ version = "3.13"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 3.13.1 by Sem;colon 2016-11-06 01:00 UTC+1
+#     - bugfix (Added "self.protocol_version = 'HTTP/1.1'" for ws connections)
 # 3.13 by Sem;colon 2016-10-29 01:00 UTC+1
 #     - bugfix (Send event to another webserver)
 # 3.12.1 by Pako 2016-05-08 18:19 UTC+1
@@ -1163,6 +1165,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                 digest = b64encode(sha1(key + self.magic).hexdigest().decode('hex'))
             except:
                 eg.PrintTraceback()
+            self.protocol_version = 'HTTP/1.1'
             self.send_response(101, 'Switching Protocols')
             self.send_header('Upgrade', 'websocket')
             self.send_header('Connection', 'Upgrade')
