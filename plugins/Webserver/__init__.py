@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
-version = "3.12.1"
+version = "3.13"
 #
 # This file is part of EventGhost.
-# Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-
+# 3.13 by Sem;colon 2016-10-29 01:00 UTC+1
+#     - bugfix (Send event to another webserver)
 # 3.12.1 by Pako 2016-05-08 18:19 UTC+1
-#     - !!! experimental version !!!
 #     - many changes - particularly regarding the WebSocket
 # 3.12 by by Pako 2016-02-15 17:15 UTC+1
 #     - bugfix (Send all values)
@@ -96,14 +97,19 @@ import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
-    author = "Bitmonster & Pako & Sem;colon & krambriw",
+    author = (
+        "Bitmonster",
+        "Pako",
+        "Sem;colon",
+        "krambriw",
+    ),
     version = version,
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = ur'''<rst>
 Implements a small webserver, that you can use to generate events
 through HTML-pages and WebSocket.
 
-Implementation of WebSocket support was made possible through the article_, 
+Implementation of WebSocket support was made possible through the article_,
 published on the SevenWatt_ web..
 
 Plugin version: %s
@@ -111,7 +117,7 @@ Plugin version: %s
 .. _article:     http://www.sevenwatt.com/main/websocket-html-webserver-python/
 .. _SevenWatt:   http://www.sevenwatt.com/main/
 ''' % version,
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,
     canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
@@ -132,24 +138,24 @@ Plugin version: %s
         "V6o9Jv2beq++WywWf3IcZ/hgmNKh9JnVk4+d31CCyRXDljEAx9T6zrC+dzYrribCcn9z"
         "c/ObTqdzALjiIQmNArF76gcMYAB0gT7g3l/+ByWIP9hU8ktfAAAAAElFTkSuQmCC"
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1663",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1663",
 )
 
 import wx
 import socket
 from os import curdir, pardir
-from sys import getwindowsversion, path as syspath
+from sys import path as syspath
 from ssl import wrap_socket, CERT_NONE
 from posixpath import splitext, normpath
 from time import sleep, strftime
 from datetime import datetime as dt
 from urllib import unquote, unquote_plus
-from urllib2 import urlopen, Request as urlRequest 
+from urllib2 import urlopen, Request as urlRequest
 from httplib import HTTPResponse
 from jinja2 import BaseLoader, TemplateNotFound, Environment
 from copy import deepcopy as cpy
 from json import dumps, loads
-from re import IGNORECASE, compile as re_compile 
+from re import IGNORECASE, compile as re_compile
 from struct import pack, unpack
 from base64 import b64encode, encodestring as b64_encStr
 from hashlib import sha1, md5
@@ -159,7 +165,10 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import ThreadingMixIn
 from os.path import getmtime, isfile, isdir, join, exists, splitdrive, split
 from wx.lib.mixins.listctrl import TextEditMixin
-from websocket import WebSocketApp
+try:
+    from websocket import WebSocketApp
+except:
+    from websocket import WebSocket as WebSocketApp
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 ACV = wx.ALIGN_CENTER_VERTICAL
 
@@ -564,8 +573,6 @@ class ClientsDialog(wx.Frame):
         panel.SetSizer(sizer)
 
         cliSizer = wx.GridBagSizer(5, 5)
-        cliSizer.AddGrowableRow(0)
-        cliSizer.AddGrowableCol(2)
         clientListCtrl = Table(
             panel,
             text.colLabelsCli,
@@ -591,6 +598,8 @@ class ClientsDialog(wx.Frame):
         cliSizer.Add(abortButtonCli, (1, 0), flag = wx.LEFT, border = 10)
         cliSizer.Add(abortAllButtonCli, (1, 1))
         cliSizer.Add(refreshButtonCli, (1, 2))
+        cliSizer.AddGrowableRow(0)
+        cliSizer.AddGrowableCol(2)
         sizer.Add(cliSizer, 1, wx.EXPAND)
 
         def onDelete(evt):
@@ -714,8 +723,6 @@ class ServersDialog(wx.Frame):
         panel.SetSizer(sizer)
 
         srvSizer = wx.GridBagSizer(5, 5)
-        srvSizer.AddGrowableRow(0)
-        srvSizer.AddGrowableCol(2)
         serverListCtrl = Table(
             panel,
             text.colLabelsSrvr,
@@ -741,6 +748,8 @@ class ServersDialog(wx.Frame):
         srvSizer.Add(abortButtonSrv, (1, 0), flag = wx.LEFT, border = 10)
         srvSizer.Add(abortAllButtonSrv, (1, 1))
         srvSizer.Add(refreshButtonSrv, (1, 2))
+        srvSizer.AddGrowableRow(0)
+        srvSizer.AddGrowableCol(2)
         sizer.Add(srvSizer, 1, wx.EXPAND)
 
         def onDelete(evt):
@@ -885,7 +894,7 @@ class MyServer(ThreadingMixIn, HTTPServer):
 
     def server_bind(self):
         """Called by constructor to bind the socket."""
-        if socket.has_ipv6 and getwindowsversion()[0] > 5:
+        if socket.has_ipv6 and eg.Utils.IsVista():
             # make it a dual-stack socket if OS is Vista/Win7
             IPPROTO_IPV6 = 41
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
@@ -4155,7 +4164,6 @@ class SendEvent(eg.ActionBase):
         passwordCtrl = panel.TextCtrl(password)
         fl = wx.EXPAND|wx.TOP
         box=wx.GridBagSizer(2, 5)
-        box.AddGrowableCol(1)
         box.Add(panel.StaticText(text.event), (0, 0), flag = wx.TOP, border=12)
         box.Add(eventCtrl, (0, 1), flag = fl, border=9)    
         box.Add(parsCtrl, (1, 0), (1, 2))    
@@ -4167,6 +4175,7 @@ class SendEvent(eg.ActionBase):
         box.Add(userCtrl, (4, 1), flag = fl, border=9)       
         box.Add(panel.StaticText(text.password), (5, 0), flag=wx.TOP, border=12)    
         box.Add(passwordCtrl, (5, 1), flag = fl, border=9)
+        box.AddGrowableCol(1)
         panel.sizer.Add(box, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 
         while panel.Affirmed():
@@ -4180,51 +4189,54 @@ class SendEvent(eg.ActionBase):
             )
 #===============================================================================
 
-# Enhancement by Sem;colon - START
+
 class SendEventExt(eg.ActionBase):
 
     class text:
-        url = "Url: (like you would put it into a webbrowser)"
+        url = "URL:"
         event = "Event:"
         username = "Username:"
         password = "Password:"
-        msg1 = "This page isn't protected by authentication."
+        msg1 = "This page isn't protected by basic authentication."
         msg2 = 'But we failed for another reason.'
         msg3 = 'A 401 error without an authentication response header - very weird.'
         msg4 = 'The authentication line is badly formed.'
-        msg5 = 'This example only works with BASIC authentication.'
+        msg5 = 'SendEventExt only works with BASIC authentication.'
         msg6 = "url, username or password is wrong."
 
     def __call__(self, event="", host="", user="", password=""):
         text = self.text
-        req = urlRequest(host, event)
+        if event!="":
+            req = urlRequest(host, event)
+        else:
+            req = urlRequest(host)
         try:
             handle = urlopen(req)
         except IOError, e:
             # If we fail then the page could be protected
-            if not hasattr(e, 'code') or e.code != 401:                 
+            if not hasattr(e, 'code') or e.code != 401:
                 # we got an error - but not a 401 error
-                print text.msg1
-                print text.msg2
-                print "ERROR " + str(e.code if hasattr(e, "code") else e)
+                #print text.msg1
+                #print text.msg2
+                eg.PrintError("Webserver: Error " + str(e.code if hasattr(e, "code") else e))
                 return None
-            authline = e.headers.get('www-authenticate', '')               
+            authline = e.headers.get('www-authenticate', '')
             # this gets the www-authenticat line from the headers - which has the authentication scheme and realm in it
             if not authline:
-                print text.msg3
+                eg.PrintError("Webserver: " + text.msg3)
                 return None
-            authobj = re_compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', IGNORECASE)         
+            authobj = re_compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', IGNORECASE)
             # this regular expression is used to extract scheme and realm
             matchobj = authobj.match(authline)
-            if not matchobj:                                       
+            if not matchobj:
                 # if the authline isn't matched by the regular expression then something is wrong
-                print text.msg4
+                eg.PrintError("Webserver: " + text.msg4)
                 #authheader=b'Basic ' + b64encode(user + b':' + password)
                 return None
             scheme = matchobj.group(1)
             realm = matchobj.group(2)
             if scheme.lower() != 'basic':
-                print text.msg5
+                eg.PrintError("Webserver: " + text.msg5)
                 return None
             base64string = b64_encStr('%s:%s' % (user, password))[:-1]
             authheader =  "Basic %s" % base64string
@@ -4232,8 +4244,7 @@ class SendEventExt(eg.ActionBase):
             try:
                 handle = urlopen(req)
             except IOError, e:
-                print text.msg6
-                print "ERROR " + str(e.code if hasattr(e, "code") else e)
+                eg.PrintError("Webserver: Error " + str(e.code if hasattr(e, "code") else e) + ": " + text.msg6)
                 return None
         thepage = unquote(handle.read()) # handle.read()
         return thepage
@@ -4246,16 +4257,18 @@ class SendEventExt(eg.ActionBase):
         hostCtrl = panel.TextCtrl(host)
         userCtrl = panel.TextCtrl(user)
         passwordCtrl = panel.TextCtrl(password)
-        panel.sizer.AddMany([
-            panel.StaticText(text.event),
-            eventCtrl,
-            panel.StaticText(text.url),
-            hostCtrl,
-            panel.StaticText(text.username),
-            userCtrl,
-            panel.StaticText(text.password),
-            passwordCtrl,
-        ])
+        fl = wx.EXPAND|wx.TOP
+        box=wx.GridBagSizer(2, 5)
+        box.Add(panel.StaticText(text.event), (0, 0), flag = wx.TOP, border=12)
+        box.Add(eventCtrl, (0, 1), flag = fl, border=9)
+        box.Add(panel.StaticText(text.url), (2, 0), flag = wx.TOP, border=12)
+        box.Add(hostCtrl, (2, 1), flag = fl, border=9)
+        box.Add(panel.StaticText(text.username), (4, 0), flag=wx.TOP, border=12)
+        box.Add(userCtrl, (4, 1), flag = fl, border=9)
+        box.Add(panel.StaticText(text.password), (5, 0), flag=wx.TOP, border=12)
+        box.Add(passwordCtrl, (5, 1), flag = fl, border=9)
+        box.AddGrowableCol(1)
+        panel.sizer.Add(box, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
         while panel.Affirmed():
             panel.SetResult(
                 eventCtrl.GetValue(),
@@ -4263,7 +4276,7 @@ class SendEventExt(eg.ActionBase):
                 userCtrl.GetValue(),
                 passwordCtrl.GetValue(),
             )
-# Enhancement by Sem;colon - END
+
 #===============================================================================
 
 class Webserver(eg.PluginBase):
@@ -5248,7 +5261,6 @@ class StartClient(eg.ActionBase):
         noCertCtrl = wx.CheckBox(panel, -1, text.noCert)
         noCertCtrl.SetValue(noCert)
         credSizer = wx.GridBagSizer(10, 8)
-        credSizer.AddGrowableCol(1)
         topSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, pext.authBox),
             wx.HORIZONTAL
@@ -5258,6 +5270,7 @@ class StartClient(eg.ActionBase):
         credSizer.Add(loginCtrl,(1,1),(1,1), flag = wx.EXPAND)
         credSizer.Add(passwordLabel,(0,0),(1,1), flag = ACV)
         credSizer.Add(passwordCtrl,(0,1),(1,1), flag = wx.EXPAND)
+        credSizer.AddGrowableCol(1)
 
         topSizer.Add(credSizer, 1, wx.EXPAND)
         panel.sizer.Add(titleSizer, 0, wx.EXPAND)
