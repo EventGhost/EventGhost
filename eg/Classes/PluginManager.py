@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -18,15 +18,12 @@
 
 import os
 from os.path import exists, isdir, join
-from threading import Event
 
 # Local imports
 import eg
 
 class PluginManager:
-
     def __init__(self):
-        self.packageDatabase = {}
         self.database = {}
         self.ScanAllPlugins()
 
@@ -48,67 +45,19 @@ class PluginManager:
         infoList.sort(key=lambda pluginInfo: pluginInfo.name.lower())
         return infoList
 
-    def InstallPackages(self, packages, ident):
-        for package in packages:
-            if package not in self.packageDatabase:
-                try:
-                    __import__(package)
-                except ImportError:
-                    try:
-                        eg.Utils.Package.Install(package)
-                    except:
-                        return False
-                    while eg.Utils.Package.IsRunning():
-                       pass
-
-                self.packageDatabase[package] = [ident]
-            else:
-                self.packageDatabase[package].append(ident)
-        return True
-
-    def UninstallPackages(self, ident):
-        packages = self.packageDatabase
-        packageNames = list(packages.keys())
-        for name in packageNames:
-            if ident in packages[name]:
-                if len(packages[name]) == 1:
-                    eg.Utils.Package.Uninstall(name)
-                    while eg.Utils.Package.IsRunning():
-                       pass
-
-                    del(packages[name])
-                else:
-                    packages[name].remove(ident)
-
     def OpenPlugin(self, ident, evalName, args, treeItem=None):
-
-        def makeClsInfo(modInfo):
-            if modInfo is None:
-                return NonexistentPluginInfo(ident, evalName)
-            try:
-                return eg.PluginInstanceInfo.FromModuleInfo(
-                    modInfo
-                )
-            except eg.Exceptions.PluginLoadError:
-                if evalName:
-                    return NonexistentPluginInfo(ident, evalName)
-                else:
-                    raise
-
         moduleInfo = self.GetPluginInfo(ident)
-
         if moduleInfo is None:
             # we don't have such plugin
-            clsInfo = makeClsInfo(None)
+            clsInfo = NonexistentPluginInfo(ident, evalName)
         else:
-            packages = moduleInfo.installPackages
-            if packages is not None:
-                if isinstance(packages, basestring):
-                    packages = (packages,)
-                if self.InstallPackages(packages, ident) is False:
-                    moduleInfo = None
-            clsInfo = makeClsInfo(moduleInfo)
-
+            try:
+                clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
+            except eg.Exceptions.PluginLoadError:
+                if evalName:
+                    clsInfo = NonexistentPluginInfo(ident, evalName)
+                else:
+                    raise
         info = clsInfo.CreateInstance(args, evalName, treeItem)
         if moduleInfo is None:
             info.actions = ActionsMapping(info)
@@ -178,6 +127,7 @@ class NonexistentPlugin(eg.PluginBase):
     def GetLabel(self, *dummyArgs):
         return '<Unknown Plugin "%s">' % self.name
 
+
 class NonexistentPluginInfo(eg.PluginInstanceInfo):
     def __init__(self, guid, name):
         self.guid = guid
@@ -189,4 +139,3 @@ class NonexistentPluginInfo(eg.PluginInstanceInfo):
 
         Plugin.__name__ = name
         self.pluginCls = Plugin
-
