@@ -81,6 +81,9 @@ class ControlProviderMixin:
         fontCtrl = eg.FontSelectButton(self)
         fontCtrl.SetValue(value)
         return fontCtrl
+    
+    def FloatSliderCtrl(self, *args, **kwargs):
+        return eg.FloatSliderCtrl(self, *args, **kwargs)
 
     def MacroSelectButton(self, *args, **kwargs):
         return eg.MacroSelectButton(self, *args, **kwargs)
