@@ -45,7 +45,12 @@
 # added:   private method for conversion of max, min, value to be passed to the
 #          wxSlider instance
 # added:   additional docstrings
-# changed: stretch spacers for labels are only added if necessary.
+# changed: how the formatting of the labels is done. the widget will now
+#          automatically figure out how many decimal positions need to be
+#          displayed based on the last digit that is a non 0 and will display
+#          the proper number of positions needed instead of truncating
+# added:   private method _GenerateFormat to handle the creation of the string
+#          formatter for the labels
 
 import wx
 
@@ -124,6 +129,10 @@ class FloatSliderCtrl(wx.PyPanel):
         if any, are positioned on the opposite side. So, to have a label on
         the left side of a vertical slider, wx.SL_RIGHT must be used.
 
+        Warning: If using SL_AUTOTICKS as an example if you have an increment
+        set at 0.001 and a min of 0.0 and a max of 10000.00 this will cause the
+        widget to hang due to the sheer number of tick marks it tries to draw.
+
         Default - wx.SL_HORIZONTAL
         :param name: user identifier for the widget.
 
@@ -201,16 +210,14 @@ class FloatSliderCtrl(wx.PyPanel):
 
         self.value = float(value)
         self.minValue = float(minValue)
-        self.maxValue = float(manValue)
+        self.maxValue = float(maxValue)
 
         # check to see if the increment was set and if not to set a generic one
         if increment is None:
-            self.increment = float(100 / (maxValue - minValue))
+            self.increment = float(100 / (self.maxValue - self.minValue))
         else:
             self.increment = float(increment)
 
-        # checking the size and if either the width or height is -1 to plug in
-        # the numbers that will assure the widget gets fully displayed
         if size == wx.DefaultSize and horizontal:
             size = (-1, 80)
         elif size == wx.DefaultSize:
@@ -221,30 +228,30 @@ class FloatSliderCtrl(wx.PyPanel):
             size = (size[0], 80)
 
         if horizontal:
-            sliderSize = (size[0], size[1] * 0.20)
+            sliderSize = (size[0], 32)
         else:
-            sliderSize = (size[0] * 0.27, size[1])
+            sliderSize = (32, size[1])
 
-        if horizontal and sliderSize[1] < 30 <= size[1]:
-            sliderSize = (sliderSize[0], 30)
+        if horizontal and sliderSize[1] < 32 <= size[1]:
+            sliderSize = (sliderSize[0], 32)
 
         wx.PyPanel.__init__(self, parent, -1, size=size, pos=pos)
 
         # converting the minValue/maxValue/value so we can pass the modified
         # values to the constructor of the wxSlider
         sliderVal, sliderMin, sliderMax = self._ConvertValues(
-            value,
-            minValue,
-            maxValue
+            self.value,
+            self.minValue,
+            self.maxValue
         )
 
         self.Slider = wx.Slider(
             self,
             id,
-            size=sliderSize,
             value=sliderVal,
             minValue=sliderMin,
             maxValue=sliderMax,
+            size=sliderSize,
             style=style,
             name=name
         )
@@ -252,27 +259,16 @@ class FloatSliderCtrl(wx.PyPanel):
         # create a sizer to place the wxSlider into this will control any of
         # the sizing automatically. we add a stretch spacer before and after
         # to ensure we have space to place our labels
+
         if horizontal:
             panelSizer = wx.BoxSizer(wx.VERTICAL)
-
         else:
             panelSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        if not top and not left:
-            if mLabel:
-                panelSizer.AddStretchSpacer()
-        else:
-            if vLabel:
-                panelSizer.AddStretchSpacer()
-
+        panelSizer.AddStretchSpacer()
         panelSizer.Add(self.Slider, 0, wx.EXPAND | wx.ALIGN_CENTER)
+        panelSizer.AddStretchSpacer()
 
-        if not top and not left:
-            if vLabel:
-                panelSizer.AddStretchSpacer()
-        else:
-            if mLabel:
-                panelSizer.AddStretchSpacer()
 
         # setting the colors of wxPyPanel to the system default doing a redraw
         # the slider will grab the colors and set them for the slider. this is
@@ -290,6 +286,7 @@ class FloatSliderCtrl(wx.PyPanel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self._OnSize)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+        self.Slider.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 
         # binding to the various events the wxSlider can generate so when
         # generated we can create a new event with this class set as the
@@ -304,10 +301,29 @@ class FloatSliderCtrl(wx.PyPanel):
         self.Slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self._OnThumbRelease)
         self.Slider.Bind(wx.EVT_SCROLL_CHANGED, self._OnChanged)
 
+        self.floatFormat = self._GenerateFormat()
         self.SetSizer(panelSizer)
         self.Refresh()
 
 # --------------------Event Handling and Private Methods------------------
+
+    def DoGetBestSize(self, *args, **kwargs):
+        return self.GetSizeTuple()
+
+    def _GenerateFormat(self):
+        """
+        Internal use, creates the str formatter for the labels.
+        :return: str() formatter. Example: "%.2f"
+        """
+        incT = '%f' % self.increment
+        maxT = '%f' % self.maxValue
+        minT = '%f' % self.minValue
+        incDec = len(incT.rstrip('0').split('.')[1])
+        maxDec = len(maxT.rstrip('0').split('.')[1])
+        minDec = len(minT.rstrip('0').split('.')[1])
+        decPos = max([incDec, maxDec, minDec])
+        return '%.' + str(decPos) + 'f'
+
     def _ConvertValues(self, *args):
         """
         Internal use, converts any value parameters the wxSlider instance uses
@@ -420,11 +436,12 @@ class FloatSliderCtrl(wx.PyPanel):
 
         if item in self.__dict__:
             return self.__dict__[item]
-
         if hasattr(self.Slider, item):
             return getattr(self.Slider, item)
 
-        raise AttributeError('FloatSliderCtrl does not have attribute ' + item)
+        raise AttributeError(
+            '%r does not have attribute %r' % (repr(self), item)
+        )
 
     def _UpdateValues(self):
         """
@@ -458,6 +475,7 @@ class FloatSliderCtrl(wx.PyPanel):
         :param evt: wxEvent instance.
         :return: None
         """
+
         value = self.value
         # reversing the max/min if wx.SL_INVERSE was set
         if self.inverse:
@@ -476,20 +494,17 @@ class FloatSliderCtrl(wx.PyPanel):
         self.Slider.SetForegroundColour(forecolour)
         self.Slider.SetBackgroundColour(backcolour)
 
-        bmp = wx.EmptyBitmap(*self.GetSizeTuple())
-        font = self.Slider.GetFont()
-
-        panelW, panelH = self.GetSize()
+        panelW, panelH = self.GetSizeTuple()
         sliderW, sliderH = self.Slider.GetSize()
         sliderX, sliderY = self.Slider.GetPosition()
 
+        bmp = wx.EmptyBitmap(panelW, panelH)
+        font = self.GetFont()
         dc = wx.MemoryDC()
         dc.SelectObject(bmp)
         dc.SetFont(font)
-        # dc = wx.GCDC(dc)
 
-        # drawing the background for the labels but setting it to completely
-        # transparent
+        # drawing the background for the labels
         dc.SetBrush(wx.Brush(wx.Colour(*backcolour)))
         dc.SetPen(wx.Pen(wx.Colour(*backcolour), 0))
         dc.DrawRectangle(0, 0, panelW, panelH)
@@ -497,21 +512,16 @@ class FloatSliderCtrl(wx.PyPanel):
         dc.SetTextBackground(wx.Colour(*backcolour))
 
         if self.mLabel:
+            print 'mLabel'
             # converting the max/min to strings
-            maxText = '%3.2f' % maxValue
-            minText = '%3.2f' % minValue
+            maxText = self.floatFormat % maxValue
+            minText = self.floatFormat % minValue
 
             # getting the size in pixels of the max/min values
-            minW, minH = dc.GetTextExtent(maxText)
-            maxW, maxH = dc.GetTextExtent(minText)
+            minW, minH = dc.GetTextExtent(minText)
+            maxW, maxH = dc.GetTextExtent(maxText)
 
             if self.horizontal:
-                # there was an odd issue of everything after the '.' being
-                # painted outside the paintable area even tho we took the panel
-                # size and subtracted the maxValue width. so i grabbed
-                # everything after the '.' and got it's size and added that to
-                # the maxValue size so it can properly be displayed
-                maxW += dc.GetTextExtent(maxText.split('.')[1])[0]
                 if self.top:
                     y = sliderY + sliderH
                 else:
@@ -533,7 +543,8 @@ class FloatSliderCtrl(wx.PyPanel):
             dc.DrawText(maxText, maxX, maxY)
 
         if self.vLabel:
-            valText = '%3.2f' % value
+            print 'vLabel'
+            valText = self.floatFormat % value
             valW, valH = dc.GetTextExtent(valText)
 
             if self.horizontal:
@@ -557,7 +568,7 @@ class FloatSliderCtrl(wx.PyPanel):
             elif self.left:
                 pos = (sliderX - valW - 3, pos)
             elif self.horizontal:
-                pos = (pos, (panelH / 2) + (sliderH * 0.65))
+                pos = (pos, sliderY + sliderH)
             else:
                 pos = (sliderX + sliderW, pos)
             dc.DrawText(valText, *pos)
@@ -569,6 +580,7 @@ class FloatSliderCtrl(wx.PyPanel):
         pdc.DrawBitmap(bmp, 0, 0)
 
         evt.Skip()
+
 
 # -----------------Public Methods---------------------
     def IsMinMaxLabel(self):
@@ -685,6 +697,7 @@ class FloatSliderCtrl(wx.PyPanel):
         :return: None
         """
         self.minValue = float(minValue)
+        self.floatFormat = self._GenerateFormat()
         self.Slider.SetMin(*self._ConvertValues(self.minValue))
         self.Refresh()
 
@@ -696,6 +709,7 @@ class FloatSliderCtrl(wx.PyPanel):
         :return: None
         """
         self.maxValue = float(maxValue)
+        self.floatFormat = self._GenerateFormat()
         self.Slider.SetMax(*self._ConvertValues(self.maxValue))
         self.Refresh()
 
@@ -713,6 +727,7 @@ class FloatSliderCtrl(wx.PyPanel):
             self.minValue,
             self.maxValue
         )
+        self.floatFormat = self._GenerateFormat()
         self.Slider.SetRange(minValue, maxValue)
         self.Slider.SetValue(value)
         self.Refresh()
@@ -727,6 +742,7 @@ class FloatSliderCtrl(wx.PyPanel):
         """
         self.minValue = float(minValue)
         self.maxValue = float(maxValue)
+        self.floatFormat = self._GenerateFormat()
         self.Slider.SetRange(
             *self._ConvertValues(self.minValue, self.maxValue)
         )
