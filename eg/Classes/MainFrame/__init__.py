@@ -20,7 +20,7 @@ import inspect
 import re
 import types
 import wx
-import wx.aui
+from wx.lib.agw import aui
 from collections import defaultdict
 from os.path import join
 
@@ -59,6 +59,7 @@ ID = defaultdict(wx.NewId, {
 })
 
 Text = eg.text.MainFrame
+
 
 class Config(eg.PersistentData):
     position = (50, 50)
@@ -104,12 +105,14 @@ class MainFrame(wx.Frame):
         )
         self.SetMinSize((400, 200))
         document.frame = self
-        auiManager = wx.aui.AuiManager(self, wx.aui.AUI_MGR_DEFAULT)
-        self.auiManager = auiManager
+        self.auiManager = auiManager = aui.AuiManager()
+        auiManager.SetManagedWindow(self)
 
         self.logCtrl = self.CreateLogCtrl()
-        self.corConst = self.logCtrl.GetWindowBorderSize()[0] + \
+        self.corConst = (
+            self.logCtrl.GetWindowBorderSize()[0] +
             wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+        )
         self.treeCtrl = self.CreateTreeCtrl()
         self.toolBar = self.CreateToolBar()
         self.menuBar = self.CreateMenuBar()
@@ -134,9 +137,9 @@ class MainFrame(wx.Frame):
         self.ratio = Config.ratio
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_MOVE, self.OnMove)
-        self.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
-        self.Bind(wx.aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
-        self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
+        self.Bind(aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
+        self.Bind(aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
+        self.Bind(aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
         eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
@@ -152,34 +155,29 @@ class MainFrame(wx.Frame):
         self.OnFocusChange(self.treeCtrl)
         eg.Bind("ClipboardChange", self.OnClipboardChange)
         # tell FrameManager to manage this frame
-        if (Config.perspective is not None):
+        if Config.perspective is not None:
             try:
                 auiManager.LoadPerspective(Config.perspective, False)
             except:
                 pass
         artProvider = auiManager.GetArtProvider()
-        artProvider.SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
+        artProvider.SetMetric(aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         artProvider.SetMetric(
-            wx.aui.AUI_DOCKART_GRADIENT_TYPE,
-            wx.aui.AUI_GRADIENT_HORIZONTAL
+            aui.AUI_DOCKART_GRADIENT_TYPE,
+            aui.AUI_GRADIENT_HORIZONTAL
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_COLOUR,
             eg.colour.inactiveCaption
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR,
             eg.colour.inactiveCaptionGradient
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,
             eg.colour.inactiveCaptionTextColour
         )
-        auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
-        self.toolBar.Show(Config.showToolbar)
-        auiManager.Update()
-        auiManager.GetPane("logger").MinSize((100, 100))\
-            .Caption(" " + Text.Logger.caption)
 
         # create an accelerator for the "Log only assigned and activated
         # events" checkbox. An awful hack.
@@ -239,17 +237,13 @@ class MainFrame(wx.Frame):
         if not Config.logTime:
             logCtrl.SetTimeLogging(False)
         logCtrl.SetIndent(Config.indentLog)
-        self.auiManager.AddPane(
-            logCtrl,
-            wx.aui.AuiPaneInfo().
-            Name("logger").
-            Left().
-            MinSize((280, 300)).
-            MaximizeButton(True).
-            CloseButton(False).
-            Caption(" " + Text.Logger.caption)
-        )
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("logger").Caption(" " + Text.Logger.caption).Left()
+        pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
+        self.auiManager.AddPane(logCtrl, pane)
         self.auiManager.Update()
+
         logCtrl.Thaw()
         return logCtrl
 
@@ -281,8 +275,8 @@ class MainFrame(wx.Frame):
         Append("Open", "\tCtrl+O")
         Append("Save", "\tCtrl+S").Enable(False)
         Append("SaveAs", "\tShift+Ctrl+S")
-        menu.AppendSeparator()
-        Append("Options", "\tCtrl+P")
+        #menu.AppendSeparator()
+        #Append("Options", "\tCtrl+P")
         menu.AppendSeparator()
         Append("Restart", "\tShift+Ctrl+~")
         menu.AppendSeparator()
@@ -343,6 +337,10 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         Append("Disabled", "\tCtrl+D", kind=wx.ITEM_CHECK)
 
+        # settings menu
+        settingsMenu = eg.SettingsMenu(ID)
+        menuBar.Append(settingsMenu, settingsMenu.GetTitle())
+
         # help menu
         menu = wx.Menu()
         menuBar.Append(menu, text.HelpMenu)
@@ -365,12 +363,23 @@ class MainFrame(wx.Frame):
         """
         Creates the toolbar of the frame.
         """
-        toolBar = wx.ToolBar(self, style=wx.TB_FLAT)
+        toolBar = aui.AuiToolBar(
+            self,
+            # size=(self.GetSizeTuple()[0], 16),
+            agwStyle=aui.AUI_TB_PLAIN_BACKGROUND | aui.AUI_TB_GRIPPER
+        )
         toolBar.SetToolBitmapSize((16, 16))
+        toolBar.SetAuiManager(self.auiManager)
         text = Text.Menu
 
         def Append(ident, image):
-            toolBar.AddSimpleTool(ID[ident], image, getattr(text, ident))
+            toolText = getattr(text, ident).replace('&', '')
+            toolBar.AddSimpleTool(
+                ID[ident],
+                label=toolText,
+                bitmap=image,
+                short_help_string=toolText
+            )
 
         Append("New", GetInternalBitmap("New"))
         Append("Open", GetInternalBitmap("Open"))
@@ -395,35 +404,43 @@ class MainFrame(wx.Frame):
         # the execute button must be added with unique id, because otherwise
         # the menu command OnCmdExecute will be used in conjunction to
         # our special mouse click handlers
+        executeText = getattr(text, "Execute").replace('&', '')
         toolBar.AddSimpleTool(
             ID_TOOLBAR_EXECUTE,
-            GetInternalBitmap("Execute"),
-            getattr(text, "Execute")
+            label=executeText,
+            bitmap=GetInternalBitmap("Execute"),
+            short_help_string=executeText
         )
 
         toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
-        self.SetToolBar(toolBar)
+        # self.SetToolBar(toolBar)
 
         toolBar.Bind(wx.EVT_LEFT_DOWN, self.OnToolBarLeftDown)
         toolBar.Bind(wx.EVT_LEFT_UP, self.OnToolBarLeftUp)
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("toolBar").Caption(" Toolbar").Top().Row(0)
+        pane.MaximizeButton(False).CloseButton(False)
+        pane.Floatable(True).Dockable(True).ToolbarPane()
+        self.auiManager.AddPane(toolBar, pane)
+        self.auiManager.Update()
+
+        pane.Show(Config.showToolbar)
+        self.auiManager.Update()
+
         return toolBar
 
     def CreateTreeCtrl(self):
         treeCtrl = TreeCtrl(self, document=self.document)
-        self.auiManager.AddPane(
-            treeCtrl,
-            wx.aui.AuiPaneInfo().
-            Name("tree").
-            Center().
-            MinSize((100, 100)).
-            Floatable(True).
-            Dockable(True).
-            MaximizeButton(True).
-            Caption(" " + Text.Tree.caption).
-            CloseButton(False)
-        )
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("tree").Caption(" " + Text.Tree.caption).Center()
+        pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
+        pane.Floatable(True).Dockable(True)
+        self.auiManager.AddPane(treeCtrl, pane)
         self.auiManager.Update()
+
         treeCtrl.SetFocus()
         return treeCtrl
 
@@ -614,7 +631,7 @@ class MainFrame(wx.Frame):
 
     def OnPaneClose(self, event):
         """
-        React to a wx.aui.EVT_AUI_PANE_CLOSE event.
+        React to a aui.EVT_AUI_PANE_CLOSE event.
 
         Monitors if the toolbar gets closed and updates the check menu
         entry accordingly
@@ -626,13 +643,13 @@ class MainFrame(wx.Frame):
 
     def OnPaneMaximize(self, dummyEvent):
         """
-        React to a wx.aui.EVT_AUI_PANE_MAXIMIZE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_MAXIMIZE event.
         """
         Config.perspective2 = self.auiManager.SavePerspective()
 
     def OnPaneRestore(self, dummyEvent):
         """
-        React to a wx.aui.EVT_AUI_PANE_RESTORE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_RESTORE event.
         """
         if Config.perspective2 is not None:
             self.auiManager.LoadPerspective(Config.perspective2)
@@ -702,9 +719,9 @@ class MainFrame(wx.Frame):
         self.popupMenu.SetLabel(wx.ID_REDO, redoName)
 
         self.toolBar.EnableTool(wx.ID_UNDO, hasUndos)
-        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName)
+        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName.replace('&', ''))
         self.toolBar.EnableTool(wx.ID_REDO, hasRedos)
-        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName)
+        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName.replace('&', ''))
 
     def Raise(self):
         BringHwndToFront(self.GetHandle())
@@ -853,11 +870,8 @@ class MainFrame(wx.Frame):
     #---- View ---------------------------------------------------------------
     def OnCmdHideShowToolbar(self):
         Config.showToolbar = not Config.showToolbar
-        #self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
-        #self.auiManager.Update()
-        self.toolBar.Show(Config.showToolbar)
-        self.Layout()
-        self.SendSizeEvent()
+        self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
+        self.auiManager.Update()
 
     def OnCmdExpandAll(self):
         self.treeCtrl.ExpandAll()
