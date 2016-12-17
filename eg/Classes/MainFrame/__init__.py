@@ -275,8 +275,8 @@ class MainFrame(wx.Frame):
         Append("Open", "\tCtrl+O")
         Append("Save", "\tCtrl+S").Enable(False)
         Append("SaveAs", "\tShift+Ctrl+S")
-        #menu.AppendSeparator()
-        #Append("Options", "\tCtrl+P")
+        menu.AppendSeparator()
+        Append("Options", "\tCtrl+P")
         menu.AppendSeparator()
         Append("Restart", "\tShift+Ctrl+~")
         menu.AppendSeparator()
@@ -336,10 +336,6 @@ class MainFrame(wx.Frame):
         Append("Execute", "\tF5")
         menu.AppendSeparator()
         Append("Disabled", "\tCtrl+D", kind=wx.ITEM_CHECK)
-
-        # settings menu
-        settingsMenu = eg.SettingsMenu(ID)
-        menuBar.Append(settingsMenu, settingsMenu.GetTitle())
 
         # help menu
         menu = wx.Menu()
@@ -631,7 +627,7 @@ class MainFrame(wx.Frame):
 
     def OnPaneClose(self, event):
         """
-        React to a aui.EVT_AUI_PANE_CLOSE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_CLOSE event.
 
         Monitors if the toolbar gets closed and updates the check menu
         entry accordingly
