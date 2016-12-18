@@ -1,6 +1,7 @@
 
 ![EventGhost Logo](images/logo.png)
-# EventGhost   [![Build Status](https://ci.appveyor.com/api/projects/status/3wf2sdw8bf4i02b9/branch/master?svg=true)](https://ci.appveyor.com/project/blackwind/eventghost/build/artifacts)   [![Slack](https://eventghost-slackin.herokuapp.com/badge.svg)](https://eventghost-slackin.herokuapp.com/)
+# EventGhost   [![Build Status](https://ci.appveyor.com/api/projects/status/3wf2sdw8bf4i02b9/branch/master?svg=true)](https://ci.appveyor.com/project/blackwind/eventghost/build/artifacts)   [![Slack](https://eventghost-slackin.herokuapp.com/badge.svg)](https://eventghost-slackin.herokuapp.com/)   [![Code Climate](https://codeclimate.com/github/EventGhost/EventGhost/badges/gpa.svg)](https://codeclimate.com/github/EventGhost/EventGhost)   [![Test Coverage](https://codeclimate.com/github/EventGhost/EventGhost/badges/coverage.svg)](https://codeclimate.com/github/EventGhost/EventGhost/coverage)
+
 
 
 [EventGhost](www.eventghost.org) is an advanced, yet easy-to-use extensible automation tool for Windows. Users can create macros entirely through the GUI -- you don't have to write a single line of code if you don't want to -- and these macros are triggered by events, which can come from literally any device, program, or source with a corresponding plugin.
