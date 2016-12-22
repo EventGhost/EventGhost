@@ -57,8 +57,184 @@ INFO_FIELDS = [
     "icon",
 ]
 
+
 class PluginInstall(object):
+    def AddGUID(self, pluginInfo):
+        from comtypes import GUID
+        self.BackupPlugin(pluginInfo)
+
+        initFile = os.path.join(pluginInfo.path, '__init__.py')
+        initFile = open(initFile, 'r+')
+
+        lines = initFile.readlines()
+        initFile.seek(0)
+
+        startPos = None
+        stopPos = None
+        modifiedRegister = []
+        bracketCount = 0
+        for i, line in enumerate(lines):
+            if line.strip() == 'eg.RegisterPlugin(':
+                startPos = i
+                modifiedRegister.append(line)
+                bracketCount = 1
+                continue
+            elif line.startswith('eg.RegisterPlugin('):
+                modifiedRegister.append(line)
+                startPos = i
+                bracketCount = 1
+                for char in line[18:]:
+                    if char == '(':
+                        bracketCount += 1
+                    elif char == ')':
+                        bracketCount -= 1
+                if bracketCount:
+                    for j, nextLine in enumerate(lines[i + 1:]):
+                        modifiedRegister.append(nextLine)
+                        for char2 in nextLine:
+                            if char2 == '(':
+                                bracketCount += 1
+                            if char2 == ')':
+                                bracketCount -= 1
+                        if not bracketCount:
+                            stopPos = j
+                            break
+                    break
+                else:
+                    stopPos = i
+                    break
+            if startPos is not None:
+                modifiedRegister.append(line)
+                if line.strip().lower.startswith('guid'):
+                    continue
+                for char in line:
+                    if char == '(':
+                        bracketCount += 1
+                    elif char == ')':
+                        bracketCount -= 1
+
+                if not bracketCount:
+                    stopPos = i
+                    break
+        if stopPos is None:
+            return None
+
+        print modifiedRegister
+
+        spaces = 0
+        tabs = 0
+        for i, char in enumerate(modifiedRegister[0]):
+            if char == ' ':
+                spaces += 1
+            elif char == '\t':
+                tabs += 1
+            else:
+                break
+
+        guid = unicode(GUID.create_new()).upper()
+
+        modifiedRegister = list(line.strip() for line in modifiedRegister)
+        modifiedRegister = ''.join(modifiedRegister)
+        modifiedRegister = modifiedRegister.split(',')
+        firstLine = modifiedRegister[0].split('(')
+        if len(modifiedRegister) == 1:
+            lastLine = firstLine[1][:-1]
+            modifiedRegister = [
+                firstLine[0] + '(',
+                lastLine,
+                'guid=%r' % guid,
+                ')'
+            ]
+        else:
+            lastLine = modifiedRegister[-1]
+            modifiedRegister[0] = firstLine[0] + '('
+            modifiedRegister.insert(1, firstLine[1])
+            modifiedRegister[len(modifiedRegister) - 1] = lastLine[:-1]
+            modifiedRegister.append('guid=%r' % guid)
+            modifiedRegister.append(')')
+
+        regLen = len(modifiedRegister)
+
+        print modifiedRegister
+
+        for i, line in enumerate(modifiedRegister):
+            if spaces:
+                indent = ' ' * spaces
+            elif tabs:
+                indent = '\t' * tabs
+            else:
+                indent = ''
+            if not i or i >= regLen - 2:
+                formatter = '%s%s\n'
+            else:
+                formatter = '%s%s,\n'
+
+            if i and i + 1 != regLen:
+                if tabs:
+                    indent += '\t'
+                else:
+                    indent += ' ' * 4
+
+            keywordList = (
+                'name',
+                'description',
+                'kind',
+                'author',
+                'version',
+                'icon',
+                'canMultiLoad',
+                'createMacrosOnAdd',
+                'url',
+                'help',
+                'hardwareId'
+            )
+
+            for kName in keywordList:
+                if line.startswith(kName):
+                    line = line.replace(kName, '')
+                    if line.startswith(' ='):
+                        line = line[2:].strip()
+                    if line.startswith('='):
+                        line = line[1:].strip()
+
+                    if line.startswith("('") or line.startswith('("'):
+                        quote = line[:2][1]
+                        line = line[1:]
+                        if tabs:
+                            dent = indent + '\t'
+                        else:
+                            dent = indent + ' ' * 4
+                        line = line.replace(
+                            quote + quote,
+                            '%s\n%s%s' % (quote, dent, quote)
+                        )
+                        if line.endswith(quote + ')'):
+                            line = line[:-2] + quote + '\n' + indent + ')'
+
+                        line = '(\n' + dent + line
+                    line = kName + '=' + line
+                    break
+
+            line = formatter % (indent, line)
+            modifiedRegister[i] = line
+
+        print modifiedRegister
+
+        for i in range(startPos, stopPos + 1):
+            lines.pop(startPos)
+
+        for i, line in enumerate(modifiedRegister):
+            lines.insert(startPos + i, line)
+
+        initFile.writelines(lines)
+        initFile.close()
+
+        eg.pluginManager.ScanAllPlugins()
+
+        return eg.pluginManager.database[guid]
+
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
+
         zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
         sourceCode = "\n".join(
             "%s = %r" % (fieldName, pluginData[fieldName])
@@ -84,7 +260,6 @@ class PluginInstall(object):
 
     @eg.LogItWithReturn
     def Export(self, pluginInfo):
-        pluginData = self.GetPluginData(pluginInfo)
         #dialog = PluginOverviewDialog(
         #    eg.document.frame,
         #    "Plugin Information",
@@ -96,11 +271,41 @@ class PluginInstall(object):
         #dialog.Destroy()
         #if result == wx.ID_CANCEL:
         #    return
-        filename = os.path.basename(pluginInfo.path)
+
+        if pluginInfo.guid == pluginInfo.englishName:
+            dialog = wx.MessageDialog(
+                None,
+                message=(
+                    'Plugin %s does not have a GUID,\n'
+                    'this is required for plugins.\n\n'
+                    'Would you like to add one?' %
+                    pluginInfo.englishName
+                ),
+                caption='Plugin Export - Missing GUID',
+                style=(
+                    wx.YES_NO |
+                    wx.YES_DEFAULT |
+                    wx.ICON_EXCLAMATION |
+                    wx.STAY_ON_TOP
+                )
+            )
+
+            result = dialog.ShowModal()
+            dialog.Destroy()
+            if result == wx.ID_NO:
+                return
+            pluginInfo = self.AddGUID(pluginInfo)
+
+        pluginData = self.GetPluginData(pluginInfo)
+
+        fileName = (
+            '%s-%s.egplugin' % (pluginInfo.englishName, pluginInfo.version)
+        )
+        filePath = os.path.basename(pluginInfo.path)
         title = eg.text.MainFrame.Menu.Export.replace("&", "").replace(".", "")
         dialog = wx.FileDialog(
             eg.document.frame,
-            defaultFile=filename,
+            defaultFile=os.path.join(filePath, fileName),
             message=title,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
@@ -131,6 +336,30 @@ class PluginInstall(object):
             "icon": iconData,
         }
 
+    def BackupPlugin(self, pluginInfo):
+
+        backupName = (
+            '%s-%s.egplugin' % (pluginInfo.englishName, pluginInfo.version)
+        )
+
+        backupPath = os.path.join(
+            eg.folderPath.ProgramData,
+            'EventGhost',
+            'PluginBackups'
+        )
+        if not os.path.exists(backupPath):
+            os.makedirs(backupPath)
+
+        eg.PrintNotice('Creating backup of plugin.')
+        eg.PrintNotice('Writing ' + os.path.join(backupPath, backupName))
+
+        self.CreatePluginPackage(
+            pluginInfo.path,
+            os.path.join(backupPath, backupName),
+            self.GetPluginData(pluginInfo)
+        )
+
+
     @eg.LogItWithReturn
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
@@ -146,38 +375,110 @@ class PluginInstall(object):
                 if os.path.isdir(path):
                     basePath = path
                     break
-            dialog = PluginOverviewDialog(
-                title="Install EventGhost Plugin",
-                pluginData=pluginData,
-                basePath=basePath,
-                message=(
-                    "Do you really want to install this plugin into "
-                    "EventGhost?"
-                )
-            )
-            result = dialog.ShowModal()
-            dialog.Destroy()
-            if result == wx.ID_CANCEL:
-                return
+
             guid = pluginData['guid']
             if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
                 info = eg.pluginManager.database[guid]
-                if info.path.lower().startswith(eg.localPluginDir.lower()):
-                    # plugin with same GUID exists in user dir, so delete
-                    # the folder first
-                    shutil.rmtree(info.path, False)
-            dstDir = os.path.join(eg.localPluginDir, os.path.basename(basePath))
-            if os.path.exists(dstDir):
-                # the wanted name is already used by another plugin
-                # so we create a new folder name by adding an number
-                for i in range(2, 100):
-                    searchDir = dstDir + str(i)
-                    if not os.path.exists(searchDir):
-                        dstDir = searchDir
-                        break
+
+                if info.englishName != pluginData['name']:
+                    title = 'Replace EventGhost Plugin %s' % info.englishName
+                    message = (
+                        'The new plugin has the same identifier as\n'
+                        'an existing plugin.\n'
+                        'Would you like to replace plugin\n'
+                        '%s with plugin %s?' %
+                        (info.englishName, pluginData['name'])
+                    )
+                elif info.version != pluginData['version']:
+                    if info.version < pluginData['version']:
+                        title = (
+                            'Upgrade EventGhost Plugin %s' % info.englishName
+                        )
+                        message = (
+                            'Would you like to upgrade plugin %s\n'
+                            'version %s to version %s?' %
+                            (
+                                info.englishName,
+                                info.version,
+                                pluginData['version']
+                            )
+                        )
+                    else:
+                        title = (
+                            'Downgrade EventGhost Plugin %s' % info.englishName
+                        )
+                        message = (
+                            'Would you like to downgrade plugin %s\n'
+                            'version %s to version %s?' %
+                            (
+                                info.englishName,
+                                info.version,
+                                pluginData['version']
+                            )
+                        )
                 else:
-                    raise Exception("Can't create directory for plugin")
+                    title = 'Overwrite EventGhost Plugin %s' % info.englishName
+                    message = (
+                        'Plugin %s is already installed.\n'
+                        'Would you like to overwrite plugin %s?\n' %
+                        (info.englishName, pluginData['name'])
+                    )
+
+                dialog = PluginOverviewDialog(
+                    title=title,
+                    message=message,
+                    pluginData=pluginData,
+                    basePath=basePath,
+                )
+
+                result = dialog.ShowModal()
+                dialog.Destroy()
+                if result == wx.ID_CANCEL:
+                    return
+
+                self.BackupPlugin(info)
+                try:
+                    shutil.rmtree(info.path, False)
+                except WindowsError:
+                    if info.path.startswith(eg.corePluginDir):
+                        eg.PrintNotice(
+                            'The old plugin will have to removed manually.\n' +
+                            info.path
+                        )
+                    else:
+                        raise
+            else:
+                dialog = PluginOverviewDialog(
+                    title="Install EventGhost Plugin %s" % pluginData['name'],
+                    pluginData=pluginData,
+                    basePath=basePath,
+                    message=(
+                        "Do you really want to install this plugin into "
+                        "EventGhost?"
+                    )
+                )
+                result = dialog.ShowModal()
+                dialog.Destroy()
+                if result == wx.ID_CANCEL:
+                    return
+
+            dstDir = os.path.join(
+                eg.localPluginDir,
+                os.path.basename(basePath)
+            )
+
+            if os.path.exists(dstDir):
+                dstDir += '-' + pluginData['version']
+                if os.path.exists(dstDir):
+                    for i in range(1, 200):
+                        searchDir = dstDir + '-' + str(i)
+                        if not os.path.exists(searchDir):
+                            dstDir = searchDir
+                        break
+                    else:
+                        raise Exception("Can't create directory for plugin")
+
             shutil.copytree(basePath, dstDir)
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
         finally:
@@ -196,6 +497,7 @@ class PluginOverviewDialog(Dialog):
         basePath=None,
         pluginData=None,
         message="",
+        upgrade=False
     ):
         Dialog.__init__(
             self,
@@ -203,7 +505,11 @@ class PluginOverviewDialog(Dialog):
             -1,
             title,
             size=(400, 300),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+            style=(
+                wx.DEFAULT_DIALOG_STYLE |
+                wx.RESIZE_BORDER |
+                wx.STAY_ON_TOP
+            )
         )
         self.text = TEMPLATE.format(**pluginData)
         headerCtrl = eg.HtmlWindow(self, style=wx.html.HW_SCROLLBAR_NEVER)
