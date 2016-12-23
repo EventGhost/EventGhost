@@ -48,20 +48,82 @@ TEMPLATE = u"""
 <b>Description:</b>"""
 
 INFO_FIELDS = [
-    "name",
-    "author",
-    "version",
-    "url",
-    "guid",
-    "description",
-    "icon",
+    'name',
+    'author',
+    'version',
+    'url',
+    'guid',
+    'description',
+    'icon',
+    'hardwareId',
+    'canMultiLoad',
+    'createMacrosOnAdd',
+    'kind',
 ]
+
+
+def InfoField(field, attr, tab=''):
+    if tab:
+        index = 68
+        infoField = '%s%s=' % (tab, field)
+    else:
+        index = 72
+        infoField = '%s = ' % field
+    if len(infoField + repr(attr)) + 2 > 72:
+        infoField += '(\n'
+        while len(repr(attr)) > index:
+            infoField += '%s%r\n' % (tab + ' ' * 4, attr[:index])
+            attr = attr[index:]
+        infoField += '%s%r\n%s)' % (tab + ' ' * 4, attr, tab)
+    else:
+        if field == 'icon' and attr is not None:
+            infoField += attr
+        else:
+            infoField += repr(attr)
+    if tab:
+        infoField += ','
+    return infoField + '\n'
+
+
+def FindStop(nextLines, icon):
+    for j, nextLine in enumerate(nextLines):
+        if icon:
+            if (
+                    nextLine.startswith('    icon=') or
+                    nextLine.startswith('\ticon=')
+            ):
+                icon = nextLine[nextLine.find('=') + 1:].strip()
+                if icon.startswith('('):
+                    icon = u''
+                    iconLines = nextLines[j + 1:]
+                    for iconLine in iconLines:
+                        if iconLine.strip()[:1] == ')':
+                            break
+                        icon += unicode(iconLine.strip()[1:-1])
+                else:
+                    if icon.endswidth(','):
+                        icon = icon[:-1]
+                    if icon[:1] in ("'", '"'):
+                        icon = repr(unicode(icon[1:-1]))
+
+        if nextLine.rstrip() == ')':
+            return j, repr(icon)
+
+    return None, repr(icon)
 
 
 class PluginInstall(object):
     def AddGUID(self, pluginInfo):
         from comtypes import GUID
         self.BackupPlugin(pluginInfo)
+
+        guid = unicode(GUID.create_new()).upper()
+        pluginInfo.guid = guid
+
+        if pluginInfo.icon == eg.Icons.PLUGIN_ICON:
+            icon = None
+        else:
+            icon = True
 
         initFile = os.path.join(pluginInfo.path, '__init__.py')
         initFile = open(initFile, 'r+')
@@ -71,175 +133,77 @@ class PluginInstall(object):
 
         startPos = None
         stopPos = None
-        modifiedRegister = []
-        bracketCount = 0
+
         for i, line in enumerate(lines):
-            if line.strip() == 'eg.RegisterPlugin(':
+            if line.rstrip() == 'eg.RegisterPlugin(':
                 startPos = i
-                modifiedRegister.append(line)
-                bracketCount = 1
-                continue
+                stopPos, icon = FindStop(lines[i + 1:], icon)
+                break
             elif line.startswith('eg.RegisterPlugin('):
-                modifiedRegister.append(line)
                 startPos = i
-                bracketCount = 1
-                for char in line[18:]:
-                    if char == '(':
-                        bracketCount += 1
-                    elif char == ')':
-                        bracketCount -= 1
-                if bracketCount:
-                    for j, nextLine in enumerate(lines[i + 1:]):
-                        modifiedRegister.append(nextLine)
-                        for char2 in nextLine:
-                            if char2 == '(':
-                                bracketCount += 1
-                            if char2 == ')':
-                                bracketCount -= 1
-                        if not bracketCount:
-                            stopPos = j
-                            break
-                    break
+                if line.rstrip().endswith(')'):
+                    stopPos = i
                 else:
-                    stopPos = i
-                    break
-            if startPos is not None:
-                modifiedRegister.append(line)
-                if line.strip().lower.startswith('guid'):
-                    continue
-                for char in line:
-                    if char == '(':
-                        bracketCount += 1
-                    elif char == ')':
-                        bracketCount -= 1
-
-                if not bracketCount:
-                    stopPos = i
-                    break
-        if stopPos is None:
-            return None
-
-        print modifiedRegister
-
-        spaces = 0
-        tabs = 0
-        for i, char in enumerate(modifiedRegister[0]):
-            if char == ' ':
-                spaces += 1
-            elif char == '\t':
-                tabs += 1
-            else:
+                    stopPos, icon = FindStop(lines[i + 1:], icon)
                 break
 
-        guid = unicode(GUID.create_new()).upper()
+        registerPlugin = 'eg.RegisterPlugin(\n'
+        for field in INFO_FIELDS:
+            if field == 'icon':
+                continue
+            attr = getattr(pluginInfo, field)
+            if field == 'hardwareId':
+                attr = unicode(attr)
 
-        modifiedRegister = list(line.strip() for line in modifiedRegister)
-        modifiedRegister = ''.join(modifiedRegister)
-        modifiedRegister = modifiedRegister.split(',')
-        firstLine = modifiedRegister[0].split('(')
-        if len(modifiedRegister) == 1:
-            lastLine = firstLine[1][:-1]
-            modifiedRegister = [
-                firstLine[0] + '(',
-                lastLine,
-                'guid=%r' % guid,
-                ')'
-            ]
-        else:
-            lastLine = modifiedRegister[-1]
-            modifiedRegister[0] = firstLine[0] + '('
-            modifiedRegister.insert(1, firstLine[1])
-            modifiedRegister[len(modifiedRegister) - 1] = lastLine[:-1]
-            modifiedRegister.append('guid=%r' % guid)
-            modifiedRegister.append(')')
+            registerPlugin += InfoField(field, attr, tab=' ' * 4)
 
-        regLen = len(modifiedRegister)
+        registerPlugin += InfoField('icon', icon, tab=' ' * 4)
+        registerPlugin = registerPlugin[:-2] + '\n)\n'
 
-        print modifiedRegister
-
-        for i, line in enumerate(modifiedRegister):
-            if spaces:
-                indent = ' ' * spaces
-            elif tabs:
-                indent = '\t' * tabs
-            else:
-                indent = ''
-            if not i or i >= regLen - 2:
-                formatter = '%s%s\n'
-            else:
-                formatter = '%s%s,\n'
-
-            if i and i + 1 != regLen:
-                if tabs:
-                    indent += '\t'
-                else:
-                    indent += ' ' * 4
-
-            keywordList = (
-                'name',
-                'description',
-                'kind',
-                'author',
-                'version',
-                'icon',
-                'canMultiLoad',
-                'createMacrosOnAdd',
-                'url',
-                'help',
-                'hardwareId'
+        if None in (startPos, stopPos):
+            dialog = wx.MessageDialog(
+                None,
+                message=(
+                    'There was an error in adding the GUID\n'
+                    'to the plugin. you will have to add it\n'
+                    'manually.\n\n' +
+                    registerPlugin
+                ),
+                caption='Plugin Export - GUID Error',
+                style=(
+                    wx.OK |
+                    wx.ICON_ERROR |
+                    wx.STAY_ON_TOP
+                )
             )
+            dialog.ShowModal()
+            dialog.Destroy()
+            return None
 
-            for kName in keywordList:
-                if line.startswith(kName):
-                    line = line.replace(kName, '')
-                    if line.startswith(' ='):
-                        line = line[2:].strip()
-                    if line.startswith('='):
-                        line = line[1:].strip()
-
-                    if line.startswith("('") or line.startswith('("'):
-                        quote = line[:2][1]
-                        line = line[1:]
-                        if tabs:
-                            dent = indent + '\t'
-                        else:
-                            dent = indent + ' ' * 4
-                        line = line.replace(
-                            quote + quote,
-                            '%s\n%s%s' % (quote, dent, quote)
-                        )
-                        if line.endswith(quote + ')'):
-                            line = line[:-2] + quote + '\n' + indent + ')'
-
-                        line = '(\n' + dent + line
-                    line = kName + '=' + line
-                    break
-
-            line = formatter % (indent, line)
-            modifiedRegister[i] = line
-
-        print modifiedRegister
-
-        for i in range(startPos, stopPos + 1):
+        for i in range(startPos, startPos + stopPos + 2):
             lines.pop(startPos)
-
-        for i, line in enumerate(modifiedRegister):
-            lines.insert(startPos + i, line)
+        lines.insert(startPos, registerPlugin)
 
         initFile.writelines(lines)
         initFile.close()
 
         eg.pluginManager.ScanAllPlugins()
-
         return eg.pluginManager.database[guid]
 
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
 
         zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
-        sourceCode = "\n".join(
-            "%s = %r" % (fieldName, pluginData[fieldName])
-            for fieldName in INFO_FIELDS
+        sourceCode = ''.join(
+            InfoField(fieldName, pluginData[fieldName])
+            for fieldName in INFO_FIELDS[:6]
         )
+        icon = pluginData['icon']
+        if icon is not None:
+            icon = unicode(icon)
+            if len(icon) < 72:
+                icon = repr(icon)
+
+        sourceCode += InfoField('icon', icon) + '\n'
         zipfile.writestr("info.py", sourceCode)
         baseName = os.path.basename(sourcePath)
         for dirpath, dirnames, filenames in os.walk(sourcePath):
@@ -295,7 +259,8 @@ class PluginInstall(object):
             if result == wx.ID_NO:
                 return
             pluginInfo = self.AddGUID(pluginInfo)
-
+            if pluginInfo is None:
+                return
         pluginData = self.GetPluginData(pluginInfo)
 
         fileName = (
@@ -496,8 +461,7 @@ class PluginOverviewDialog(Dialog):
         title=eg.APP_NAME,
         basePath=None,
         pluginData=None,
-        message="",
-        upgrade=False
+        message=""
     ):
         Dialog.__init__(
             self,
