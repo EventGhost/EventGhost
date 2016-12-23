@@ -25,6 +25,7 @@ import shutil
 import tempfile
 import wx
 from zipfile import ZIP_DEFLATED, ZipFile
+from comtypes import GUID
 
 # Local imports
 import eg
@@ -63,12 +64,13 @@ INFO_FIELDS = [
 
 
 def InfoField(field, attr, tab=''):
-    if tab:
+    if tab != '':
         index = 68
         infoField = '%s%s=' % (tab, field)
     else:
         index = 72
         infoField = '%s = ' % field
+
     if len(infoField + repr(attr)) + 2 > 72:
         infoField += '(\n'
         while len(repr(attr)) > index:
@@ -87,24 +89,21 @@ def InfoField(field, attr, tab=''):
 
 def FindStop(nextLines, icon):
     for j, nextLine in enumerate(nextLines):
-        if icon:
-            if (
-                    nextLine.startswith('    icon=') or
-                    nextLine.startswith('\ticon=')
-            ):
-                icon = nextLine[nextLine.find('=') + 1:].strip()
-                if icon.startswith('('):
-                    icon = u''
-                    iconLines = nextLines[j + 1:]
-                    for iconLine in iconLines:
-                        if iconLine.strip()[:1] == ')':
-                            break
-                        icon += unicode(iconLine.strip()[1:-1])
-                else:
-                    if icon.endswidth(','):
-                        icon = icon[:-1]
-                    if icon[:1] in ("'", '"'):
-                        icon = repr(unicode(icon[1:-1]))
+        ic = nextLine.startswith('    icon=') or nextLine.startswith('\ticon=')
+        if icon and ic:
+            icon = nextLine[nextLine.find('=') + 1:].strip()
+            if icon.startswith('('):
+                icon = u''
+                iconLines = nextLines[j + 1:]
+                for iconLine in iconLines:
+                    if iconLine.strip()[:1] == ')':
+                        break
+                    icon += unicode(iconLine.strip()[1:-1])
+            else:
+                if icon.endswidth(','):
+                    icon = icon[:-1]
+                if icon[:1] in ("'", '"'):
+                    icon = repr(unicode(icon[1:-1]))
 
         if nextLine.rstrip() == ')':
             return j, repr(icon)
@@ -114,12 +113,7 @@ def FindStop(nextLines, icon):
 
 class PluginInstall(object):
     def AddGUID(self, pluginInfo):
-        from comtypes import GUID
         self.BackupPlugin(pluginInfo)
-
-        guid = unicode(GUID.create_new()).upper()
-        pluginInfo.guid = guid
-
         if pluginInfo.icon == eg.Icons.PLUGIN_ICON:
             icon = None
         else:
@@ -133,7 +127,6 @@ class PluginInstall(object):
 
         startPos = None
         stopPos = None
-
         for i, line in enumerate(lines):
             if line.rstrip() == 'eg.RegisterPlugin(':
                 startPos = i
@@ -147,6 +140,8 @@ class PluginInstall(object):
                     stopPos, icon = FindStop(lines[i + 1:], icon)
                 break
 
+        guid = unicode(GUID.create_new()).upper()
+        pluginInfo.guid = guid
         registerPlugin = 'eg.RegisterPlugin(\n'
         for field in INFO_FIELDS:
             if field == 'icon':
@@ -193,10 +188,10 @@ class PluginInstall(object):
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
 
         zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
-        sourceCode = ''.join(
-            InfoField(fieldName, pluginData[fieldName])
-            for fieldName in INFO_FIELDS[:6]
-        )
+        sourceCode = ''
+        for fieldName in INFO_FIELDS[:6]:
+            sourceCode += InfoField(fieldName, pluginData[fieldName])
+
         icon = pluginData['icon']
         if icon is not None:
             icon = unicode(icon)
