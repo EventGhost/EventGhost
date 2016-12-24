@@ -558,8 +558,8 @@ class MainFrame(wx.Frame):
             self.SetWindowStyleFlag(self.style)
 
     def OnDocumentChange(self, isDirty):
-        self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
-        self.menuBar.Enable(wx.ID_SAVE, bool(isDirty))
+        wx.CallAfter(self.toolBar.EnableTool, wx.ID_SAVE, bool(isDirty))
+        wx.CallAfter(self.menuBar.Enable, wx.ID_SAVE, bool(isDirty))
 
     def OnDocumentFileChange(self, filepath):
         self.SetTitle(self.document.GetTitle())
