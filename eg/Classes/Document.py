@@ -126,6 +126,7 @@ class Document(object):
         elif result == wx.ID_YES:
             return self.Save()
         else:
+            eg.config.Undo()
             return wx.ID_NO
 
     @eg.LogItWithReturn
@@ -419,6 +420,7 @@ class Document(object):
     def Save(self):
         if not self.filePath:
             return self.SaveAs()
+        eg.config.Save()
         self.WriteFile(self.filePath)
         return wx.ID_YES
 
@@ -426,6 +428,7 @@ class Document(object):
         filePath = self.AskFile(style=wx.SAVE | wx.OVERWRITE_PROMPT)
         if filePath is None:
             return wx.ID_CANCEL
+        eg.config.Save()
         self.WriteFile(filePath)
         self.SetFilePath(filePath)
         return wx.ID_YES

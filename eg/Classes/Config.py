@@ -78,7 +78,11 @@ class Config(Section):
         if not os.path.exists(configDir):
             os.makedirs(configDir)
         configFilePath = os.path.join(configDir, "config.py")
+
         self._configFilePath = configFilePath
+        self._undoData = []
+        self._debugData = []
+        self._markedForDeletion = []
 
         # BUG: of the python function 'ExecFile'. It doesn't handle unicode
         # filenames right.
@@ -97,12 +101,63 @@ class Config(Section):
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
 
+    def Undo(self):
+        self._markedForDeletion = self._undoData[:]
+        self._undoData = []
+
+    def AddDebugData(self, data):
+        if data in self._debugData:
+            self._debugData.remove(data)
+        else:
+            self._debugData.append(data)
+
+    def AddUndoData(self, data):
+        if data in self._debugData:
+            self._debugData.remove(data)
+        self._undoData.append(data)
+
+    def MarkForDelete(self, data):
+        if data not in self._debugData:
+            self._markedForDeletion.append(data)
+
     def Save(self):
         self.version = eg.Version.string
         configFile = open(self._configFilePath, 'w+')
+
+        markForDeletion = self._markedForDeletion[:] + self._debugData[:]
+
+        for d in markForDeletion:
+            attr = self
+            attrNames = d.split('.')
+            for attrName in attrNames[:-1]:
+                if not hasattr(attr, attrName):
+                    attr = None
+                    break
+                attr = getattr(attr, attrName)
+            if attr is not None:
+                attrName = attrNames.pop()
+                if hasattr(attr, attrName):
+                    delattr(attr, attrName)
+                while len(attrNames) > 1:
+                    def GetAttr(a):
+                        for attrN in attrNames[:-1]:
+                            a = getattr(a, attrN)
+                        return a
+
+                    parentAttr = GetAttr(self)
+                    cName = attrNames.pop()
+                    childAttr = getattr(parentAttr, cName)
+                    configKeys = list(
+                        key for key in childAttr.__dict__.keys()
+                        if childAttr.__dict__[key] if not key.startswith('_')
+                    )
+                    if not configKeys:
+                        delattr(parentAttr, cName)
+
         RecursivePySave(self, configFile.write)
         configFile.close()
-
+        self._undoData = []
+        self._markedForDeletion = []
 
 def MakeSectionMetaClass(dummyName, dummyBases, dct):
     section = Section()
@@ -114,6 +169,7 @@ def RecursivePySave(obj, fileWriter, indent=""):
     keys = objDict.keys()
     keys.sort()
     classKeys = []
+
     for key in keys:
         if key.startswith("_"):
             continue
@@ -125,7 +181,12 @@ def RecursivePySave(obj, fileWriter, indent=""):
         else:
             line = indent + key + " = " + repr(value) + "\n"
             fileWriter(line)
+
     for key in classKeys:
         value = objDict[key]
         fileWriter(indent + "class " + key + ":\n")
-        RecursivePySave(value, fileWriter, indent + "    ")
+        RecursivePySave(
+            value,
+            fileWriter,
+            indent + "    "
+        )

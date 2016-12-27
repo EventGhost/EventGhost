@@ -19,6 +19,7 @@
 # Local imports
 import eg
 
+
 class PersistentDataMeta(type):
     def __new__(mcs, name, bases, dct):
         cls = type.__new__(mcs, name, bases, dct)
@@ -26,8 +27,13 @@ class PersistentDataMeta(type):
             searchPath = dct["__module__"]
             config = eg.config
             parts = searchPath.split(".")
+
             for part in parts[:-1]:
                 config = config.SetDefault(part, eg.Bunch)
+
+            if eg.debugLevel and hasattr(config, parts[-1]):
+                eg.config.AddDebugData('.'.join(parts))
+
             return config.SetDefault(parts[-1], cls)
         return cls
 
