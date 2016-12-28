@@ -541,7 +541,11 @@ class MainFrame(wx.Frame):
         """
         if len(self.openDialogs) == 0:
             if eg.config.hideOnClose:
-                self.document.HideFrame()
+                if eg.config.showTrayIcon:
+                    self.document.HideFrame()
+                else:
+                    self.Iconize()
+
             else:
                 eg.app.Exit()
         else:
@@ -590,7 +594,6 @@ class MainFrame(wx.Frame):
         """
         Handle wx.EVT_ICONIZE
         """
-        # On iconizing, we actually destroy the frame completely
         if eg.config.showTrayIcon:
             self.document.HideFrame()
         else:

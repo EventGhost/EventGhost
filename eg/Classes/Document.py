@@ -298,10 +298,8 @@ class Document(object):
         # TODO: Find a better way. Preferable detect the minimize option
         #       before we create the MainFrame.
         if self.reentrantLock.acquire(False):
-            if self.frame is not None:
-                if len(self.frame.openDialogs) == 0:
-                    self.frame.Hide()
-                    # self.frame = None
+            if len(self.frame.openDialogs) == 0:
+                self.frame.Hide()
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
