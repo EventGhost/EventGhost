@@ -586,12 +586,15 @@ class MainFrame(wx.Frame):
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
     @eg.LogIt
-    def OnIconize(self, dummyEvent):
+    def OnIconize(self, event):
         """
         Handle wx.EVT_ICONIZE
         """
         # On iconizing, we actually destroy the frame completely
-        self.document.HideFrame()
+        if eg.config.showTrayIcon:
+            self.document.HideFrame()
+        else:
+            event.Skip()
 
     def OnLogCtrlSize(self, evt):
         if self.mainSizeFlag:

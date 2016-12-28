@@ -300,8 +300,8 @@ class Document(object):
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
-                    self.frame.Destroy()
-                    self.frame = None
+                    self.frame.Hide()
+                    # self.frame = None
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
