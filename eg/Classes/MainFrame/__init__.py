@@ -21,7 +21,6 @@ import re
 import types
 import wx
 import wx.aui
-from collections import defaultdict
 from os.path import join
 
 # Local imports
