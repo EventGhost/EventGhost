@@ -227,10 +227,11 @@ class MainFrame(wx.Frame):
         self.SetAcceleratorTable(self.acceleratorTable)
         self.logCtrl.Bind(wx.EVT_SIZE, self.OnLogCtrlSize)
 
-        if eg.config.hideOnStartup or eg.startupArguments.hideOnStartup:
-            self.Iconize(True)
-        else:
+        if not(eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+            self.Show()
             eg.EnsureVisible(self)
+        else:
+            self.Iconize(True)
 
     if eg.debugLevel:
         @eg.LogIt
@@ -603,7 +604,6 @@ class MainFrame(wx.Frame):
 
     def OnIconize(self, event):
         self.Iconize(event.Iconized())
-
 
     def OnLogCtrlSize(self, evt):
         if self.mainSizeFlag:
