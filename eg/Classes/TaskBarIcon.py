@@ -58,19 +58,25 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
 
     def Close(self):
+        eg.mainFrame.Iconize(False)
         self.Hide()
 
     def Hide(self):
+        eg.mainFrame.Iconize(False)
         self.RemoveIcon()
 
     def OnCmdExit(self, event):
-        eg.app.Exit(event)
+        if len(eg.mainFrame.openDialogs) == 0:
+            eg.app.Exit(event)
+        else:
+            eg.mainFrame.Iconize(False)
+            eg.mainFrame.RequestUserAttention()
 
     def OnCmdHide(self, dummyEvent):
-        eg.document.HideFrame()
+        eg.mainFrame.Iconize(True)
 
     def OnCmdShow(self, dummyEvent=None):
-        eg.document.ShowFrame()
+        eg.mainFrame.Iconize(False)
 
     def OnProcessingChange(self, state):
         if self.IsIconInstalled():

@@ -67,6 +67,7 @@ eg.startupArguments = eg.Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
+eg.mainFrame = None
 eg.result = None
 eg.plugins = eg.Bunch()
 eg.globals = eg.Bunch()

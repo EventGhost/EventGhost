@@ -90,9 +90,7 @@ def InitGui():
     eg.messageReceiver.Start()
 
     eg.document = eg.Document()
-
-    if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
-        eg.document.ShowFrame()
+    eg.mainFrame = eg.document.frame = eg.MainFrame(eg.document)
 
     eg.actionThread.Start()
 
