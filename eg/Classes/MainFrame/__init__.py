@@ -40,23 +40,21 @@ ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
 ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
 
-ID_DISABLED = wx.NewId()
-ID_EXECUTE = wx.NewId()
-ID_PYTHON = wx.NewId()
-ID_TOOLBAR_EXECUTE = wx.NewId()
+class ID(dict):
+    def __getitem__(self, item):
+        return getattr(self, item.upper())
 
-ID = defaultdict(wx.NewId, {
-    "Save": wx.ID_SAVE,
-    "Undo": wx.ID_UNDO,
-    "Redo": wx.ID_REDO,
-    "Cut": wx.ID_CUT,
-    "Copy": wx.ID_COPY,
-    "Python": ID_PYTHON,
-    "Paste": wx.ID_PASTE,
-    "Delete": wx.ID_DELETE,
-    "Disabled": ID_DISABLED,
-    "Execute": ID_EXECUTE,
-})
+    def __getattr__(self, item):
+        item = item.upper()
+        if hasattr(wx, 'ID_' + item.upper()):
+            attr = getattr(wx, 'ID_' + item.upper())
+        else:
+            attr = wx.NewId()
+        setattr(self, item, attr)
+        return attr
+
+ID = ID()
+
 
 Text = eg.text.MainFrame
 
@@ -396,12 +394,12 @@ class MainFrame(wx.Frame):
         # the menu command OnCmdExecute will be used in conjunction to
         # our special mouse click handlers
         toolBar.AddSimpleTool(
-            ID_TOOLBAR_EXECUTE,
+            ID.TOOLBAR_EXECUTE,
             GetInternalBitmap("Execute"),
             getattr(text, "Execute")
         )
 
-        toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
+        toolBar.EnableTool(ID.SAVE, self.document.isDirty)
         toolBar.Realize()
         self.SetToolBar(toolBar)
 
@@ -532,7 +530,7 @@ class MainFrame(wx.Frame):
     def OnClipboardChange(self, dummyValue):
         if self.lastFocus == self.treeCtrl:
             canPaste = self.treeCtrl.GetSelectedNode().CanPaste()
-            self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
+            self.toolBar.EnableTool(ID.PASTE, canPaste)
 
     @eg.LogIt
     def OnClose(self, dummyEvent):
@@ -558,8 +556,8 @@ class MainFrame(wx.Frame):
             self.SetWindowStyleFlag(self.style)
 
     def OnDocumentChange(self, isDirty):
-        wx.CallAfter(self.toolBar.EnableTool, wx.ID_SAVE, bool(isDirty))
-        wx.CallAfter(self.menuBar.Enable, wx.ID_SAVE, bool(isDirty))
+        wx.CallAfter(self.toolBar.EnableTool, ID.SAVE, bool(isDirty))
+        wx.CallAfter(self.menuBar.Enable, ID.SAVE, bool(isDirty))
 
     def OnDocumentFileChange(self, filepath):
         self.SetTitle(self.document.GetTitle())
@@ -580,10 +578,10 @@ class MainFrame(wx.Frame):
         self.lastFocus = focus
         toolBar = self.toolBar
         canCut, canCopy, canPython, canPaste = self.GetEditCmdState()[:4]
-        toolBar.EnableTool(wx.ID_CUT, canCut)
-        toolBar.EnableTool(wx.ID_COPY, canCopy)
-        toolBar.EnableTool(ID_PYTHON, canPython)
-        toolBar.EnableTool(wx.ID_PASTE, canPaste)
+        toolBar.EnableTool(ID.CUT, canCut)
+        toolBar.EnableTool(ID.COPY, canCopy)
+        toolBar.EnableTool(ID.PYTHON, canPython)
+        toolBar.EnableTool(ID.PASTE, canPaste)
 
     @eg.LogIt
     def OnIconize(self, dummyEvent):
@@ -647,10 +645,10 @@ class MainFrame(wx.Frame):
 
     def OnSelectionChange(self, dummySelection):
         canCut, canCopy, canPython, canPaste = self.GetEditCmdState()[:4]
-        self.toolBar.EnableTool(wx.ID_CUT, canCut)
-        self.toolBar.EnableTool(wx.ID_COPY, canCopy)
-        self.toolBar.EnableTool(ID_PYTHON, canPython)
-        self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
+        self.toolBar.EnableTool(ID.CUT, canCut)
+        self.toolBar.EnableTool(ID.COPY, canCopy)
+        self.toolBar.EnableTool(ID.PYTHON, canPython)
+        self.toolBar.EnableTool(ID.PASTE, canPaste)
 
     def OnSize(self, event):
         """
@@ -667,7 +665,7 @@ class MainFrame(wx.Frame):
         """
         x, y = event.GetPosition()
         item = self.toolBar.FindToolForPosition(x, y)
-        if item and item.GetId() == ID_TOOLBAR_EXECUTE:
+        if item and item.GetId() == ID.TOOLBAR_EXECUTE:
             node = self.treeCtrl.GetSelectedNode()
             if not node.isExecutable:
                 self.DisplayError(Text.Messages.cantExecute)
@@ -691,20 +689,20 @@ class MainFrame(wx.Frame):
         undoName = Text.Menu.Undo + undoName
         redoName = Text.Menu.Redo + redoName
 
-        self.menuBar.Enable(wx.ID_UNDO, hasUndos)
-        self.menuBar.SetLabel(wx.ID_UNDO, undoName + "\tCtrl+Z")
-        self.menuBar.Enable(wx.ID_REDO, hasRedos)
-        self.menuBar.SetLabel(wx.ID_REDO, redoName + "\tCtrl+Y")
+        self.menuBar.Enable(ID.UNDO, hasUndos)
+        self.menuBar.SetLabel(ID.UNDO, undoName + "\tCtrl+Z")
+        self.menuBar.Enable(ID.REDO, hasRedos)
+        self.menuBar.SetLabel(ID.REDO, redoName + "\tCtrl+Y")
 
-        self.popupMenu.Enable(wx.ID_UNDO, hasUndos)
-        self.popupMenu.SetLabel(wx.ID_UNDO, undoName)
-        self.popupMenu.Enable(wx.ID_REDO, hasRedos)
-        self.popupMenu.SetLabel(wx.ID_REDO, redoName)
+        self.popupMenu.Enable(ID.UNDO, hasUndos)
+        self.popupMenu.SetLabel(ID.UNDO, undoName)
+        self.popupMenu.Enable(ID.REDO, hasRedos)
+        self.popupMenu.SetLabel(ID.REDO, redoName)
 
-        self.toolBar.EnableTool(wx.ID_UNDO, hasUndos)
-        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName)
-        self.toolBar.EnableTool(wx.ID_REDO, hasRedos)
-        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName)
+        self.toolBar.EnableTool(ID.UNDO, hasUndos)
+        self.toolBar.SetToolShortHelp(ID.UNDO, undoName)
+        self.toolBar.EnableTool(ID.REDO, hasRedos)
+        self.toolBar.SetToolShortHelp(ID.REDO, redoName)
 
     def Raise(self):
         BringHwndToFront(self.GetHandle())
@@ -712,13 +710,13 @@ class MainFrame(wx.Frame):
 
     def SetupEditMenu(self, menu):
         canCut, canCopy, canPython, canPaste, canDelete = self.GetEditCmdState()
-        menu.Enable(wx.ID_CUT, canCut)
-        menu.Enable(wx.ID_COPY, canCopy)
-        menu.Enable(ID_PYTHON, canPython)
-        menu.Enable(wx.ID_PASTE, canPaste)
-        menu.Enable(wx.ID_DELETE, canDelete)
+        menu.Enable(ID.CUT, canCut)
+        menu.Enable(ID.COPY, canCopy)
+        menu.Enable(ID.PYTHON, canPython)
+        menu.Enable(ID.PASTE, canPaste)
+        menu.Enable(ID.DELETE, canDelete)
         selection = self.treeCtrl.GetSelectedNode()
-        menu.Check(ID_DISABLED, selection is not None and not selection.isEnabled)
+        menu.Check(ID.DISABLED, selection is not None and not selection.isEnabled)
 
     def UpdateRatio(self):
         self.logCtrl.SetColumnWidth(
