@@ -24,6 +24,8 @@ import os
 import shutil
 import tempfile
 import wx
+import win32api
+import win32con
 from zipfile import ZIP_DEFLATED, ZipFile
 
 # Local imports
@@ -57,6 +59,17 @@ INFO_FIELDS = [
     "icon",
 ]
 
+
+def IsSystem(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_SYSTEM == fileAttributes
+
+
+def IsHidden(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_HIDDEN == fileAttributes
+
+
 class PluginInstall(object):
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
         zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
@@ -70,12 +83,21 @@ class PluginInstall(object):
             for dirname in dirnames[:]:
                 if dirname.startswith("."):
                     dirnames.remove(dirname)
+                elif IsHidden(os.path.join(dirpath, dirname)):
+                    dirnames.remove(dirname)
+                elif IsSystem(os.path.join(dirpath, dirname)):
+                    dirnames.remove(dirname)
             for filename in filenames:
+
                 ext = os.path.splitext(filename)[1]
                 if (
                     ext.lower() in (".pyc", ".pyo") and
                     filename[:-1] in filenames
                 ):
+                    continue
+                elif IsHidden(os.path.join(dirpath, filename)):
+                    continue
+                elif IsSystem(os.path.join(dirpath, filename)):
                     continue
                 src = os.path.join(dirpath, filename)
                 dst = os.path.join(baseName, src[len(sourcePath) + 1:])
