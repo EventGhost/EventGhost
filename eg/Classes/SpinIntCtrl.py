@@ -34,7 +34,7 @@ class SpinIntCtrl(eg.SpinNumCtrl):
         min=0,
         max=None,
         size=(-1, -1),
-        **kwargs
+        style=0
     ):
         allowNegative = bool(min < 0)
         if max is None:
@@ -51,8 +51,7 @@ class SpinIntCtrl(eg.SpinNumCtrl):
             max=max,
             size=size,
             allowNegative=allowNegative,
-            groupDigits=False,
+            groupDigits = False,
             fractionWidth=0,
-            integerWidth=integerWidth,
-            **kwargs
+            integerWidth=integerWidth
         )

@@ -56,7 +56,8 @@ class SpinNumCtrl(wx.Window):
         **kwargs
     ):
         if "increment" in kwargs:
-            self.increment = kwargs.pop("increment")
+            self.increment = kwargs["increment"]
+            del kwargs["increment"]
         else:
             self.increment = 1
 
@@ -64,28 +65,31 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
-        if kwargs['min'] < 0:
+        minValue = kwargs.pop("min")
+        if minValue < 0:
             kwargs["allowNegative"] = True
         if "max" not in kwargs:
             kwargs["max"] = (
                 (10 ** kwargs["integerWidth"]) -
                 (10 ** -kwargs["fractionWidth"])
             )
-
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
             self,
             -1,
-            value,
+            0,  # Can't set value here, to avoid bug in NumCtrl
             pos,
             size,
             style,
             validator,
             name,
             allowNone=True,
-            **kwargs
+            #**kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
+        numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
+        numCtrl.SetValue(value)  # To avoid bug in NumCtrl
+        numCtrl.SetMin(minValue)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
@@ -93,7 +97,6 @@ class SpinNumCtrl(wx.Window):
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
         )
-
         numCtrl.SetLimited(True)
         height = numCtrl.GetSize()[1]
         spinbutton = wx.SpinButton(
