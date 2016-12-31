@@ -37,6 +37,7 @@ class SpinIntCtrl(eg.SpinNumCtrl):
         **kwargs
     ):
         allowNegative = bool(min < 0)
+
         if max is None:
             integerWidth = 5
         else:
