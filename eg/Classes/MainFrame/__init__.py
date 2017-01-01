@@ -961,7 +961,6 @@ class MainFrame(wx.Frame):
 
         from wx.lib.inspection import InspectionTool
         eg.wit = InspectionTool()
-        #eg.wit.Init(config=Config.wit, locals=, app=eg.app)
         eg.wit.Show(refreshTree=True)
 
     def OnCmdPythonShell(self):
