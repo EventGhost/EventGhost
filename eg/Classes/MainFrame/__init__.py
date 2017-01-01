@@ -355,6 +355,7 @@ class MainFrame(wx.Frame):
         Append("CheckUpdate")
         menu.AppendSeparator()
         Append("PythonShell", "\tShift+Ctrl+I")
+        Append("WIT")
         menu.AppendSeparator()
         Append("About")
 
@@ -952,6 +953,16 @@ class MainFrame(wx.Frame):
 
     def OnCmdCheckUpdate(self):
         eg.CheckUpdate.CheckUpdateManually()
+
+    def OnCmdWIT(self):
+        if eg.wit:
+            eg.wit.Show(refreshTree=True)
+            return
+
+        from wx.lib.inspection import InspectionTool
+        eg.wit = InspectionTool()
+        #eg.wit.Init(config=Config.wit, locals=, app=eg.app)
+        eg.wit.Show(refreshTree=True)
 
     def OnCmdPythonShell(self):
         if eg.pyCrustFrame:

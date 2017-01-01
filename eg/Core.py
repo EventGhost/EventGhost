@@ -395,6 +395,7 @@ eg.taskBarIcon = eg.TaskBarIcon(
     not eg.startupArguments.pluginFile
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
+eg.wit = None
 
 eg.Init = Init
 eg.Init.Init()
