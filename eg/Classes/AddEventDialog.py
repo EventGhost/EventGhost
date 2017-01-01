@@ -36,6 +36,12 @@ class Text(eg.TranslatableStrings):
     userEventLabel = "Manually enter event"
     userEvent = "If an event is not in the list of available events," \
                 " it can be manually entered here."
+    info = "Note: You can drag and drop events from the list to a macro."
+    unknown = "<unknown>"
+    unknownDesc = (
+        "Here you find events that are used in your configuration, but "
+        "couldn't be associated with a plugin."
+    )
 
 
 class AddEventDialog(eg.TaskletDialog):
@@ -73,13 +79,19 @@ class AddEventDialog(eg.TaskletDialog):
         tree.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnStartDrag)
         tree.Bind(wx.EVT_SET_FOCUS, self.OnFocusTree)
 
-        self.userEvent = wx.TextCtrl(leftPanel, wx.ID_ANY,
-                                     style=wx.TE_PROCESS_ENTER)
+        userEventLabel = wx.StaticText(
+            leftPanel,
+            label="{0}:".format(Text.userEventLabel)
+        )
+        self.userEvent = wx.TextCtrl(
+            leftPanel, wx.ID_ANY, style=wx.TE_PROCESS_ENTER
+        )
         self.userEvent.Bind(wx.EVT_TEXT_ENTER, self.OnTextEnter)
         self.userEvent.Bind(wx.EVT_SET_FOCUS, self.OnFocusUserEvent)
 
         leftSizer =  wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(tree, 1, wx.EXPAND)
+        leftSizer.Add(userEventLabel, 0, wx.TOP, 5)
         leftSizer.Add(self.userEvent, 0, wx.EXPAND)
         leftPanel.SetSizer(leftSizer)
 
@@ -107,8 +119,17 @@ class AddEventDialog(eg.TaskletDialog):
         splitterWindow.UpdateSize()
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
+        info = eg.HeaderBox(
+            parent=self,
+            name=Text.info,
+            #text=Text.info,
+            icon=eg.Icons.INFO_ICON,
+            url=None
+        )
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(info, 0, wx.EXPAND)
+        mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND | wx.ALIGN_CENTER, 0),
         mainSizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
 
@@ -130,6 +151,7 @@ class AddEventDialog(eg.TaskletDialog):
 
     def FillTree(self):
         tree = self.tree
+        events = eg.eventTable.keys()
         for plugin in eg.pluginList:
             eventList = plugin.info.eventList
             if not eventList:
@@ -143,6 +165,30 @@ class AddEventDialog(eg.TaskletDialog):
                 tmp = tree.AppendItem(item, eventName)
                 tree.SetPyData(tmp, data)
                 tree.SetItemImage(tmp, data.icon.index)
+                try:
+                    events.remove(
+                        ".".join([plugin.name, eventName])
+                    )
+                except ValueError:
+                    pass
+
+        if not events:
+            return
+
+        dummy_info = eg.PluginInstanceInfo()
+        dummy_info.name = ""
+        dummy_info.eventPrefix = ""
+        dummy_info.description = Text.unknownDesc
+
+        item = tree.AppendItem(self.root, Text.unknown)
+        tree.SetPyData(item, dummy_info)
+        tree.SetItemImage(item, eg.Icons.FOLDER_ICON._GetIndex())
+
+        for eventName in events:
+            tmp = tree.AppendItem(item, eventName)
+            data = EventInfo(eventName, "", dummy_info)
+            tree.SetPyData(tmp, data)
+            tree.SetItemImage(tmp, eg.Icons.EVENT_ICON._GetIndex())
 
     def OnActivated(self, event):
         item = self.tree.GetSelection()
@@ -153,10 +199,16 @@ class AddEventDialog(eg.TaskletDialog):
             event.Skip()
 
     def OnCollapsed(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = False
+        try:
+            self.tree.GetPyData(event.GetItem()).expanded = False
+        except:
+            pass
 
     def OnExpanded(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = True
+        try:
+            self.tree.GetPyData(event.GetItem()).expanded = True
+        except:
+            pass
 
     def OnFocusTree(self, event):
         item = self.tree.GetSelection()
@@ -177,7 +229,10 @@ class AddEventDialog(eg.TaskletDialog):
     @eg.LogItWithReturn
     def OnStartDrag(self, event):
         item = self.tree.GetPyData(event.GetItem())
-        text = item.info.eventPrefix + "." + item.name
+        if item.info.pluginCls:
+            text = item.info.eventPrefix + "." + item.name
+        else:
+            text = item.name
         # create our own data format and use it in a
         # custom data object
         customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
@@ -203,20 +258,29 @@ class AddEventDialog(eg.TaskletDialog):
         except RuntimeError:
             return
         if isinstance(data, EventInfo):
-            self.resultData = data.info.eventPrefix + "." + data.name
+            if data.info.pluginCls:
+                self.resultData = data.info.eventPrefix + "." + data.name
+            else:
+                self.resultData = data.name
             self.buttonRow.okButton.Enable(True)
             self.userEvent.SetValue(self.resultData)
             path = data.info.path
-        else:
+            label = data.name
+            desc = data.description
+        elif isinstance(data, eg.PluginInstanceInfo):
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
             self.userEvent.SetValue("")
             path = data.path
-        self.nameText.SetLabel(data.name)
+            label = data.name
+            desc = data.description
+        else:
+            path = ""
+            label = ""
+            desc = None
+        self.nameText.SetLabel(label)
         self.docText.SetBasePath(path)
-        self.docText.SetPage(
-            data.description if data.description else Text.noDescription
-        )
+        self.docText.SetPage(desc if desc else Text.noDescription)
 
     def OnTextEnter(self, event):
         value = event.GetString()
