@@ -383,7 +383,7 @@ class TextToSpeech(eg.ActionClass):
             (sizer2, 0, wx.EXPAND|wx.ALL, 5),
         )
         ACV = wx.ALIGN_CENTER_VERTICAL
-        sizer3 = wx.FlexGridSizer(4, 2, 5, 5)
+        sizer3 = wx.FlexGridSizer(0, 2, 5, 5)
         sizer3.AddGrowableCol(1, 1)
         sizer3.AddMany(
             (
