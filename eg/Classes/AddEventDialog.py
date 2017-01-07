@@ -18,25 +18,36 @@
 
 import wx
 
-# Local imports
 import eg
 
-gLastSelected = None
 
 class Config(eg.PersistentData):
     position = None
     size = (550, 400)
     splitPosition = 210
+    lastSelected = None
 
 
 class Text(eg.TranslatableStrings):
     title = "Add Event..."
     descriptionLabel = "Description"
     noDescription = "<i>No description available</i>"
-    userEventLabel = "Manually enter event"
-    userEvent = "If an event is not in the list of available events," \
-                " it can be manually entered here."
+    userEventLabel = "Search or manually enter event"
+    userEvent = (
+        "If an event is not in the list of available events,"
+        " it can be manually entered here.<br><br> While you enter some "
+        "text, the list is filtered for matching entries."
+        '<br>If you for example type <span style="color: blue;">'
+        '<i>X10.Red</i></span>, the list will be '
+        'filtered for any matching <span style="color: blue;"><i>X10.Red</i>'
+        '</span>, <span style="color: blue;"><i>X10</i></span> or '
+        '<span style="color: blue;"><i>Red</i></span>. '
+        "(The search string will only be splitted at the first '<b>.</b>' if "
+        "there are more than one.)"
+    )
+
     info = "Note: You can drag and drop events from the list to a macro."
+    noMatch = "<no matching event>"
     unknown = "<unknown>"
     unknownDesc = (
         "Here you find events that are used in your configuration, but "
@@ -47,8 +58,10 @@ class Text(eg.TranslatableStrings):
 class AddEventDialog(eg.TaskletDialog):
     @eg.LogItWithReturn
     def Configure(self, parent):
-        global gLastSelected
-        self.resultData = None
+        self._allEventsData = {}
+        self._allEventsDict = {}
+        self._searchstring = ""
+        self.resultData = ""
         super(AddEventDialog, self).__init__(
             parent=parent, id=wx.ID_ANY, title=Text.title,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
@@ -64,18 +77,17 @@ class AddEventDialog(eg.TaskletDialog):
         )
 
         leftPanel = wx.Panel(splitterWindow)
-        self.tree = tree = wx.TreeCtrl(leftPanel, -1,
-                           style=wx.TR_DEFAULT_STYLE |
-                                 wx.TR_HIDE_ROOT |
-                                 wx.TR_FULL_ROW_HIGHLIGHT
-                           )
+        self.tree = tree = wx.TreeCtrl(
+            leftPanel, -1,
+            style=wx.TR_DEFAULT_STYLE |
+            wx.TR_HIDE_ROOT |
+            wx.TR_FULL_ROW_HIGHLIGHT
+        )
         tree.SetMinSize((100, 100))
         tree.SetImageList(eg.Icons.gImageList)
 
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivated)
-        tree.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
-        tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
         tree.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnStartDrag)
         tree.Bind(wx.EVT_SET_FOCUS, self.OnFocusTree)
 
@@ -88,8 +100,9 @@ class AddEventDialog(eg.TaskletDialog):
         )
         self.userEvent.Bind(wx.EVT_TEXT_ENTER, self.OnTextEnter)
         self.userEvent.Bind(wx.EVT_SET_FOCUS, self.OnFocusUserEvent)
+        self.userEvent.Bind(wx.EVT_TEXT, self.OnText)
 
-        leftSizer =  wx.BoxSizer(wx.VERTICAL)
+        leftSizer = wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(tree, 1, wx.EXPAND)
         leftSizer.Add(userEventLabel, 0, wx.TOP, 5)
         leftSizer.Add(self.userEvent, 0, wx.EXPAND)
@@ -122,7 +135,6 @@ class AddEventDialog(eg.TaskletDialog):
         info = eg.HeaderBox(
             parent=self,
             name=Text.info,
-            #text=Text.info,
             icon=eg.Icons.INFO_ICON,
             url=None
         )
@@ -140,93 +152,143 @@ class AddEventDialog(eg.TaskletDialog):
         splitterWindow.SetSashPosition(Config.splitPosition)
         if Config.position is not None:
             self.SetPosition(Config.position)
-        self.ReloadTree()
+
+        self.GenerateEventlist()
+        self.FillTree(self._allEventsData)
+        self.ReselectLastSelected()
+
         while self.Affirmed():
             self.SetResult(self.resultData)
-        item = tree.GetSelection()
-        gLastSelected = tree.GetPyData(item)
+
         Config.size = self.GetSizeTuple()
         Config.position = self.GetPositionTuple()
         Config.splitPosition = splitterWindow.GetSashPosition()
 
-    def FillTree(self):
-        tree = self.tree
-        events = eg.eventTable.keys()
+    def GenerateEventlist(self):
+        self._allEventsDict = eventDict = {Text.unknown: []}
+        for e in eg.eventTable.keys():
+            if "." not in e:
+                eventDict[Text.unknown].append(e)
+                continue
+            parts = e.split(".", 1)
+            if parts[0] in eventDict:
+                eventDict[parts[0]].append(parts[1])
+            else:
+                eventDict[parts[0]] = ["*", parts[1]]
+
+        self._allEventsData = allevents = {}
         for plugin in eg.pluginList:
             eventList = plugin.info.eventList
-            if not eventList:
+            prefix = plugin.info.eventPrefix
+            if not eventList and prefix not in eventDict:
                 continue
-            item = tree.AppendItem(self.root, plugin.name)
-            tree.SetPyData(item, plugin.info)
-            tree.SetItemImage(item, plugin.info.icon.folderIndex)
+
+            allevents.update(
+                {plugin.name: (
+                    plugin.info.icon.folderIndex,
+                    plugin.info,
+                    {}  # events
+                )}
+            )
 
             for eventName, description in eventList:
                 data = EventInfo(eventName, description, plugin.info)
-                tmp = tree.AppendItem(item, eventName)
-                tree.SetPyData(tmp, data)
-                tree.SetItemImage(tmp, data.icon.index)
+                allevents[plugin.name][2].update(
+                    {eventName: (data.icon.index, data)}
+                )
                 try:
-                    events.remove(
-                        ".".join([plugin.name, eventName])
-                    )
+                    eventDict[prefix].remove(eventName)
+                    if not eventDict[prefix]:
+                        eventDict.pop(prefix)
                 except ValueError:
                     pass
 
-        if not events:
+            if prefix in eventDict:
+                for eventName in eventDict[prefix]:
+                    data = EventInfo(
+                        eventName, Text.noDescription, plugin.info
+                    )
+                    allevents[plugin.name][2].update(
+                        {eventName: (data.icon.index, data)}
+                    )
+
+        if not eventDict:
             return
 
         dummy_info = eg.PluginInstanceInfo()
         dummy_info.name = ""
+        dummy_info.evalName = ""
         dummy_info.eventPrefix = ""
         dummy_info.description = Text.unknownDesc
 
-        item = tree.AppendItem(self.root, Text.unknown)
-        tree.SetPyData(item, dummy_info)
-        tree.SetItemImage(item, eg.Icons.FOLDER_ICON._GetIndex())
+        allevents.update(
+            {Text.unknown: (
+                eg.Icons.FOLDER_ICON._GetIndex(),
+                dummy_info,
+                {}  # events
+            )}
+        )
 
-        for eventName in events:
-            tmp = tree.AppendItem(item, eventName)
-            data = EventInfo(eventName, "", dummy_info)
-            tree.SetPyData(tmp, data)
-            tree.SetItemImage(tmp, eg.Icons.EVENT_ICON._GetIndex())
+        for eventName in eventDict[Text.unknown]:
+            allevents[Text.unknown][2].update(
+                {eventName: (
+                    eg.Icons.EVENT_ICON._GetIndex(),
+                    EventInfo(eventName, "", dummy_info)
+                )}
+            )
+
+    def FillTree(self, eventlist):
+        tree = self.tree
+        tree.DeleteAllItems()
+        self.root = tree.AddRoot("Functions")
+        for plugin in sorted(eventlist):
+            image, data, events = eventlist[plugin]
+            item = tree.AppendItem(
+                parent=self.root,
+                text=plugin,
+                image=image,
+            )
+            tree.SetPyData(item, data)
+
+            for event in sorted(events):
+                image, data = events[event]
+                subitem = tree.AppendItem(
+                    parent=item,
+                    text=event,
+                    image=image,
+                )
+                tree.SetPyData(subitem, data)
 
     def OnActivated(self, event):
+        event.Skip()
         item = self.tree.GetSelection()
-        data = self.tree.GetPyData(item)
-        if isinstance(data, EventInfo):
-            self.OnOK(event)
-        else:
-            event.Skip()
-
-    def OnCollapsed(self, event):
-        try:
-            self.tree.GetPyData(event.GetItem()).expanded = False
-        except:
-            pass
-
-    def OnExpanded(self, event):
-        try:
-            self.tree.GetPyData(event.GetItem()).expanded = True
-        except:
-            pass
+        if item.IsOk():
+            data = self.tree.GetPyData(item)
+            if isinstance(data, EventInfo):
+                Config.lastSelected = data.info.eventPrefix + "." + data.name
+                self.resultData = data.info.eventPrefix + "." + data.name
+                self.OnOK(event)
 
     def OnFocusTree(self, event):
         item = self.tree.GetSelection()
-        try:
-            self.DoSelectionChanged(item)
-        except AssertionError:
-            pass
-        event.Skip()
+        if not item.IsOk():
+            return
+        self.DoSelectionChanged(item)
 
     def OnFocusUserEvent(self, event):
         self.nameText.SetLabel(Text.userEventLabel)
         self.docText.SetBasePath("")
         self.docText.SetPage(Text.userEvent)
-        self.resultData = None
-        self.buttonRow.okButton.Enable(False)
+        value = self.resultData
+        # if "." in value:
+        #     plg, v = value.split(".", 1)
+        #     if plg in self._allEventsDict:
+        #         value = v
+        self.userEvent.ChangeValue(value)
+        self.resultData = value
+        self.buttonRow.okButton.Enable(True)
         event.Skip()
 
-    @eg.LogItWithReturn
     def OnStartDrag(self, event):
         item = self.tree.GetPyData(event.GetItem())
         if item.info.pluginCls:
@@ -248,29 +310,24 @@ class AddEventDialog(eg.TaskletDialog):
 
     def OnSelectionChanged(self, event):
         item = event.GetItem()
-        if not item.IsOk():
-            return
         self.DoSelectionChanged(item)
 
     def DoSelectionChanged(self, item):
-        try:
-            data = self.tree.GetPyData(item)
-        except RuntimeError:
+        if not item.IsOk():
             return
+        data = self.tree.GetPyData(item)
         if isinstance(data, EventInfo):
-            if data.info.pluginCls:
-                self.resultData = data.info.eventPrefix + "." + data.name
+            if data.info.eventPrefix:
+                evt = data.info.eventPrefix + "." + data.name
             else:
-                self.resultData = data.name
+                evt = data.name
+            self.resultData = evt
             self.buttonRow.okButton.Enable(True)
-            self.userEvent.SetValue(self.resultData)
             path = data.info.path
             label = data.name
             desc = data.description
         elif isinstance(data, eg.PluginInstanceInfo):
-            self.resultData = None
             self.buttonRow.okButton.Enable(False)
-            self.userEvent.SetValue("")
             path = data.path
             label = data.name
             desc = data.description
@@ -278,46 +335,118 @@ class AddEventDialog(eg.TaskletDialog):
             path = ""
             label = ""
             desc = None
+        self.userEvent.ChangeValue(self.resultData)
         self.nameText.SetLabel(label)
         self.docText.SetBasePath(path)
         self.docText.SetPage(desc if desc else Text.noDescription)
+
+    def OnText(self, evt):
+        if not evt.GetEventObject().HasFocus():
+            return
+        self.resultData = value = evt.GetString()
+        if not value:
+            wx.CallAfter(self.FillTree, self._allEventsData)
+            return
+        values = [value.lower()]
+        if "." in value:
+            for v in value.split(".", 1):
+                if v:
+                    values.append(v)
+
+        allevts = self._allEventsData
+        filtered = {}
+        for plugin in allevts:
+            if any(v in allevts[plugin][1].evalName.lower() for v in values):
+                filtered.update({plugin: allevts[plugin]})
+                continue
+
+            events = allevts[plugin][2]
+            for event in events:
+                if any(v in event.lower() for v in values):
+                    if plugin not in filtered:
+                        filtered.update(
+                            {plugin: (
+                                allevts[plugin][0],
+                                allevts[plugin][1],
+                                {event: (
+                                    allevts[plugin][2][event][0],
+                                    allevts[plugin][2][event][1]
+                                )}
+                            )}
+                        )
+                    else:
+                        filtered[plugin][2].update(
+                            {event: (
+                                allevts[plugin][2][event][0],
+                                allevts[plugin][2][event][1]
+                            )}
+                        )
+        if not filtered:
+            dummy_info = eg.PluginInstanceInfo()
+            dummy_info.name = ""
+            dummy_info.eventPrefix = ""
+            dummy_info.description = Text.noMatch
+
+            filtered = {Text.noMatch: (
+                -1,
+                dummy_info,
+                {}  # events
+            )}
+
+        self.FillTree(filtered)
+        self.tree.ExpandAllChildren(self.root)
 
     def OnTextEnter(self, event):
         value = event.GetString()
         if value:
             self.resultData = value
-            self.buttonRow.okButton.Enable(True)
-            wx.CallAfter(self.buttonRow.okButton.SetFocus)
+            Config.lastSelected = value
+            self.OnOK(event)
         else:
-            self.resultData = None
-            self.buttonRow.okButton.Enable(False)
+            self.resultData = ""
 
-    def ReloadTree(self):
-        global gLastSelected
-        tree = self.tree
-        tree.DeleteAllItems()
-        self.root = tree.AddRoot("Functions")
-        self.FillTree()
-        if gLastSelected:
-            item = self.FindItemByText(gLastSelected.name)
+    def ReselectLastSelected(self):
+        if Config.lastSelected:
+            item = self.FindEventItem(Config.lastSelected)
             if item.IsOk():
-                tree.EnsureVisible(item)
-                tree.SelectItem(item)
+                self.tree.EnsureVisible(item)
+                self.tree.SelectItem(item)
 
-    def FindItemByText(self, text):
-        tree = self.tree
-
-        def FindItem(item, text):
-            subItem, cookie = tree.GetFirstChild(item)
-            while subItem.IsOk():
-                if tree.GetItemData(subItem).Data.name == text:
-                    return subItem
-                FindItem(subItem, text)
-                subItem = tree.GetNextSibling(subItem)
+    def FindEventItem(self, searchText):
+        if not searchText or "." not in searchText:
             return wx.TreeItemId()
 
-        item, cookie = tree.GetFirstChild(tree.GetRootItem())
-        return FindItem(item, text)
+        tree = self.tree
+        parts = searchText.split(".", 1)
+        plugin, event = parts[0], parts[1].lower()
+
+        pluginItem = self.FindPluginItem(plugin)
+        if not pluginItem.IsOk() or pluginItem is tree.GetRootItem():
+            return wx.TreeItemId()
+
+        item, cookie = tree.GetFirstChild(pluginItem)
+        while item.IsOk():
+            if tree.GetItemText(item).lower() == event:
+                return item
+            item, cookie = tree.GetNextChild(pluginItem, cookie)
+
+        return wx.TreeItemId()
+
+    def FindPluginItem(self, pluginName):
+        plgName = pluginName.lower()
+        tree = self.tree
+        root = tree.GetRootItem()
+        pluginItem, cookie = tree.GetFirstChild(root)
+        while pluginItem.IsOk():
+            data = tree.GetItemPyData(pluginItem)
+            if data.evalName:
+                if data.evalName.lower() == plgName:
+                    break
+            pluginItem, cookie = tree.GetNextChild(root, cookie)
+
+        if pluginItem is tree.GetRootItem():
+            return wx.TreeItemId()
+        return pluginItem
 
 
 class EventInfo:

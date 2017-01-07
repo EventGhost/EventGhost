@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
+from wx import CallAfter
+
 import eg
 from NewItem import NewItem
+
 
 class NewEvent(NewItem):
     name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
@@ -63,4 +65,5 @@ class NewEvent(NewItem):
             eg.actionThread.Call(item.Delete)
             return None
         self.StoreItem(item)
+        CallAfter(document.frame.treeCtrl.SetFocus)
         return item
