@@ -17,176 +17,143 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
-from os.path import exists
+import wx
+import traceback
 from types import ClassType, InstanceType
 
 # Local imports
-import eg
-from eg.Utils import GetClosestLanguage
 
-class Section:
-    def __init__(self, defaults=None):
-        if defaults:
-            for key, value in defaults.__dict__.iteritems():
-                if type(value) == ClassType:
-                    setattr(self, key, Section(value))
-                elif not hasattr(self, key):
-                    setattr(self, key, value)
-
-    def SetDefault(self, key, default):
-        if key not in self.__dict__:
-            setattr(self, key, Section(default))
-        else:
-            section = self.__dict__[key]
-            for key2, value in default.__dict__.iteritems():
-                if not hasattr(section, key2):
-                    setattr(section, key2, value)
-        return getattr(self, key)
+import PersistentData
+from Version import Version
+from .. import Cli
+from ..Utils import GetClosestLanguage
 
 
-class Config(Section):
-    version = eg.Version.string
-    language = GetClosestLanguage()
-    autoloadFilePath = False
-    checkUpdate = True
-    checkPreRelease = False
-    colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
-    confirmDelete = True
-    defaultThreadStartTimeout = 5.00
-    hideOnClose = False
-    hideOnStartup = False
-    lastUpdateCheckDate = None
-    lastUpdateCheckVersion = None
-    limitMemory = False
-    limitMemorySize = 8
-    logActions = True
-    logDebug = False
-    logMacros = True
-    onlyLogAssigned = False
-    propResize = True
-    refreshEnv = False
-    showTrayIcon = True
-    useFixedFont = False
+_defaults = dict(
+    version=Version.string,
+    language=GetClosestLanguage(),
+    autoloadFilePath=False,
+    checkUpdate=True,
+    checkPreRelease=False,
+    colourPickerCustomColours=[(-1, -1, -1, 255) for n in range(16)],
+    confirmDelete=True,
+    defaultThreadStartTimeout=5.00,
+    hideOnClose=False,
+    hideOnStartup=False,
+    lastUpdateCheckDate=None,
+    lastUpdateCheckVersion=None,
+    limitMemory=False,
+    limitMemorySize=8,
+    logActions=True,
+    logDebug=False,
+    logMacros=True,
+    onlyLogAssigned=False,
+    propResize=True,
+    refreshEnv=False,
+    showTrayIcon=True,
+    useFixedFont=False
+)
 
-    class plugins:  #pylint: disable-msg=C0103
+
+if not os.path.exists(Cli.args.configDir):
+    try:
+        os.makedirs(Cli.args.configDir)
+    except:
         pass
 
+
+class Config(PersistentData.PersistentDataBase):
+
     def __init__(self):
-        Section.__init__(self)
-        configDir = eg.configDir
-        if not os.path.exists(configDir):
-            os.makedirs(configDir)
-        configFilePath = os.path.join(configDir, "config.py")
+        self.__dict__ = _defaults
+        self._fileLoadError = False
+        self._configFilePath = os.path.join(Cli.args.configDir, "config.py")
 
-        self._configFilePath = configFilePath
-        self._undoData = []
-        self._debugData = []
-        self._markedForDeletion = []
+        PersistentData.PersistentDataBase.__init__(self, self, '')
 
-        # BUG: of the python function 'ExecFile'. It doesn't handle unicode
-        # filenames right.
-        configFilePath = configFilePath.encode(sys.getfilesystemencoding())
+        self.Load()
+        self.version = Version.string
 
-        if exists(configFilePath):
-            try:
-                eg.ExecFile(
-                    configFilePath,
-                    {"__metaclass__": MakeSectionMetaClass},
-                    self.__dict__
-                )
-            except:
-                if eg.debugLevel:
-                    raise
-        else:
-            eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
+    def Load(self):
+        if not os.path.exists(self._configFilePath):
+            app = wx.App()
+            dlg = wx.MessageDialog(
+                None,
+                message=(
+                    'Configuration file does not exist.\n'
+                    'Would you like to create a new file?\n\n'
+                    % self._configFilePath
+                ),
+                caption='Configuration Load Error',
+                style=wx.YES_NO | wx.ICON_QUESTION
+            )
 
-    def Undo(self):
-        self._markedForDeletion = self._undoData[:]
-        self._undoData = []
+            answer = dlg.ShowModal()
+            app.MainLoop()
+            dlg.Destroy()
+            app.ExitMainLoop()
+            app.Destroy()
 
-    def AddDebugData(self, data):
-        if data in self._debugData:
-            self._debugData.remove(data)
-        else:
-            self._debugData.append(data)
+            if answer == wx.ID_NO:
+                raise IOError('File %s not found.' % self._configFilePath)
+            self.Save()
 
-    def AddUndoData(self, data):
-        if data in self._debugData:
-            self._debugData.remove(data)
-        self._undoData.append(data)
+        try:
+            namespace = {}
+            with open(self._configFilePath, 'r') as f:
+                exec(f.read(), namespace, namespace)
 
-    def MarkForDelete(self, data):
-        if data not in self._debugData:
-            self._markedForDeletion.append(data)
+            def LoadConfig(cls, dct):
+                for key in dct.keys():
+                    if key.startswith('_'):
+                        continue
+                    value = dct[key]
+                    if type(value) in (ClassType, InstanceType):
+                        newCls = PersistentData.PersistentDataBase(cls, key)
+                        LoadConfig(newCls, value.__dict__)
+                        value = newCls
+                    cls.__dict__[key] = value
+            LoadConfig(self, namespace)
+
+        except (IOError, SyntaxError):
+            tb = traceback.format_exc()
+            app = wx.App()
+            dlg = wx.MessageDialog(
+                None,
+                message=(
+                    'Configuration File did not load properly.\n\n'
+                    '%s\n\n'
+                    'Would you like to create a new file?\n\n'
+                    'WARNING: This will overwrite the existing file\n'
+                    '         %s\n\n'
+                    % (str(tb), self._configFilePath)
+                ),
+                caption='Configuration Load Error',
+                style=wx.YES_NO | wx.ICON_ERROR
+            )
+
+            answer = dlg.ShowModal()
+            app.MainLoop()
+            dlg.Destroy()
+            app.ExitMainLoop()
+            app.Destroy()
+
+            if answer == wx.ID_YES:
+                self.Save()
+            else:
+                traceback.print_exc()
+                self._fileLoadError = True
 
     def Save(self):
-        self.version = eg.Version.string
-        configFile = open(self._configFilePath, 'w+')
+        if self._fileLoadError:
+            return
 
-        markForDeletion = self._markedForDeletion[:] + self._debugData[:]
+        configFile = open(self._configFilePath, 'w')
 
-        for d in markForDeletion:
-            attr = self
-            attrNames = d.split('.')
-            for attrName in attrNames[:-1]:
-                if not hasattr(attr, attrName):
-                    attr = None
-                    break
-                attr = getattr(attr, attrName)
-            if attr is not None:
-                attrName = attrNames.pop()
-                if hasattr(attr, attrName):
-                    delattr(attr, attrName)
-                while len(attrNames) > 1:
-                    def GetAttr(a):
-                        for attrN in attrNames[:-1]:
-                            a = getattr(a, attrN)
-                        return a
-
-                    parentAttr = GetAttr(self)
-                    cName = attrNames.pop()
-                    childAttr = getattr(parentAttr, cName)
-                    configKeys = list(
-                        key for key in childAttr.__dict__.keys()
-                        if childAttr.__dict__[key] if not key.startswith('_')
-                    )
-                    if not configKeys:
-                        delattr(parentAttr, cName)
-
-        RecursivePySave(self, configFile.write)
+        self.SaveData(configFile.write, 0)
         configFile.close()
-        self._undoData = []
-        self._markedForDeletion = []
 
-def MakeSectionMetaClass(dummyName, dummyBases, dct):
-    section = Section()
-    section.__dict__ = dct
-    return section
-
-def RecursivePySave(obj, fileWriter, indent=""):
-    objDict = obj.__dict__
-    keys = objDict.keys()
-    keys.sort()
-    classKeys = []
-
-    for key in keys:
-        if key.startswith("_"):
-            continue
-        value = objDict[key]
-        if type(value) == ClassType:
-            classKeys.append(key)
-        elif type(value) == InstanceType:
-            classKeys.append(key)
-        else:
-            line = indent + key + " = " + repr(value) + "\n"
-            fileWriter(line)
-
-    for key in classKeys:
-        value = objDict[key]
-        fileWriter(indent + "class " + key + ":\n")
-        RecursivePySave(
-            value,
-            fileWriter,
-            indent + "    "
-        )
+    def __repr__(self):
+        objRepr = object.__repr__(self).split(' ')
+        objRepr[0] = '<eg.config'
+        return ' '.join(objRepr)

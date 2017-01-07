@@ -60,21 +60,6 @@ class PluginItem(ActionItem):
     def AskCut(self):
         return self.AskDelete()
 
-    def GetPersistantData(self):
-        info = self.info
-        if info.path.startswith(eg.corePluginDir):
-            configName = "CorePluginModule"
-        else:
-            configName = "UserPluginModule"
-
-        if hasattr(eg.config.eg, configName):
-            config = getattr(eg.config.eg, configName)
-        else:
-            config = None
-
-        if config and hasattr(config, info.pluginName):
-            return 'eg.%s.%s' % (configName, info.pluginName)
-
     def AskDelete(self):
         actionItemCls = self.document.ActionItem
 
@@ -94,16 +79,15 @@ class PluginItem(ActionItem):
         if not TreeItem.AskDelete(self):
             return False
 
-        config = self.GetPersistantData()
-
-        if config:
+        if self.info.persistentData.config:
             answer = eg.MessageBox(
                 eg.text.General.deleteConfigMessage,
                 eg.text.General.deleteConfigCaption,
                 wx.YES_NO | wx.ICON_QUESTION
             )
             if answer == wx.ID_YES:
-                eg.config.MarkForDelete(config)
+                self.info.persistentData.Delete(True)
+
         return True
 
     @eg.AssertInActionThread
@@ -114,7 +98,6 @@ class PluginItem(ActionItem):
             info.Close()
             info.instance.OnDelete()
             info.RemovePluginInstance()
-
         eg.actionThread.Call(DoIt)
 
         ActionItem.Delete(self)
@@ -175,10 +158,6 @@ class PluginItem(ActionItem):
         """
         # if the Configure method of the executable is overriden, we assume
         # the item wants to be configured after creation
-        config = self.GetPersistantData()
-        if config:
-            eg.config.AddUndoData(config)
-
         return (
             self.executable.Configure.im_func !=
             eg.PluginBase.Configure.im_func

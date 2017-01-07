@@ -46,6 +46,9 @@ from os.path import exists, join
 import eg
 import Init
 
+eg.config = eg.Config()
+eg.debugLevel = int(eg.Cli.args.debugLevel or eg.config.logDebug)
+
 eg.APP_NAME = "EventGhost"
 eg.CORE_PLUGIN_GUIDS = (
     "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",  # "EventGhost"
@@ -64,7 +67,6 @@ eg.sitePackagesDir = join(
 )
 eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
-eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
 eg.result = None
@@ -361,8 +363,6 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
-eg.config = eg.Config()
-eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
 
 def TracebackHook(tType, tValue, traceback):
     eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
