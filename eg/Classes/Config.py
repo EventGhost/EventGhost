@@ -71,7 +71,9 @@ class Config(PersistentData.PersistentDataBase):
 
         PersistentData.PersistentDataBase.__init__(self, self, '')
 
-        self.Load()
+        if Cli.args.isMain:
+            self.Load()
+
         self.version = Version.string
 
     def Load(self):
