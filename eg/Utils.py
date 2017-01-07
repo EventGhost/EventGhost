@@ -38,7 +38,7 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow",
+    "ExecFile", "GetTopLevelWindow", "PrettyPythonPrint"
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -90,6 +90,46 @@ class MyHtmlDocWriter(Writer):
 """ % self.interpolation_dict()
 
 HTML_DOC_WRITER = MyHtmlDocWriter()
+
+
+def PrettyPythonPrint(attrName, attrValue, indent):
+    if isinstance(indent, basestring):
+        indt = (len(indent))
+        if indent.find('\t') > -1:
+            indt *= 4
+        indent = indt
+
+    indent4 = ' ' * (indent + 4)
+    indent = ' ' * indent
+    line = '%s%s = ' % (indent, attrName)
+
+    multiLine = len(line + repr(attrValue)) > 76
+
+    if multiLine and type(attrValue) in (unicode, str, list, tuple):
+        if type(attrValue) == list:
+            line += '[\n'
+            for item in attrValue:
+                line += '%s%r,\n' % (indent4, item)
+            line = '%s\n%s]' % (line[:-2], indent)
+
+        else:
+            if type(attrValue) in (unicode, str):
+                stop = 76 - len(indent4)
+                if stop > 25:
+                    line += '(\n'
+                    while len(repr(attrValue) + indent4) > 76:
+                        line += '%s%r\n' % (indent4, attrValue[:stop])
+                        attrValue = attrValue[stop:]
+                    line += '%s%r\n%s)' % (indent4, attrValue, indent)
+                else:
+                    line += repr(attrValue)
+            else:
+                for item in attrValue:
+                    line += '%s%r,\n' % (indent4, item)
+                line = '%s\n%s)' % (line[:-2], indent)
+    else:
+        line += repr(attrValue)
+    return line + '\n'
 
 
 class NotificationHandler(object):
