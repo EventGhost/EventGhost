@@ -81,7 +81,7 @@ class Config(PersistentData.PersistentDataBase):
                 None,
                 message=(
                     'Configuration file does not exist.\n'
-                    'Would you like to create a new file?\n\n'
+                    'Would you like to create a new file?\n%s\n\n'
                     % self._configFilePath
                 ),
                 caption='Configuration Load Error',

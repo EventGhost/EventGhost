@@ -27,14 +27,10 @@ class PersistentData(UndoHandlerBase):
         UndoHandlerBase.__init__(self, None)
         self.__class__._UndoHandlers.append(self)
         self.config = config
-        self.flag = False
+        self.flag = Falses
+        self.Redo = self.Undo
         if config:
             config.SetDelete(False)
-
-    def Redo(self):
-        if self.config:
-            self.flag = not self.flag
-            self.config.SetDelete(self.flag)
 
     def Undo(self):
         if self.config:
