@@ -150,11 +150,9 @@ def PrettyPythonPrint(attrName, attrValue, indent):
         line += AddBracket(True, attrValue, 0) + '\n'
         line += IterValue(attrValue, indent + 4)
         line = line[:-2] + '\n' + AddBracket(False, attrValue, indent) + '\n'
-
     else:
-        eg.PrintDebugNotice(repr(attrValue))
         line += '%r\n' % (attrValue,)
-
+        
     return line
 
 
