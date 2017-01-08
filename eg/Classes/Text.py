@@ -160,6 +160,7 @@ class Default:
             WebForum = "Support &Forums"
             WebWiki = "&Wiki"
             PythonShell = "P&ython Shell"
+            WIT = "Widget Inspection Tool"
             CheckUpdate = "Check for &Updates..."
             About = "&About EventGhost..."
 
