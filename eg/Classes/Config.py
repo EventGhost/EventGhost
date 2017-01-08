@@ -71,7 +71,7 @@ class Config(PersistentData.PersistentDataBase):
 
         PersistentData.PersistentDataBase.__init__(self, self, '')
 
-        if Cli.args.isMain:
+        if Cli.args.isMain and not Cli.args.install:
             self.Load()
 
         self.version = Version.string
