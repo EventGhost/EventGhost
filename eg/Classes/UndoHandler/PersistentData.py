@@ -27,7 +27,7 @@ class PersistentData(UndoHandlerBase):
         UndoHandlerBase.__init__(self, None)
         self.__class__._UndoHandlers.append(self)
         self.config = config
-        self.flag = Falses
+        self.flag = False
         self.Redo = self.Undo
         if config:
             config.SetDelete(False)
