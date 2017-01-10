@@ -128,10 +128,10 @@ class Command(eg.ActionBase):
                 eg.folderPath.TemporaryFiles,
                 "EventGhost-output-%s.txt" % ttime()
             )
-            processInformation.lpParameters = '/C %s > %s' % (command, filename)
+            processInformation.lpParameters = '/S/C "%s" > %s' % (command, filename)
             processInformation.fMask = SEE_MASK_NOCLOSEPROCESS
         else:
-            processInformation.lpParameters = '/C %s' % command
+            processInformation.lpParameters = '/S/C "%s"' % command
         if runAsAdmin:
             processInformation.lpVerb = "runas"
         processInformation.nShow = 0
@@ -288,7 +288,7 @@ class Command(eg.ActionBase):
 
 def popen(cmd, si):
     return Popen(
-        'cmd /C %s' % cmd,
+        'cmd /S/C "%s"' % cmd,
         stdout = PIPE,
         stderr = open(devnull),
         startupinfo = si,
