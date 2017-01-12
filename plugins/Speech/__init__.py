@@ -75,10 +75,25 @@ eg.RegisterPlugin(
 )
 
 
-import win32com
-from time import strftime
-import threading
-import pythoncom
+import win32com # NOQA
+import threading # NOQA
+import pythoncom # NOQA
+from time import strftime # NOQA
+
+
+def _GetDescInvokeType(entry, invoke_type):
+    if not entry or not entry.desc:
+        return invoke_type
+    varkind = entry.desc[4]
+    if (
+        varkind == pythoncom.VAR_DISPATCH and
+        invoke_type == pythoncom.INVOKE_PROPERTYGET
+    ):
+        return pythoncom.INVOKE_FUNC | invoke_type
+    else:
+        return varkind
+
+win32com.client.dynamic._GetDescInvokeType = _GetDescInvokeType
 
 
 class Text:
@@ -211,83 +226,73 @@ class Speech(eg.PluginClass):
     text = Text
 
     def __init__(self):
-        self.tts = None
-        self.voice = None
-        self.audio = None
-        self.tts_id = None
         self.threads = []
         self.AddAction(TextToSpeech)
 
-    def __start__(self):
+    def GetTTS(self):
         try:
-            pythoncom.CoInitialize()
-            self.tts = win32com.client.Dispatch("Sapi.SpVoice")
-            self.tts_id = pythoncom.CoMarshalInterThreadInterfaceInStream(
-                pythoncom.IID_IDispatch,
-                self.tts
-            )
+            tts = win32com.client.Dispatch("Sapi.SpVoice")
         except pythoncom.com_error:
             eg.PrintTraceback(self.text.ttsError)
-            self.tts = None
-
-    def __stop__(self):
-        del self.tts
-        self.tts = None
+            tts = None
+        return tts
 
     def GetVoices(self):
-        return list(
-            voice.GetDescription()
-            for voice in self.tts.GetVoices()
-        )
-
-    def GetAudioOutputs(self):
-        return list(
-            audioDev.GetDescription()
-            for audioDev in self.tts.GetAudioOutputs()
-        )
-
-    def SetVoice(self, voiceName):
-        voiceName = voiceName.split(' - ')[0]
-        self.voice = '<voice required="name=%s">' % voiceName + '%s</voice>'
-
-    def SetAudioOutput(self, outputName):
-        if outputName is not None:
-            self.audio = (
-                '<audio required="name=%s">' % outputName + '%s</audio>'
+        tts = self.GetTTS()
+        if tts:
+            return list(
+                voice.GetDescription()
+                for voice in tts.GetVoices()
             )
         else:
-            self.audio = '%s'
+            return[]
 
-    def AddThread(self, voiceText, suffix):
-        if self.tts is not None:
-            voiceText = self.voice % voiceText
-            voiceText = self.audio % voiceText
+    def GetAudioOutputs(self):
+        tts = self.GetTTS()
+        if tts:
+            return list(
+                audioDev.GetDescription()
+                for audioDev in tts.GetAudioOutputs()
+            )
+        else:
+            return []
+
+    def GetVoice(self, tts, voice):
+        voice = voice.split(' - ')[0]
+        return tts.GetVoices('Name=' + voice)[0]
+
+    def GetAudio(self, tts, audio):
+        return list(
+            audioDev for audioDev in tts.GetAudioOutputs()
+            if audioDev.GetDescription() == audio
+        )[0]
+
+    def AddThread(self, voice, rate, voiceText, suffix, volume, audio):
+        pythoncom.CoInitialize()
+        tts = self.GetTTS()
+        if tts:
             if suffix:
                 suffix = self.text.suffix + '.' + suffix
             else:
                 suffix = self.text.suffix
-            t = Speaker(self, self.tts_id, voiceText, suffix)
+
+            tts.Voice = self.GetVoice(tts, voice)
+            if audio:
+                tts.AudioOutput = self.GetAudio(tts, audio)
+            tts.Volume = volume
+            tts.Rate = rate
+            tts_id = pythoncom.CoMarshalInterThreadInterfaceInStream(
+                pythoncom.IID_IDispatch,
+                tts
+            )
+
+            t = Speaker(self, tts_id, voiceText, suffix)
             t.start()
             self.threads.append(t)
 
-    def SetRate(self, rate):
-        self.tts.Rate = rate
-
-    def SetVolume(self, volume):
-        self.tts.Volume = volume
-
-
 class TextToSpeech(eg.ActionClass):
 
-    def __call__(
-        self,
-        voiceName,
-        rate,
-        voiceText,
-        suff,
-        volume,
-        device=None
-    ):
+    def __call__(self, voice, rate, voiceText, suffix, volume, audio=None):
         def filterFunc(s):
             formatString = '</context><context ID = "%s">%s</context><context>'
             if s == "DATE":
@@ -310,42 +315,30 @@ class TextToSpeech(eg.ActionClass):
             '</context>'
         )
 
-        self.plugin.SetVoice(voiceName)
-        self.plugin.SetRate(rate)
-        self.plugin.SetAudioOutput(device)
-        self.plugin.SetVolume(volume)
-        self.plugin.AddThread(voiceText, suff)
+        self.plugin.AddThread(voice, rate, voiceText, suffix, volume, audio)
 
-    def GetLabel(
-        self,
-        voiceName,
-        rate,
-        voiceText,
-        suff,
-        volume,
-        device = None
-    ):
+    def GetLabel(self, voice, rate, voiceText, suffix, volume, audio=None):
         return self.text.label % voiceText
 
 
     def Configure(
         self,
-        voiceName=None,
+        voice=None,
         rate=0,
         voiceText="",
-        suff="",
+        suffix="",
         volume=100,
-        device=None
+        audio=None
     ):
 
         text = self.text
         panel = eg.ConfigPanel()
 
-        if not suff:
-            suff = ''
+        if not suffix:
+            suffix = ''
 
         textCtrl = wx.TextCtrl(panel, -1, voiceText)
-        suffCtrl = wx.TextCtrl(panel, -1, suff)
+        suffCtrl = wx.TextCtrl(panel, -1, suffix)
 
         insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
 
@@ -383,11 +376,11 @@ class TextToSpeech(eg.ActionClass):
         devs = self.plugin.GetAudioOutputs()
 
         voiceChoice = wx.Choice(panel, -1, choices=voices)
-        voiceName = voiceName if voiceName else voices[0]
+        voiceName = voice if voice else voices[0]
         voiceChoice.SetStringSelection(voiceName)
 
         devChoice = wx.Choice(panel, -1, choices=devs)
-        devName = device if device  else devs[0]
+        devName = audio if audio else devs[0]
         devChoice.SetStringSelection(devName)
 
         rateCtrl = CustomSlider(
@@ -427,7 +420,7 @@ class TextToSpeech(eg.ActionClass):
             (sizer2, 0, wx.EXPAND|wx.ALL, 5),
         )
         ACV = wx.ALIGN_CENTER_VERTICAL
-        sizer3 = wx.FlexGridSizer(0, 0, 5, 5)
+        sizer3 = wx.FlexGridSizer(0, 2, 5, 5)
         sizer3.AddGrowableCol(1, 1)
         sizer3.AddMany(
             (
@@ -461,4 +454,3 @@ class TextToSpeech(eg.ActionClass):
                 volumeCtrl.GetValue(),
                 devChoice.GetStringSelection()
             )
-
