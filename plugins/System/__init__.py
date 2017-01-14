@@ -24,6 +24,8 @@ import thread
 import time
 import wx
 import _winreg
+import win32con
+import win32gui
 from base64 import b64decode, b64encode
 from PIL import Image
 from qrcode import QRCode, constants as QRconstants
@@ -107,6 +109,22 @@ EVENT_LIST = (
     ("DeviceAttached", None),
     ("DeviceRemoved", None),
 )
+
+MONITOR_STATES = dict(
+    OFF=2,
+    STANDBY=1,
+    ON=-1
+)
+
+
+def MonitorState(state):
+    win32gui.SendMessage(
+        win32con.HWND_BROADCAST,
+        win32con.WM_SYSCOMMAND,
+        SC_MONITORPOWER,
+        MONITOR_STATES[state]
+    )
+
 
 class Text:
     class MonitorGroup:
@@ -681,7 +699,7 @@ class MonitorPowerOff(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 2)
+        MonitorState('OFF')
 
 
 class MonitorPowerOn(eg.ActionBase):
@@ -693,7 +711,7 @@ class MonitorPowerOn(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, -1)
+        MonitorState('ON')
 
 
 class MonitorStandby(eg.ActionBase):
@@ -702,7 +720,7 @@ class MonitorStandby(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 1)
+        MonitorState('STANDBY')
 
 
 class SetDisplayPreset(eg.ActionBase):
