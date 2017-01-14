@@ -144,6 +144,10 @@ notifications:
 matrix:
     fast_finish: true
     allow_failures:
+        - env: TOX_ENV=flake8 PACKAGE=plugins/AIRT
+        - env: TOX_ENV=flake8 PACKAGE=plugins/AsusPsr2000
+        - env: TOX_ENV=flake8 PACKAGE=plugins/AtiRemoteWonder2WinUsb
+        - env: TOX_ENV=flake8 PACKAGE=plugins/Auvisio
         - env: TOX_ENV=flake8 PACKAGE=eg
         - env: TOX_ENV=flake8 PACKAGE=plugins/BSPlayer
         - env: TOX_ENV=flake8 PACKAGE=plugins/BT8x8
