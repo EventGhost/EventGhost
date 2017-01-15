@@ -81,21 +81,6 @@ import pythoncom # NOQA
 from time import strftime # NOQA
 
 
-def _GetDescInvokeType(entry, invoke_type):
-    if not entry or not entry.desc:
-        return invoke_type
-    varkind = entry.desc[4]
-    if (
-        varkind == pythoncom.VAR_DISPATCH and
-        invoke_type == pythoncom.INVOKE_PROPERTYGET
-    ):
-        return pythoncom.INVOKE_FUNC | invoke_type
-    else:
-        return varkind
-
-win32com.client.dynamic._GetDescInvokeType = _GetDescInvokeType
-
-
 class Text:
     suffix = "SpeakingFinished"
     ttsError = 'Speech: Unable to start the TTS engine'
@@ -454,3 +439,4 @@ class TextToSpeech(eg.ActionClass):
                 volumeCtrl.GetValue(),
                 devChoice.GetStringSelection()
             )
+
