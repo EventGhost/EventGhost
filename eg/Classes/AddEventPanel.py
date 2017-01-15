@@ -22,18 +22,10 @@ import eg
 
 
 class Config(eg.PersistentData):
-    splitPosition = 210
     lastSelected = None
 
 
 class Text(eg.TranslatableStrings):
-    eventItem = "Event Item"
-    eventName = "Event Name:"
-    notice = (
-        "Note: You can also drag and drop events from the logger to a "
-        "macro."
-    )
-    title = "Add Event..."
     descriptionLabel = "Description"
     noDescription = "<i>No description available</i>"
     userEventLabel = "Search or manually enter event"
@@ -50,7 +42,6 @@ class Text(eg.TranslatableStrings):
         "there are more than one.)"
     )
 
-    info = "Note: You can drag and drop events from the list to a macro."
     noMatch = "<no matching event>"
     unknown = "<unknown>"
     unknownDesc = (
@@ -127,7 +118,6 @@ class AddEventPanel(eg.Panel):
         splitterWindow.SplitVertically(leftPanel, rightPanel)
         splitterWindow.SetMinimumPaneSize(120)
         splitterWindow.UpdateSize()
-        splitterWindow.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSash)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 5)
@@ -148,9 +138,6 @@ class AddEventPanel(eg.Panel):
                 tree.SelectItem(item)
         else:
             self.ReselectLastSelected()
-
-    def OnSash(self, event):
-        Config.splitPosition = self.splitterWindow.GetSashPosition()
 
     def GenerateEventlist(self):
         self._allEventsDict = eventDict = {Text.unknown: []}
@@ -248,15 +235,12 @@ class AddEventPanel(eg.Panel):
                 tree.SetPyData(subitem, data)
 
     def OnActivated(self, event):
-        print "#############"
         item = self.tree.GetSelection()
         if item.IsOk():
             data = self.tree.GetPyData(item)
             if isinstance(data, eg.EventInfo):
                 Config.lastSelected = data.info.eventPrefix + "." + data.name
                 self.resultData = Config.lastSelected
-                #event.Skip()
-
         event.Veto()
 
     def OnFocusTree(self, event):

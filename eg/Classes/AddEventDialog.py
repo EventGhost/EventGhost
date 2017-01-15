@@ -30,29 +30,7 @@ class Config(eg.PersistentData):
 
 class Text(eg.TranslatableStrings):
     title = "Add Event..."
-    descriptionLabel = "Description"
-    noDescription = "<i>No description available</i>"
-    userEventLabel = "Search or manually enter event"
-    userEvent = (
-        "If an event is not in the list of available events,"
-        " it can be manually entered here.<br><br> While you enter some "
-        "text, the list is filtered for matching entries."
-        '<br>If you for example type <span style="color: blue;">'
-        '<i>X10.Red</i></span>, the list will be '
-        'filtered for any matching <span style="color: blue;"><i>X10.Red</i>'
-        '</span>, <span style="color: blue;"><i>X10</i></span> or '
-        '<span style="color: blue;"><i>Red</i></span>. '
-        "(The search string will only be splitted at the first '<b>.</b>' if "
-        "there are more than one.)"
-    )
-
     info = "Note: You can drag and drop events from the list to a macro."
-    noMatch = "<no matching event>"
-    unknown = "<unknown>"
-    unknownDesc = (
-        "Here you find events that are used in your configuration, but "
-        "couldn't be associated with a plugin."
-    )
 
 
 class AddEventDialog(eg.TaskletDialog):
