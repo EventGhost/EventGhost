@@ -72,10 +72,10 @@ eg.RegisterPlugin(
 )
 
 
-from win32com.client import Dispatch, DispatchWithEvents
-from time import strftime
-from threading import Thread
 import pythoncom
+import threading
+import win32com.client
+from time import strftime
 
 
 class Text:
@@ -181,84 +181,121 @@ class CustomSlider(wx.Window):
 #            StreamPosition
 #        )
 
-class Speaker(Thread):
+class Speaker(threading.Thread):
     def __init__(
-        self,
-        plugin,
-        text,
-        voiceName,
-        rate,
-        volume,
-        suff,
-        device
-        ):
-        super(Speaker, self).__init__()
+            self,
+            plugin,
+            tts_id,
+            voiceText,
+            suffix
+    ):
+        threading.Thread.__init__(self, name='Text To Speech Thread')
         self.plugin = plugin
-        self.text = text
-        self.voiceName = voiceName
-        self.rate = rate
-        self.volume = volume
-        self.suff = suff
-        self.device = device
-        self.start()
+        self.tts_id = tts_id
+        self.voiceText = voiceText
+        self.suffix = suffix
 
     def run(self):
-        try:
-            pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
-            #tts = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
-            tts = Dispatch('SAPI.SpVoice')
-        except:
-            self.plugin.PrintError(self.plugin.text.ttsError)
-            return
-        vcs = tts.GetVoices()
-        voices = [(voice.GetDescription(), voice) for voice in vcs]
-        tmp = [item[0] for item in voices]
-        ix = tmp.index(self.voiceName) if self.voiceName in tmp else 0
-        tts.Voice = voices[ix][1]
-
-        devs = tts.GetAudioOutputs()
-        devices = [(dev.GetDescription(), dev) for dev in devs]
-        tmp = [item[0] for item in devices]
-        ix = tmp.index(self.device) if self.device in tmp else 0
-        tts.AudioOutput = devices[ix][1]
-
-        tts.Rate = self.rate
-        tts.Volume = self.volume
-        tts.Speak(self.text,0)
-        suffix = self.plugin.text.suffix if self.suff == "" else "%s.%s" % (
-            self.plugin.text.suffix,
-            self.suff
+        pythoncom.CoInitialize()
+        tts = win32com.client.Dispatch(
+            pythoncom.CoGetInterfaceAndReleaseStream(
+                self.tts_id,
+                pythoncom.IID_IDispatch
+            )
         )
-        self.plugin.TriggerEvent(suffix)
+
+        tts.Speak(self.voiceText, 0)
+        self.plugin.TriggerEvent(self.suffix)
 
 
 class Speech(eg.PluginClass):
     text = Text
 
     def __init__(self):
+        self.threads = []
         self.AddAction(TextToSpeech)
 
+    def GetTTS(self):
+        try:
+            tts = win32com.client.Dispatch("Sapi.SpVoice")
+        except pythoncom.com_error:
+            eg.PrintTraceback(self.text.ttsError)
+            tts = None
+        return tts
+
+    def GetVoices(self):
+        tts = self.GetTTS()
+        if tts:
+            return list(
+                voice.GetDescription()
+                for voice in tts.GetVoices()
+            )
+        else:
+            return[]
+
+    def GetAudioOutputs(self):
+        tts = self.GetTTS()
+        if tts:
+            return list(
+                audioDev.GetDescription()
+                for audioDev in tts.GetAudioOutputs()
+            )
+        else:
+            return []
+
+    def GetVoice(self, tts, voice):
+        voice = voice.split(' - ')[0]
+        return tts.GetVoices('Name=' + voice)[0]
+
+    def GetAudio(self, tts, audio):
+        return list(
+            audioDev for audioDev in tts.GetAudioOutputs()
+            if audioDev.GetDescription() == audio
+        )[0]
+
+    def AddThread(self, voice, rate, voiceText, suffix, volume, audio):
+        pythoncom.CoInitialize()
+        tts = self.GetTTS()
+        if tts:
+            if suffix:
+                suffix = self.text.suffix + '.' + suffix
+            else:
+                suffix = self.text.suffix
+
+            tts.Voice = self.GetVoice(tts, voice)
+            if audio:
+                tts.AudioOutput = self.GetAudio(tts, audio)
+            tts.Volume = volume
+            tts.Rate = rate
+            tts_id = pythoncom.CoMarshalInterThreadInterfaceInStream(
+                pythoncom.IID_IDispatch,
+                tts
+            )
+
+            t = Speaker(self, tts_id, voiceText, suffix)
+            t.start()
+            self.threads.append(t)
 
 
 class TextToSpeech(eg.ActionClass):
 
-    def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
-        self.suff = suff if suff != 0 else ""
+    def __call__(self, voice, rate, voiceText, suffix, volume, audio=None):
 
         def filterFunc(s):
+            formatString = '</context><context ID = "%s">%s</context><context>'
             if s == "DATE":
-                return '</context><context ID = "date_mdy">' + strftime("%m/%d/%Y") + '</context><context>'
+                return formatString % ('date_mdy', strftime("%m/%d/%Y"))
             elif s == "DATE1":
-                return '</context><context ID = "date_mdy">' + strftime("%m/%d/%y") + '</context><context>'
+                return formatString % ('date_mdy', strftime("%m/%d/%y"))
             elif s == "TIME":
-                return '</context><context ID = "time">' + strftime("%H:%M:%S") + '</context><context>'
+                return formatString % ('time', strftime("%H:%M:%S"))
             elif s == "TIME1":
-                return '</context><context ID = "time">' + strftime("%H:%M") + '</context><context>'
+                return formatString % ('time', strftime("%H:%M"))
             else:
                 return None
 
         voiceText = eg.ParseString(voiceText, filterFunc)
-        voiceText = "<context>" + voiceText + "</context>"
+        voiceText = "<context>%s</context>" % voiceText
         if voiceText.startswith('<context></context>'):
             voiceText = voiceText[19:]
         voiceText = voiceText.replace(
@@ -266,15 +303,7 @@ class TextToSpeech(eg.ActionClass):
             '</context>'
         )
 
-        sp=Speaker(
-            self.plugin,
-            voiceText,
-            voiceName,
-            rate,
-            volume,
-            suff,
-            device
-        )
+        self.plugin.AddThread(voice, rate, voiceText, suffix, volume, audio)
 
 
     def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
@@ -286,17 +315,17 @@ class TextToSpeech(eg.ActionClass):
         voiceName=None,
         rate=0,
         voiceText="",
-        suff="",
+        suffix="",
         volume=100,
         device = None
     ):
-        suff = suff if suff != 0 else ""
+        # suffix = suffix if suffix else ""
+        #
         text = self.text
         panel = eg.ConfigPanel()
-        plugin = self.plugin
 
         textCtrl = wx.TextCtrl(panel, -1, voiceText)
-        suffCtrl = wx.TextCtrl(panel, -1, suff)
+        suffCtrl = wx.TextCtrl(panel, -1, suffix)
 
         insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
         def OnButton(event):
@@ -324,15 +353,8 @@ class TextToSpeech(eg.ActionClass):
 
 
 
-        try:
-            #self.VoiceObj = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
-            VoiceObj = Dispatch("Sapi.SpVoice")
-        except:
-            self.PrintError(self.text.errorCreate)
-            return
-        voices = [voice.GetDescription() for voice in VoiceObj.GetVoices()]
-        devs = [dev.GetDescription() for dev in VoiceObj.GetAudioOutputs()]
-        del VoiceObj
+        voices = self.plugin.GetVoices()
+        devs = self.plugin.GetAudioOutputs()
 
         voiceChoice = wx.Choice(panel, -1, choices=voices)
         voiceName = voiceName if voiceName  else voices[0]
