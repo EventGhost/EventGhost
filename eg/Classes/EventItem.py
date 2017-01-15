@@ -17,13 +17,13 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+from wx._core import PyDeadObjectError
 
 import eg
 from TreeItem import HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, TreeItem
 
 
-class Text(eg.TranslatableStrings):
-    eventItem = "Event Item"
+Text = eg.text.EventDialog
 
 
 class EventItem(TreeItem):
@@ -49,9 +49,15 @@ class EventItem(TreeItem):
         cfgPanel.dialog.mainSizer.Remove(2)
 
         def AfterSelectionChanged():
-            item = evtPanel.tree.GetSelection()
-            if not item.IsOk():
+            try:
+                # It could happen that an event arrives after the dialog
+                # has been closed. To avoid an error we use try/except here.
+                item = evtPanel.tree.GetSelection()
+                if not item.IsOk():
+                    return
+            except PyDeadObjectError:
                 return
+
             data = evtPanel.tree.GetPyData(item)
             if isinstance(data, eg.EventInfo):
                 cfgPanel.dialog.buttonRow.applyButton.Enable(True)
@@ -89,7 +95,7 @@ class EventItem(TreeItem):
         return ""
 
     def GetDescription(self):
-        return ""
+        return Text.dndInfo
 
     def GetTypeName(self):
         return Text.eventItem

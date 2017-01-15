@@ -21,16 +21,14 @@ import wx
 import eg
 
 
+Text = eg.text.EventDialog
+
+
 class Config(eg.PersistentData):
     position = None
     size = (550, 400)
     splitPosition = 210
     lastSelected = None
-
-
-class Text(eg.TranslatableStrings):
-    title = "Add Event..."
-    info = "Note: You can drag and drop events from the list to a macro."
 
 
 class AddEventDialog(eg.TaskletDialog):
@@ -51,7 +49,7 @@ class AddEventDialog(eg.TaskletDialog):
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
         info = eg.HeaderBox(
             parent=self,
-            name=Text.info,
+            name=Text.dndInfo,
             icon=eg.Icons.INFO_ICON,
             url=None
         )

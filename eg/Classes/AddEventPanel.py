@@ -17,37 +17,17 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+import wx.lib.agw.supertooltip as STT
+from wx._core import PyDeadObjectError
 
 import eg
 
 
+Text = eg.text.EventDialog
+
+
 class Config(eg.PersistentData):
     lastSelected = None
-
-
-class Text(eg.TranslatableStrings):
-    descriptionLabel = "Description"
-    noDescription = "<i>No description available</i>"
-    userEventLabel = "Search or manually enter event"
-    userEvent = (
-        "If an event is not in the list of available events,"
-        " it can be manually entered here.<br><br> While you enter some "
-        "text, the list is filtered for matching entries."
-        '<br>If you for example type <span style="color: blue;">'
-        '<i>X10.Red</i></span>, the list will be '
-        'filtered for any matching <span style="color: blue;"><i>X10.Red</i>'
-        '</span>, <span style="color: blue;"><i>X10</i></span> or '
-        '<span style="color: blue;"><i>Red</i></span>. '
-        "(The search string will only be splitted at the first '<b>.</b>' if "
-        "there are more than one.)"
-    )
-
-    noMatch = "<no matching event>"
-    unknown = "<unknown>"
-    unknownDesc = (
-        "Here you find events that are used in your configuration, but "
-        "couldn't be associated with a plugin."
-    )
 
 
 class AddEventPanel(eg.Panel):
@@ -85,18 +65,22 @@ class AddEventPanel(eg.Panel):
             leftPanel,
             label="{0}:".format(Text.userEventLabel)
         )
+        userEventLabel.SetToolTip(wx.ToolTip(Text.userEventTooltip))
+
         self.eventName = eventName =wx.TextCtrl(
             leftPanel, wx.ID_ANY, style=wx.TE_PROCESS_ENTER
         )
         eventName.Bind(wx.EVT_TEXT_ENTER, self.OnTextEnter)
         eventName.Bind(wx.EVT_SET_FOCUS, self.OnFocusUserEvent)
         eventName.Bind(wx.EVT_TEXT, self.OnText)
+        eventName.SetToolTip(wx.ToolTip(Text.userEventTooltip))
 
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(tree, 1, wx.EXPAND)
         leftSizer.Add(userEventLabel, 0, wx.TOP, 5)
         leftSizer.Add(eventName, 0, wx.EXPAND)
         leftPanel.SetSizer(leftSizer)
+        leftPanel.SetToolTip(wx.ToolTip(Text.userEventTooltip))
 
         rightPanel = self.rightPanel = eg.Panel(splitterWindow)
         rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
@@ -105,6 +89,7 @@ class AddEventPanel(eg.Panel):
 
         self.nameText = nameText = wx.StaticText(rightPanel)
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
+
         rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
@@ -254,9 +239,6 @@ class AddEventPanel(eg.Panel):
         self.DoSelectionChanged(item)
 
     def OnFocusUserEvent(self, event):
-        self.nameText.SetLabel(Text.userEventLabel)
-        self.docText.SetBasePath("")
-        self.docText.SetPage(Text.userEvent)
         value = self.resultData
         self.eventName.ChangeValue(value)
         self.resultData = value
@@ -311,10 +293,18 @@ class AddEventPanel(eg.Panel):
             desc = None
         self.eventName.ChangeValue(self.resultData)
         self.eventName.SetInsertionPointEnd()
-        wx.CallAfter(self.eventName.SetFocus)
+        wx.CallAfter(self.SetFocusToTextCtrl)
         self.nameText.SetLabel(label)
         self.docText.SetBasePath(path)
         self.docText.SetPage(desc if desc else Text.noDescription)
+
+    def SetFocusToTextCtrl(self):
+        try:
+            # It could happen that an event arrives after the dialog
+            # has been closed. To avoid an error we use try/except here.
+            self.eventName.SetFocus()
+        except PyDeadObjectError:
+            pass
 
     def OnText(self, evt):
         if not evt.GetEventObject().HasFocus():
@@ -323,23 +313,42 @@ class AddEventPanel(eg.Panel):
         if not value:
             wx.CallAfter(self.FillTree, self._allEventsData)
             return
+
         values = [value.lower()]
         if "." in value:
             for v in value.split(".", 1):
                 if v:
-                    values.append(v)
+                    values.append(v.lower())
 
         allevts = self._allEventsData
         filtered = {}
+        match = False
+        label = Text.userEventLabel
+        path = ""
+        desc = Text.userEventTooltip
+        
         for plugin in allevts:
-            if any(v in allevts[plugin][1].evalName.lower() for v in
-                   values):
-                filtered.update({plugin: allevts[plugin]})
-                continue
+            if len(values) < 3:
+                if any(v in allevts[plugin][1].evalName.lower() for v in values):
+                    filtered.update({plugin: allevts[plugin]})
+                    continue
 
             events = allevts[plugin][2]
             for event in events:
                 if any(v in event.lower() for v in values):
+                    if any(v == event.lower() for v in values):
+                        match = True
+                        data = events[event][1]
+                        if data.info.eventPrefix:
+                            evt = data.info.eventPrefix + "." + data.name
+                        else:
+                            evt = data.name
+                        self.resultData = evt
+                        Config.lastSelected = evt
+                        path = data.info.path
+                        label = data.name
+                        desc = data.description
+
                     if plugin not in filtered:
                         filtered.update(
                             {plugin: (
@@ -358,6 +367,7 @@ class AddEventPanel(eg.Panel):
                                 allevts[plugin][2][event][1]
                             )}
                         )
+
         if not filtered:
             dummy_info = eg.PluginInstanceInfo()
             dummy_info.name = ""
@@ -370,6 +380,9 @@ class AddEventPanel(eg.Panel):
                 {}  # events
             )}
 
+        self.nameText.SetLabel(label if match else Text.userEventLabel)
+        self.docText.SetBasePath(path if match else "")
+        self.docText.SetPage(desc if match else Text.userEventTooltip)
         self.FillTree(filtered)
         self.tree.ExpandAllChildren(self.root)
 

@@ -23,6 +23,37 @@ import eg
 from eg.Utils import SetDefault
 
 class Default:
+    class EventDialog:
+        descriptionLabel = "Description"
+        dndInfo = (
+            "Note: You can drag an event from the list and "
+            "drop it onto a macro."
+        )
+        eventItem = "Event Item"
+        noDescription = "<i>No description available</i>"
+        userEventLabel = "Search or manually enter event"
+        userEventTooltip = (
+            "If an event is not in the list of available events,\n"
+            "you can enter it in the text field.\n"
+            "\n"
+            "While you enter some text, the list is filtered\n"
+            "for matching entries. If you for example type\n"
+            "   X10.Red\n"
+            "the list will be filtered for any event matching\n"
+            "'X10.Red', 'X10' or 'Red'\n"
+            "\n"
+            "The search string will only be splitted at the\n"
+            "first dot, if there are more than one."
+        )
+
+        noMatch = "<no matching event>"
+        title = "Add Event..."
+        unknown = "<unknown>"
+        unknownDesc = (
+            "Here you find events that are used in your configuration, but "
+            "couldn't be associated with a plugin."
+        )
+
     class General:
         configTree = "Configuration Tree"
         deleteQuestion = "Are you sure you want to delete this item?"
