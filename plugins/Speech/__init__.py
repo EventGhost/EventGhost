@@ -79,27 +79,29 @@ import pythoncom
 
 
 class Text:
-    name = "Text to speech"
-    description = "Uses the Microsoft Speech API (SAPI) to speak a text."
-    label = "Speak: %s"
-    errorCreate = "Cannot create voice object"
-    buttonInsertTime = "Insert time HH:MM:SS"
-    buttonInsertTime1 = "Insert time HH:MM"
-    buttonInsertDate = "Insert date (20XX)"
-    buttonInsertDate1 = "Insert date (XX)"
-    normal = "Normal"
-    slow = "Slow"
-    fast = "Fast"
-    silent = "Silent"
-    loud = "Loud"
-    labelVoice = "Voice:"
-    labelRate = "Rate:"
-    labelVolume = "Volume:"
-    voiceProperties = "Voice properties"
-    textBoxLabel = "Text"
     suffix = "SpeakingFinished"
-    addSuffix = "Additional event suffix:"
-    device = "Output device:"
+    ttsError = 'Speech: Unable to start the TTS engine'
+
+    class TextToSpeech:
+        name = "Text to speech"
+        description = "Uses the Microsoft Speech API (SAPI) to speak a text."
+        label = "Speak: %s"
+        buttonInsertTime = "Insert time HH:MM:SS"
+        buttonInsertTime1 = "Insert time HH:MM"
+        buttonInsertDate = "Insert date (20XX)"
+        buttonInsertDate1 = "Insert date (XX)"
+        normal = "Normal"
+        slow = "Slow"
+        fast = "Fast"
+        silent = "Silent"
+        loud = "Loud"
+        labelVoice = "Voice:"
+        labelRate = "Rate:"
+        labelVolume = "Volume:"
+        voiceProperties = "Voice properties"
+        textBoxLabel = "Text"
+        addSuffix = "Additional event suffix:"
+        device = "Output device:"
 
 
 class CustomSlider(wx.Window):
@@ -206,7 +208,7 @@ class Speaker(Thread):
             #tts = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
             tts = Dispatch('SAPI.SpVoice')
         except:
-            self.plugin.PrintError(self.plugin.text.errorCreate)
+            self.plugin.PrintError(self.plugin.text.ttsError)
             return
         vcs = tts.GetVoices()
         voices = [(voice.GetDescription(), voice) for voice in vcs]
@@ -231,7 +233,7 @@ class Speaker(Thread):
 
 
 class Speech(eg.PluginClass):
-    text = Text()
+    text = Text
 
     def __init__(self):
         self.AddAction(TextToSpeech)
@@ -239,7 +241,6 @@ class Speech(eg.PluginClass):
 
 
 class TextToSpeech(eg.ActionClass):
-    text = Text()
 
     def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
         self.suff = suff if suff != 0 else ""
