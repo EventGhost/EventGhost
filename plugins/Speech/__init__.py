@@ -38,16 +38,18 @@
 # 1.0 by MonsterMagnet
 #     - initial version
 
+import eg
+
 eg.RegisterPlugin(
-    name = "Speech",
-    author = "MonsterMagnet",
-    guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
-    version = "2.2",
-    description = (
+    name="Speech",
+    author="MonsterMagnet",
+    guid="{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
+    version="2.2",
+    description=(
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=6828",
-    icon = (
+    url="http://www.eventghost.org/forum/viewtopic.php?f=9&t=6828",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAADh0lEQVR4nIXSW0yTBxgG4P/GxRkZ2+gWtR2YCBoOlsL/87fQg4WldkLHqQZo"
         "RcbBUBDCYFxsukaJqyLdAgw3p1AcOhHXNhzaIWLXtVSoWNx0LMsssspGUMYWMB3URVre"
@@ -71,11 +73,12 @@ eg.RegisterPlugin(
     ),
 )
 
+import threading
+from time import strftime
 
 import pythoncom
-import threading
 import win32com.client
-from time import strftime
+import wx
 
 
 class Text:
@@ -105,38 +108,42 @@ class Text:
 
 
 class CustomSlider(wx.Window):
-
     def __init__(
         self,
         parent,
-        id = -1,
-        value = None,
-        minValue = None,
-        maxValue = None,
-        pos = wx.DefaultPosition,
-        size = wx.DefaultSize,
-        style = 0,
-        valueLabel = None,
-        minLabel = None,
-        maxLabel = None,
+        wxId=wx.ID_ANY,
+        value=None,
+        minValue=None,
+        maxValue=None,
+        pos=wx.DefaultPosition,
+        size=wx.DefaultSize,
+        style=0,
+        valueLabel=None,
+        minLabel=None,
+        maxLabel=None,
     ):
         self.valueLabel = valueLabel
-        wx.Window.__init__(self, parent, id, pos, size, style)
+        wx.Window.__init__(self, parent, wxId, pos, size, style)
         sizer = wx.GridBagSizer()
         self.slider = wx.Slider(
             self,
-            -1,
+            wx.ID_ANY,
             value,
             minValue,
             maxValue,
-            style = style
+            style=style
         )
         sizer.Add(self.slider, (0, 0), (1, 3), wx.EXPAND)
-        st = wx.StaticText(self, -1, minLabel)
+        st = wx.StaticText(self, wx.ID_ANY, minLabel)
         sizer.Add(st, (1, 0), (1, 1), wx.ALIGN_LEFT)
-        self.valueLabelCtrl = wx.StaticText(self, -1, valueLabel)
-        sizer.Add(self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL)
-        st = wx.StaticText(self, -1, maxLabel)
+        self.valueLabelCtrl = wx.StaticText(self, wx.ID_ANY, valueLabel)
+        sizer.Add(
+            self.valueLabelCtrl,
+            (1, 1),
+            (1, 1),
+            wx.ALIGN_CENTER_HORIZONTAL
+        )
+        st = wx.StaticText(self, wx.ID_ANY, maxLabel)
         sizer.Add(st, (1, 2), (1, 1), wx.ALIGN_RIGHT)
         sizer.AddGrowableCol(1, 1)
         self.SetSizer(sizer)
@@ -149,15 +156,12 @@ class CustomSlider(wx.Window):
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.OnScrollChanged()
 
-
     def OnSize(self, event):
         if self.GetAutoLayout():
             self.Layout()
 
-
     def OnSetFocus(self, event):
         self.slider.SetFocus()
-
 
     def OnScrollChanged(self, event=None):
         d = {"1": self.slider.GetValue()}
@@ -165,29 +169,20 @@ class CustomSlider(wx.Window):
         if event:
             wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
 
-
     def GetValue(self):
         return self.slider.GetValue()
-
 
     def SetValue(self):
         self.slider.SetValue()
 
 
-#class SpeechEvents:
-#    def OnEndStream(self, StreamNumber, StreamPosition):
-#        print 'OnEndStream: StreamNumber=%s, StreamPosition=%s' % (
-#            StreamNumber,
-#            StreamPosition
-#        )
-
 class Speaker(threading.Thread):
     def __init__(
-            self,
-            plugin,
-            tts_id,
-            voiceText,
-            suffix
+        self,
+        plugin,
+        tts_id,
+        voiceText,
+        suffix
     ):
         threading.Thread.__init__(self, name='Text To Speech Thread')
         self.plugin = plugin
@@ -230,8 +225,7 @@ class Speech(eg.PluginClass):
                 voice.GetDescription()
                 for voice in tts.GetVoices()
             )
-        else:
-            return[]
+        return []
 
     def GetAudioOutputs(self):
         tts = self.GetTTS()
@@ -240,14 +234,15 @@ class Speech(eg.PluginClass):
                 audioDev.GetDescription()
                 for audioDev in tts.GetAudioOutputs()
             )
-        else:
-            return []
+        return []
 
-    def GetVoice(self, tts, voice):
+    @staticmethod
+    def GetVoice(tts, voice):
         voice = voice.split(' - ')[0]
         return tts.GetVoices('Name=' + voice)[0]
 
-    def GetAudio(self, tts, audio):
+    @staticmethod
+    def GetAudio(tts, audio):
         return list(
             audioDev for audioDev in tts.GetAudioOutputs()
             if audioDev.GetDescription() == audio
@@ -255,30 +250,31 @@ class Speech(eg.PluginClass):
 
     def AddThread(self, voice, rate, voiceText, suffix, volume, audio):
         pythoncom.CoInitialize()
+
+        if suffix:
+            suffix = self.text.suffix + '.' + suffix
+        else:
+            suffix = self.text.suffix
+
         tts = self.GetTTS()
-        if tts:
-            if suffix:
-                suffix = self.text.suffix + '.' + suffix
-            else:
-                suffix = self.text.suffix
+        if not tts:
+            return
+        tts.Voice = self.GetVoice(tts, voice)
+        if audio:
+            tts.AudioOutput = self.GetAudio(tts, audio)
+        tts.Volume = volume
+        tts.Rate = rate
+        tts_id = pythoncom.CoMarshalInterThreadInterfaceInStream(
+            pythoncom.IID_IDispatch,
+            tts
+        )
 
-            tts.Voice = self.GetVoice(tts, voice)
-            if audio:
-                tts.AudioOutput = self.GetAudio(tts, audio)
-            tts.Volume = volume
-            tts.Rate = rate
-            tts_id = pythoncom.CoMarshalInterThreadInterfaceInStream(
-                pythoncom.IID_IDispatch,
-                tts
-            )
-
-            t = Speaker(self, tts_id, voiceText, suffix)
-            t.start()
-            self.threads.append(t)
+        t = Speaker(self, tts_id, voiceText, suffix)
+        t.start()
+        self.threads.append(t)
 
 
 class TextToSpeech(eg.ActionClass):
-
     def __call__(self, voice, rate, voiceText, suffix, volume, audio=None):
 
         def filterFunc(s):
@@ -305,10 +301,9 @@ class TextToSpeech(eg.ActionClass):
 
         self.plugin.AddThread(voice, rate, voiceText, suffix, volume, audio)
 
-
-    def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
-        return self.text.label % voiceText
-
+    def GetLabel(self, *args):
+        # args = voiceName, rate, voiceText, suff, volume, device
+        return self.text.label % args[2]
 
     def Configure(
         self,
@@ -317,103 +312,82 @@ class TextToSpeech(eg.ActionClass):
         voiceText="",
         suffix="",
         volume=100,
-        device = None
+        device=None
     ):
-        # suffix = suffix if suffix else ""
-        #
         text = self.text
         panel = eg.ConfigPanel()
 
-        textCtrl = wx.TextCtrl(panel, -1, voiceText)
-        suffCtrl = wx.TextCtrl(panel, -1, suffix)
+        textCtrl = wx.TextCtrl(panel, wx.ID_ANY, voiceText)
+        suffCtrl = wx.TextCtrl(panel, wx.ID_ANY, suffix)
 
-        insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
-        def OnButton(event):
-            textCtrl.WriteText('{TIME}')
-            textCtrl.SetFocus()
-        insertTimeButton.Bind(wx.EVT_BUTTON, OnButton)
+        def MakeButton(txt, value):
+            def OnButton(event):
+                textCtrl.WriteText(value)
+                textCtrl.SetFocus()
+            btn = wx.Button(panel, wx.ID_ANY, txt)
+            btn.Bind(wx.EVT_BUTTON, OnButton)
+            return btn
 
-        insertTimeButton1 = wx.Button(panel, -1, text.buttonInsertTime1)
-        def OnButton(event):
-            textCtrl.WriteText('{TIME1}')
-            textCtrl.SetFocus()
-        insertTimeButton1.Bind(wx.EVT_BUTTON, OnButton)
-
-        insertDateButton = wx.Button(panel, -1, text.buttonInsertDate)
-        def OnButton(event):
-            textCtrl.WriteText('{DATE}')
-            textCtrl.SetFocus()
-        insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
-
-        insertDateButton1 = wx.Button(panel, -1, text.buttonInsertDate1)
-        def OnButton(event):
-            textCtrl.WriteText('{DATE1}')
-            textCtrl.SetFocus()
-        insertDateButton1.Bind(wx.EVT_BUTTON, OnButton)
-
-
+        insertTimeButton = MakeButton(text.buttonInsertTime, '{TIME}')
+        insertTimeButton1 = MakeButton(text.buttonInsertTime1, '{TIME1}')
+        insertDateButton = MakeButton(text.buttonInsertDate, '{DATE}')
+        insertDateButton1 = MakeButton(text.buttonInsertDate1, '{DATE1}')
 
         voices = self.plugin.GetVoices()
         devs = self.plugin.GetAudioOutputs()
 
-        voiceChoice = wx.Choice(panel, -1, choices=voices)
-        voiceName = voiceName if voiceName  else voices[0]
+        voiceChoice = wx.Choice(panel, wx.ID_ANY, choices=voices)
+        voiceName = voiceName if voiceName else voices[0]
         voiceChoice.SetStringSelection(voiceName)
-        devChoice = wx.Choice(panel, -1, choices=devs)
-        devName = device if device  else devs[0]
+        devChoice = wx.Choice(panel, wx.ID_ANY, choices=devs)
+        devName = device if device else devs[0]
         devChoice.SetStringSelection(devName)
-
-
-
-
 
         rateCtrl = CustomSlider(
             panel,
-            value = int(rate),
-            valueLabel = text.normal,
-            minValue = -5,
-            minLabel = text.slow,
-            maxValue = 5,
-            maxLabel = text.fast,
-            style = wx.SL_AUTOTICKS|wx.SL_TOP
+            value=int(rate),
+            valueLabel=text.normal,
+            minValue=-5,
+            minLabel=text.slow,
+            maxValue=5,
+            maxLabel=text.fast,
+            style=wx.SL_AUTOTICKS | wx.SL_TOP
         )
 
         volumeCtrl = CustomSlider(
             panel,
-            value = volume,
-            valueLabel = "%(1)i %%",
-            minValue = 0,
-            minLabel = text.silent,
-            maxValue = 100,
-            maxLabel = text.loud,
-            style = wx.SL_AUTOTICKS|wx.SL_TOP
+            value=volume,
+            valueLabel="%(1)i %%",
+            minValue=0,
+            minLabel=text.silent,
+            maxValue=100,
+            maxLabel=text.loud,
+            style=wx.SL_AUTOTICKS | wx.SL_TOP
         )
         volumeCtrl.slider.SetTickFreq(10, 3)
 
-        sizer1 = eg.HBoxSizer(
-            (textCtrl, 1, wx.EXPAND)
-        )
+        sizer1 = eg.HBoxSizer((textCtrl, 1, wx.EXPAND))
         sizer2 = eg.HBoxSizer(
-            (insertTimeButton),
-            (insertTimeButton1, 0, wx.ALIGN_LEFT,3),
-            ((10, 5),0),
+            insertTimeButton,
+            (insertTimeButton1, 0, wx.ALIGN_LEFT, 3),
+            ((10, 5), 0),
             (insertDateButton, 0, wx.ALIGN_RIGHT, 3),
             (insertDateButton1, 0, wx.ALIGN_RIGHT)
         )
         staticBoxSizer1 = panel.VStaticBoxSizer(
             text.textBoxLabel,
-            (sizer1, 0, wx.EXPAND|wx.ALL, 5),
-            (sizer2, 0, wx.EXPAND|wx.ALL, 5),
+            (sizer1, 0, wx.EXPAND | wx.ALL, 5),
+            (sizer2, 0, wx.EXPAND | wx.ALL, 5),
         )
         ACV = wx.ALIGN_CENTER_VERTICAL
         sizer3 = wx.FlexGridSizer(0, 2, 5, 5)
         sizer3.AddGrowableCol(1, 1)
         sizer3.AddMany(
             (
-                (panel.StaticText(text.labelVoice), 0, ACV|wx.BOTTOM, 10),
-                (voiceChoice, 0, wx.EXPAND|wx.BOTTOM, 10),
-                (panel.StaticText(text.device), 0, ACV|wx.BOTTOM, 10),
-                (devChoice, 0, wx.EXPAND|wx.BOTTOM, 10),
+                (panel.StaticText(text.labelVoice), 0, ACV | wx.BOTTOM, 10),
+                (voiceChoice, 0, wx.EXPAND | wx.BOTTOM, 10),
+                (panel.StaticText(text.device), 0, ACV | wx.BOTTOM, 10),
+                (devChoice, 0, wx.EXPAND | wx.BOTTOM, 10),
                 (panel.StaticText(text.labelRate), 0, ACV),
                 (rateCtrl, 0, wx.EXPAND),
                 (panel.StaticText(text.labelVolume), 0, ACV),
@@ -425,11 +399,11 @@ class TextToSpeech(eg.ActionClass):
 
         staticBoxSizer2 = panel.VStaticBoxSizer(
             text.voiceProperties,
-            (sizer3, 0, wx.EXPAND|wx.ALL, 5),
+            (sizer3, 0, wx.EXPAND | wx.ALL, 5),
         )
 
         panel.sizer.Add(staticBoxSizer1, 0, wx.EXPAND)
-        panel.sizer.Add(staticBoxSizer2, 0, wx.EXPAND|wx.TOP, 10)
+        panel.sizer.Add(staticBoxSizer2, 0, wx.EXPAND | wx.TOP, 10)
 
         while panel.Affirmed():
             panel.SetResult(
@@ -440,4 +414,3 @@ class TextToSpeech(eg.ActionClass):
                 volumeCtrl.GetValue(),
                 devChoice.GetStringSelection()
             )
-
