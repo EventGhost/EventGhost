@@ -76,6 +76,8 @@ def ImportAll():
     Traverse(eg.corePluginDir, "eg.CorePluginModule")
 
 def Init():
+    import WinApi.pywin32_patches # NOQA
+
     if eg.startupArguments.isMain or eg.startupArguments.install:
         import WinApi.COMServer  # NOQA
 
