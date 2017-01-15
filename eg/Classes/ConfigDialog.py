@@ -41,7 +41,7 @@ class ConfigDialog(eg.TaskletDialog):
             title = eg.text.General.settingsPluginCaption
         elif isinstance(treeItem, eg.EventItem):
             title = eg.text.General.settingsEventCaption
-            size = (450, 150)
+            size = (550, 400)
         else:
             title = eg.text.General.settingsActionCaption
             addTestButton = True

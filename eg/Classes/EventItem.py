@@ -16,17 +16,14 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
+import wx
+
 import eg
 from TreeItem import HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, TreeItem
 
+
 class Text(eg.TranslatableStrings):
     eventItem = "Event Item"
-    eventName = "Event Name:"
-    notice = (
-        "Note: You can also drag and drop events from the logger to a "
-        "macro."
-    )
 
 
 class EventItem(TreeItem):
@@ -44,17 +41,37 @@ class EventItem(TreeItem):
         TreeItem.__init__(self, parent, node)
         self.RegisterEvent(self.name)
 
-    def Configure(self, name):
-        panel = eg.ConfigPanel()
-        staticText = panel.StaticText(Text.eventName)
-        textCtrl = panel.TextCtrl(name, size=(250, -1))
-        staticText2 = panel.StaticText(Text.notice)
-        panel.sizer.Add(staticText)
-        panel.sizer.Add(textCtrl)
-        panel.sizer.Add((5, 5))
-        panel.sizer.Add(staticText2)
-        while panel.Affirmed():
-            panel.SetResult(textCtrl.GetValue())
+    def Configure(self, editName):
+        cfgPanel = eg.ConfigPanel()
+
+        evtPanel = eg.AddEventPanel(cfgPanel.dialog, editName)
+        cfgPanel.dialog.mainSizer.Add(evtPanel, 1, wx.EXPAND)
+        cfgPanel.dialog.mainSizer.Remove(2)
+
+        def AfterSelectionChanged():
+            item = evtPanel.tree.GetSelection()
+            if not item.IsOk():
+                return
+            data = evtPanel.tree.GetPyData(item)
+            if isinstance(data, eg.EventInfo):
+                cfgPanel.dialog.buttonRow.applyButton.Enable(True)
+                cfgPanel.dialog.buttonRow.okButton.Enable(True)
+            else:
+                cfgPanel.dialog.buttonRow.applyButton.Enable(False)
+                cfgPanel.dialog.buttonRow.okButton.Enable(False)
+
+        def OnSelectionChanged(event):
+            wx.CallAfter(AfterSelectionChanged)
+            event.Skip()
+
+        def OnActivated(event):
+            cfgPanel.dialog.DispatchEvent(event, wx.ID_OK)
+
+        evtPanel.tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
+        evtPanel.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, OnActivated)
+
+        while cfgPanel.Affirmed():
+            cfgPanel.SetResult(evtPanel.eventName.GetValue())
 
     def Delete(self):
         self.UnRegisterEvent(self.name)
