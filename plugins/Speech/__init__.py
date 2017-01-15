@@ -22,6 +22,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.6 by K         2017-01-11 13:23 UTC-7
+#     - bugfix - text class not being utilized properly
+#     - bugfix - win32com com_error
 # 2.5 by blackwind 2016-05-19 18:40 UTC-7
 #     - bugfix - instantiate Text class in declarations
 # 2.4 by Pako 2016-03-05 09:44 UTC+1
@@ -44,7 +47,7 @@ eg.RegisterPlugin(
     name="Speech",
     author="MonsterMagnet",
     guid="{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
-    version="2.2",
+    version="2.6",
     description=(
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
