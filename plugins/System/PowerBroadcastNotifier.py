@@ -99,39 +99,139 @@ GUID_CONSOLE_DISPLAY_STATE = GUID(monGUID)
 
 POWER_MESSAGES = {
     GUID_CONSOLE_DISPLAY_STATE: {
-        MON_OFF: 'Monitor.Off',
-        MON_ON: 'Monitor.On',
-        MON_DIM: 'Monitor.Dim'
+        MON_OFF: dict(
+            event='Monitor.Off',
+            description='Monitor State is Off'
+        ),
+        MON_ON: dict(
+            event='Monitor.On',
+            description='Monitor State is On'
+        ),
+        MON_DIM: dict(
+            event='Monitor.Dim',
+            description=(
+                'Monitor has been dimmed\n'
+                '(usually when on battery)\n'
+                '(Windows 8+)'
+            )
+        )
     },
     GUID_SYSTEM_AWAYMODE: {
-        AWY_EXITING: 'AwayMode.Exiting',
-        AWY_ENTERING: 'AwayMode.Entering'
+        AWY_EXITING: dict(
+            event='AwayMode.Exiting',
+            description='Exiting Away Mode'
+        ),
+        AWY_ENTERING: dict(
+            event='AwayMode.Entering',
+            description='Entering Away Mode'
+        )
     },
     GUID_ACDC_POWER_SOURCE: {
-        PWR_AC: 'PowerSource.Line',
-        PWR_DC: 'PowerSource.Battery',
-        PWR_UPS: 'PowerSource.UPS'
+        PWR_AC: dict(
+            event='PowerSource.Line',
+            description='Line (AC) Power Source'
+        ),
+        PWR_DC: dict(
+            event='PowerSource.Battery',
+            description='Battery (DC) Power Source'
+        ),
+        PWR_UPS: dict(
+            event='PowerSource.UPS',
+            description='Battery Backup (UPS) Power Source'
+        )
     },
     GUID_BATTERY_PERCENTAGE_REMAINING: {
-        i: 'BatteryLevel.' + str(i) + '%' for i in range(101)
+        i: dict(
+            event='BatteryLevel.' + str(i) + '%',
+            description='Battery Level at ' + str(i) + '%'
+        ) for i in range(101)
     },
     GUID_POWER_SAVING_STATUS: {
-        SVR_OFF: 'PowerSaving.Off',
-        SVR_ON: 'PowerSaving.On'
+        SVR_OFF: dict(
+            event='PowerSaving.Off',
+            description=(
+                'Power Saving Turned Off\n'
+                '(usually when on battery)'
+            )
+        ),
+        SVR_ON: dict(
+            event='PowerSaving.On',
+            description=(
+                'Power Saving Turned On\n'
+                '(usually when on battery'
+            )
+        )
     },
     GUID_POWERSCHEME_PERSONALITY: {
-        GUID_MIN_POWER_SAVINGS: 'PowerProfile.PowerSaver',
-        GUID_MAX_POWER_SAVINGS: 'PowerProfile.HighPerformance',
-        GUID_TYPICAL_POWER_SAVINGS: 'PowerProfile.Balanced'
+        GUID_MIN_POWER_SAVINGS: dict(
+            event='PowerProfile.PowerSaver',
+            description=(
+                'Power Plan has been changed to\n'
+                'Power Saving'
+            )
+        ),
+        GUID_MAX_POWER_SAVINGS: dict(
+            event='PowerProfile.HighPerformance',
+            description=(
+                'Power Plan has been changed to\n'
+                'High Performance'
+            )
+        ),
+        GUID_TYPICAL_POWER_SAVINGS: dict(
+            event='PowerProfile.Balanced',
+            description=(
+                'Power Plan has been changed to\n'
+                'Balanced'
+            )
+        )
     },
-    PBT_APMBATTERYLOW: 'BatteryLevel.Low', # pre win vista
-    PBT_APMOEMEVENT: 'OemEvent', # pre win vista
-    PBT_APMQUERYSUSPENDFAILED: 'QuerySuspendFailed', # pre win vista
-    PBT_APMRESUMECRITICAL: 'ResumeCritical', # pre win vista
-    PBT_APMQUERYSUSPEND: 'QuerySuspend', # pre win vista
-    PBT_APMRESUMEAUTOMATIC: 'ResumeAutomatic',
-    PBT_APMRESUMESUSPEND: 'Resume',
-    PBT_APMSUSPEND: 'Suspend'
+    PBT_APMBATTERYLOW: dict(
+        event='BatteryLevel.Low',
+        description=(
+            'Battery Level is low\n'
+            '(Available only before Windows Vista)'
+        )
+    ),
+    PBT_APMOEMEVENT: dict(
+        event='OemEvent',
+        description=(
+            'Have no clue. roll the dice\n'
+            '(Available only before Windows Vista)'
+        )
+    ),
+    PBT_APMQUERYSUSPENDFAILED: dict(
+        event='QuerySuspendFailed',
+        description=(
+            'Permission to suspend the computer was denied\n'
+            '(Available only before Windows Vista)'
+        )
+    ),
+    PBT_APMRESUMECRITICAL: dict(
+        event='ResumeCritical',
+        description=(
+            'Resume after critical suspension caused by a failing battery\n'
+            '(Available only before Windows Vista)'
+        )
+    ),
+    PBT_APMQUERYSUSPEND: dict(
+        event='QuerySuspend',
+        description=(
+            'A request for permission to suspend the computer has been made\n'
+            '(Available only before Windows Vista)'
+        )
+    ),
+    PBT_APMRESUMEAUTOMATIC: dict(
+        event='Resuming',
+        description='System is Resuming from sleep or hibernation'
+    ),
+    PBT_APMRESUMESUSPEND: dict(
+        event='Resumed',
+        description='System has Resumed from sleep or hibernation'
+    ),
+    PBT_APMSUSPEND: dict(
+        event='Suspend',
+        description='System is going to sleep or hibernation'
+    )
     # PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
 }
 
@@ -183,7 +283,17 @@ def CreatePowerClass(lParam, cls):
 
 class PowerBroadcastNotifier:
     def __init__(self, plugin):
+
+        def CreateEventList(d, e=()):
+            if 'event' in d:
+                e += ((d['event'], d['description']),)
+            else:
+                for key in sorted(d.keys()):
+                    e = CreateEventList(d[key], e)
+            return e
+
         self.plugin = plugin
+        self.plugin.AddEvents(*CreateEventList(POWER_MESSAGES))
 
         self.monitorNotify = Register(GUID_CONSOLE_DISPLAY_STATE)
         self.awayNotify = Register(GUID_SYSTEM_AWAYMODE)
@@ -228,7 +338,7 @@ class PowerBroadcastNotifier:
 
         if msg is not None:
             eg.eventThread.TriggerEventWait(
-                suffix=msg,
+                suffix=msg['event'],
                 prefix="System",
                 source=self.plugin
             )
