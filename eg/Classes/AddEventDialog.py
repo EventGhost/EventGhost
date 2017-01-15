@@ -46,7 +46,6 @@ class AddEventDialog(eg.TaskletDialog):
         )
         panel = eg.AddEventPanel(self)
         self.tree = panel.tree
-        self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivated)
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
@@ -75,10 +74,6 @@ class AddEventDialog(eg.TaskletDialog):
 
         Config.size = self.GetSizeTuple()
         Config.position = self.GetPositionTuple()
-
-    def OnActivated(self, event):
-        event.Skip()
-        self.OnOK(event)
 
     def OnSelectionChanged(self, event):
         item = event.GetItem()

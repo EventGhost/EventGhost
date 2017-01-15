@@ -54,6 +54,8 @@ class AddEventPanel(eg.Panel):
     def __init__(self, parent, editName=""):
         super(AddEventPanel, self).__init__(parent=parent)
 
+        self.parent = parent
+
         self.splitterWindow = splitterWindow = wx.SplitterWindow(
             self,
             -1,
@@ -138,6 +140,8 @@ class AddEventPanel(eg.Panel):
                 tree.SelectItem(item)
         else:
             self.ReselectLastSelected()
+        eventName.SetInsertionPointEnd()
+        wx.CallAfter(eventName.SetFocus)
 
     def GenerateEventlist(self):
         self._allEventsDict = eventDict = {Text.unknown: []}
@@ -241,7 +245,7 @@ class AddEventPanel(eg.Panel):
             if isinstance(data, eg.EventInfo):
                 Config.lastSelected = data.info.eventPrefix + "." + data.name
                 self.resultData = Config.lastSelected
-        event.Veto()
+                self.parent.OnOK(event)
 
     def OnFocusTree(self, event):
         item = self.tree.GetSelection()
@@ -306,6 +310,8 @@ class AddEventPanel(eg.Panel):
             label = ""
             desc = None
         self.eventName.ChangeValue(self.resultData)
+        self.eventName.SetInsertionPointEnd()
+        wx.CallAfter(self.eventName.SetFocus)
         self.nameText.SetLabel(label)
         self.docText.SetBasePath(path)
         self.docText.SetPage(desc if desc else Text.noDescription)
@@ -372,7 +378,8 @@ class AddEventPanel(eg.Panel):
         if value:
             self.resultData = value
             Config.lastSelected = value
-            self.OnOK(event)
+            #event.Skip()
+            self.parent.OnOK(event)
         else:
             self.resultData = ""
 

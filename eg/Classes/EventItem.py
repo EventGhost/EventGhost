@@ -64,11 +64,7 @@ class EventItem(TreeItem):
             wx.CallAfter(AfterSelectionChanged)
             event.Skip()
 
-        def OnActivated(event):
-            cfgPanel.dialog.DispatchEvent(event, wx.ID_OK)
-
         evtPanel.tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
-        evtPanel.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, OnActivated)
 
         while cfgPanel.Affirmed():
             cfgPanel.SetResult(evtPanel.eventName.GetValue())
