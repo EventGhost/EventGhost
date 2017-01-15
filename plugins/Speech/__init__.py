@@ -79,8 +79,6 @@ import pythoncom
 
 
 class Text:
-    name = "Text to speech"
-    description = "Uses the Microsoft Speech API (SAPI) to speak a text."
     label = "Speak: %s"
     errorCreate = "Cannot create voice object"
     buttonInsertTime = "Insert time HH:MM:SS"
@@ -100,6 +98,9 @@ class Text:
     suffix = "SpeakingFinished"
     addSuffix = "Additional event suffix:"
     device = "Output device:"
+    class TextToSpeech:
+        name = "Text to speech"
+        description = "Uses the Microsoft Speech API (SAPI) to speak a text."
 
 
 class CustomSlider(wx.Window):
@@ -239,7 +240,7 @@ class Speech(eg.PluginClass):
 
 
 class TextToSpeech(eg.ActionClass):
-    text = Text()
+    baseText = Text()
 
     def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
         self.suff = suff if suff != 0 else ""
@@ -277,7 +278,7 @@ class TextToSpeech(eg.ActionClass):
 
 
     def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
-        return self.text.label % voiceText
+        return self.baseText.label % voiceText
 
 
     def Configure(
@@ -290,7 +291,7 @@ class TextToSpeech(eg.ActionClass):
         device = None
     ):
         suff = suff if suff != 0 else ""
-        text = self.text
+        text = self.baseText
         panel = eg.ConfigPanel()
         plugin = self.plugin
 
