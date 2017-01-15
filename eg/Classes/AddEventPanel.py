@@ -326,7 +326,7 @@ class AddEventPanel(eg.Panel):
         label = Text.userEventLabel
         path = ""
         desc = Text.userEventTooltip
-        
+
         for plugin in allevts:
             if len(values) < 3:
                 if any(v in allevts[plugin][1].evalName.lower() for v in values):
