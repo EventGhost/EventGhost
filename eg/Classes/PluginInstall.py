@@ -24,6 +24,7 @@ import os
 import shutil
 import tempfile
 import wx
+import re
 from zipfile import ZIP_DEFLATED, ZipFile
 from comtypes import GUID
 
@@ -55,150 +56,64 @@ INFO_FIELDS = [
     'url',
     'guid',
     'description',
-    'icon',
-    'hardwareId',
-    'canMultiLoad',
-    'createMacrosOnAdd',
-    'kind',
+    'icon'
 ]
 
-
-def InfoField(field, attr, tab=''):
-    if tab != '':
-        index = 68
-        infoField = '%s%s=' % (tab, field)
-    else:
-        index = 72
-        infoField = '%s = ' % field
-
-    if len(infoField + repr(attr)) + 2 > 72:
-        infoField += '(\n'
-        while len(repr(attr)) > index:
-            infoField += '%s%r\n' % (tab + ' ' * 4, attr[:index])
-            attr = attr[index:]
-        infoField += '%s%r\n%s)' % (tab + ' ' * 4, attr, tab)
-    else:
-        if field == 'icon' and attr is not None:
-            infoField += attr
-        else:
-            infoField += repr(attr)
-    if tab:
-        infoField += ','
-    return infoField + '\n'
+Text = eg.text.PluginInstall
 
 
-def FindStop(nextLines, icon):
-    for j, nextLine in enumerate(nextLines):
-        ic = nextLine.startswith('    icon=') or nextLine.startswith('\ticon=')
-        if icon and ic:
-            icon = nextLine[nextLine.find('=') + 1:].strip()
-            if icon.startswith('('):
-                icon = u''
-                iconLines = nextLines[j + 1:]
-                for iconLine in iconLines:
-                    if iconLine.strip()[:1] == ')':
-                        break
-                    icon += unicode(iconLine.strip()[1:-1])
+def InfoField(attrName, attrValue):
+    types = (unicode, str)
+
+    line = '%s = ' % attrName
+    multiLine = len(line + repr(attrValue)) > 75
+
+    if type(attrValue) in types and multiLine:
+        newAttrValue = ()
+        while attrValue:
+            addLen = attrValue.count("'")
+            jump = min([len(repr(attrValue)) + addLen, 72])
+
+            jump -= attrValue[:jump].count("'")
+            value = attrValue[:jump]
+            if '\n' in value:
+                jump = value.find('\n') + 1
+            elif jump == 72 and ' ' in value and not value.endswith('.'):
+                jump = value.rfind(' ') + 1
+
+            newAttrValue += (attrValue[:jump],)
+            attrValue = attrValue[jump:]
+
+        line += '(\n'
+        for item in newAttrValue:
+            if "'" in item:
+                item = item.replace("'", "\\'")
+                line += "    u'%s'\n"
             else:
-                if icon.endswidth(','):
-                    icon = icon[:-1]
-                if icon[:1] in ("'", '"'):
-                    icon = repr(unicode(icon[1:-1]))
+                line += '    %r\n'
+            line %= item
+        line = '%s\n)\n' % line[:-1]
 
-        if nextLine.rstrip() == ')':
-            return j, repr(icon)
-
-    return None, repr(icon)
+    elif type(attrValue) in types:
+        attrValue = attrValue.replace("'", "\\'")
+        line += "u'%s'\n" % attrValue
+    else:
+        line += '%r\n' % attrValue
+    return line
 
 
 class PluginInstall(object):
-    def AddGUID(self, pluginInfo):
-        self.BackupPlugin(pluginInfo)
-        if pluginInfo.icon == eg.Icons.PLUGIN_ICON:
-            icon = None
-        else:
-            icon = True
-
-        initFile = os.path.join(pluginInfo.path, '__init__.py')
-        initFile = open(initFile, 'r+')
-
-        lines = initFile.readlines()
-        initFile.seek(0)
-
-        startPos = None
-        stopPos = None
-        for i, line in enumerate(lines):
-            if line.rstrip() == 'eg.RegisterPlugin(':
-                startPos = i
-                stopPos, icon = FindStop(lines[i + 1:], icon)
-                break
-            elif line.startswith('eg.RegisterPlugin('):
-                startPos = i
-                if line.rstrip().endswith(')'):
-                    stopPos = i
-                else:
-                    stopPos, icon = FindStop(lines[i + 1:], icon)
-                break
-
-        guid = unicode(GUID.create_new()).upper()
-        pluginInfo.guid = guid
-        registerPlugin = 'eg.RegisterPlugin(\n'
-        for field in INFO_FIELDS:
-            if field == 'icon':
-                continue
-            attr = getattr(pluginInfo, field)
-            if field == 'hardwareId':
-                attr = unicode(attr)
-
-            registerPlugin += InfoField(field, attr, tab=' ' * 4)
-
-        registerPlugin += InfoField('icon', icon, tab=' ' * 4)
-        registerPlugin = registerPlugin[:-2] + '\n)\n'
-
-        if None in (startPos, stopPos):
-            dialog = wx.MessageDialog(
-                None,
-                message=(
-                    'There was an error in adding the GUID\n'
-                    'to the plugin. you will have to add it\n'
-                    'manually.\n\n' +
-                    registerPlugin
-                ),
-                caption='Plugin Export - GUID Error',
-                style=(
-                    wx.OK |
-                    wx.ICON_ERROR |
-                    wx.STAY_ON_TOP
-                )
-            )
-            dialog.ShowModal()
-            dialog.Destroy()
-            return None
-
-        for i in range(startPos, startPos + stopPos + 2):
-            lines.pop(startPos)
-        lines.insert(startPos, registerPlugin)
-
-        initFile.writelines(lines)
-        initFile.close()
-
-        eg.pluginManager.ScanAllPlugins()
-        return eg.pluginManager.database[guid]
-
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
 
         zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
         sourceCode = ''
-        for fieldName in INFO_FIELDS[:6]:
+
+        if pluginData['icon'] is not None:
+            pluginData['icon'] = unicode(pluginData['icon'])
+
+        for fieldName in INFO_FIELDS:
             sourceCode += InfoField(fieldName, pluginData[fieldName])
 
-        icon = pluginData['icon']
-        if icon is not None:
-            icon = unicode(icon)
-            if len(icon) < 72:
-                icon = repr(icon)
-
-        sourceCode += InfoField('icon', icon) + '\n'
         zipfile.writestr("info.py", sourceCode)
         baseName = os.path.basename(sourcePath)
         for dirpath, dirnames, filenames in os.walk(sourcePath):
@@ -232,30 +147,26 @@ class PluginInstall(object):
         #    return
 
         if pluginInfo.guid == pluginInfo.englishName:
-            dialog = wx.MessageDialog(
+            guid = unicode(GUID.create_new()).upper()
+            dialog = wx.TextEntryDialog(
                 None,
-                message=(
-                    'Plugin %s does not have a GUID,\n'
-                    'this is required for plugins.\n\n'
-                    'Would you like to add one?' %
-                    pluginInfo.englishName
-                ),
-                caption='Plugin Export - Missing GUID',
+                message=Text.guidMessage,
+                caption=Text.guidTitle,
+                defaultValue='guid = ' + repr(guid),
                 style=(
-                    wx.YES_NO |
-                    wx.YES_DEFAULT |
-                    wx.ICON_EXCLAMATION |
+                    wx.OK |
+                    wx.ICON_ERROR |
                     wx.STAY_ON_TOP
                 )
             )
-
-            result = dialog.ShowModal()
+            textCtrl = list(
+                item for item in dialog.Children
+                if isinstance(item, wx.TextCtrl)
+            )[0]
+            textCtrl.SetEditable(False)
+            dialog.ShowModal()
             dialog.Destroy()
-            if result == wx.ID_NO:
-                return
-            pluginInfo = self.AddGUID(pluginInfo)
-            if pluginInfo is None:
-                return
+            return
         pluginData = self.GetPluginData(pluginInfo)
 
         fileName = (
@@ -297,7 +208,6 @@ class PluginInstall(object):
         }
 
     def BackupPlugin(self, pluginInfo):
-
         backupName = (
             '%s-%s.egplugin' % (pluginInfo.englishName, pluginInfo.version)
         )
@@ -319,7 +229,6 @@ class PluginInstall(object):
             self.GetPluginData(pluginInfo)
         )
 
-
     @eg.LogItWithReturn
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
@@ -340,50 +249,23 @@ class PluginInstall(object):
             if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
                 info = eg.pluginManager.database[guid]
-
+                name = info.englishName
+                mData = (name, pluginData['name'])
                 if info.englishName != pluginData['name']:
-                    title = 'Replace EventGhost Plugin %s' % info.englishName
-                    message = (
-                        'The new plugin has the same identifier as\n'
-                        'an existing plugin.\n'
-                        'Would you like to replace plugin\n'
-                        '%s with plugin %s?' %
-                        (info.englishName, pluginData['name'])
-                    )
+                    title = Text.replaceTitle % info.englishName
+                    message = Text.replaceMessage % mData
+
                 elif info.version != pluginData['version']:
+                    mData = (name, info.version, pluginData['version'])
                     if info.version < pluginData['version']:
-                        title = (
-                            'Upgrade EventGhost Plugin %s' % info.englishName
-                        )
-                        message = (
-                            'Would you like to upgrade plugin %s\n'
-                            'version %s to version %s?' %
-                            (
-                                info.englishName,
-                                info.version,
-                                pluginData['version']
-                            )
-                        )
+                        title = Text.upgradeTitle % name
+                        message = Text.upgradeMessage % mData
                     else:
-                        title = (
-                            'Downgrade EventGhost Plugin %s' % info.englishName
-                        )
-                        message = (
-                            'Would you like to downgrade plugin %s\n'
-                            'version %s to version %s?' %
-                            (
-                                info.englishName,
-                                info.version,
-                                pluginData['version']
-                            )
-                        )
+                        title = Text.downgradeTitle % name
+                        message = Text.downgradeMessage % messageData
                 else:
-                    title = 'Overwrite EventGhost Plugin %s' % info.englishName
-                    message = (
-                        'Plugin %s is already installed.\n'
-                        'Would you like to overwrite plugin %s?\n' %
-                        (info.englishName, pluginData['name'])
-                    )
+                    title = Text.overwriteTitle % name
+                    message = Text.overwriteMessage % mData
 
                 dialog = PluginOverviewDialog(
                     title=title,
@@ -402,22 +284,17 @@ class PluginInstall(object):
                     shutil.rmtree(info.path, False)
                 except WindowsError:
                     if info.path.startswith(eg.corePluginDir):
-                        eg.PrintNotice(
-                            'The old plugin will have to removed manually.\n' +
-                            info.path
-                        )
+                        eg.PrintNotice(Text.pluginRemoveError + info.path)
                     else:
                         raise
             else:
                 dialog = PluginOverviewDialog(
-                    title="Install EventGhost Plugin %s" % pluginData['name'],
+                    title= Text.installTitle % pluginData['name'],
                     pluginData=pluginData,
                     basePath=basePath,
-                    message=(
-                        "Do you really want to install this plugin into "
-                        "EventGhost?"
-                    )
+                    message=Text.installMessage
                 )
+
                 result = dialog.ShowModal()
                 dialog.Destroy()
                 if result == wx.ID_CANCEL:
