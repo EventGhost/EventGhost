@@ -18,6 +18,7 @@
 
 import os
 import wx
+from threading import Lock
 from tempfile import mkstemp
 from types import ClassType
 from xml.etree import cElementTree as ElementTree
@@ -61,8 +62,36 @@ class Document(object):
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
+        self.reentrantLock = Lock()
         self.frame = None
         self.expandedNodes = set()
+
+    @eg.LogItWithReturn
+    def ShowFrame(self):
+        if self.reentrantLock.acquire(False):
+            if self.frame is None:
+                self.frame = eg.mainFrame = eg.MainFrame(self)
+                self.frame.Show()
+            self.frame.Raise()
+            self.reentrantLock.release()
+
+    @eg.LogItWithReturn
+    def HideFrame(self):
+        # NOTICE:
+        # If the program is started through a shortcut with "minimize" option
+        # set, we get an iconize event while ShowFrame() is executing.
+        # Therefore we have to use this CallLater workaround.
+        # TODO: Find a better way. Preferable detect the minimize option
+        #       before we create the MainFrame.
+        if self.reentrantLock.acquire(False):
+            if self.frame is not None:
+                if len(self.frame.openDialogs) == 0:
+                    self.frame.Destroy()
+                    self.frame = None
+                    eg.mainFrame = None
+            self.reentrantLock.release()
+        else:
+            wx.CallLater(100, self.HideFrame)
 
     def AfterLoad(self):
         if (
