@@ -588,7 +588,7 @@ class MainFrame(wx.Frame):
 
     @eg.LogIt
     def Iconize(self, flag=True):
-        if eg.config.showTrayIcon:
+        if flag and eg.config.showTrayIcon:
             self.document.HideFrame()
         else:
             wx.Frame.Iconize(self, flag)
