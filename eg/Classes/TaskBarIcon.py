@@ -73,10 +73,14 @@ class TaskBarIcon(wx.TaskBarIcon):
             eg.mainFrame.RequestUserAttention()
 
     def OnCmdHide(self, dummyEvent):
-        eg.mainFrame.Iconize(True)
+        if eg.mainFrame is not None:
+            eg.mainFrame.Iconize(True)
 
     def OnCmdShow(self, dummyEvent=None):
-        eg.mainFrame.Iconize(False)
+        if eg.mainFrame is not None:
+            eg.mainFrame.Iconize(False)
+        else:
+            eg.document.ShowFrame()
 
     def OnProcessingChange(self, state):
         if self.IsIconInstalled():
