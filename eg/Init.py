@@ -91,8 +91,13 @@ def InitGui():
 
     eg.document = eg.Document()
 
-    if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+    if eg.config.showTrayIcon:
+        if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+            eg.document.ShowFrame()
+    else:
         eg.document.ShowFrame()
+        if eg.config.hideOnStartup or eg.startupArguments.hideOnStartup:
+            eg.mainFrame.Iconize(True)
 
     eg.actionThread.Start()
 
