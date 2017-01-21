@@ -230,6 +230,9 @@ class OptionsDialog(eg.TaskletDialog):
         else:
             eg.taskBarIcon.Hide()
 
+        if eg.mainFrame:
+            eg.mainFrame.SetWindowStyleFlag()
+
         if config.language != oldLanguage:
             wx.CallAfter(self.ShowLanguageWarning)
 

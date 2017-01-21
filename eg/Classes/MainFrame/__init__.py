@@ -126,6 +126,7 @@ class MainFrame(wx.Frame):
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
 
+        self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.mainSizeFlag = True
@@ -133,7 +134,6 @@ class MainFrame(wx.Frame):
         self.ratio = Config.ratio
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_MOVE, self.OnMove)
-        self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
         self.Bind(wx.aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
@@ -226,7 +226,6 @@ class MainFrame(wx.Frame):
         )
         self.SetAcceleratorTable(self.acceleratorTable)
         self.logCtrl.Bind(wx.EVT_SIZE, self.OnLogCtrlSize)
-
         eg.EnsureVisible(self)
 
     if eg.debugLevel:
@@ -522,12 +521,33 @@ class MainFrame(wx.Frame):
         pos = info.find(";dir=") + 5
         return info[pos]
 
+    def SetWindowStyleFlag(self, *args, **kwargs):
+        if eg.config.showTrayIcon:
+            if len(self.openDialogs):
+                style = ~(wx.MINIMIZE_BOX | wx.CLOSE_BOX) & self.style
+            else:
+                style = self.style
+        else:
+            style = self.style
+
+        wx.Frame.SetWindowStyleFlag(self, style)
+
+    @eg.LogIt
+    def Iconize(self, flag=True):
+        if flag and eg.config.showTrayIcon:
+            self.document.HideFrame()
+        else:
+            wx.Frame.Iconize(self, flag)
+
+            for dialog in self.openDialogs:
+                dialog.Iconize(flag)
+
     def OnAddDialog(self, dialog):
         if dialog.GetParent() != self:
             return
         self.openDialogs.append(dialog)
         dialog.Bind(wx.EVT_WINDOW_DESTROY, self.OnDialogDestroy)
-        # self.SetWindowStyleFlag(~(wx.MINIMIZE_BOX | wx.CLOSE_BOX) & self.style)
+        self.SetWindowStyleFlag()
 
     @eg.LogIt
     def OnClipboardChange(self, dummyValue):
@@ -555,8 +575,7 @@ class MainFrame(wx.Frame):
             self.openDialogs.remove(dialog)
         except ValueError:
             pass
-        # if len(self.openDialogs) == 0:
-        #     self.SetWindowStyleFlag(self.style)
+        self.SetWindowStyleFlag()
 
     def OnDocumentChange(self, isDirty):
         wx.CallAfter(self.toolBar.EnableTool, wx.ID_SAVE, bool(isDirty))
@@ -587,16 +606,10 @@ class MainFrame(wx.Frame):
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
     @eg.LogIt
-    def Iconize(self, flag=True):
-        if flag and eg.config.showTrayIcon:
-            self.document.HideFrame()
-        else:
-            wx.Frame.Iconize(self, flag)
-
-            for dialog in self.openDialogs:
-                dialog.Iconize(flag)
-
     def OnIconize(self, event):
+        """
+        Handle wx.EVT_ICONIZE
+        """
         self.Iconize(event.Iconized())
 
     def OnLogCtrlSize(self, evt):

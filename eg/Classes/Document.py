@@ -18,8 +18,8 @@
 
 import os
 import wx
-from threading import Lock
 from tempfile import mkstemp
+from threading import Lock
 from types import ClassType
 from xml.etree import cElementTree as ElementTree
 
@@ -62,36 +62,9 @@ class Document(object):
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
-        self.reentrantLock = Lock()
         self.frame = None
+        self.reentrantLock = Lock()
         self.expandedNodes = set()
-
-    @eg.LogItWithReturn
-    def ShowFrame(self):
-        if self.reentrantLock.acquire(False):
-            if self.frame is None:
-                self.frame = eg.mainFrame = eg.MainFrame(self)
-                self.frame.Show()
-            self.frame.Raise()
-            self.reentrantLock.release()
-
-    @eg.LogItWithReturn
-    def HideFrame(self):
-        # NOTICE:
-        # If the program is started through a shortcut with "minimize" option
-        # set, we get an iconize event while ShowFrame() is executing.
-        # Therefore we have to use this CallLater workaround.
-        # TODO: Find a better way. Preferable detect the minimize option
-        #       before we create the MainFrame.
-        if self.reentrantLock.acquire(False):
-            if self.frame is not None:
-                if len(self.frame.openDialogs) == 0:
-                    self.frame.Destroy()
-                    self.frame = None
-                    eg.mainFrame = None
-            self.reentrantLock.release()
-        else:
-            wx.CallLater(100, self.HideFrame)
 
     def AfterLoad(self):
         if (
@@ -316,6 +289,23 @@ class Document(object):
             filename = os.path.splitext(os.path.basename(self.filePath))[0]
         return "EventGhost %s - %s" % (eg.Version.string, filename)
 
+    @eg.LogItWithReturn
+    def HideFrame(self):
+        # NOTICE:
+        # If the program is started through a shortcut with "minimize" option
+        # set, we get an iconize event while ShowFrame() is executing.
+        # Therefore we have to use this CallLater workaround.
+        # TODO: Find a better way. Preferable detect the minimize option
+        #       before we create the MainFrame.
+        if self.reentrantLock.acquire(False):
+            if self.frame is not None:
+                if len(self.frame.openDialogs) == 0:
+                    self.frame.Destroy()
+                    self.frame = eg.mainFrame = None
+            self.reentrantLock.release()
+        else:
+            wx.CallLater(100, self.HideFrame)
+
     @eg.LogIt
     def Load(self, filePath):
         if filePath is None:
@@ -370,7 +360,7 @@ class Document(object):
         eg.AsTasklet(eg.UndoHandler.Configure(self).Do)(node)
 
     def Open(self, filePath=None):
-        eg.mainFrame.Iconize(False)
+        self.ShowFrame()
         if filePath is not None:
             res = wx.MessageBox(
                 "Do you really want to load the tree file:\n%s" % filePath,
@@ -468,6 +458,16 @@ class Document(object):
     def SetUndoState(self, undoState):
         self.undoState = undoState
         eg.Notify("UndoChange", undoState)
+
+    @eg.LogItWithReturn
+    def ShowFrame(self):
+        if self.reentrantLock.acquire(False):
+            if self.frame is None:
+                self.frame = eg.mainFrame = eg.MainFrame(self)
+                self.frame.Show()
+            else:
+                self.frame.Iconize(False)
+            self.reentrantLock.release()
 
     def StartSession(self, filePath):
         eg.eventThread.Func(eg.eventThread.StopSession)()
