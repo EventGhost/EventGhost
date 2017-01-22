@@ -20,13 +20,13 @@ import wx
 from wx import SystemSettings_GetColour as GetColour
 from wx.lib import masked
 
-# Local imports
 import eg
 
 l = wx.Locale()
 l.Init2(language=wx.LANGUAGE_DEFAULT, flags=wx.LOCALE_LOAD_DEFAULT)
 THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
+
 
 class SpinNumCtrl(wx.Window):
     """
@@ -152,7 +152,7 @@ class SpinNumCtrl(wx.Window):
         if minValue is not None and value < minValue:
             value = minValue
         res = self.numCtrl.SetValue(value)
-        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value = value))
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value=value))
         return res
 
     def __OnSpin(self, pos):
@@ -160,8 +160,7 @@ class SpinNumCtrl(wx.Window):
         This is the function that gets called in response to up/down arrow or
         bound spin button events.
         """
-        #self.__IncrementValue(key, self.__posCurrent)   # changes the value
-
+        
         # Ensure adjusted control regains focus and has adjusted portion
         # selected:
         numCtrl = self.numCtrl
