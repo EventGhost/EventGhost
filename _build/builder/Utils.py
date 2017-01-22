@@ -163,10 +163,11 @@ def GetGitHubConfig():
         if rc == 200:
             for repo in data:
                 if repo["name"] == "EventGhost":
+                    usr, rep = repo["full_name"].split("/")
                     page2 = 1
                     branches = []
                     while page2 > 0:
-                        rc2, data2 = gh.repos[gitcfg["user"]][repo["name"]].branches.get(page=page2)
+                        rc2, data2 = gh.repos[usr][rep].branches.get(page=page2)
                         if rc2 == 200:
                             for br in data2:
                                 branches.append(br["name"])
