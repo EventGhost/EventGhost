@@ -24,6 +24,11 @@ from eg.Utils import SetDefault
 
 class Default:
     class General:
+        deleteConfigMessage = (
+            "Do you want to remove all configuration data\n"
+            "for plugin %s?\n\n"
+        )
+        deleteConfigCaption = "Delete Configuration Data"
         configTree = "Configuration Tree"
         deleteQuestion = "Are you sure you want to delete this item?"
         deleteManyQuestion = (

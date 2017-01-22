@@ -26,6 +26,8 @@ import os
 import pywintypes
 import sys
 from os.path import abspath, dirname, join
+from Classes.FolderPath import FolderPath
+
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -34,6 +36,8 @@ scriptPath = argvIter.next()
 
 # get program directory
 mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
+# get config directory
+configDir = join(FolderPath().RoamingAppData, 'EventGhost')
 
 # determine the commandline parameters
 import __main__  # NOQA
@@ -41,7 +45,7 @@ import __main__  # NOQA
 
 class args:
     allowMultiLoad = False
-    configDir = None
+    configDir = configDir
     debugLevel = 0
     hideOnStartup = False
     install = False
@@ -50,7 +54,6 @@ class args:
     startupEvent = None
     startupFile = None
     translate = False
-
 
 if args.isMain:
     for arg in argvIter:

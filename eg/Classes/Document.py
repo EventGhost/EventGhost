@@ -126,6 +126,7 @@ class Document(object):
         elif result == wx.ID_YES:
             return self.Save()
         else:
+            eg.UndoHandler.PersistentData.UndoAll()
             return wx.ID_NO
 
     @eg.LogItWithReturn
@@ -506,6 +507,7 @@ class Document(object):
             self.SetIsDirty(False)
             self.undoIdOnSave = self.undoId
             success = True
+            eg.config.Save()
         except:
             eg.PrintTraceback("Error while saving file")
         return success
