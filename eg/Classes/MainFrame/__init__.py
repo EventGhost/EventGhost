@@ -522,6 +522,18 @@ class MainFrame(wx.Frame):
         return info[pos]
 
     def SetWindowStyleFlag(self, *args, **kwargs):
+        """
+        Changes the main frame style depending on the display of the tray icon.
+
+        sets the stlye flags fo the minimize button will be grayed out if the
+        tray icon is shown and there are any open child windows.
+        If the tray icon is not shown the minimize button will function as
+        usual.
+
+        :param args: unused parameter
+        :param kwargs: unused parameter
+        :return: None
+        """
         if eg.config.showTrayIcon:
             if len(self.openDialogs):
                 style = ~(wx.MINIMIZE_BOX | wx.CLOSE_BOX) & self.style
