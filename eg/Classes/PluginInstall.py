@@ -63,6 +63,9 @@ Text = eg.text.PluginInstall
 
 
 def InfoField(attrName, attrValue):
+    def Replace(s):
+        return s.replace("'", "\\'").replace('\n', '\\n')
+
     types = (unicode, str)
 
     line = '%s = ' % attrName
@@ -71,32 +74,28 @@ def InfoField(attrName, attrValue):
     if type(attrValue) in types and multiLine:
         newAttrValue = ()
         while attrValue:
-            addLen = attrValue.count("'")
-            jump = min([len(repr(attrValue)) + addLen, 72])
-
+            jump = min([len(repr(attrValue)) + attrValue.count("'"), 72])
             jump -= attrValue[:jump].count("'")
+
             value = attrValue[:jump]
+
             if '\n' in value:
                 jump = value.find('\n') + 1
-            elif jump == 72 and ' ' in value and not value.endswith('.'):
-                jump = value.rfind(' ') + 1
 
-            newAttrValue += (attrValue[:jump],)
+            elif len(attrValue[jump:]) > 72:
+                if ' ' in value and value[-1:] != '.':
+                    jump = value.rfind(' ') + 1
+
+            newAttrValue += (Replace(attrValue[:jump]),)
             attrValue = attrValue[jump:]
 
         line += '(\n'
         for item in newAttrValue:
-            if "'" in item:
-                item = item.replace("'", "\\'")
-                line += "    u'%s'\n"
-            else:
-                line += '    %r\n'
-            line %= item
-        line = '%s\n)\n' % line[:-1]
+            line += "    u'%s'\n" % item
+        line += ')\n'
 
     elif type(attrValue) in types:
-        attrValue = attrValue.replace("'", "\\'")
-        line += "u'%s'\n" % attrValue
+        line += "u'%s'\n" % Replace(attrValue)
     else:
         line += '%r\n' % attrValue
     return line
