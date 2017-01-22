@@ -108,17 +108,16 @@ class MainFrame(wx.Frame):
         self.auiManager = auiManager = aui.AuiManager()
         auiManager.SetManagedWindow(self)
 
-        self.logCtrl = self.CreateLogCtrl()
+        self.logCtrl, logPane = self.CreateLogCtrl()
         self.corConst = (
             self.logCtrl.GetWindowBorderSize()[0] +
             wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
         )
-        self.treeCtrl = self.CreateTreeCtrl()
-        self.toolBar = self.CreateToolBar()
+        self.treeCtrl, treePane = self.CreateTreeCtrl()
+        self.toolBar, toolBarPane = self.CreateToolBar()
         self.menuBar = self.CreateMenuBar()
         self.statusBar = StatusBar(self)
         self.SetStatusBar(self.statusBar)
-
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
@@ -158,6 +157,21 @@ class MainFrame(wx.Frame):
         if Config.perspective is not None:
             try:
                 auiManager.LoadPerspective(Config.perspective, False)
+                if Config.perspective.find('name=toolBar') == -1:
+                    treeFloating = treePane.IsFloating()
+                    logPane.Dock()
+                    treePane.Dock()
+                    auiManager.Update()
+                    treePane.Floatable(True).Dockable(True).Right()
+                    logPane.Floatable(False).Center()
+                    toolBarPane.Show(False)
+                    auiManager.Update()
+                    if treeFloating:
+                        treePane.Float()
+                    toolBarPane.Show(Config.showToolbar)
+                    auiManager.Update()
+                    Config.perspective = self.auiManager.SavePerspective()
+                    eg.config.Save()
             except:
                 pass
         artProvider = auiManager.GetArtProvider()
@@ -239,13 +253,14 @@ class MainFrame(wx.Frame):
         logCtrl.SetIndent(Config.indentLog)
 
         pane = aui.AuiPaneInfo()
-        pane.Name("logger").Caption(" " + Text.Logger.caption).Left()
+        pane.Name("logger").Caption(" " + Text.Logger.caption)
         pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
+        pane.Floatable(False).Center().Dockable(False)
         self.auiManager.AddPane(logCtrl, pane)
         self.auiManager.Update()
 
         logCtrl.Thaw()
-        return logCtrl
+        return logCtrl, pane
 
     def CreateMenuBar(self):
         """
@@ -425,20 +440,20 @@ class MainFrame(wx.Frame):
         pane.Show(Config.showToolbar)
         self.auiManager.Update()
 
-        return toolBar
+        return toolBar, pane
 
     def CreateTreeCtrl(self):
         treeCtrl = TreeCtrl(self, document=self.document)
 
         pane = aui.AuiPaneInfo()
-        pane.Name("tree").Caption(" " + Text.Tree.caption).Center()
+        pane.Name("tree").Caption(" " + Text.Tree.caption).Right()
         pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
         pane.Floatable(True).Dockable(True)
         self.auiManager.AddPane(treeCtrl, pane)
         self.auiManager.Update()
 
         treeCtrl.SetFocus()
-        return treeCtrl
+        return treeCtrl, pane
 
     def CreateTreePopupMenu(self):
         """
@@ -738,55 +753,53 @@ class MainFrame(wx.Frame):
             0,
             self.logCtrl.GetSizeTuple()[0] - self.corConst
         )
-        if not eg.config.propResize:
-            return
-        panel = self.auiManager.GetPane("logger")
-        if panel.IsDocked():
+
+        ratioValues = self.GetRatioValues()
+        if ratioValues is not None:
             if self.ratioLock:
                 self.ratioLock = False
                 self.UpdateSize()
                 #self.UpdateSize(False)
-            dir = self.GetPanelDirection(panel)
-            coord = None
-            if dir in ("2", "4"):
-                coord = 0
-            elif dir in ("1", "3"):
-                coord = 1
-            if coord is not None:
-                l_val = self.logCtrl.GetSizeTuple()[coord]
-                t_val = self.treeCtrl.GetSizeTuple()[coord]
-                self.ratio = float(t_val) / float(l_val)
-                Config.ratio = self.ratio
+
+            self.ratio = float(ratioValues[2]) / float(ratioValues[1])
+            Config.ratio = self.ratio
         else:
             self.ratioLock = True
 
+    def GetRatioValues(self):
+        pane = self.auiManager.GetPane('tree')
+        if eg.config.propResize and pane.IsDocked():
+            dir = pane.dock_direction_get()
+            if dir in (2, 4):
+                coord = 0
+            elif dir in (1, 3):
+                coord = 1
+            else:
+                return None
+            return (
+                self.logCtrl.GetSizeTuple()[coord],
+                self.treeCtrl.GetSizeTuple()[coord],
+                self.GetClientSizeTuple()[coord]
+            )
+
     def UpdateSize(self):
-        if eg.config.propResize:
-            panel = self.auiManager.GetPane("logger")
-            if panel.IsDocked():
-                s = self.auiManager.SavePerspective()
-                dir = self.GetPanelDirection(panel)
-                coord = None
-                if dir in ("2", "4"):
-                    coord = 0
-                elif dir in ("1", "3"):
-                    coord = 1
-                if coord is not None:
-                    l_val = self.logCtrl.GetSizeTuple()[coord]
-                    t_val = self.treeCtrl.GetSizeTuple()[coord]
-                    c_val = self.GetClientSizeTuple()[coord]
-                    k = c_val - l_val - t_val
-                    l_val = int((c_val - k) / (1 + self.ratio))
-                    #t_val = (c_val-k)-l_val
-                    b1 = s.find("|dock_size(%s," % dir) + 1
-                    b2 = s.find("=", b1) + 1
-                    e = s.find("|", b1)
-                    s = "%s%i%s" % (s[:b2], l_val, s[e:])
-                    self.auiManager.LoadPerspective(s, True)
-                    self.logCtrl.SetColumnWidth(
-                        0,
-                        self.logCtrl.GetSizeTuple()[0] - self.corConst
-                    )
+        ratioValues = self.GetRatioValues()
+        if ratioValues is not None:
+            c_val, l_val, t_val = ratioValues
+            s = self.auiManager.SavePerspective()
+            k = c_val - l_val - t_val
+            l_val = int((c_val - k) / (1 + self.ratio))
+            #t_val = (c_val-k)-l_val
+            b1 = s.find("|dock_size(5,") + 1
+            b2 = s.find("=", b1) + 1
+            e = s.find("|", b1)
+            s = "%s%i%s" % (s[:b2], l_val, s[e:])
+            self.auiManager.LoadPerspective(s, True)
+            self.logCtrl.SetColumnWidth(
+                0,
+                self.logCtrl.GetSizeTuple()[0] - self.corConst
+            )
+
         self.mainSizeFlag = True
         if not self.IsMaximized() and not self.IsIconized():
             Config.size = self.GetSizeTuple()
