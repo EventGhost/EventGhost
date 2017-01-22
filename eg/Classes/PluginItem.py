@@ -81,7 +81,7 @@ class PluginItem(ActionItem):
 
         if self.info.persistentData.config:
             answer = eg.MessageBox(
-                eg.text.General.deleteConfigMessage,
+                eg.text.General.deleteConfigMessage % self.info.name,
                 eg.text.General.deleteConfigCaption,
                 wx.YES_NO | wx.ICON_QUESTION
             )
