@@ -24,11 +24,6 @@ from eg.Utils import SetDefault
 
 class Default:
     class General:
-        closeOpenDialogMessage = (
-            "There are open dialogs would you like\n"
-            "to close them?\n\n"
-        )
-        closeOpenDialogCaption = "Close open dialogs"
         configTree = "Configuration Tree"
         deleteQuestion = "Are you sure you want to delete this item?"
         deleteManyQuestion = (

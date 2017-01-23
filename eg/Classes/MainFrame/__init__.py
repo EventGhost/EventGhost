@@ -545,29 +545,20 @@ class MainFrame(wx.Frame):
             else:
                 eg.app.Exit()
         else:
-            dialogNames = []
-            for dialog in self.openDialogs:
-                dialogName = dialog.GetTitle() + ' - '
-                if hasattr(dialog, 'headerBox'):
-                    dialogName += dialog.headerBox.GetChildren()[0].GetLabel()
-                else:
-                    dialogName = dialogName[:-3]
-                dialogNames.append(dialogName)
-            message = (
-                eg.text.General.closeOpenDialogMessage +
-                '\n'.join(dialogNames)
-            )
-            answer = eg.MessageBox(
-                message,
-                eg.text.General.closeOpenDialogCaption,
-                style=wx.YES_NO | wx.ICON_QUESTION
-            )
-            if answer == wx.ID_YES:
-                for dialog in self.openDialogs[:]:
-                    dialog.Destroy()
-                self.OnClose(None)
-            else:
+            for dialog in self.openDialogs[:]:
+                panel = getattr(dialog, 'panel', None)
+                try:
+                    if not panel.isDirty:
+                        dialog.Destroy()
+                        continue
+                except AttributeError:
+                    pass
+
+                dialog.Raise()
                 self.RequestUserAttention()
+                return
+
+            self.OnClose(None)
 
     @eg.LogIt
     def OnDialogDestroy(self, event):
