@@ -25,6 +25,7 @@ from os.path import join
 
 # Local imports
 import eg
+from eg.Classes import WXIdManager as ID
 from eg.Classes.MainFrame.LogCtrl import LogCtrl
 from eg.Classes.MainFrame.StatusBar import StatusBar
 from eg.Classes.MainFrame.TreeCtrl import TreeCtrl
@@ -38,22 +39,6 @@ ADD_FOLDER_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.FOLDER_ICON)
 ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
 ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
-
-class ID(dict):
-    def __getitem__(self, item):
-        return getattr(self, item.upper())
-
-    def __getattr__(self, item):
-        item = item.upper()
-        if hasattr(wx, 'ID_' + item.upper()):
-            attr = getattr(wx, 'ID_' + item.upper())
-        else:
-            attr = wx.NewId()
-        setattr(self, item, attr)
-        return attr
-
-ID = ID()
-
 
 Text = eg.text.MainFrame
 
