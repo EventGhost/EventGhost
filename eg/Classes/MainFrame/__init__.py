@@ -525,8 +525,8 @@ class MainFrame(wx.Frame):
         """
         Changes the main frame style depending on the display of the tray icon.
 
-        Sets the stlye flags fo the minimize button will be grayed out if the
-        tray icon is shown and there are any open child windows.
+        Sets the style flags for the minimize button. It will be grayed out if
+        the tray icon is shown and there child dialogs open.
         If the tray icon is not shown the minimize button will function as
         usual.
 
