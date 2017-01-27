@@ -24,8 +24,6 @@ import os
 import shutil
 import tempfile
 import wx
-import win32api
-import win32con
 from zipfile import ZIP_DEFLATED, ZipFile
 from wx.lib.agw import customtreectrl
 
@@ -33,7 +31,12 @@ from wx.lib.agw import customtreectrl
 import eg
 from eg.Icons import PilToBitmap, StreamToPil
 from eg.Classes.Dialog import Dialog
-from eg.Utils import DecodeMarkdown, DecodeReST
+from eg.Utils import (
+    DecodeMarkdown,
+    DecodeReST,
+    HasSystemAttribute,
+    HasHiddenAttribute
+)
 
 TEMPLATE = u"""
 <FONT SIZE=5><b>{name}</b></FONT>
@@ -132,25 +135,56 @@ CHECKED = (
 )
 
 
-def IsSystem(filePath):
-    fileAttributes = win32api.GetFileAttributes(filePath)
-    return fileAttributes | win32con.FILE_ATTRIBUTE_SYSTEM == fileAttributes
-
-
-def IsHidden(filePath):
-    fileAttributes = win32api.GetFileAttributes(filePath)
-    return fileAttributes | win32con.FILE_ATTRIBUTE_HIDDEN == fileAttributes
+class Text(eg.TranslatableStrings):
+    hiddenSystemTitle = 'Plugin Install - Hidden/System Files'
+    hiddenSystemMessage = (
+        'There are hidden and system files please select\n'
+        'the files you wish to add to the egplugin package.'
+    )
+    fileType = 'file'
+    folderType = 'folder'
+    dotType = 'starts with a "."'
+    hiddenType1 = ' and is a hidden'
+    hiddenType2 = 'is a hidden'
+    systemType1 = 'system'
+    systemType2 = ' and is a system'
+    systemType3 = 'is a system'
+    exportTitle = 'Export EventGhost Plugin'
+    exportFileMessage = 'Export plugin %s'
+    importTitle = 'Install EventGhost Plugin'
+    importMessage = (
+        'Do you really want to install plugin %s\n'
+        'into EventGhost?\n\n'
+    )
+    importError = 'Can\'t create directory for plugin'
 
 
 def GetAttributeFlags(path, name):
     path = os.path.join(path, name)
-    res = []
+    res = ''
+
+    if os.path.isdir(path):
+        pathType = Text.folderType
+    else:
+        pathType = Text.fileType
+
     if name.startswith("."):
-        res.append('.')
-    if IsHidden(path):
-        res.append('HIDDEN')
-    if IsSystem(path):
-        res.append('SYSTEM')
+        res = Text.dotType
+    if HasHiddenAttribute(path):
+        if res:
+            res += Text.hiddenType1
+        else:
+            res += Text.hiddenType2
+    if HasSystemAttribute(path):
+        if res.find(Text.hiddenType1) > -1:
+            res += ', ' + Text.systemType1
+        elif res:
+            res += Text.systemType2
+        else:
+            res += Text.systemType3
+
+    if res and res != Text.dotType:
+        res += ' ' + pathType
     return res
 
 
@@ -245,11 +279,10 @@ class PluginInstall(object):
         #if result == wx.ID_CANCEL:
         #    return
         filename = os.path.basename(pluginInfo.path)
-        title = eg.text.MainFrame.Menu.Export.replace("&", "").replace(".", "")
         dialog = wx.FileDialog(
             eg.document.frame,
             defaultFile=filename,
-            message=title,
+            message=Text.exportMessage % pluginInfo.instance.name,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
         )
@@ -294,14 +327,12 @@ class PluginInstall(object):
                 if os.path.isdir(path):
                     basePath = path
                     break
+
             dialog = PluginOverviewDialog(
-                title="Install EventGhost Plugin",
+                title=Text.importTitle,
                 pluginData=pluginData,
                 basePath=basePath,
-                message=(
-                    "Do you really want to install this plugin into "
-                    "EventGhost?"
-                )
+                message=Text.importMessage
             )
             result = dialog.ShowModal()
             dialog.Destroy()
@@ -325,7 +356,7 @@ class PluginInstall(object):
                         dstDir = searchDir
                         break
                 else:
-                    raise Exception("Can't create directory for plugin")
+                    raise Exception(Text.importError)
             shutil.copytree(basePath, dstDir)
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
         finally:
@@ -443,7 +474,7 @@ class HiddenSystemDialog(wx.Dialog):
         wx.Dialog.__init__(
             self,
             None,
-            title='Plugin Install - Hidden/System Files',
+            title=Text.hiddenSystemTitle,
             size=(450, 525),
             style=(
                 wx.CAPTION |
@@ -456,11 +487,8 @@ class HiddenSystemDialog(wx.Dialog):
 
         headerBox = eg.HeaderBox(
             self,
-            name='Plugin Install',
-            text=(
-                'There are hidden and system files please select\n'
-                'the files you wish to add to the egplugin package.'
-            ),
+            name=Text.hiddenSystemTitle,
+            text=Text.hiddenSystemMessage,
             icon=eg.Icons.PLUGIN_ICON
         )
 
@@ -481,10 +509,7 @@ class HiddenSystemDialog(wx.Dialog):
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
 
-        tree.EnableSelectionGradient(True)
-        tree.SetGradientStyle(False)
-        tree.SetFirstGradientColour(wx.Colour(0, 0, 0))
-        tree.SetSecondGradientColour(wx.Colour(0, 255, 0))
+        tree.EnableSelectionGradient(False)
         tree.SetBackgroundColour(
             wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
         )
@@ -563,7 +588,10 @@ class HiddenSystemDialog(wx.Dialog):
                     child, cookie = self.tree.GetFirstChild(treeItem)
                     while child.IsOk():
                         self.tree.CheckItem(child, False)
-                        child, cookie = self.tree.GetNextChild(treeItem, cookie)
+                        child, cookie = self.tree.GetNextChild(
+                            treeItem,
+                            cookie
+                        )
 
             else:
                 fileFolders = self.tree.GetPyData(parent)
