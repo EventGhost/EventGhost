@@ -3,7 +3,8 @@ engines:
     enabled: true
     config:
       languages:
-      - python
+        python:
+          mass_threshold: 35
   eslint:
     enabled: true
   fixme:
@@ -11,7 +12,7 @@ engines:
   radon:
     enabled: true
     config: 
-      threshold: "C"
+      threshold: "D"
 ratings:
   paths:
   - "**.py"
@@ -19,4 +20,3 @@ exclude_paths:
   - "lib27/"
   - "languages/"
   - "ez_setup.py"
-  
