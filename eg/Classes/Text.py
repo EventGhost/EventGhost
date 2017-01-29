@@ -211,6 +211,40 @@ class Default:
                 "Only plugins, events, and actions can be configured."
             )
 
+    class PluginInstall:
+        replaceTitle = 'Replace EventGhost Plugin %s'
+        replaceMessage = (
+            'The new plugin has the same identifier as\n'
+            'an existing plugin.\n'
+            'Would you like to replace plugin\n'
+            '%s with plugin %s?'
+        )
+        upgradeTitle = 'Upgrade EventGhost Plugin %s'
+        upgradeMessage = (
+            'Would you like to upgrade plugin %s\n'
+            'version %s to version %s?'
+        )
+        downgradeTitle = 'Downgrade EventGhost Plugin %s'
+        downgradeMessage = (
+            'Would you like to downgrade plugin %s\n'
+            'version %s to version %s?'
+        )
+        overwriteTitle = 'Overwrite EventGhost Plugin %s'
+        overwriteMessage = (
+            'Plugin %s is already installed.\n'
+            'Would you like to overwrite plugin %s?\n'
+        )
+        guidTitle = 'Plugin Export - GUID Error'
+        guidMessage = (
+            'Please add this line to the plugin __init__\n'
+            'in the call to eg.RegisterPlugin\n\n'
+        )
+        installTitle = 'Install EventGhost Plugin %s'
+        installMessage = (
+            'Do you really want to install this plugin into EventGhost?'
+        )
+        removeError = 'The old plugin will have to removed manually.\n'
+
 
 def Text(language):
     class Translation(Default):

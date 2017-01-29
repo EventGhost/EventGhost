@@ -25,6 +25,7 @@ import shutil
 import tempfile
 import wx
 from zipfile import ZIP_DEFLATED, ZipFile
+from comtypes import GUID
 from wx.lib.agw import customtreectrl
 
 # Local imports
@@ -55,15 +56,14 @@ TEMPLATE = u"""
 <b>Description:</b>"""
 
 INFO_FIELDS = [
-    "name",
-    "author",
-    "version",
-    "url",
-    "guid",
-    "description",
-    "icon",
+    'name',
+    'author',
+    'version',
+    'url',
+    'guid',
+    'description',
+    'icon'
 ]
-
 
 class Text(eg.TranslatableStrings):
     hiddenSystemTitle = 'Plugin Install - Hidden/System Files'
@@ -111,6 +111,7 @@ def GetAttributeFlags(path, name, flags=''):
         res = Text.parent + flags
 
     return res
+
 
 
 class PluginInstall(object):
@@ -190,7 +191,6 @@ class PluginInstall(object):
 
     @eg.LogItWithReturn
     def Export(self, pluginInfo):
-        pluginData = self.GetPluginData(pluginInfo)
         #dialog = PluginOverviewDialog(
         #    eg.document.frame,
         #    "Plugin Information",
@@ -202,11 +202,39 @@ class PluginInstall(object):
         #dialog.Destroy()
         #if result == wx.ID_CANCEL:
         #    return
-        filename = os.path.basename(pluginInfo.path)
+
+        if pluginInfo.guid == pluginInfo.pluginName:
+            guid = unicode(GUID.create_new()).upper()
+            dialog = wx.TextEntryDialog(
+                None,
+                message=Text.guidMessage,
+                caption=Text.guidTitle,
+                defaultValue='guid = ' + repr(guid),
+                style=(
+                    wx.OK |
+                    wx.ICON_ERROR |
+                    wx.STAY_ON_TOP
+                )
+            )
+            textCtrl = list(
+                item for item in dialog.Children
+                if isinstance(item, wx.TextCtrl)
+            )[0]
+            textCtrl.SetEditable(False)
+            dialog.ShowModal()
+            dialog.Destroy()
+            return
+        pluginData = self.GetPluginData(pluginInfo)
+
+        fileName = (
+            '%s-%s.egplugin' % (pluginInfo.pluginName, pluginInfo.version)
+        )
+        filePath = os.path.basename(pluginInfo.path)
+        title = eg.text.MainFrame.Menu.Export.replace("&", "").replace(".", "")
         dialog = wx.FileDialog(
             eg.document.frame,
-            defaultFile=filename,
-            message=Text.exportFileMessage % pluginInfo.name,
+            defaultFile=os.path.join(filePath, fileName),
+            message=title,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
         )
@@ -236,6 +264,28 @@ class PluginInstall(object):
             "icon": iconData,
         }
 
+    def BackupPlugin(self, pluginInfo):
+        backupName = (
+            '%s-%s.egplugin' % (pluginInfo.englishName, pluginInfo.version)
+        )
+
+        backupPath = os.path.join(
+            eg.folderPath.ProgramData,
+            'EventGhost',
+            'PluginBackups'
+        )
+        if not os.path.exists(backupPath):
+            os.makedirs(backupPath)
+
+        eg.Print('Creating backup of plugin.')
+        eg.Print('Writing ' + os.path.join(backupPath, backupName))
+
+        self.CreatePluginPackage(
+            pluginInfo.path,
+            os.path.join(backupPath, backupName),
+            self.GetPluginData(pluginInfo)
+        )
+
     @eg.LogItWithReturn
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
@@ -252,35 +302,79 @@ class PluginInstall(object):
                     basePath = path
                     break
 
-            dialog = PluginOverviewDialog(
-                title=Text.importTitle,
-                pluginData=pluginData,
-                basePath=basePath,
-                message=Text.importMessage % pluginData['name']
-            )
-            result = dialog.ShowModal()
-            dialog.Destroy()
-            if result == wx.ID_CANCEL:
-                return
             guid = pluginData['guid']
             if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
                 info = eg.pluginManager.database[guid]
-                if info.path.lower().startswith(eg.localPluginDir.lower()):
-                    # plugin with same GUID exists in user dir, so delete
-                    # the folder first
+                name = info.name
+                mData = (name, pluginData['name'])
+                if info.englishName != pluginData['name']:
+                    title = Text.replaceTitle % name
+                    message = Text.replaceMessage % mData
+
+                elif info.version != pluginData['version']:
+                    mData = (name, info.version, pluginData['version'])
+                    if info.version < pluginData['version']:
+                        title = Text.upgradeTitle % name
+                        message = Text.upgradeMessage % mData
+                    else:
+                        title = Text.downgradeTitle % name
+                        message = Text.downgradeMessage % messageData
+                else:
+                    title = Text.overwriteTitle % name
+                    message = Text.overwriteMessage % mData
+
+                dialog = PluginOverviewDialog(
+                    title=title,
+                    message=message,
+                    pluginData=pluginData,
+                    basePath=basePath,
+                )
+
+                result = dialog.ShowModal()
+                dialog.Destroy()
+                if result == wx.ID_CANCEL:
+                    return
+
+                self.BackupPlugin(info)
+                try:
                     shutil.rmtree(info.path, False)
-            dstDir = os.path.join(eg.localPluginDir, os.path.basename(basePath))
+                except WindowsError:
+                    if info.path.startswith(eg.corePluginDir):
+                        eg.PrintNotice(Text.pluginRemoveError + info.path)
+                    else:
+                        raise
+            else:
+                dialog = PluginOverviewDialog(
+                    title= Text.installTitle % pluginData['name'],
+                    pluginData=pluginData,
+                    basePath=basePath,
+                    message=Text.installMessage
+                )
+
+                result = dialog.ShowModal()
+                dialog.Destroy()
+                if result == wx.ID_CANCEL:
+                    return
+
+            dstDir = os.path.join(
+                eg.localPluginDir,
+                os.path.basename(basePath)
+            )
+
             if os.path.exists(dstDir):
-                # the wanted name is already used by another plugin
-                # so we create a new folder name by adding an number
-                for i in range(2, 100):
-                    searchDir = dstDir + str(i)
-                    if not os.path.exists(searchDir):
-                        dstDir = searchDir
+                dstDir += '-' + pluginData['version']
+                if os.path.exists(dstDir):
+                    for i in range(1, 200):
+                        searchDir = dstDir + '-' + str(i)
+                        if not os.path.exists(searchDir):
+                            dstDir = searchDir
                         break
+                    else:
+                        raise Exception("Can't create directory for plugin")
                 else:
                     raise Exception(Text.importError)
+
             shutil.copytree(basePath, dstDir)
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
         finally:
@@ -298,7 +392,7 @@ class PluginOverviewDialog(Dialog):
         title=eg.APP_NAME,
         basePath=None,
         pluginData=None,
-        message="",
+        message=""
     ):
         Dialog.__init__(
             self,
@@ -306,7 +400,11 @@ class PluginOverviewDialog(Dialog):
             -1,
             title,
             size=(400, 300),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+            style=(
+                wx.DEFAULT_DIALOG_STYLE |
+                wx.RESIZE_BORDER |
+                wx.STAY_ON_TOP
+            )
         )
         self.text = TEMPLATE.format(**pluginData)
         headerCtrl = eg.HtmlWindow(self, style=wx.html.HW_SCROLLBAR_NEVER)
