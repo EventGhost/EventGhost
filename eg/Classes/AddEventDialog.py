@@ -172,6 +172,7 @@ class AddEventDialog(eg.TaskletDialog):
         self.docText.SetPage(Text.userEvent)
         self.resultData = None
         self.buttonRow.okButton.Enable(False)
+
         event.Skip()
 
     @eg.LogItWithReturn
@@ -224,9 +225,6 @@ class AddEventDialog(eg.TaskletDialog):
             self.resultData = value
             self.buttonRow.okButton.Enable(True)
             wx.CallAfter(self.buttonRow.okButton.SetFocus)
-        else:
-            self.resultData = None
-            self.buttonRow.okButton.Enable(False)
 
     def ReloadTree(self):
         global gLastSelected
@@ -234,6 +232,7 @@ class AddEventDialog(eg.TaskletDialog):
         tree.DeleteAllItems()
         self.root = tree.AddRoot("Functions")
         self.FillTree()
+
         if gLastSelected:
             item = self.FindItemByText(gLastSelected.name)
             if item.IsOk():

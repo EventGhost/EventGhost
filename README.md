@@ -1,6 +1,5 @@
-
 ![EventGhost Logo](images/logo.png)
-# EventGhost   [![Build Status](https://ci.appveyor.com/api/projects/status/3wf2sdw8bf4i02b9/branch/master?svg=true)](https://ci.appveyor.com/project/blackwind/eventghost/build/artifacts)   [![Slack](https://eventghost-slackin.herokuapp.com/badge.svg)](https://eventghost-slackin.herokuapp.com/)   [![Code Climate](https://codeclimate.com/github/EventGhost/EventGhost/badges/gpa.svg)](https://codeclimate.com/github/EventGhost/EventGhost)   [![Test Coverage](https://codeclimate.com/github/EventGhost/EventGhost/badges/coverage.svg)](https://codeclimate.com/github/EventGhost/EventGhost/coverage)
+# EventGhost [![Build status](https://ci.appveyor.com/api/projects/status/2x71orl3hjc8iejf/branch/master?svg=true)](https://ci.appveyor.com/project/topic2k/eventghost-61smq/branch/master)  [![Slack](https://eventghost-slackin.herokuapp.com/badge.svg)](https://eventghost-slackin.herokuapp.com/)
 
 
 
