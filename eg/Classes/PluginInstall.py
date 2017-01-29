@@ -24,7 +24,6 @@ import os
 import shutil
 import tempfile
 import wx
-import re
 from zipfile import ZIP_DEFLATED, ZipFile
 from comtypes import GUID
 
@@ -145,7 +144,7 @@ class PluginInstall(object):
         #if result == wx.ID_CANCEL:
         #    return
 
-        if pluginInfo.guid == pluginInfo.englishName:
+        if pluginInfo.guid == pluginInfo.pluginName:
             guid = unicode(GUID.create_new()).upper()
             dialog = wx.TextEntryDialog(
                 None,
@@ -169,7 +168,7 @@ class PluginInstall(object):
         pluginData = self.GetPluginData(pluginInfo)
 
         fileName = (
-            '%s-%s.egplugin' % (pluginInfo.englishName, pluginInfo.version)
+            '%s-%s.egplugin' % (pluginInfo.pluginName, pluginInfo.version)
         )
         filePath = os.path.basename(pluginInfo.path)
         title = eg.text.MainFrame.Menu.Export.replace("&", "").replace(".", "")
@@ -248,10 +247,10 @@ class PluginInstall(object):
             if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
                 info = eg.pluginManager.database[guid]
-                name = info.englishName
+                name = info.name
                 mData = (name, pluginData['name'])
                 if info.englishName != pluginData['name']:
-                    title = Text.replaceTitle % info.englishName
+                    title = Text.replaceTitle % name
                     message = Text.replaceMessage % mData
 
                 elif info.version != pluginData['version']:
