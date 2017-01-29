@@ -33,15 +33,15 @@ class SpinNumCtrl(wx.Window):
     A wx.Control that shows a fixed width floating point value and spin
     buttons to let the user easily input a floating point value.
     """
-    _defaultArgs = {
-        "integerWidth": 3,
-        "fractionWidth": 2,
-        "allowNegative": False,
-        "min": 0,
-        "limited": True,
-        "groupChar": THOUSANDS_SEP,
-        "decimalChar": DECIMAL_POINT,
-    }
+    _defaultArgs = dict(
+        integerWidth=3,
+        fractionWidth=2,
+        allowNegative=False,
+        min=0,
+        limited=True,
+        groupChar=THOUSANDS_SEP,
+        decimalChar=DECIMAL_POINT
+    )
 
     def __init__(
         self,
@@ -66,11 +66,13 @@ class SpinNumCtrl(wx.Window):
 
         if kwargs['min'] < 0:
             kwargs["allowNegative"] = True
+
         if "max" not in kwargs:
             kwargs["max"] = (
                 (10 ** kwargs["integerWidth"]) -
                 (10 ** -kwargs["fractionWidth"])
             )
+
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -92,6 +94,7 @@ class SpinNumCtrl(wx.Window):
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
         )
+
         numCtrl.SetLimited(True)
         height = numCtrl.GetSize()[1]
         spinbutton = wx.SpinButton(
