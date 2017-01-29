@@ -22,6 +22,9 @@ import sys
 import threading
 import time
 import wx
+import win32api
+import win32con
+
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
@@ -31,6 +34,7 @@ from functools import update_wrapper
 from os.path import abspath, dirname, exists, join
 from types import ClassType
 
+
 # Local imports
 import eg
 
@@ -38,7 +42,7 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow", "PrettyPythonPrint"
+    "ExecFile", "GetTopLevelWindow", "HasSystemAttribute", "HasHiddenAttribute"
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -637,3 +641,13 @@ def UpdateStartupShortcut(create):
             arguments="-h -e OnInitAfterBoot",
             startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
+
+
+def HasSystemAttribute(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_SYSTEM == fileAttributes
+
+
+def HasHiddenAttribute(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_HIDDEN == fileAttributes

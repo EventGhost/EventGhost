@@ -233,6 +233,22 @@ def PilToBitmap(pil):
     """
     return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
 
+
+def StreamToPil(stringData):
+    """
+    Reads a save image string into a PIL.Image.
+
+    Reads a string into a file like object (cStringIO.StringIO) so PIL.Image
+    can read the stream back into an image.
+    
+    :param stringData: String data of an image.
+    :return: PIL.Image
+    """
+    stream = StringIO(stringData)
+    pil = Image.open(stream).convert("RGBA")
+    stream.close()
+    return pil
+
 # setup some commonly used icons
 INFO_ICON = PathIcon(join(IMAGES_PATH, "info.png"))
 ERROR_ICON = PathIcon(join(IMAGES_PATH, "error.png"))
