@@ -22,6 +22,9 @@ import sys
 import threading
 import time
 import wx
+import win32api
+import win32con
+
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
@@ -31,6 +34,7 @@ from functools import update_wrapper
 from os.path import abspath, dirname, exists, join
 from types import ClassType
 
+
 # Local imports
 import eg
 
@@ -38,7 +42,7 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow",
+    "ExecFile", "GetTopLevelWindow", "HasSystemAttribute", "HasHiddenAttribute"
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -90,6 +94,70 @@ class MyHtmlDocWriter(Writer):
 """ % self.interpolation_dict()
 
 HTML_DOC_WRITER = MyHtmlDocWriter()
+
+
+def PrettyPythonPrint(attrName, attrValue, indent):
+    types = (dict, list, tuple, unicode, str)
+
+    if type(indent) in types[3:]:
+        indt = (len(indent))
+        if indent.find('\t') > -1:
+            indt *= 4
+        indent = indt
+
+    line = '%s%s = ' % (' ' * indent, attrName)
+    multiLine = len(line + repr(attrValue)) > 76
+    jump = 71 - indent
+
+    def AddBracket(open, value, idt):
+        if type(value) == list:
+            bracket = '[]'
+        elif type(value) == dict:
+            bracket = '{}'
+        else:
+            bracket = '()'
+        idt = ' ' * idt
+        return idt + bracket[:1] if open else idt + bracket[1:]
+
+    def IterValue(value, idt):
+        def CheckItem(item):
+            if type(item) in types[:3] and len(' ' * idt + repr(item)) > 76:
+                newLine = AddBracket(True, item, idt) + '\n'
+                newLine += IterValue(item, idt + 4)
+                newLine += AddBracket(False, item, idt) + ',\n'
+                return newLine
+            return '%s%r,\n' % (' ' * idt, item)
+
+        ln = ''
+
+        if type(value) == dict:
+            for k in sorted(value.keys()):
+                ln += (
+                    '%s%r: %s' %
+                    (' ' * idt, k, CheckItem(value[k])[idt:])
+                )
+        else:
+            for item in value:
+                ln += CheckItem(item)
+
+        return ln
+
+    if type(attrValue) in types and multiLine and jump > 20:
+        if type(attrValue) in types[2:]:
+            newAttrValue = ()
+            while attrValue:
+                jump = min([len(attrValue), jump])
+                newAttrValue += (attrValue[:jump],)
+                attrValue = attrValue[jump:]
+            attrValue = newAttrValue
+
+        line += AddBracket(True, attrValue, 0) + '\n'
+        line += IterValue(attrValue, indent + 4)
+        line = line[:-2] + '\n' + AddBracket(False, attrValue, indent) + '\n'
+    else:
+        line += '%r\n' % (attrValue,)
+        
+    return line
 
 
 class NotificationHandler(object):
@@ -573,3 +641,13 @@ def UpdateStartupShortcut(create):
             arguments="-h -e OnInitAfterBoot",
             startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
+
+
+def HasSystemAttribute(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_SYSTEM == fileAttributes
+
+
+def HasHiddenAttribute(filePath):
+    fileAttributes = win32api.GetFileAttributes(filePath)
+    return fileAttributes | win32con.FILE_ATTRIBUTE_HIDDEN == fileAttributes

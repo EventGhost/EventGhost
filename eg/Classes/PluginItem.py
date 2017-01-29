@@ -78,6 +78,16 @@ class PluginItem(ActionItem):
             return False
         if not TreeItem.AskDelete(self):
             return False
+
+        if self.info.persistentData.config:
+            answer = eg.MessageBox(
+                eg.text.General.deleteConfigMessage % self.info.name,
+                eg.text.General.deleteConfigCaption,
+                wx.YES_NO | wx.ICON_QUESTION
+            )
+            if answer == wx.ID_YES:
+                self.info.persistentData.Delete(True)
+
         return True
 
     @eg.AssertInActionThread

@@ -25,6 +25,7 @@ import eg
 from eg.Utils import SetDefault
 from PluginModuleInfo import PluginModuleInfo
 
+
 class PluginInstanceInfo(PluginModuleInfo):
     pluginCls = None
     module = None
@@ -41,6 +42,7 @@ class PluginInstanceInfo(PluginModuleInfo):
     isStarted = False
     lastEvent = eg.EventGhostEvent()
     eventList = None
+    persistentData = None
 
     def __init__(self):
         pass
@@ -131,14 +133,17 @@ class PluginInstanceInfo(PluginModuleInfo):
     def FromModuleInfo(cls, moduleInfo):
         self = cls.__new__(cls)
         self.__dict__.update(moduleInfo.__dict__)
+
         pathname = join(self.path, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return None
+
         if self.path.startswith(eg.corePluginDir):
             moduleName = "eg.CorePluginModule." + self.pluginName
         else:
             moduleName = "eg.UserPluginModule." + self.pluginName
+
         try:
             if moduleName in sys.modules:
                 module = sys.modules[moduleName]
@@ -150,6 +155,14 @@ class PluginInstanceInfo(PluginModuleInfo):
                 1
             )
             raise eg.Exceptions.PluginLoadError()
+
+        config = eg.config
+        attrNames = moduleName.split('.')
+        for attrName in attrNames:
+            config = getattr(config, attrName, None)
+
+        self.persistentData = eg.UndoHandler.PersistentData(config)
+
         pluginCls = module.__pluginCls__
         self.module = module
         self.pluginCls = pluginCls

@@ -1,3 +1,21 @@
+## [0.5.0-beta5](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-beta5) (2016-12-24)
+
+**Enhancements:**
+
+* Finish the new "Add Event..." dialog [\#110](https://github.com/EventGhost/EventGhost/pull/110) ([topic2k](https://github.com/topic2k))
+* Documentation improvements [\#114](https://github.com/EventGhost/EventGhost/pull/114) ([per1234](https://github.com/per1234))
+* Bring back the -debug command line argument [\#118](https://github.com/EventGhost/EventGhost/pull/118) ([topic2k](https://github.com/topic2k))
+* Popup menu and hotkey for "Select All" in LogCtrl [\#124](https://github.com/EventGhost/EventGhost/pull/124) ([topic2k](https://github.com/topic2k))
+* Adds GUID to treeItems [\#133](https://github.com/EventGhost/EventGhost/pull/133) ([kdschlosser](https://github.com/kdschlosser))
+* \[Webserver\] plugin updates \(with commit for each version\) [\#134](https://github.com/EventGhost/EventGhost/pull/134) ([per1234](https://github.com/per1234))
+* \[EventGhost\] add skin selection to ShowOSD [\#136](https://github.com/EventGhost/EventGhost/pull/136) ([topic2k](https://github.com/topic2k))
+
+**Fixed bugs:**
+
+* \[Broadcaster\] fix Unicode encoding and decoding [\#122](https://github.com/EventGhost/EventGhost/pull/122) ([david-mark](https://github.com/david-mark))
+* Fix typo in build warning message [\#135](https://github.com/EventGhost/EventGhost/pull/135) ([per1234](https://github.com/per1234))
+
+
 ## [0.5.0-beta4](https://github.com/blackwind/EventGhost/releases/tag/v0.5.0-beta4) (2016-09-14)
 
 **Enhancements:**

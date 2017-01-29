@@ -26,11 +26,18 @@ import tempfile
 import wx
 from zipfile import ZIP_DEFLATED, ZipFile
 from comtypes import GUID
+from wx.lib.agw import customtreectrl
 
 # Local imports
 import eg
+from eg.Icons import PilToBitmap, StreamToPil
 from eg.Classes.Dialog import Dialog
-from eg.Utils import DecodeMarkdown, DecodeReST
+from eg.Utils import (
+    DecodeMarkdown,
+    DecodeReST,
+    HasSystemAttribute,
+    HasHiddenAttribute
+)
 
 TEMPLATE = u"""
 <FONT SIZE=5><b>{name}</b></FONT>
@@ -58,66 +65,79 @@ INFO_FIELDS = [
     'icon'
 ]
 
-Text = eg.text.PluginInstall
+class Text(eg.TranslatableStrings):
+    hiddenSystemTitle = 'Plugin Install - Hidden/System Files'
+    hiddenSystemMessage = (
+        'There are hidden and system files please select\n'
+        'the files you wish to add to the egplugin package.'
+    )
+    fileType = 'file'
+    folderType = 'folder'
+    dotHiddenSystem = 'is a no include, hidden, system '
+    dotHidden = 'is a no include, hidden '
+    dotSystem = 'is a no include, system '
+    dot = 'is a no include '
+    hiddenSystem = 'is a hidden, system '
+    hidden = 'is a hidden '
+    system = 'is a system '
+    parent = 'parent '
+    exportTitle = 'Export EventGhost Plugin'
+    exportFileMessage = 'Export plugin %s'
+    importTitle = 'Install EventGhost Plugin'
+    importMessage = (
+        'Do you really want to install plugin %s\n'
+        'into EventGhost?\n\n'
+    )
+    importError = 'Can\'t create directory for plugin'
 
 
-def InfoField(attrName, attrValue):
-    def Replace(s):
-        return s.replace("'", "\\'").replace('\n', '\\n')
+def GetAttributeFlags(path, name, flags=''):
+    path = os.path.join(path, name)
+    pathType = [Text.fileType, Text.folderType][os.path.isdir(path)]
 
-    types = (unicode, str)
+    res = ''
+    if name.startswith("."):
+        res += 'Dot'
+    if HasHiddenAttribute(path):
+        res += 'Hidden'
+    if HasSystemAttribute(path):
+        res += 'System'
 
-    line = '%s = ' % attrName
-    multiLine = len(line + repr(attrValue)) > 75
+    if res:
+        res = getattr(Text, res[:1].lower() + res[1:])
+        res += pathType
 
-    if type(attrValue) in types and multiLine:
-        newAttrValue = ()
-        while attrValue:
-            jump = min([len(repr(attrValue)) + attrValue.count("'"), 72])
-            jump -= attrValue[:jump].count("'")
+    elif flags:
+        res = Text.parent + flags
 
-            value = attrValue[:jump]
+    return res
 
-            if '\n' in value:
-                jump = value.find('\n') + 1
-
-            elif len(attrValue[jump:]) > 72:
-                if ' ' in value and value[-1:] != '.':
-                    jump = value.rfind(' ') + 1
-
-            newAttrValue += (Replace(attrValue[:jump]),)
-            attrValue = attrValue[jump:]
-
-        line += '(\n'
-        for item in newAttrValue:
-            line += "    u'%s'\n" % item
-        line += ')\n'
-
-    elif type(attrValue) in types:
-        line += "u'%s'\n" % Replace(attrValue)
-    else:
-        line += '%r\n' % attrValue
-    return line
 
 
 class PluginInstall(object):
+
     def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
-
-        zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
-        sourceCode = ''
-
-        if pluginData['icon'] is not None:
-            pluginData['icon'] = unicode(pluginData['icon'])
-
-        for fieldName in INFO_FIELDS:
-            sourceCode += InfoField(fieldName, pluginData[fieldName])
-
-        zipfile.writestr("info.py", sourceCode)
-        baseName = os.path.basename(sourcePath)
+        fileFolders = dict(flags='', sourcePath=sourcePath)
         for dirpath, dirnames, filenames in os.walk(sourcePath):
-            for dirname in dirnames[:]:
-                if dirname.startswith("."):
-                    dirnames.remove(dirname)
+            pathList = []
+            head, tail = os.path.split(dirpath.replace(sourcePath, ''))
+            while tail:
+                pathList.insert(0, tail)
+                head, tail = os.path.split(head)
+
+            tmpDict = fileFolders
+            for folder in pathList:
+                if folder not in tmpDict:
+                    tmpDict[folder] = dict(flags=tmpDict['flags'])
+                tmpDict = tmpDict[folder]
+
+            dirFlags = tmpDict['flags']
+
+            for dirname in dirnames:
+                tmpDict[dirname] = dict(
+                    flags=GetAttributeFlags(dirpath, dirname, dirFlags)
+                )
+
             for filename in filenames:
                 ext = os.path.splitext(filename)[1]
                 if (
@@ -125,10 +145,49 @@ class PluginInstall(object):
                     filename[:-1] in filenames
                 ):
                     continue
-                src = os.path.join(dirpath, filename)
-                dst = os.path.join(baseName, src[len(sourcePath) + 1:])
-                zipfile.write(src, dst)
-        zipfile.close()
+
+                tmpDict[filename] = GetAttributeFlags(
+                    dirpath,
+                    filename,
+                    dirFlags
+                )
+
+        def CheckFlags(flagDict):
+
+            if flagDict['flags']:
+                return True
+            for key in flagDict.keys():
+                if isinstance(flagDict[key], dict):
+                    return CheckFlags(flagDict[key])
+                else:
+                    return flagDict[key]
+
+        if CheckFlags(fileFolders):
+            dlg = HiddenSystemDialog(fileFolders)
+            dlg.ShowModal()
+
+        if fileFolders:
+            zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
+            sourceCode = "\n".join(
+                "%s = %r" % (fieldName, pluginData[fieldName])
+                for fieldName in INFO_FIELDS
+            )
+            zipfile.writestr("info.py", sourceCode)
+            baseName = os.path.basename(sourcePath)
+
+            def WriteFiles(ff, path):
+                for key in ff.keys():
+                    if key in ('flags', 'sourcePath', 'st'):
+                        continue
+                    if isinstance(ff[key], dict) and ff[key]['flags']:
+                        WriteFiles(ff[key], os.path.join(path, key))
+                    elif isinstance(ff[key], bool) and ff[key]:
+                        src = os.path.join(path, key)
+                        dst = os.path.join(baseName, src[len(sourcePath) + 1:])
+                        zipfile.write(src, dst)
+
+            WriteFiles(fileFolders, sourcePath)
+            zipfile.close()
 
     @eg.LogItWithReturn
     def Export(self, pluginInfo):
@@ -313,6 +372,8 @@ class PluginInstall(object):
                         break
                     else:
                         raise Exception("Can't create directory for plugin")
+                else:
+                    raise Exception(Text.importError)
 
             shutil.copytree(basePath, dstDir)
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
@@ -423,3 +484,204 @@ class SafeExecParser(object):
 
     def VisitStr(self, node):
         return node.s
+
+
+class HiddenSystemDialog(wx.Dialog):
+
+    def __init__(self, fileFolders):
+
+        self.fileFolders = fileFolders
+        self.root = None
+
+        wx.Dialog.__init__(
+            self,
+            None,
+            title=Text.hiddenSystemTitle,
+            size=(600, 400),
+            style=(
+                wx.CAPTION |
+                wx.CLOSE_BOX |
+                wx.SYSTEM_MENU |
+                wx.RESIZE_BORDER |
+                wx.MAXIMIZE_BOX
+            )
+        )
+
+        headerBox = eg.HeaderBox(
+            self,
+            name=Text.hiddenSystemTitle,
+            text=Text.hiddenSystemMessage,
+            icon=eg.Icons.PLUGIN_ICON
+        )
+
+        self.tree = tree = customtreectrl.CustomTreeCtrl(
+            self,
+            -1,
+            size=(-1, 325),
+            style=wx.SUNKEN_BORDER,
+            agwStyle=(
+                customtreectrl.TR_ALIGN_WINDOWS_RIGHT
+                | customtreectrl.TR_TWIST_BUTTONS
+                | customtreectrl.TR_HAS_BUTTONS
+                | customtreectrl.TR_HAS_VARIABLE_ROW_HEIGHT
+                | customtreectrl.TR_FULL_ROW_HIGHLIGHT
+            )
+        )
+
+        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
+
+        tree.EnableSelectionGradient(False)
+        tree.SetBackgroundColour(
+            wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+        )
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(headerBox, 0, wx.EXPAND | wx.BOTTOM, 20)
+        sizer.Add(tree, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 10)
+        sizer.Add(buttonRow.sizer, 0, wx.EXPAND)
+
+        self.SetSizer(sizer)
+        self.Bind(wx.EVT_CLOSE, self.OnCancel)
+
+        self.FillTree()
+        tree.Bind(customtreectrl.EVT_TREE_ITEM_CHECKED, self.OnItemCheck)
+
+    def ShowModal(self, *args, **kwargs):
+        self.SendSizeEvent()
+        wx.Dialog.ShowModal(self, *args, **kwargs)
+
+    def FillTree(self):
+
+        def ReadFileFolders(ff, parent, stWidgets=None):
+            for key in sorted(ff.keys()):
+                if key in ('flags', 'sourcePath', 'st'):
+                    continue
+                if isinstance(ff[key], dict):
+                    if stWidgets is None:
+                        child = self.tree.AppendItem(
+                            parent,
+                            key,
+                            1,
+                            ff[key]['st']
+                        )
+
+                        self.tree.SetPyData(child, ff[key])
+
+                        ff[key]['flags'] = not bool(ff[key]['flags'])
+                        self.tree.CheckItem(child, ff[key]['flags'])
+
+                    else:
+                        child = None
+                        st = wx.StaticText(self.tree, -1, ff[key]['flags'])
+                        stWidgets += (st,)
+                        ff[key]['st'] = st
+
+                    stWidgets = ReadFileFolders(ff[key], child, stWidgets)
+                else:
+                    if stWidgets is None:
+                        flag, st = ff[key]
+                        ff[key] = not bool(flag)
+                        child = self.tree.AppendItem(parent, key, 1, st)
+                        self.tree.SetPyData(child, ff[key])
+                        self.tree.CheckItem(child, ff[key])
+                    else:
+                        st = wx.StaticText(self.tree, -1, ff[key])
+                        stWidgets += (st,)
+                        ff[key] = [ff[key], st]
+
+            return stWidgets
+
+        self.root = root = self.tree.AddRoot(self.fileFolders['sourcePath'])
+        self.tree.SetPyData(root, self.fileFolders)
+
+        for widget in ReadFileFolders(self.fileFolders, None, ()):
+
+            def GetSize():
+                size = (widget.GetCharWidth() * 34, widget.GetSizeTuple()[1])
+                return wx.Size(*size)
+            setattr(widget, 'GetSize', GetSize)
+
+        ReadFileFolders(self.fileFolders, root)
+
+        self.tree.Expand(root)
+        self.tree.ExpandAllChildren(root)
+
+    def OnItemCheck(self, event):
+        self.tree.Unbind(
+            customtreectrl.EVT_TREE_ITEM_CHECKED,
+            handler=self.OnItemCheck
+        )
+
+        treeItem = event.GetItem()
+
+        if treeItem.IsOk():
+            def CheckParents(parentItem):
+                child, cookie = self.tree.GetFirstChild(parentItem)
+                checkParent = 0
+                while child and child.IsOk():
+                    checkParent = max([
+                        checkParent,
+                        int(self.tree.IsItemChecked(child))
+                    ])
+                    child, cookie = self.tree.GetNextChild(parentItem, cookie)
+
+                self.tree.CheckItem(parentItem, bool(checkParent))
+                parentData = self.tree.GetPyData(parentItem)
+                parentData['flags'] = bool(checkParent)
+
+                parentItem = self.tree.GetItemParent(parentItem)
+
+                if parentItem != self.tree.GetRootItem():
+                    CheckParents(parentItem)
+
+            def CheckChildren(parentItem):
+                child, cookie = self.tree.GetFirstChild(parentItem)
+                while child and child.IsOk():
+                    self.tree.CheckItem(child, False)
+                    childData = self.tree.GetPyData(child)
+
+                    if isinstance(childData, dict):
+                        childData['flags'] = False
+                        if self.tree.ItemHasChildren(child):
+                            CheckChildren(child)
+                    else:
+                        parentData = self.tree.GetPyData(parentItem)
+                        key = self.tree.GetItemText(child)
+                        parentData[key] = False
+
+                    child, cookie = self.tree.GetNextChild(
+                        parentItem,
+                        cookie
+                    )
+
+            itemData = self.tree.GetPyData(treeItem)
+            parent = self.tree.GetItemParent(treeItem)
+            flag = self.tree.IsItemChecked(treeItem)
+
+            if isinstance(itemData, dict):
+                itemData['flags'] = flag
+                if not flag and self.tree.ItemHasChildren(treeItem):
+                    CheckChildren(treeItem)
+            else:
+                itemData = self.tree.GetPyData(parent)
+                key = self.tree.GetItemText(treeItem)
+                itemData[key] = flag
+
+            if parent != self.tree.GetRootItem():
+                CheckParents(parent)
+
+            self.tree.Bind(
+                customtreectrl.EVT_TREE_ITEM_CHECKED,
+                self.OnItemCheck
+            )
+
+        event.Skip()
+
+    def OnOK(self, event):
+        self.EndModal(wx.ID_OK)
+        event.Skip()
+
+    def OnCancel(self, event):
+        self.fileFolders.clear()
+        self.EndModal(wx.ID_CANCEL)
+        event.Skip()
