@@ -167,7 +167,7 @@ class ModuleDependency(DependencyBase):
                 version = result[0]
             else:
                 raise Exception("Can't get version information")
-        if not isinstance(version, str):
+        if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
             raise WrongVersion
