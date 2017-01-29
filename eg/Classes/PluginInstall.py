@@ -219,8 +219,8 @@ class PluginInstall(object):
         if not os.path.exists(backupPath):
             os.makedirs(backupPath)
 
-        eg.PrintNotice('Creating backup of plugin.')
-        eg.PrintNotice('Writing ' + os.path.join(backupPath, backupName))
+        eg.Print('Creating backup of plugin.')
+        eg.Print('Writing ' + os.path.join(backupPath, backupName))
 
         self.CreatePluginPackage(
             pluginInfo.path,
