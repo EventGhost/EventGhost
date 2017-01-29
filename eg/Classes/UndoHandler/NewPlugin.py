@@ -40,6 +40,7 @@ class NewPlugin(NewItem):
         if pluginItem.executable:
             if pluginItem.NeedsStartupConfiguration():
                 if not eg.UndoHandler.Configure(document).Do(pluginItem, True):
+                    pluginItem.info.persistentData.Remove()
                     eg.actionThread.Call(pluginItem.Delete)
                     return None
             eg.actionThread.Call(pluginItem.Execute)

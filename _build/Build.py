@@ -48,6 +48,7 @@ class MyBuilder(builder.Builder):
         "pkg_resources",
         "pythoncom",
         "pywin32",
+        "six",
         "win32com",
         "wx",
     ]

@@ -111,6 +111,7 @@ class LogCtrl(wx.ListCtrl):
         self.isOdd = False
         self.data = collections.deque()
         eg.log.SetCtrl(self)
+        wx.CallAfter(self.SetData, eg.log.GetData())
 
     if eg.debugLevel:
         @eg.LogIt
