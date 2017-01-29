@@ -17,10 +17,11 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-import wx
+from os import listdir
 from os.path import abspath, dirname, join
 
-# Local imports
+import wx
+
 import eg
 from eg.WinApi.Dynamic import (
     CreateEvent,
@@ -40,6 +41,8 @@ SKIN_DIR = join(
     abspath(dirname(__file__.decode('mbcs'))),
     "OsdSkins"
 )
+SKINS = [name[:-3] for name in listdir(SKIN_DIR) if name.endswith(".py")]
+SKINS.sort()
 
 DEFAULT_FONT_INFO = wx.Font(
     18,
@@ -47,6 +50,7 @@ DEFAULT_FONT_INFO = wx.Font(
     wx.NORMAL,
     wx.BOLD
 ).GetNativeFontInfoDesc()
+
 
 class ShowOSD(eg.ActionBase):
     name = "Show OSD"
@@ -79,17 +83,19 @@ class ShowOSD(eg.ActionBase):
         skin = "Use skin"
 
     def __call__(
-        self,
-        osdText="",
-        fontInfo=None,
-        foregroundColour=(255, 255, 255),
-        backgroundColour=(0, 0, 0),
-        alignment=0,
-        offset=(0, 0),
-        displayNumber=0,
-        timeout=3.0,
-        skin=None
+            self,
+            osdText="",
+            fontInfo=None,
+            foregroundColour=(255, 255, 255),
+            backgroundColour=(0, 0, 0),
+            alignment=0,
+            offset=(0, 0),
+            displayNumber=0,
+            timeout=3.0,
+            skin=None
     ):
+        if isinstance(skin, bool):
+            skin = SKINS[0] if skin else None
         self.osdFrame.timer.cancel()
         osdText = eg.ParseString(osdText)
         event = CreateEvent(None, 0, 0, None)
@@ -109,17 +115,19 @@ class ShowOSD(eg.ActionBase):
         eg.actionThread.WaitOnEvent(event)
 
     def Configure(
-        self,
-        osdText="",
-        fontInfo=None,
-        foregroundColour=(255, 255, 255),
-        backgroundColour=(0, 0, 0),
-        alignment=0,
-        offset=(0, 0),
-        displayNumber=0,
-        timeout=3.0,
-        skin=None,
+            self,
+            osdText="",
+            fontInfo=None,
+            foregroundColour=(255, 255, 255),
+            backgroundColour=(0, 0, 0),
+            alignment=0,
+            offset=(0, 0),
+            displayNumber=0,
+            timeout=3.0,
+            skin=None,
     ):
+        if isinstance(skin, bool):
+            skin = SKINS[0] if skin else None
         if fontInfo is None:
             fontInfo = DEFAULT_FONT_INFO
         panel = eg.ConfigPanel()
@@ -148,9 +156,13 @@ class ShowOSD(eg.ActionBase):
         )
 
         backgroundColourButton = panel.ColourSelectButton(tmpColour)
-        if backgroundColour is None:
-            backgroundColourButton.Enable(False)
-        skinCtrl = panel.CheckBox(bool(skin), text.skin)
+        backgroundColourButton.Enable(backgroundColour is not None)
+
+        useSkin = skin is not None
+        skinCtrl = panel.CheckBox(useSkin, text.skin)
+        skinCtrl.SetValue(useSkin)
+        skinChc = panel.Choice(SKINS.index(skin) if skin else 0, SKINS)
+        skinChc.Enable(useSkin)
 
         sizer = wx.GridBagSizer(5, 5)
         expand = wx.EXPAND
@@ -165,6 +177,7 @@ class ShowOSD(eg.ActionBase):
             (outlineCheckBox, (3, 3), (1, 1), expand),
             (backgroundColourButton, (3, 4)),
             (skinCtrl, (4, 3)),
+            (skinChc, (4, 4), (1, 1), expand),
             (panel.StaticText(text.alignment), (1, 0), (1, 1), align),
             (alignmentChoice, (1, 1), (1, 1), expand),
             (panel.StaticText(text.display), (2, 0), (1, 1), align),
@@ -181,17 +194,26 @@ class ShowOSD(eg.ActionBase):
         sizer.AddGrowableCol(2)
         panel.sizer.Add(sizer, 1, wx.EXPAND)
 
-        def OnCheckBox(event):
+        def OnCheckBoxBGColour(event):
             backgroundColourButton.Enable(outlineCheckBox.IsChecked())
             event.Skip()
+        outlineCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBoxBGColour)
 
-        outlineCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
+        def OnCheckBoxSkin(event):
+            skinChc.Enable(skinCtrl.IsChecked())
+            event.Skip()
+        skinCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBoxSkin)
 
         while panel.Affirmed():
             if outlineCheckBox.IsChecked():
                 outlineColour = backgroundColourButton.GetValue()
             else:
                 outlineColour = None
+            if skinCtrl.IsChecked():
+                skin = skinChc.GetStringSelection()
+            else:
+                skin = None
+
             panel.SetResult(
                 editTextCtrl.GetValue(),
                 fontButton.GetValue(),
@@ -201,7 +223,7 @@ class ShowOSD(eg.ActionBase):
                 (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
                 displayChoice.GetValue(),
                 timeCtrl.GetValue(),
-                skinCtrl.GetValue()
+                skin
             )
 
     def GetLabel(self, osdText, *dummyArgs):
@@ -215,14 +237,15 @@ class ShowOSD(eg.ActionBase):
             def CloseOSD():
                 cls.osdFrame.timer.cancel()
                 cls.osdFrame.Close()
+
             eg.app.onExitFuncs.append(CloseOSD)
 
         wx.CallAfter(MakeOSD)
 
     @eg.LogIt
     def OnClose(self):
-        #self.osdFrame.timer.cancel()
-        #wx.CallAfter(self.osdFrame.Close)
+        # self.osdFrame.timer.cancel()
+        # wx.CallAfter(self.osdFrame.Close)
         self.osdFrame = None
 
 
@@ -230,6 +253,7 @@ class OSDFrame(wx.Frame):
     """
     A shaped frame to display the OSD.
     """
+
     @eg.LogIt
     def __init__(self, parent):
         wx.Frame.__init__(
@@ -257,21 +281,22 @@ class OSDFrame(wx.Frame):
         def __del__(self):
             pass
 
+    @staticmethod
     def GetSkinnedBitmap(
-        self,
-        textLines,
-        textWidths,
-        textHeights,
-        textWidth,
-        textHeight,
-        memoryDC,
-        textColour,
-        skinName
+            textLines,
+            textWidths,
+            textHeights,
+            textWidth,
+            textHeight,
+            memoryDC,
+            textColour,
+            skinName
     ):
         image = wx.Image(join(SKIN_DIR, skinName + ".png"))
         option = eg.Bunch()
 
-        def Setup(minWidth, minHeight, xMargin, yMargin, transparentColour):
+        def Setup(minWidth, minHeight, xMargin, yMargin,
+                  transparentColour=None):
             width = textWidth + 2 * xMargin
             if width < minWidth:
                 width = minWidth
@@ -328,17 +353,17 @@ class OSDFrame(wx.Frame):
 
     @eg.LogIt
     def ShowOSD(
-        self,
-        osdText="",
-        fontInfo=None,
-        textColour=(255, 255, 255),
-        outlineColour=(0, 0, 0),
-        alignment=0,
-        offset=(0, 0),
-        displayNumber=0,
-        timeout=3.0,
-        event=None,
-        skin=None,
+            self,
+            osdText="",
+            fontInfo=None,
+            textColour=(255, 255, 255),
+            outlineColour=(0, 0, 0),
+            alignment=0,
+            offset=(0, 0),
+            displayNumber=0,
+            timeout=3.0,
+            event=None,
+            skin=None,
     ):
         self.timer.cancel()
         if osdText.strip() == "":
@@ -347,7 +372,7 @@ class OSDFrame(wx.Frame):
             SetEvent(event)
             return
 
-        #self.Freeze()
+        # self.Freeze()
         memoryDC = wx.MemoryDC()
 
         # make sure the mask colour is not used by foreground or
@@ -381,7 +406,7 @@ class OSDFrame(wx.Frame):
                 textHeight,
                 memoryDC,
                 textColour,
-                "Default"
+                skin
             )
             width, height = bitmap.GetSize()
         elif outlineColour is None:
@@ -468,11 +493,14 @@ class OSDFrame(wx.Frame):
 def AlignLeft(width, offset):
     return offset
 
+
 def AlignCenter(width, offset):
     return (width / 2) + offset
 
+
 def AlignRight(width, offset):
     return width - offset
+
 
 ALIGNMENT_FUNCS = (
     (AlignLeft, AlignLeft),  # Top Left
@@ -485,6 +513,7 @@ ALIGNMENT_FUNCS = (
     (AlignLeft, AlignCenter),  # Left Center
     (AlignRight, AlignCenter),  # Right Center
 )
+
 
 def DrawTextLines(deviceContext, textLines, textHeights, xOffset=0, yOffset=0):
     for i, textLine in enumerate(textLines):

@@ -129,7 +129,7 @@ class CheckSourceCode(builder.Task):
         sourceFile = open(path, "rt")
         for line in sourceFile.readlines():
             if len(line.rstrip()) > 79:
-                print "line to long", path, line.rstrip()
+                print "line too long", path, line.rstrip()
                 return
 
     def FixTrailingWhitespace(self, path):

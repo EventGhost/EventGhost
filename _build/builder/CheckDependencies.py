@@ -174,9 +174,9 @@ class ModuleDependency(DependencyBase):
 
 
 class PyWin32Dependency(DependencyBase):
-    name = "pywin32"
-    version = "220"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
+    name = "pypiwin32"
+    version = "219"
+    # url = "https://pypi.python.org/pypi/pypiwin32"
 
     def Check(self):
         versionFilePath = join(

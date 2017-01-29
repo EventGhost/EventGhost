@@ -170,6 +170,9 @@ class AddEventDialog(eg.TaskletDialog):
         self.nameText.SetLabel(Text.userEventLabel)
         self.docText.SetBasePath("")
         self.docText.SetPage(Text.userEvent)
+        self.resultData = None
+        self.buttonRow.okButton.Enable(False)
+
         event.Skip()
 
     @eg.LogItWithReturn
@@ -221,15 +224,36 @@ class AddEventDialog(eg.TaskletDialog):
         if value:
             self.resultData = value
             self.buttonRow.okButton.Enable(True)
-        else:
-            self.resultData = None
-            self.buttonRow.okButton.Enable(False)
+            wx.CallAfter(self.buttonRow.okButton.SetFocus)
 
     def ReloadTree(self):
+        global gLastSelected
         tree = self.tree
         tree.DeleteAllItems()
         self.root = tree.AddRoot("Functions")
         self.FillTree()
+
+        if gLastSelected:
+            item = self.FindItemByText(gLastSelected.name)
+            if item.IsOk():
+                tree.EnsureVisible(item)
+                tree.SelectItem(item)
+
+    def FindItemByText(self, text):
+        tree = self.tree
+
+        def FindItem(item, text):
+            subItem, cookie = tree.GetFirstChild(item)
+            while subItem.IsOk():
+                if tree.GetItemData(subItem).Data.name == text:
+                    return subItem
+                FindItem(subItem, text)
+                subItem = tree.GetNextSibling(subItem)
+            return wx.TreeItemId()
+
+        item, cookie = tree.GetFirstChild(tree.GetRootItem())
+        return FindItem(item, text)
+
 
 class EventInfo:
     icon = eg.Icons.EVENT_ICON
