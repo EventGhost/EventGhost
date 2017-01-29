@@ -29,7 +29,6 @@ from wx.lib.agw import customtreectrl
 
 # Local imports
 import eg
-from eg.Icons import PilToBitmap, StreamToPil
 from eg.Classes.Dialog import Dialog
 from eg.Utils import (
     DecodeMarkdown,
@@ -106,7 +105,6 @@ def GetAttributeFlags(path, name, flags=''):
     if res:
         res = getattr(Text, res[:1].lower() + res[1:])
         res += pathType
-
     elif flags:
         res = Text.parent + flags
 
@@ -178,11 +176,12 @@ class PluginInstall(object):
                 for key in ff.keys():
                     if key in ('flags', 'sourcePath', 'st'):
                         continue
+                    src = os.path.join(path, key)
+                    dst = os.path.join(baseName, src[len(sourcePath) + 1:])
                     if isinstance(ff[key], dict) and ff[key]['flags']:
+                        zipfile.write(src, dst)
                         WriteFiles(ff[key], os.path.join(path, key))
                     elif isinstance(ff[key], bool) and ff[key]:
-                        src = os.path.join(path, key)
-                        dst = os.path.join(baseName, src[len(sourcePath) + 1:])
                         zipfile.write(src, dst)
 
             WriteFiles(fileFolders, sourcePath)
@@ -423,7 +422,6 @@ class HiddenSystemDialog(wx.Dialog):
             style=wx.SUNKEN_BORDER,
             agwStyle=(
                 customtreectrl.TR_ALIGN_WINDOWS_RIGHT
-                | customtreectrl.TR_TWIST_BUTTONS
                 | customtreectrl.TR_HAS_BUTTONS
                 | customtreectrl.TR_HAS_VARIABLE_ROW_HEIGHT
                 | customtreectrl.TR_FULL_ROW_HIGHLIGHT
@@ -445,6 +443,13 @@ class HiddenSystemDialog(wx.Dialog):
         self.SetSizer(sizer)
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
 
+        self.imageList = wx.ImageList(16, 16)
+        self.imageDict = dict(
+            folder=self.imageList.Add(eg.Icons.FOLDER_ICON.GetBitmap()),
+            empty=self.imageList.Add(eg.Icons.GetInternalBitmap("New"))
+        )
+        self.tree.SetImageList(self.imageList)
+
         self.FillTree()
         tree.Bind(customtreectrl.EVT_TREE_ITEM_CHECKED, self.OnItemCheck)
 
@@ -452,9 +457,63 @@ class HiddenSystemDialog(wx.Dialog):
         self.SendSizeEvent()
         wx.Dialog.ShowModal(self, *args, **kwargs)
 
+    def GetImageIndex(self, pathName, fileName):
+        """
+        Return an index to an image in the image list of the treecontrol
+        for a given file based on the file type. If the image is not already
+        in the list, add it.
+
+        :type pathName: str or unicode
+        :param pathName: base path name
+        :type fileName: str or unicode
+        :param fileName: file or folder name
+
+        :rtype: int
+        :return: index to image in image list
+        """
+
+        fullName = os.path.join(pathName, fileName)
+        if os.path.isdir(fullName):
+            return self.imageDict["folder"]
+
+        extension = os.path.splitext(fileName)[1]
+        if not extension:
+            return self.imageDict["empty"]
+        if extension in self.imageDict:
+            return self.imageDict[extension]
+
+        fileType = wx.TheMimeTypesManager.GetFileTypeFromExtension(extension)
+        if not fileType:
+            icon = wx.IconFromLocation(wx.IconLocation(fullName))
+            if not icon.IsOk():
+                return self.imageDict["empty"]
+            return self.imageList.Add(icon)
+
+        info = fileType.GetIconInfo()
+        icon = None
+        if info:
+            icon, file, idx = info
+            if not icon.IsOk():
+                icon = None
+        if not icon:
+            icon = wx.IconFromLocation(wx.IconLocation(fullName))
+            if not icon.IsOk():
+                command = fileType.GetOpenCommand(fullName)
+                command = " ".join(command.split()[0:-1])
+                command = command.replace('"', "")
+                if " -" in command:
+                    command = command[0:command.index(" -")]
+
+                icon = wx.IconFromLocation(wx.IconLocation(command))
+                if not icon.IsOk():
+                    return self.imageDict["empty"]
+
+        idx = self.imageDict[extension] = self.imageList.AddIcon(icon)
+        return idx
+
     def FillTree(self):
 
-        def ReadFileFolders(ff, parent, stWidgets=None):
+        def ReadFileFolders(ff, parent, stWidgets=None, path=''):
             for key in sorted(ff.keys()):
                 if key in ('flags', 'sourcePath', 'st'):
                     continue
@@ -466,24 +525,29 @@ class HiddenSystemDialog(wx.Dialog):
                             1,
                             ff[key]['st']
                         )
-
+                        child.SetImage(0, wx.TreeItemIcon_Normal)
                         self.tree.SetPyData(child, ff[key])
 
                         ff[key]['flags'] = not bool(ff[key]['flags'])
                         self.tree.CheckItem(child, ff[key]['flags'])
-
                     else:
                         child = None
                         st = wx.StaticText(self.tree, -1, ff[key]['flags'])
                         stWidgets += (st,)
                         ff[key]['st'] = st
 
-                    stWidgets = ReadFileFolders(ff[key], child, stWidgets)
+                    stWidgets = ReadFileFolders(
+                        ff[key], child, stWidgets, os.path.join(path, key)
+                    )
                 else:
                     if stWidgets is None:
                         flag, st = ff[key]
                         ff[key] = not bool(flag)
                         child = self.tree.AppendItem(parent, key, 1, st)
+                        child.SetImage(
+                            self.GetImageIndex(path, key),
+                            wx.TreeItemIcon_Normal
+                        )
                         self.tree.SetPyData(child, ff[key])
                         self.tree.CheckItem(child, ff[key])
                     else:
@@ -503,7 +567,9 @@ class HiddenSystemDialog(wx.Dialog):
                 return wx.Size(*size)
             setattr(widget, 'GetSize', GetSize)
 
-        ReadFileFolders(self.fileFolders, root)
+        ReadFileFolders(
+            self.fileFolders, root, path=self.fileFolders['sourcePath']
+        )
 
         self.tree.Expand(root)
         self.tree.ExpandAllChildren(root)
