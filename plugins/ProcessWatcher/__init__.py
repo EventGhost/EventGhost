@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import eg
+
+
 eg.RegisterPlugin(
     name = "Process Watcher",
     author = (
@@ -44,9 +47,9 @@ eg.RegisterPlugin(
     ),
 )
 
+import wx
+
 from eg.cFunctions import GetProcessDict
-from threading import Thread
-from time import sleep
 from os.path import splitext
 import threading
 from eg.WinApi.Dynamic import (
@@ -55,32 +58,185 @@ from eg.WinApi.Dynamic import (
     PulseEvent,
 )
 
+
+class Text(eg.TranslatableStrings):
+
+    pollLbl = 'Default Poll Interval:'
+    resetMessage = 'ProcessWatcher: Setting poll interval %.2f back to %.2f'
+    changeMessage = (
+        'ProcessWatcher: Setting poll interval %.2f for %.2f seconds'
+    )
+    startMessage = 'ProcessWatcher: Watching..'
+    stopMessage = 'ProcessWatcher: Not Watching..'
+
+    class PollInterval:
+        name = 'Change Poll Interval'
+        description = (
+            'Sets the duration of time between checking the process list for '
+            'changes'
+        )
+        pollLbl = 'New Poll Interval:'
+        durationLbl = 'Interval Duration:'
+        descLbl = (
+            '\n\nHow long to keep the new polling interval set for.\n'
+            'Set to 0 to keep indefinitely\n\n'
+        )
+
+
+class PollInterval(eg.ActionBase):
+
+    def __call__(self, pollInterval, duration):
+
+        self.plugin.SetInterval(pollInterval, duration)
+
+    def GetLabel(self, pollInterval, duration):
+        return Text.changeMessage % (pollInterval, duration)
+        
+    def Configure(self, pollInterval=None, duration=0.0):
+
+        if pollInterval is None:
+            pollInterval = self.plugin._defaultInterval
+
+        text = self.text
+        panel = eg.ConfigPanel()
+
+        pollST = panel.StaticText(text.pollLbl)
+        pollCtrl = panel.SpinNumCtrl(
+            pollInterval,
+            min=0.05,
+            max=1.0,
+            increment=0.05
+        )
+        durationDesc = panel.StaticText(text.descLbl)
+        durationST = panel.StaticText(text.durationLbl)
+        durationCtrl = panel.SpinNumCtrl(
+            duration,
+            min=0.0,
+            increment=0.05
+        )
+
+        pollSizer = wx.BoxSizer(wx.HORIZONTAL)
+        durationSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        pollSizer.Add(pollST, 0, wx.EXPAND | wx.ALL, 10)
+        pollSizer.Add(pollCtrl, 0, wx.EXPAND | wx.ALL, 10)
+
+        durationSizer.Add(durationST, 0, wx.EXPAND | wx.ALL, 10)
+        durationSizer.Add(durationCtrl, 0, wx.EXPAND | wx.ALL, 10)
+
+        panel.sizer.Add(pollSizer, 0, wx.EXPAND)
+        panel.sizer.Add(durationDesc, 0, wx.EXPAND | wx.ALL, 10)
+        panel.sizer.Add(durationSizer, 0, wx.EXPAND)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                pollCtrl.GetValue(),
+                durationCtrl.GetValue()
+            )
+
+
 class Process(eg.PluginClass):
 
-    def __start__(self):
+    text = Text
+
+    def __init__(self):
+        self.AddAction(PollInterval)
+        self._threadEvent = threading.Event()
+        self._pollInterval = 0.1
+        self._resetIntervalTimer = None
+        self._defaultInterval = 0.1
+
+    def __start__(self, pollInterval=0.1):
+
+        while self._threadEvent.isSet():
+            pass
+
+        self._pollInterval = pollInterval
+        self._defaultInterval = pollInterval
+
         self.stopEvent = CreateEvent(None, 1, 0, None)
         self.startException = None
+
         startupEvent = threading.Event()
+
         self.thread = threading.Thread(
             target=self.ThreadLoop,
             name="ProcessWatcherThread",
             args=(startupEvent,)
         )
+
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:
             raise self.Exception(self.startException)
 
     def __stop__(self):
+        self.StopIntervalTimer()
+
         if self.thread is not None:
+            self._threadEvent.set()
             PulseEvent(self.stopEvent)
             self.thread.join(5.0)
+
+    def ResetInterval(self):
+        eg.Print(
+            self.text.resetMessage %
+            (self._pollInterval, self._defaultInterval)
+        )
+        self._pollInterval = self._defaultInterval
+        self._resetIntervalTimer = None
+
+    def StopIntervalTimer(self):
+        try:
+            self._resetIntervalTimer.stop()
+        except AttributeError:
+            pass
+        self._resetIntervalTimer = None
+
+    def SetInterval(self, pollInterval, duration):
+        eg.Print(
+            self.text.changeMessage %
+            (pollInterval, duration)
+        )
+        self._pollInterval = pollInterval
+        self.StopIntervalTimer()
+        if duration:
+            self._resetIntervalTimer = threading.Timer(
+                duration,
+                self.ResetInterval
+            )
+            self._resetIntervalTimer.start()
+
+    def Configure(self, pollInterval=0.1):
+        text = self.text
+        panel = eg.ConfigPanel()
+
+        pollST = panel.StaticText(text.pollLbl)
+        pollCtrl = panel.SpinNumCtrl(
+            pollInterval,
+            min=0.05,
+            max=1.0,
+            increment=0.05
+        )
+
+        pollSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        pollSizer.Add(pollST, 0, wx.EXPAND | wx.ALL, 10)
+        pollSizer.Add(pollCtrl, 0, wx.EXPAND | wx.ALL, 10)
+        panel.sizer.Add(pollSizer, 0, wx.EXPAND)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                pollCtrl.GetValue()
+            )
 
     def ThreadLoop(self, stopThreadEvent):
         oldProcesses = GetProcessDict()
         oldPids = set(oldProcesses.iterkeys())
 
-        while True:
+        eg.Print(self.text.startMessage)
+
+        while not self._threadEvent.isSet():
             newProcesses = GetProcessDict()
             newPids = set(newProcesses.iterkeys())
             for pid in newPids.difference(oldPids):
@@ -91,4 +247,6 @@ class Process(eg.PluginClass):
                 eg.TriggerEvent("Destroyed." + name, prefix="Process")
             oldProcesses = newProcesses
             oldPids = newPids
-            sleep(0.1)
+            self._threadEvent.wait(self._pollInterval)
+        self._threadEvent.clear()
+        eg.Print(self.text.stopMessage)
