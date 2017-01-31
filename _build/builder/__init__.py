@@ -119,7 +119,10 @@ class Builder(object):
             if type(e) is ValueError:
                 msg = "WARNING: Specified `github.token` is invalid!\n" + msg
             if not IsCIBuild():
+                token = ""
                 print msg
+            else:
+                token = os.environ["GITHUB_TOKEN"]
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {
@@ -131,7 +134,7 @@ class Builder(object):
                 "branch": "master",
                 "repo": "EventGhost",
                 "repo_full": "EventGhost/EventGhost",
-                "token": "",
+                "token": token
                 "user": "EventGhost",
             }
 
