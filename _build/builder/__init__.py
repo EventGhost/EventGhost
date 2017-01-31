@@ -134,7 +134,7 @@ class Builder(object):
                 "branch": "master",
                 "repo": "EventGhost",
                 "repo_full": "EventGhost/EventGhost",
-                "token": token
+                "token": token,
                 "user": "EventGhost",
             }
 
