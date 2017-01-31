@@ -313,7 +313,7 @@ class Execute(eg.ActionBase):
 
         def OnPathnameChanged(evt = None):
             path = filepathCtrl.GetValue().upper()
-            if path.endswith(PATHEXT) and not isdir(path):
+            if not isdir(path):
                 enable = True
             else:
                 enable = False
