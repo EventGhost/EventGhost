@@ -37,6 +37,10 @@ class BuildChangelog(builder.Task):
             self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
+        if not self.buildSetup.gitConfig["token"]:
+            print "WARNING: Skipping changelog build due to invalid token."
+            return
+
         buildSetup = self.buildSetup
         changelog_path = join(buildSetup.outputDir, "CHANGELOG.md")
         copy2(
@@ -44,18 +48,15 @@ class BuildChangelog(builder.Task):
             changelog_path
         )
 
+        token = buildSetup.gitConfig["token"]
         user = buildSetup.gitConfig["user"]
         repo = buildSetup.gitConfig["repo"]
         branch = buildSetup.gitConfig["branch"]
 
-        gh = GitHub()
+        gh = GitHub(token=token)
         rc, data = gh.repos[user][repo].git.refs.tags.get()
         if rc != 200:
-            raise BuildError(
-                "Couldn't build changelog.\nError {0}: {1}".format(
-                    rc, data["message"]
-                )
-            )
+            raise BuildError("Couldn't get tags, probably due to invalid token.")
         to_commits = [i["object"]["sha"] for i in data]
 
         # get commits since last release
