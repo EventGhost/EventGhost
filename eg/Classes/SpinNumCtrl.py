@@ -76,15 +76,18 @@ class SpinNumCtrl(wx.Window):
         numCtrl = masked.NumCtrl(
             self,
             -1,
-            value,
+            0, # Can't set value here, to avoid bug in NumCtrl
             pos,
             size,
             style,
             validator,
             name,
             allowNone=True,
-            **kwargs
+            # **kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
+        numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
+        numCtrl.SetValue(value)  # To avoid bug in NumCtrl
+        numCtrl.SetMin(minValue)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
@@ -160,7 +163,7 @@ class SpinNumCtrl(wx.Window):
         This is the function that gets called in response to up/down arrow or
         bound spin button events.
         """
-        
+
         # Ensure adjusted control regains focus and has adjusted portion
         # selected:
         numCtrl = self.numCtrl
