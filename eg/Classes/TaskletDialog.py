@@ -162,7 +162,6 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             self.Configure(*args, **kwargs)
         except:
             eg.PrintTraceback()
-
         self.__done = True
         self.__resultsChannel.send((None, None))
         self.Destroy()
