@@ -87,7 +87,6 @@ class SpinNumCtrl(wx.Window):
         )
         numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
         numCtrl.SetValue(value)  # To avoid bug in NumCtrl
-        numCtrl.SetMin(minValue)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
