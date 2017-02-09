@@ -799,6 +799,8 @@ class TreeCtrl(wx.TreeCtrl):
         """
         if node not in self.visibleNodes:
             path = node.GetPath()
+            if path is None:
+                return
             parent = self.root
             for pos in path[:-1]:
                 childNode = parent.childs[pos]

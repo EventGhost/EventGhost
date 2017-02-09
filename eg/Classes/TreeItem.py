@@ -68,7 +68,7 @@ class TreeItem(object):
             self.guid = eg.GUID.NewId(self)
         else:
             self.guid = eg.GUID.AddId(self, guid)
-            
+
         if isinstance(self.name, str):
             self.name = unicode(self.name, "utf8")
         self.isEnabled = not get('enabled') == "False"
@@ -279,6 +279,8 @@ class TreeItem(object):
         path = []
         while item is not root:
             parent = item.parent
+            if parent is None:
+                return None
             path.append(parent.childs.index(item))
             item = parent
         path.reverse()
