@@ -136,35 +136,66 @@ class BuildChangelog(builder.Task):
         releaseUrl = "https://github.com/{0}/{1}/releases/tag/v{2}".format(
             user, repo, buildSetup.appVersion
         )
-
-        changes = ["## [{0}]({1}) ({2})\n".format(
-            buildSetup.appVersion,
-            releaseUrl,
-            buildDate,
-        )]
+        changes = dict(
+            md = ["## [{0}]({1}) ({2})\n".format(
+                buildSetup.appVersion,
+                releaseUrl,
+                buildDate
+            )],
+            bb = ["[size=150][b][url={0}]{1}[/url] ({2})[/b][/size]\n".format(
+                releaseUrl,
+                buildSetup.appVersion,
+                buildDate
+            )]
+        )
         print "## {0} ({1})".format(buildSetup.appVersion, buildDate)
         for title, items in prs.iteritems():
             if items:
-                changes.append("\n**{0}:**\n\n".format(title))
+                changes['md'].append("\n**{0}:**\n\n".format(title))
+                changes['bb'].append("\n[b]{0}:[/b]\n\[list]\n".format(title))
                 print "\n{0}:\n".format(title)
                 for pr in items:
-                    changes.append("* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
-                        EscapeMarkdown(pr["title"]),
-                        pr["number"],
-                        pr["html_url"],
-                        EscapeMarkdown(pr["user"]["login"]),
-                        pr["user"]["html_url"],
-                    ))
+                    changes['md'].append(
+                        "* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
+                            EscapeMarkdown(pr["title"]),
+                            pr["number"],
+                            pr["html_url"],
+                            EscapeMarkdown(pr["user"]["login"]),
+                            pr["user"]["html_url"],
+                        )
+                    )
+                    changes['bb'].append(
+                        "[*] {0} [url={1}]{2}[/url] "
+                        "([url={3}]{4}[/url])\n".format(
+                            pr["title"],
+                            pr["html_url"],
+                            pr["number"],
+                            pr["user"]["html_url"],
+                            EscapeMarkdown(pr["user"]["login"])
+                        )
+                    )
                     print "* {0} #{1} ({2})".format(
                         pr["title"],
                         pr["number"],
                         pr["user"]["login"],
                     )
+                changes['bb'].append("[/list]\n")
 
-        if len(changes) == 1:
+        if len(changes['md']) == 1:
             text = "\nOnly minor changes in this release.\n"
-            changes.append(text)
+            changes['md'].append(text)
+            changes['bb'].append(text)
             print text.strip()
+
+        # write a changelog in bbcode for news section in forum
+        try:
+            fn = join(buildSetup.outputDir, "CHANGELOG.bb")
+            out = open(fn, "w")
+            out.writelines(changes['bb'])
+            out.close()
+        except:
+            print "failed bbcode"
+            pass
 
         # read the existing changelog...
         try:
