@@ -113,7 +113,6 @@ class MainFrame(wx.Frame):
                 aui.AUI_MGR_LIVE_RESIZE |
                 aui.AUI_MGR_ANIMATE_FRAMES |
                 aui.AUI_MGR_AERO_DOCKING_GUIDES |
-                aui.AUI_MGR_PREVIEW_MINIMIZED_PANES |
                 aui.AUI_MGR_SMOOTH_DOCKING |
                 aui.AUI_MGR_DEFAULT
             )
@@ -171,21 +170,29 @@ class MainFrame(wx.Frame):
                 if Config.perspective.find('name=toolBar') == -1:
                     treePane = auiManager.GetPane(self.treeCtrl)
                     logPane = auiManager.GetPane(self.logCtrl)
-                    toolBarPane = auiManager.GetPane(self.toolBar)
+
                     treeFloating = treePane.IsFloating()
                     logPane.Dock()
                     treePane.Dock()
-                    treePane.Floatable(True).Dockable(True).Right()
-                    logPane.Floatable(False).Center()
+                    auiManager.Update()
+
+                    self.SetPaneProperties()
+
+                    toolBarPane = auiManager.GetPane(self.toolBar)
                     toolBarPane.Show(False)
+                    toolBarPane.Show(Config.showToolbar)
+
                     if treeFloating:
                         treePane.Float()
-                    toolBarPane.Show(Config.showToolbar)
+
                     auiManager.Update()
                     Config.perspective = self.auiManager.SavePerspective()
                     eg.config.Save()
             except:
-                pass
+                self.SetPaneProperties()
+        else:
+            self.SetPaneProperties()
+
         artProvider = auiManager.GetArtProvider()
         artProvider.SetMetric(aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         artProvider.SetMetric(
@@ -257,6 +264,18 @@ class MainFrame(wx.Frame):
         def __del__(self):
             pass
 
+    def SetPaneProperties(self):
+        treePane = self.auiManager.GetPane(self.treeCtrl)
+        logPane = self.auiManager.GetPane(self.logCtrl)
+
+        treePane.MaximizeButton(True).MinimizeButton(True).Right()
+        treePane.CloseButton(False).Floatable(True).Dockable(True)
+
+        logPane.MaximizeButton(True).MinimizeButton(True).Center()
+        logPane.CloseButton(False).Floatable(False).Dockable(True)
+
+        self.auiManager.Update()
+
     def CreateLogCtrl(self):
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
@@ -266,8 +285,8 @@ class MainFrame(wx.Frame):
 
         pane = aui.AuiPaneInfo()
         pane.Name("logger").Caption(" " + Text.Logger.caption)
-        pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
-        pane.Floatable(False).Center().Dockable(False)
+        pane.Center().MinSize((100, 100))
+
         self.auiManager.AddPane(logCtrl, pane)
         self.auiManager.Update()
 
@@ -444,7 +463,7 @@ class MainFrame(wx.Frame):
 
         pane = aui.AuiPaneInfo()
         pane.Name("toolBar").Caption(" Toolbar").Top().Row(0)
-        pane.MaximizeButton(False).CloseButton(False)
+        pane.MaximizeButton(False).MinimizeButton(True).CloseButton(True)
         pane.Floatable(True).Dockable(True).ToolbarPane()
         self.auiManager.AddPane(toolBar, pane)
         self.auiManager.Update()
@@ -458,9 +477,9 @@ class MainFrame(wx.Frame):
         treeCtrl = TreeCtrl(self, document=self.document)
 
         pane = aui.AuiPaneInfo()
-        pane.Name("tree").Caption(" " + Text.Tree.caption).Right()
-        pane.MaximizeButton(True).CloseButton(False).MinSize((100, 100))
-        pane.Floatable(True).Dockable(True)
+        pane.Name("tree").Caption(" " + Text.Tree.caption)
+        pane.Right().MinSize((100, 100))
+
         self.auiManager.AddPane(treeCtrl, pane)
         self.auiManager.Update()
 
