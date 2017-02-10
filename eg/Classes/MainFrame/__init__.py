@@ -105,8 +105,19 @@ class MainFrame(wx.Frame):
         )
         self.SetMinSize((400, 200))
         document.frame = self
-        self.auiManager = auiManager = aui.AuiManager()
-        auiManager.SetManagedWindow(self)
+        self.auiManager = auiManager = aui.AuiManager(
+            self,
+            agwFlags=(
+                aui.AUI_MGR_ALLOW_ACTIVE_PANE |
+                aui.AUI_MGR_TRANSPARENT_DRAG |
+                aui.AUI_MGR_LIVE_RESIZE |
+                aui.AUI_MGR_ANIMATE_FRAMES |
+                aui.AUI_MGR_AERO_DOCKING_GUIDES |
+                aui.AUI_MGR_PREVIEW_MINIMIZED_PANES |
+                aui.AUI_MGR_SMOOTH_DOCKING |
+                aui.AUI_MGR_DEFAULT
+            )
+        )
 
         self.logCtrl, logPane = self.CreateLogCtrl()
         self.corConst = (
