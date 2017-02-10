@@ -126,7 +126,7 @@ class BuildChangelog(builder.Task):
                 prs[title_notice].append(pr)
             elif "enhancement" in labels:
                 prs[title_enhancement].append(pr)
-            elif "bug" in labels:
+            elif any(lbl in ["bug", "bugfix"] for lbl in labels):
                 prs[title_bug].append(pr)
             else:
                 prs[title_other].append(pr)
