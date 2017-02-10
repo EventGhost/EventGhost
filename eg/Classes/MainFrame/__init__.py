@@ -119,13 +119,13 @@ class MainFrame(wx.Frame):
             )
         )
 
-        self.logCtrl, logPane = self.CreateLogCtrl()
+        self.logCtrl = self.CreateLogCtrl()
         self.corConst = (
             self.logCtrl.GetWindowBorderSize()[0] +
             wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
         )
-        self.treeCtrl, treePane = self.CreateTreeCtrl()
-        self.toolBar, toolBarPane = self.CreateToolBar()
+        self.treeCtrl = self.CreateTreeCtrl()
+        self.toolBar = self.CreateToolBar()
         self.menuBar = self.CreateMenuBar()
         self.statusBar = StatusBar(self)
         self.SetStatusBar(self.statusBar)
@@ -169,14 +169,15 @@ class MainFrame(wx.Frame):
             try:
                 auiManager.LoadPerspective(Config.perspective, False)
                 if Config.perspective.find('name=toolBar') == -1:
+                    treePane = auiManager.GetPane(self.treeCtrl)
+                    logPane = auiManager.GetPane(self.logCtrl)
+                    toolBarPane = auiManager.GetPane(self.toolBar)
                     treeFloating = treePane.IsFloating()
                     logPane.Dock()
                     treePane.Dock()
-                    auiManager.Update()
                     treePane.Floatable(True).Dockable(True).Right()
                     logPane.Floatable(False).Center()
                     toolBarPane.Show(False)
-                    auiManager.Update()
                     if treeFloating:
                         treePane.Float()
                     toolBarPane.Show(Config.showToolbar)
@@ -271,7 +272,7 @@ class MainFrame(wx.Frame):
         self.auiManager.Update()
 
         logCtrl.Thaw()
-        return logCtrl, pane
+        return logCtrl
 
     def CreateMenuBar(self):
         """
@@ -451,7 +452,7 @@ class MainFrame(wx.Frame):
         pane.Show(Config.showToolbar)
         self.auiManager.Update()
 
-        return toolBar, pane
+        return toolBar
 
     def CreateTreeCtrl(self):
         treeCtrl = TreeCtrl(self, document=self.document)
@@ -464,7 +465,7 @@ class MainFrame(wx.Frame):
         self.auiManager.Update()
 
         treeCtrl.SetFocus()
-        return treeCtrl, pane
+        return treeCtrl
 
     def CreateTreePopupMenu(self):
         """
