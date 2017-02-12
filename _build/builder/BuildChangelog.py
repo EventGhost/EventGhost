@@ -221,7 +221,7 @@ class BuildChangelog(builder.Task):
                                    style=wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         else:
-            outfile.writelines(changes)
+            outfile.writelines(changes['md'])
             if old_changes:
                 outfile.write('\n\n')
                 outfile.write(old_changes)
