@@ -301,7 +301,7 @@ class Document(object):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
                     self.frame.Destroy()
-                    self.frame = None
+                    self.frame = eg.mainFrame = None
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
@@ -463,9 +463,10 @@ class Document(object):
     def ShowFrame(self):
         if self.reentrantLock.acquire(False):
             if self.frame is None:
-                self.frame = eg.MainFrame(self)
+                self.frame = eg.mainFrame = eg.MainFrame(self)
                 self.frame.Show()
-            self.frame.Raise()
+            else:
+                self.frame.Iconize(False)
             self.reentrantLock.release()
 
     def StartSession(self, filePath):
