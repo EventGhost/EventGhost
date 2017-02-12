@@ -152,7 +152,7 @@ class BuildChangelog(builder.Task):
         for title, items in prs.iteritems():
             if items:
                 changes['md'].append("\n**{0}:**\n\n".format(title))
-                changes['bb'].append("\n[b]{0}:[/b]\n\[list]\n".format(title))
+                changes['bb'].append("\n[b]{0}:[/b]\n[list]\n".format(title))
                 print "\n{0}:\n".format(title)
                 for pr in items:
                     changes['md'].append(
