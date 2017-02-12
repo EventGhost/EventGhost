@@ -187,14 +187,22 @@ class BuildChangelog(builder.Task):
             changes['bb'].append(text)
             print text.strip()
 
-        # write a changelog in bbcode for news section in forum
+        # write a changelog in bbcode for the news section in forum
         try:
-            fn = join(buildSetup.outputDir, "CHANGELOG.bb")
+            fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.bb")
             out = open(fn, "w")
             out.writelines(changes['bb'])
             out.close()
         except:
-            print "failed bbcode"
+            pass
+
+            # write a short changelog in markdown for release description
+        try:
+            fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.md")
+            out = open(fn, "w")
+            out.writelines(changes['md'][1:])
+            out.close()
+        except:
             pass
 
         # read the existing changelog...

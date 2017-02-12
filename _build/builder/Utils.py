@@ -369,7 +369,11 @@ def ParseVersion(ver):
     """
     Return string and tuple versions of the specified string.
     """
-    if not ver or ver == "0.0.0" or os.environ.get("APPVEYOR", False):
+    if (
+        not ver or ver == "0.0.0"
+        or os.environ.get("APPVEYOR", False)
+        and os.environ["APPVEYOR_REPO_TAG"] == "false"
+    ):
         return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), ("0",) * 6)
     else:
         match = re.search(
