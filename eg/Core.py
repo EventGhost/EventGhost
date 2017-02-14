@@ -89,6 +89,12 @@ eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
 eg.GUID = eg.GUID()
 
+
+class DummyPayload:
+    pass
+
+eg.DummyPayload = DummyPayload
+
 def _CommandEvent():
     """Generate new (CmdEvent, Binder) tuple
         e.g. MooCmdEvent, EVT_MOO = EgCommandEvent()

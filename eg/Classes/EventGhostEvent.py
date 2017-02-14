@@ -83,11 +83,18 @@ class EventGhostEvent(object):
     """
     skipEvent = False
 
-    def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
+    def __init__(
+        self,
+        suffix="",
+        payload=eg.DummyPayload,
+        prefix="Main",
+        source=eg
+    ):
         self.string = prefix + "." + suffix
         self.prefix = prefix
         self.suffix = suffix
-        self.payload = payload
+        if payload != eg.DummyPayload:
+            self.payload = payload
         self.source = source
         self.time = clock()
         self.isEnded = False

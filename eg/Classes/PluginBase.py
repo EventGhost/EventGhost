@@ -243,7 +243,11 @@ class PluginBase(object):
         """
         eg.PrintError(msg, source=self.info.treeItem)
 
-    def TriggerEnduringEvent(self, suffix, payload=None):
+    def TriggerEnduringEvent(
+        self,
+        suffix,
+        payload=eg.DummyPayload
+    ):
         """
         Trigger an enduring event.
 
@@ -268,7 +272,11 @@ class PluginBase(object):
             info.lastEvent = event
             return event
 
-    def TriggerEvent(self, suffix, payload=None):
+    def TriggerEvent(
+        self,
+        suffix,
+        payload=eg.DummyPayload
+    ):
         """
         Trigger an event.
 
