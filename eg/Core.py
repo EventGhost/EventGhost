@@ -90,10 +90,10 @@ eg.folderPath = eg.FolderPath()
 eg.GUID = eg.GUID()
 
 
-class DummyPayload:
+class NoPayloadData:
     pass
 
-eg.DummyPayload = DummyPayload
+eg.NoPayloadData = NoPayloadData
 
 def _CommandEvent():
     """Generate new (CmdEvent, Binder) tuple

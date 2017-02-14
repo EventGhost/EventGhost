@@ -246,7 +246,7 @@ class PluginBase(object):
     def TriggerEnduringEvent(
         self,
         suffix,
-        payload=eg.DummyPayload
+        payload=eg.NoPayloadData
     ):
         """
         Trigger an enduring event.
@@ -275,7 +275,7 @@ class PluginBase(object):
     def TriggerEvent(
         self,
         suffix,
-        payload=eg.DummyPayload
+        payload=eg.NoPayloadData
     ):
         """
         Trigger an event.

@@ -131,12 +131,13 @@ class Log(object):
         """
         Store and display an EventGhostEvent in the logger.
         """
+        payload = event.payload
         eventstring = event.string
-        if hasattr(event, 'payload'):
-            if type(event.payload) == UnicodeType:
-                mesg = eventstring + ' u"' + event.payload + '"'
+        if payload != event.NoPayloadData:
+            if type(payload) == UnicodeType:
+                mesg = eventstring + ' u"' + payload + '"'
             else:
-                mesg = eventstring + ' ' + repr(event.payload)
+                mesg = eventstring + ' ' + repr(payload)
         else:
             mesg = eventstring
         self.Write(mesg + "\n", eg.EventItem.icon, eventstring)
