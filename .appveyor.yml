@@ -35,7 +35,7 @@ install:
       " "
       $InnoInstaller = $BuildFolder + "is-unicode.exe"
       If ((Test-Path $InnoInstaller) -eq $False) {
-        $InnoURL = "http://www.innosetup.com/download.php/is-unicode.exe"
+        $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
         Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller
       }
       & $InnoInstaller "/SP" "/VERYSILENT" "/SUPPRESSMSGBOXES" "/NORESTART" "/RESTARTAPPLICATIONS" "/NOICONS"
@@ -94,7 +94,7 @@ install:
 
       $CTypesLib = $SitePackages + "ctypeslib"
       If ((Test-Path $CTypesLib) -eq $False) {
-        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#egg=ctypeslib-dev"
+        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
       }
 
       $Sphinx = $SitePackages + "sphinx"
