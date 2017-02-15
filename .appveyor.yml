@@ -94,7 +94,7 @@ install:
 
       $CTypesLib = $SitePackages + "ctypeslib"
       If ((Test-Path $CTypesLib) -eq $False) {
-        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
+        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#egg=ctypeslib-0.5.6"
       }
 
       $Sphinx = $SitePackages + "sphinx"
