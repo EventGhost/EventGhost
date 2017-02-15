@@ -7,45 +7,127 @@ version: '{build}-{branch}'
 environment:
   matrix:
     - PYTHON: 'C:\\Python27'
-    
+
 cache:
   - '%PYTHON%\Lib\site-packages'
+  - '%PYTHON%\Scripts'
+  - '%APPVEYOR_BUILD_FOLDER%\_build\installers\'
 
 install:
   # - ps: Start-FileDownload "https://github.com/appveyor/ci/raw/master/scripts/enable-rdp.ps1" -Timeout 60000
   # - enable-rdp.ps1
-    
+
   # HTML Help Workshop 1.32
   # - cinst html-help-workshop
-  
+
   # Microsoft Visual C++ Redistributable 2008 (version min: 9.0.21022.8)
   # - cinst vcredist2008
 
   - cmd: if not exist _build\installers md _build\installers
 
-  - ps: Start-FileDownload "http://www.innosetup.com/download.php/is-unicode.exe" -Timeout 60000 -FileName "_build\installers\is-unicode.exe"
-  - cmd: _build\installers\is-unicode.exe /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS
+  # --------------Downloads and Installs--------------
+  - ps: |
+      $BuildFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
+      $SitePackages = $Env:PYTHON + "\Lib\site-packages\"
 
-  - ps: Start-FileDownload "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi" -Timeout 60000 -FileName "_build\installers\stackless-setup.msi"
-  - cmd: _build\installers\stackless-setup.msi /quiet /passive /qn /norestart
+      " "
+      "------------ Installing  Inno Setup ------------"
+      " "
+      $InnoInstaller = $BuildFolder + "is-unicode.exe"
+      If ((Test-Path $InnoInstaller) -eq $False) {
+        $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
+        Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller
+      }
+      & $InnoInstaller "/SP" "/VERYSILENT" "/SUPPRESSMSGBOXES" "/NORESTART" "/RESTARTAPPLICATIONS" "/NOICONS"
 
-  - cmd: pip install commonmark==0.7.2
-  - cmd: pip install future==0.16.0
-  - cmd: pip install pillow==3.4.2
-  - cmd: pip install py2exe_py2==0.6.9
-  - cmd: pip install sphinx==1.4.8
-  - cmd: pip install https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl
-  - cmd: pip install https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl
-  - cmd: pip install https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl
-  - cmd: pip install https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl
+      " "
+      "----- Installing Stackless Python 2.7 x32 ------"
+      " "
+      $PythonInstaller = $BuildFolder + "stackless-setup.msi"
+      If ((Test-Path $PythonInstaller) -eq $False) {
 
-  # jinja2 >= 2.9 has an async module which py2exe has problems with (build of eg will fail)
-  - cmd: pip install jinja2==2.8.1
+        $PythonURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
+        Start-FileDownload $PythonURL -Timeout 60000 -FileName $PythonInstaller
 
-  # comtypes==1.1.3
-  #   Could not find a version that satisfies the requirement comtypes==1.1.3 (from versions: 0.6.4, 1.0.0, 1.1.0, 1.1.1, 1.1.3.post2)
-  #   No matching distribution found for comtypes==1.1.3
-  - cmd: pip install https://github.com/enthought/comtypes/archive/1.1.3.zip
+      }
+      & $PythonInstaller "/quiet" "/passive" "/qn" "/norestart"
+
+      $WXInstaller = $BuildFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
+      If ((Test-Path $WXInstaller) -eq $False) {
+        " "
+        "--------- Installing  wxPython 3.0.2.0 ---------"
+        " "
+        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
+        Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
+        & $WXInstaller "/VERYSILENT" "/SUPPRESSMSGBOXES"
+      }
+
+      $PyWinInstaller = $BuildFolder + "pywin32-220.win32-py2.7.exe"
+      If ((Test-Path $PyWinInstaller) -eq $False) {
+        " "
+        "-------------- Installing pywin32 --------------"
+        " "
+        $PyWinWheel = $BuildFolder + "pywin32-220-cp27-none-win32.whl"
+        $PywinPostInstall = $Env:PYTHON + "\Scripts\pywin32_postinstall.py"
+        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
+        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
+        cd $BuildFolder
+        & "pip" "install" "wheel"
+        $ErrorActionPreference = "SilentlyContinue"
+        & "wheel" "convert" $PyWinInstaller
+        $ErrorActionPreference = "Continue"
+        & "pip" "install" $PyWinWheel
+        & "python" $PywinPostInstall "-install" "-silent" "-quiet"
+        cd ..\..
+      }
+
+      " "
+      "-------------- Installing Modules --------------"
+      " "
+      & "pip" "install" "--upgrade" "setuptools"
+      & "pip" "install" "commonmark==0.7.2"
+
+      $Jinja = $SitePackages + "jinja2"
+      If ((Test-Path $Jinja) -eq $False) {
+        & "pip" "install" "jinja2==2.8.1"
+      }
+
+      $CTypesLib = $SitePackages + "ctypeslib"
+      If ((Test-Path $CTypesLib) -eq $False) {
+        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#egg=ctypeslib-0.5.6"
+      }
+
+      $Sphinx = $SitePackages + "sphinx"
+      If ((Test-Path $Sphinx) -eq $False) {
+        & "pip" "install" "sphinx==1.4.8"
+      }
+
+      $PIL = $SitePackages + "PIL"
+      If ((Test-Path $PIL) -eq $False) {
+        & "pip" "install" "pillow==3.4.2"
+      }
+
+      $PyExe = $SitePackages + "py2exe"
+      If ((Test-Path $PyExe) -eq $False) {
+        & "pip" "install" "py2exe_py2==0.6.9"
+      }
+
+      $Pycrypto = $SitePackages + "pycrypto-2.6.1-py2.7-win32.egg"
+      If ((Test-Path $Pycrypto) -eq $False) {
+        $ErrorActionPreference = "SilentlyContinue"
+        & "easy_install" "--always-unzip" "pycrypto"
+        $ErrorActionPreference = "Continue"
+      }
+
+      $ComTypes = $SitePackages + "comtypes-1.1.3-py2.7.egg"
+      If ((Test-Path $ComTypes) -eq $False) {
+        $ErrorActionPreference = "SilentlyContinue"
+        & "easy_install" "--always-unzip" "comtypes"
+        $ErrorActionPreference = "Continue"
+      }
+      " "
+      "--------------- Running Build.Py ---------------"
+      " "
 
 build: off
 
@@ -54,7 +136,7 @@ after_test:
   - cmd: dir _build\output\*Setup.exe /B > _build\output\setup-exe.txt
   - cmd: set /P setup-exe= < _build\output\setup-exe.txt
   # - START /WAIT %setup-exe% /VERYSILENT /SUPPRESSMSGBOXES /NOCLOSEAPPLICATIONS
-  
+
 artifacts:
   - path: _build\output\$(setup-exe)
   - path: _build\output\CHANGELOG_THIS_RELEASE.bb
