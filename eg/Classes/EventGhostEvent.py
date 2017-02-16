@@ -101,6 +101,9 @@ class EventGhostEvent(object):
         self.shouldEnd = Event()
         self.upFuncList = []
 
+    def HasPayload(self):
+        return self.payload != eg.NoPayloadData
+
     def AddUpFunc(self, func, *args, **kwargs):
         if self.isEnded:
             func(*args, **kwargs)
