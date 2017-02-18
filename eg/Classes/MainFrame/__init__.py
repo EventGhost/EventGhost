@@ -580,8 +580,18 @@ class MainFrame(wx.Frame):
         elif len(self.openDialogs) == 0:
             eg.app.Exit()
         else:
-            self.Iconize(False)
-            self.RequestUserAttention()
+            for dialog in self.openDialogs[:]:
+                panel = getattr(dialog, 'panel', None)
+                try:
+                    if not panel.isDirty:
+                        dialog.Destroy()
+                        continue
+                except AttributeError:
+                    pass
+                self.Iconize(False)
+                dialog.Raise()
+                self.RequestUserAttention()
+                return
 
     @eg.LogIt
     def OnDialogDestroy(self, event):
@@ -843,7 +853,7 @@ class MainFrame(wx.Frame):
         eg.OptionsDialog.GetResult(self)
 
     def OnCmdRestart(self):
-        eg.app.Restart()
+        eg.Utils.Restart(save=False, closeDialogs=True)
 
     def OnCmdExit(self):
         eg.app.Exit()

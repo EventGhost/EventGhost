@@ -38,7 +38,7 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow",
+    "ExecFile", "GetTopLevelWindow", "Restart",
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -573,3 +573,55 @@ def UpdateStartupShortcut(create):
             arguments="-h -e OnInitAfterBoot",
             startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
+
+
+def Restart(save, closeDialogs):
+    """
+    Restart EventGhost with some options
+
+    This function provides the means to optionally close open dialogs, to save
+    any changes in the dialog and also to save any configuration tree
+    information. it will stop the restart if any of the conditions are not met
+    :param save: True/False, save changes in open dialogs, and also save
+                 configuration tree
+    :param closeDialogs: True/False, close open dialogs
+    :return: None
+    """
+    frame = eg.document.frame
+
+    if not closeDialogs and frame.openDialogs:
+        frame.RequestUserAttention()
+        return
+
+    def Save():
+        if save and eg.document.isDirty:
+            eg.PrintDebugNotice('SAVE')
+            eg.document.Save()
+        if eg.document.isDirty:
+            frame.RequestUserAttention()
+        eg.app.Restart()
+
+    def Run():
+        for dialog in frame.openDialogs[:]:
+            panel = getattr(dialog, 'panel', None)
+            try:
+                if save:
+                    dialog.DispatchEvent(None, wx.ID_OK)
+                elif panel.isDirty:
+                    frame.Iconize(False)
+                    dialog.Raise()
+                    frame.RequestUserAttention()
+                    return
+                else:
+                    dialog.Destroy()
+            except AttributeError:
+                frame.Iconize(False)
+                frame.RequestUserAttention()
+                return
+        wx.CallAfter(Save)
+
+    if frame is not None:
+        wx.CallAfter(Run)
+    else:
+        wx.CallAfter(Save)
+
