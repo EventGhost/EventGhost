@@ -580,18 +580,21 @@ class MainFrame(wx.Frame):
         elif len(self.openDialogs) == 0:
             eg.app.Exit()
         else:
-            for dialog in self.openDialogs[:]:
                 panel = getattr(dialog, 'panel', None)
-                try:
                     if not panel.isDirty:
+                try:
                         dialog.Destroy()
                         continue
-                except AttributeError:
                     pass
+                except AttributeError:
                 self.Iconize(False)
+            for dialog in self.openDialogs[:]:
+
                 dialog.Raise()
                 self.RequestUserAttention()
                 return
+
+            self.OnClose(None)
 
     @eg.LogIt
     def OnDialogDestroy(self, event):
