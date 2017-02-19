@@ -281,11 +281,14 @@ class LogCtrl(wx.ListCtrl):
 
     @eg.AssertInMainThread
     def SetData(self, data):
-        #self.Freeze()
+        # self.Freeze()
         self.data = collections.deque(data)
         self.SetItemCount(len(data))
-        #self.Thaw()
-        self.Scroll()
+
+        if eg.document.visibleLogItem:
+            self.EnsureVisible(eg.document.visibleLogItem)
+            
+        # self.Thaw()
 
     def SetIndent(self, shouldIndent):
         if shouldIndent:

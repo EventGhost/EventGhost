@@ -65,6 +65,7 @@ class Document(object):
         self.frame = None
         self.reentrantLock = Lock()
         self.expandedNodes = set()
+        self.visibleLogItem = 0
 
     def AfterLoad(self):
         if (
@@ -300,6 +301,14 @@ class Document(object):
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
+                    logCtrl = self.frame.logCtrl
+                    self.visibleLogItem = (
+                        logCtrl.GetTopItem() + logCtrl.GetCountPerPage()
+                    )
+
+                    if self.visibleLogItem:
+                        self.visibleLogItem -= 1
+
                     self.frame.Destroy()
                     self.frame = eg.mainFrame = None
             self.reentrantLock.release()
