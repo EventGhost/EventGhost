@@ -276,8 +276,12 @@ class LogCtrl(wx.ListCtrl):
             self.Refresh()
 
     def Scroll(self):
-        if len(self.data) <= (self.GetTopItem() + self.GetCountPerPage() + 2):
+        if self.IsAutoscroll():
             self.ScrollList(0, 1000000)
+
+    def IsAutoscroll(self):
+        val = self.GetTopItem() + self.GetCountPerPage() + 2
+        return len(self.data) <= val
 
     @eg.AssertInMainThread
     def SetData(self, data):
@@ -287,7 +291,9 @@ class LogCtrl(wx.ListCtrl):
 
         if eg.document.visibleLogItem:
             self.EnsureVisible(eg.document.visibleLogItem)
-            
+        else:
+            self.EnsureVisible(len(self.data) - 1)
+
         # self.Thaw()
 
     def SetIndent(self, shouldIndent):

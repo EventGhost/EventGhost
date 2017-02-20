@@ -302,12 +302,15 @@ class Document(object):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
                     logCtrl = self.frame.logCtrl
-                    self.visibleLogItem = (
-                        logCtrl.GetTopItem() + logCtrl.GetCountPerPage()
-                    )
+                    if logCtrl.IsAutoscroll():
+                        self.visibleLogItem = 0
+                    else:
+                        self.visibleLogItem = (
+                            logCtrl.GetTopItem() + logCtrl.GetCountPerPage()
+                        )
 
-                    if self.visibleLogItem:
-                        self.visibleLogItem -= 1
+                        if self.visibleLogItem:
+                            self.visibleLogItem -= 1
 
                     self.frame.Destroy()
                     self.frame = eg.mainFrame = None
