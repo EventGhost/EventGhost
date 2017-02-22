@@ -22,6 +22,8 @@
 # Added support for device names in the event 2/21/2017 21:07 -7
 
 import win32com.client
+import fnmatch
+import wx
 
 # Local imports
 import eg
@@ -291,3 +293,184 @@ def DriveLettersFromMask(mask):
         chr(65 + driveNum) for driveNum in range(0, 26)
         if (mask & (2 ** driveNum))
     ]
+
+
+class GetDevices(eg.ActionBase):
+    name = 'Get System Devices'
+    description = (
+        'Returns a device object that represents a physical device\n'
+        'on your computer.'
+    )
+
+    WMI_CLASSES = dict(
+        Battery=dict(url_id=394074, search='Caption'),
+        CDROMDrive=dict(url_id=394081, search='Caption'),
+        CacheMemory=dict(url_id=394080, search='DeviceID'),
+        DesktopMonitor=dict(url_id=394122, search='Caption'),
+        DiskDrive=dict(url_id=394132, search='Caption'),
+        Fan=dict(url_id=394146, search='Caption'),
+        FloppyController=dict(url_id=394148, search='Caption'),
+        FloppyDrive=dict(url_id=394149, search='Caption'),
+        HeatPipe=dict(url_id=394154, search='Caption'),
+        IDEController=dict(url_id=394155, search='Caption'),
+        InfraredDevice=dict(url_id=394158, search='Caption'),
+        Keyboard=dict(url_id=394166, search='Description'),
+        MotherboardDevice=dict(url_id=394204, search='Name'),
+        NetworkAdapter=dict(url_id=394216, search='Description'),
+        OnBoardDevice=dict(url_id=394238, search='Caption'),
+        PCMCIAController=dict(url_id=394251, search='Caption'),
+        POTSModem=dict(url_id=394360, search='Caption'),
+        ParallelPort=dict(url_id=394247, search='Caption'),
+        PhysicalMedia=dict(url_id=394346, search='Tag'),
+        PhysicalMemory=dict(url_id=394347, search='Tag'),
+        PointingDevice=dict(url_id=394356, search='Caption'),
+        PortableBattery=dict(url_id=394357, search='Caption'),
+        Printer=dict(url_id=394363, search='Caption'),
+        PrinterController=dict(url_id=394365, search='Caption'),
+        Processor=dict(url_id=394373, search='Name'),
+        Refrigeration=dict(url_id=394393, search='Caption'),
+        SCSIController=dict(url_id=394400, search='Caption'),
+        SerialPort=dict(url_id=394413, search='Caption'),
+        SoundDevice=dict(url_id=394463, search='Caption'),
+        SystemSlot=dict(url_id=394486, search='SlotDesignation'),
+        TCPIPPrinterPort=dict(url_id=394492, search='Caption'),
+        TapeDrive=dict(url_id=394491, search='Caption'),
+        TemperatureProbe=dict(url_id=394493, search='Caption'),
+        USBController=dict(url_id=394504, search='Caption'),
+        USBHub=dict(url_id=394506, search='Caption'),
+        VideoController=dict(url_id=394512, search='Caption'),
+        VoltageProbe=dict(url_id=394514, search='Caption'),
+    )
+
+    WMI_CLASSES['1394Controller'] = dict(url_id=394059, search='Caption')
+    WMI_CLASSES['1394ControllerDevice'] = dict(url_id=394060, search='Caption')
+    HELP_URL = 'https://msdn.microsoft.com/en-us/library/aa%d(v=vs.85).aspx'
+
+    def __call__(self, pattern=None, **kwargs):
+        if pattern is None and not kwargs:
+            return
+
+        if isinstance(pattern, dict):
+            searchCls = pattern.keys()
+            pattern = pattern[searchCls[0]]
+        elif pattern is not None:
+            searchCls = self.WMI_CLASSES.keys()
+        else:
+            if len(kwargs.keys()) > 1:
+                eg.PrintNotice(
+                    'You can only specify one device to search for.\n'
+                    'If you want to broaden your search use ? or * as'
+                    ' wildcards'
+                )
+                return
+            searchCls = kwargs.keys()
+            pattern = kwargs[searchCls[0]]
+
+        searchableItems = {}
+
+        WMI = win32com.client.GetObject("winmgmts:")
+        for clsName in searchCls:
+            primarySearch = self.WMI_CLASSES[clsName]['search']
+            for device in WMI.InstancesOf('Win32_' + clsName):
+                searchItem = getattr(device, primarySearch)
+                searchableItems[searchItem] = device
+                if device.Name is not None:
+                    if device.Name not in searchableItems:
+                        searchableItems[device.Name] = device
+                if device.Description is not None:
+                    if device.Description not in searchableItems:
+                        searchableItems[device.Description] = device
+                if hasattr(device, 'DeviceId') and device.DeviceId is not None:
+                    if device.DeviceId not in searchableItems:
+                        searchableItems[device.DeviceId] = device
+                if hasattr(device, 'HardwareId') and device.HardwareId is not None:
+                    if device.HardwareId not in searchableItems:
+                        searchableItems[device.HardwareId] = device
+
+        if '*' not in pattern and '?' not in pattern:
+            if pattern in searchableItems:
+                eg.Print('Device Found')
+                return (searchableItems[pattern],)
+            return None
+
+        devices = ()
+        for key in searchableItems.keys():
+            if fnmatch.fnmatch(key, pattern):
+                if searchableItems[key] not in devices:
+                    devices += (searchableItems[key],)
+
+        eg.Print(str(len(devices)) + ' Devices Found')
+        return devices
+
+    def Configure(self, pattern=''):
+        WMI = win32com.client.GetObject("winmgmts:")
+        panel = eg.ConfigPanel()
+        panel.EnableButtons(False)
+
+        self.result = pattern
+
+        tree = wx.TreeCtrl(
+            panel,
+            -1,
+            style=(
+                wx.TR_HAS_BUTTONS |
+                wx.TR_ROW_LINES |
+                wx.CLIP_CHILDREN
+            )
+        )
+
+        root = tree.AddRoot('Devices')
+
+        for clsName in sorted(self.WMI_CLASSES.keys()):
+            label = ''
+            for char in clsName:
+                if not char.isdigit():
+                    match = char.lower() == char
+                    if match and label[-1].lower() != label[-1]:
+                        label = label[:len(label) - 1] + ' ' + label[-1]
+                    elif not match and label and label[-1].isdigit():
+                        label += ' '
+                label += char
+            deviceTree = tree.AppendItem(root, label)
+
+            attrName = self.WMI_CLASSES[clsName]['search']
+            for device in WMI.InstancesOf('Win32_' + clsName):
+                deviceLabel = getattr(device, attrName)
+                deviceItem = tree.AppendItem(deviceTree, deviceLabel)
+                tree.SetPyData(deviceItem, {clsName: deviceLabel})
+                if self.result == {clsName: deviceLabel}:
+                    tree.SelectItem(deviceItem)
+
+        def OnActivated(evt):
+            item = evt.GetItem()
+            if item.IsOk():
+                if tree.ItemHasChildren(item):
+                    if tree.IsExpanded(item):
+                        tree.Collapse(item)
+                    else:
+                        tree.Expand(item)
+                    panel.EnableButtons(False)
+                else:
+                    self.result = tree.GetPyData(item)
+                    panel.EnableButtons(True)
+            evt.Skip()
+
+        def OnSelectionChanged(evt):
+            item = evt.GetItem()
+            if item.IsOk():
+                if tree.ItemHasChildren(item):
+                    panel.EnableButtons(False)
+                    self.result = None
+                else:
+                    self.result = tree.GetPyData(item)
+                    panel.EnableButtons(True)
+            evt.Skip()
+
+        tree.Expand(root)
+        tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, OnActivated)
+        tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
+
+        panel.sizer.Add(tree, 1, wx.EXPAND | wx.ALL, 10)
+
+        while panel.Affirmed():
+            panel.SetResult(self.result)

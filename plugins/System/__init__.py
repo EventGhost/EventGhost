@@ -63,7 +63,7 @@ from eg.WinApi.Utils import BringHwndToFront, GetMonitorDimensions
 import Registry
 from ChangeDisplaySettings import ChangeDisplaySettings
 from Command import Command
-from DeviceChangeNotifier import DeviceChangeNotifier
+from DeviceChangeNotifier import DeviceChangeNotifier, GetDevices
 from Execute import Execute
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 
@@ -164,6 +164,7 @@ class System(eg.PluginBase):
         self.AddAction(ResetIdleTimer)
         self.AddAction(SetIdleTime)
         self.AddAction(WakeOnLan)
+        self.AddAction(GetDevices)
 
         group = self.AddGroup(
             text.SoundGroup.name,
