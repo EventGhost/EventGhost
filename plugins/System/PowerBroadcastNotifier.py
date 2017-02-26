@@ -16,13 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
-import eg
+# --------- 25/2/2017, 19:50 -7 ---------
+# Added Windows XP support
+# Thanks to Diz
+# ---------------------------------------
 
+import wx
 import ctypes
 from comtypes import GUID
-from eg.WinApi.SystemInformation import GetWindowsVersionString
 
+import eg
 from eg.WinApi.Dynamic import (
     windll,
     byref,
@@ -43,9 +46,6 @@ from eg.WinApi.Dynamic import (
 UCHAR = ctypes.c_ubyte
 DWORD = ctypes.wintypes.DWORD
 
-winVer = GetWindowsVersionString()[18:]
-WIN_7 = not (winVer.startswith('10') or winVer.startswith('8'))
-
 PBT_POWERSETTINGCHANGE = 0x8013
 
 PWR_AC = 0x0
@@ -62,10 +62,36 @@ SVR_ON = 0x1
 AWY_EXITING = 0x0
 AWY_ENTERING = 0x1
 
-if WIN_7:
-    monGUID = '{02731015-4510-4526-99e6-e5a17ebd1aea}'
+PI = wx.PlatformInformation()
+# Windows 10 /  Server 2016
+WIN_10 = PI.CheckOSVersion(10, 0)
+WIN_8 = False
+WIN_7 = False
+WIN_VISTA = False
+WIN_XP = False
+
+if not WIN_10:
+    # Windows 8, 8.1 / Server 2012, 2012 R2 / RT, RT 8.1
+    WIN_8 = PI.CheckOSVersion(6, 2) or PI.CheckOSVersion(6, 3)
+if True not in (WIN_10, WIN_8):
+    # Windows 7 / Server 2008 R2
+    WIN_7 = PI.CheckOSVersion(6, 1)
+if True not in (WIN_10, WIN_8, WIN_7):
+    # Windows Vista / Server 2008
+    WIN_VISTA = PI.CheckOSVersion(6, 0)
+if True not in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
+    # Windows XP x86, x64 / Server 2003, 2003 R2 / Tablet PC, MCE
+    WIN_XP = PI.CheckOSVersion(5, 1) or PI.CheckOSVersion(5, 2)
+
+
+if True in (WIN_8, WIN_10):
+    GUID_CONSOLE_DISPLAY_STATE = GUID(
+        '{6fe69556-704a-47a0-8f24-c28d936fda47}'
+    )
 else:
-    monGUID = '{6fe69556-704a-47a0-8f24-c28d936fda47}'
+    GUID_CONSOLE_DISPLAY_STATE = GUID(
+        '{02731015-4510-4526-99e6-e5a17ebd1aea}'
+    )
 
 GUID_SYSTEM_AWAYMODE = GUID(
     '{98a7f580-01f7-48aa-9c0f-44352c29e5C0}'
@@ -85,7 +111,6 @@ GUID_POWER_SAVING_STATUS = GUID(
 GUID_POWERSCHEME_PERSONALITY = GUID(
     '{245d8541-3943-4422-b025-13A784F679B7}'
 )
-
 GUID_MAX_POWER_SAVINGS = GUID(
     '{8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c}'
 )
@@ -95,7 +120,7 @@ GUID_MIN_POWER_SAVINGS = GUID(
 GUID_TYPICAL_POWER_SAVINGS = GUID(
     '{381b4222-f694-41f0-9685-ff5bb260df2e}'
 )
-GUID_CONSOLE_DISPLAY_STATE = GUID(monGUID)
+
 
 POWER_MESSAGES = {
     GUID_CONSOLE_DISPLAY_STATE: {
@@ -124,28 +149,40 @@ POWER_MESSAGES = {
         GUID_MAX_POWER_SAVINGS: 'PowerProfile.HighPerformance',
         GUID_TYPICAL_POWER_SAVINGS: 'PowerProfile.Balanced'
     },
-    PBT_APMBATTERYLOW: 'BatteryLevel.Low', # pre win vista
-    PBT_APMOEMEVENT: 'OemEvent', # pre win vista
-    PBT_APMQUERYSUSPENDFAILED: 'QuerySuspendFailed', # pre win vista
-    PBT_APMRESUMECRITICAL: 'ResumeCritical', # pre win vista
-    PBT_APMQUERYSUSPEND: 'QuerySuspend', # pre win vista
     PBT_APMRESUMEAUTOMATIC: 'ResumeAutomatic',
     PBT_APMRESUMESUSPEND: 'Resume',
     PBT_APMSUSPEND: 'Suspend'
     # PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
 }
 
+if WIN_XP:
+    POWER_MESSAGES.update({
+        PBT_APMBATTERYLOW: 'BatteryLevel.Low', # pre win vista
+        PBT_APMOEMEVENT: 'OemEvent', # pre win vista
+        PBT_APMQUERYSUSPENDFAILED: 'QuerySuspendFailed', # pre win vista
+        PBT_APMRESUMECRITICAL: 'ResumeCritical', # pre win vista
+        PBT_APMQUERYSUSPEND: 'QuerySuspend', # pre win vista
+    })
+else:
+    def Register(guid):
+        return windll.user32.RegisterPowerSettingNotification(
+            eg.messageReceiver.hwnd,
+            byref(guid),
+            0
+        )
 
-def Register(guid):
-    return windll.user32.RegisterPowerSettingNotification(
-        eg.messageReceiver.hwnd,
-        byref(guid),
-        0
-    )
+
+    def Unregister(cls):
+        windll.user32.UnregisterDeviceNotification(cls)
 
 
-def Unregister(cls):
-    return windll.user32.UnregisterDeviceNotification(cls)
+def CreatePowerClass(lParam, cls):
+    powerBroadcast = cast(lParam, POINTER(cls))
+    powerSetting = powerBroadcast.contents.PowerSetting
+    data = powerBroadcast.contents.Data
+    msgs = POWER_MESSAGES.get(powerSetting, None)
+    if msgs is not None:
+        return msgs.get(data, None)
 
 
 class POWERBROADCAST_SETTING(ctypes.Structure):
@@ -172,19 +209,25 @@ class POWERSCHEME_PERSONALITY(ctypes.Structure):
     ]
 
 
-def CreatePowerClass(lParam, cls):
-    powerBroadcast = cast(lParam, POINTER(cls))
-    powerSetting = powerBroadcast.contents.PowerSetting
-    data = powerBroadcast.contents.Data
-    msgs = POWER_MESSAGES.get(powerSetting, None)
-    if msgs is not None:
-        return msgs.get(data, None)
-
-
 class PowerBroadcastNotifier:
     def __init__(self, plugin):
         self.plugin = plugin
+        self.monitorNotify = None
+        self.awayNotify = None
+        self.sourceNotify = None
+        self.batteryNotify = None
+        self.savingNotify = None
+        self.schemeNotify = None
 
+        if True in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
+            wx.CallAfter(self.RegisterMessages)
+
+        eg.messageReceiver.AddHandler(
+            WM_POWERBROADCAST,
+            self.OnPowerBroadcast
+        )
+
+    def RegisterMessages(self):
         self.monitorNotify = Register(GUID_CONSOLE_DISPLAY_STATE)
         self.awayNotify = Register(GUID_SYSTEM_AWAYMODE)
         self.sourceNotify = Register(GUID_ACDC_POWER_SOURCE)
@@ -192,18 +235,14 @@ class PowerBroadcastNotifier:
         self.savingNotify = Register(GUID_POWER_SAVING_STATUS)
         self.schemeNotify = Register(GUID_POWERSCHEME_PERSONALITY)
 
-        eg.messageReceiver.AddHandler(
-            WM_POWERBROADCAST,
-            self.OnPowerBroadcast
-        )
-
     def Close(self):
-        Unregister(self.monitorNotify)
-        Unregister(self.awayNotify)
-        Unregister(self.sourceNotify)
-        Unregister(self.batteryNotify)
-        Unregister(self.savingNotify)
-        Unregister(self.schemeNotify)
+        if True in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
+            Unregister(self.monitorNotify)
+            Unregister(self.awayNotify)
+            Unregister(self.sourceNotify)
+            Unregister(self.batteryNotify)
+            Unregister(self.savingNotify)
+            Unregister(self.schemeNotify)
 
         eg.messageReceiver.RemoveHandler(
             WM_POWERBROADCAST,
