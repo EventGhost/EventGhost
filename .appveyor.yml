@@ -4,14 +4,15 @@
 
 version: '{build}-{branch}'
 
+matrix:
+  fast_finish: true
+
 environment:
-  matrix:
-    - PYTHON: 'C:\\Python27'
+  PYTHON: 'C:\Stackless27'
+  PYTHONPATH: 'C:\Stackless27;C:\Stackless27\Scripts;C:\Stackless27\DLLs;C:\Stackless27\Lib;C:\Stackless27\Lib\site-packages;'
 
 cache:
-  - '%PYTHON%\Lib\site-packages'
-  - '%PYTHON%\Scripts'
-  - '%APPVEYOR_BUILD_FOLDER%\_build\installers\'
+  - '%PYTHON%'
 
 install:
   # - ps: Start-FileDownload "https://github.com/appveyor/ci/raw/master/scripts/enable-rdp.ps1" -Timeout 60000
@@ -23,111 +24,128 @@ install:
   # Microsoft Visual C++ Redistributable 2008 (version min: 9.0.21022.8)
   # - cinst vcredist2008
 
-  - cmd: if not exist _build\installers md _build\installers
-
   # --------------Downloads and Installs--------------
+
   - ps: |
-      $BuildFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
-      $SitePackages = $Env:PYTHON + "\Lib\site-packages\"
+      $Env:PATH = $Env:PATH -replace "Python27", "Stackless27"
+      $PythonFolder = $Env:PYTHON
+      $SysWOW = $Env:SYSTEMROOT + "\SysWOW64"
+      $PythonWindowsDLL = $SysWOW + "\python27.dll"
+      $PythonDLL = $PythonFolder + "\Python27.dll"
+      $InstallersFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
+
+      & "md" $InstallersFolder
+      Remove-Item $PythonWindowsDLL
+      " "
+      " "
+
+      If ((Test-Path $PythonFolder) -eq $False) {
+
+        $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
+        $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
+        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
+        Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
+
+        " "
+        "------ Installing Stackless 2.7.12150 x86 ------"
+        " "
+        Start-Process "MsiExec.exe" -arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
+        "DONE!"
+
+        $WXInstaller = $InstallersFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
+        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
+        Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
+
+        " "
+        "--------- Installing  wxPython 3.0.2.0 ---------"
+        " "
+        Start-Process $WXInstaller -arg "/VERYSILENT /SUPPRESSMSGBOXES" -Wait
+        "DONE!"
+
+        $PyWinInstaller = $InstallersFolder + "pywin32-220.win32-py2.7.exe"
+        $PyWinWheel = $InstallersFolder + "pywin32-220-cp27-none-win32.whl"
+        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
+        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
+
+        " "
+        "---------------- Upgradeing PIP ----------------"
+        " "
+        Start-Process "python" -arg "-m pip install --upgrade pip" -Wait
+
+        " "
+        "-------------- Installing Modules --------------"
+        " "
+
+        & "pip" "install" "wheel"
+        "------------------------------------------------"
+        " "
+
+        & "pip" "install" "commonmark==0.7.2"
+        "------------------------------------------------"
+        " "
+
+        & "pip" "install" "jinja2==2.8.1"
+        "------------------------------------------------"
+        " "
+
+        & "pip" "install" "sphinx==1.4.8"
+        "------------------------------------------------"
+        " "
+
+        & "pip" "install" "pillow==3.4.2"
+        "------------------------------------------------"
+        " "
+
+        & "pip" "install" "py2exe_py2==0.6.9"
+        "------------------------------------------------"
+        " "
+
+        $ErrorActionPreference = "SilentlyContinue"
+        & "easy_install" "--always-unzip" "pycrypto"
+        "------------------------------------------------"
+        " "
+
+        & "easy_install" "--always-unzip" "comtypes"
+        "------------------------------------------------"
+        " "
+
+        cd $InstallersFolder
+        & "wheel" "convert" $PyWinInstaller
+        $ErrorActionPreference = "Continue"
+
+        " "
+        "------------ Installing PyWin32 220 ------------"
+        " "
+        & "pip" "install" $PyWinWheel
+        cd ..\..
+      }
+
+      Copy-Item $PythonDLL $SysWOW
+
+      " "
+      "----- Running PyWin32  Post Install Script -----"
+      " "
+      $PywinPostInstall = $Env:PYTHON + "\Scripts\pywin32_postinstall.py"
+      & "python" $PywinPostInstall "-install" "-silent" "-quiet"
+      "------------------------------------------------"
+      " "
+
+      & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#egg=ctypeslib-0.5.6"
+      "------------------------------------------------"
+      " "
+
+      $InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
+      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
+      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller
 
       " "
       "------------ Installing  Inno Setup ------------"
       " "
-      $InnoInstaller = $BuildFolder + "is-unicode.exe"
-      If ((Test-Path $InnoInstaller) -eq $False) {
-        $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-        Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller
-      }
-      & $InnoInstaller "/SP" "/VERYSILENT" "/SUPPRESSMSGBOXES" "/NORESTART" "/RESTARTAPPLICATIONS" "/NOICONS"
+      Start-Process $InnoInstaller -arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -Wait
+      "DONE!"
 
-      " "
-      "----- Installing Stackless Python 2.7 x32 ------"
-      " "
-      $PythonInstaller = $BuildFolder + "stackless-setup.msi"
-      If ((Test-Path $PythonInstaller) -eq $False) {
-
-        $PythonURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
-        Start-FileDownload $PythonURL -Timeout 60000 -FileName $PythonInstaller
-
-      }
-      & $PythonInstaller "/quiet" "/passive" "/qn" "/norestart"
-
-      $WXInstaller = $BuildFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
-      If ((Test-Path $WXInstaller) -eq $False) {
-        " "
-        "--------- Installing  wxPython 3.0.2.0 ---------"
-        " "
-        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
-        Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
-        & $WXInstaller "/VERYSILENT" "/SUPPRESSMSGBOXES"
-      }
-
-      $PyWinInstaller = $BuildFolder + "pywin32-220.win32-py2.7.exe"
-      If ((Test-Path $PyWinInstaller) -eq $False) {
-        " "
-        "-------------- Installing pywin32 --------------"
-        " "
-        $PyWinWheel = $BuildFolder + "pywin32-220-cp27-none-win32.whl"
-        $PywinPostInstall = $Env:PYTHON + "\Scripts\pywin32_postinstall.py"
-        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
-        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
-        cd $BuildFolder
-        & "pip" "install" "wheel"
-        $ErrorActionPreference = "SilentlyContinue"
-        & "wheel" "convert" $PyWinInstaller
-        $ErrorActionPreference = "Continue"
-        & "pip" "install" $PyWinWheel
-        & "python" $PywinPostInstall "-install" "-silent" "-quiet"
-        cd ..\..
-      }
-
-      " "
-      "-------------- Installing Modules --------------"
-      " "
-      & "pip" "install" "--upgrade" "setuptools"
-      & "pip" "install" "commonmark==0.7.2"
-
-      $Jinja = $SitePackages + "jinja2"
-      If ((Test-Path $Jinja) -eq $False) {
-        & "pip" "install" "jinja2==2.8.1"
-      }
-
-      $CTypesLib = $SitePackages + "ctypeslib"
-      If ((Test-Path $CTypesLib) -eq $False) {
-        & "pip" "install" "-e" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#egg=ctypeslib-0.5.6"
-      }
-
-      $Sphinx = $SitePackages + "sphinx"
-      If ((Test-Path $Sphinx) -eq $False) {
-        & "pip" "install" "sphinx==1.4.8"
-      }
-
-      $PIL = $SitePackages + "PIL"
-      If ((Test-Path $PIL) -eq $False) {
-        & "pip" "install" "pillow==3.4.2"
-      }
-
-      $PyExe = $SitePackages + "py2exe"
-      If ((Test-Path $PyExe) -eq $False) {
-        & "pip" "install" "py2exe_py2==0.6.9"
-      }
-
-      $Pycrypto = $SitePackages + "pycrypto-2.6.1-py2.7-win32.egg"
-      If ((Test-Path $Pycrypto) -eq $False) {
-        $ErrorActionPreference = "SilentlyContinue"
-        & "easy_install" "--always-unzip" "pycrypto"
-        $ErrorActionPreference = "Continue"
-      }
-
-      $ComTypes = $SitePackages + "comtypes-1.1.3-py2.7.egg"
-      If ((Test-Path $ComTypes) -eq $False) {
-        $ErrorActionPreference = "SilentlyContinue"
-        & "easy_install" "--always-unzip" "comtypes"
-        $ErrorActionPreference = "Continue"
-      }
       " "
       "--------------- Running Build.Py ---------------"
-      " "
 
 build: off
 
