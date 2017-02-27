@@ -123,6 +123,7 @@ class DeviceChangeNotifier:
         self.WMI = None
         self.plugin = plugin
         eg.messageReceiver.AddHandler(WM_DEVICECHANGE, self.OnDeviceChange)
+        eg.messageReceiver.AddHandler(WM_DEVICECHANGE, self.OnVolumeChange)
 
         def Register(guid):
             return RegisterDeviceNotification(
@@ -177,6 +178,7 @@ class DeviceChangeNotifier:
         UnregisterDeviceNotification(self.handle11)
         UnregisterDeviceNotification(self.handle12)
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
+        eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnVolumeChange)
 
     def StartWMI(self):
         self.WMI = WMI = win32com.client.GetObject("winmgmts:")
@@ -185,97 +187,73 @@ class DeviceChangeNotifier:
             for device in devices:
                 self.currentDevices[device.DeviceId] = device.Name
 
-    def TriggerEvent(self, suffix, vendorId, driveLetters=None):
-        vendorId = '\\'.join(vendorId.replace('\\\\?\\', '').split('#')[:2])
-
-        if suffix.endswith('Removed.'):
-            for deviceId in self.currentDevices.keys():
-                if deviceId.find(vendorId) > -1:
+    def TriggerEvent(self, suffix, data):
+        if data:
+            vendorId = '\\'.join(data.replace('\\\\?\\', '').split('#')[:2])
+            suffix += '.'
+            if suffix.endswith('Removed.'):
+                for deviceId in self.currentDevices.keys():
+                    if deviceId.find(vendorId) == -1:
+                        continue
                     payload = dict(
                         name=self.currentDevices[deviceId],
                         device_id=deviceId
                     )
-                    suffix += payload['name']
-                    if driveLetters is None:
-                        self.plugin.TriggerEvent(suffix, payload)
-                    else:
-                        for letter in driveLetters:
-                            self.plugin.TriggerEvent(
-                                suffix + '.' + letter,
-                                payload
-                            )
+                    self.plugin.TriggerEvent(suffix + payload['name'], payload)
                     del(self.currentDevices[deviceId])
-                    return
+            else:
+                for deviceType, attrNames in DEVICE_ATTRIBUTES:
+                    for device in self.WMI.InstancesOf('Win32_' + deviceType):
+                        if device.DeviceId.find(vendorId) == -1:
+                            continue
+                        payload = {
+                            attrName: getattr(device, attrName)
+                            for attrName in attrNames
+                        }
+                        payload.update(dict(
+                            name=device.Name,
+                            description=device.Description,
+                            status=device.Status,
+                            device_id=device.DeviceId
+                        ))
+                        self.plugin.TriggerEvent(suffix + device.Name, payload)
+                        self.currentDevices[device.DeviceId] = device.Name
 
-        for deviceType, attrNames in DEVICE_ATTRIBUTES:
-            for device in self.WMI.InstancesOf('Win32_' + deviceType):
-                if device.DeviceId.find(vendorId) > -1:
-                    payload = {
-                        attrName: getattr(device, attrName)
-                        for attrName in attrNames
-                    }
-                    payload.update(dict(
-                        name=device.Name,
-                        description=device.Description,
-                        status=device.Status,
-                        device_id=device.DeviceId
-                    ))
-                    suffix += device.Name
+    def OnVolumeChange(self, hwnd, msg, wparam, lparam):
 
-                    if driveLetters is None:
-                        self.plugin.TriggerEvent(suffix, payload)
-                    else:
-                        for letter in driveLetters:
-                            self.plugin.TriggerEvent(
-                                suffix + '.' + letter,
-                                payload
-                            )
-                    self.currentDevices[device.DeviceId] = device.Name
-                    return
+        def IsVolumeChange():
+            dbch = DEV_BROADCAST_HDR.from_address(lparam)
+            return dbch.dbch_devicetype == DBT_DEVTYP_VOLUME
+
+        def TriggerEvent(suffix):
+            dbcv = DEV_BROADCAST_VOLUME.from_address(lparam)
+            for letter in DriveLettersFromMask(dbcv.dbcv_unitmask):
+                self.plugin.TriggerEvent(suffix + '.' + letter)
+
+        if wparam == DBT_DEVICEARRIVAL and IsVolumeChange():
+            TriggerEvent("DriveMounted")
+        elif wparam == DBT_DEVICEREMOVECOMPLETE and IsVolumeChange():
+            TriggerEvent("DriveRemoved")
 
     def OnDeviceChange(self, hwnd, msg, wparam, lparam):
-        #
-        # WM_DEVICECHANGE:
-        #  wParam - type of change: arrival, removal etc.
-        #  lParam - what's changed?
-        #    if it's a volume then...
-        #  lParam - what's changed more exactly
-        #
 
-        if wparam == DBT_DEVICEARRIVAL:
+        def IsDeviceInterface():
             dbch = DEV_BROADCAST_HDR.from_address(lparam)
-            if dbch.dbch_devicetype == DBT_DEVTYP_VOLUME:
-                dbcv = DEV_BROADCAST_VOLUME.from_address(lparam)
-                wx.CallAfter(
-                    self.TriggerEvent,
-                    "DriveMounted.",
-                    wstring_at(lparam + DBD_NAME_OFFSET),
-                    DriveLettersFromMask(dbcv.dbcv_unitmask)
-                )
+            return dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE
 
-            elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                wx.CallAfter(
-                    self.TriggerEvent,
-                    "DeviceAttached.",
-                    wstring_at(lparam + DBD_NAME_OFFSET)
-                )
+        def TriggerEvent(suffix):
+            wx.CallAfter(
+                self.TriggerEvent,
+                suffix,
+                wstring_at(lparam + DBD_NAME_OFFSET)
+            )
 
-        elif wparam == DBT_DEVICEREMOVECOMPLETE:
-            dbch = DEV_BROADCAST_HDR.from_address(lparam)
-            if dbch.dbch_devicetype == DBT_DEVTYP_VOLUME:
-                dbcv = DEV_BROADCAST_VOLUME.from_address(lparam)
-                wx.CallAfter(
-                    self.TriggerEvent,
-                    "DriveRemoved.",
-                    wstring_at(lparam + DBD_NAME_OFFSET),
-                    DriveLettersFromMask(dbcv.dbcv_unitmask)
-                )
-            elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                wx.CallAfter(
-                    self.TriggerEvent,
-                    "DeviceRemoved.",
-                    wstring_at(lparam + DBD_NAME_OFFSET)
-                )
+        if wparam == DBT_DEVICEARRIVAL and IsDeviceInterface():
+            TriggerEvent("DeviceAttached")
+
+        elif wparam == DBT_DEVICEREMOVECOMPLETE and IsDeviceInterface():
+            TriggerEvent("DeviceRemoved")
+
         return 1
 
 
