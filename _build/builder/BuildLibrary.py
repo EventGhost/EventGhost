@@ -23,7 +23,7 @@ from os.path import basename, exists, join
 
 # Local imports
 import builder
-from builder.Utils import EncodePath
+from builder.Utils import EncodePath, IsCIBuild
 
 DLL_EXCLUDES = [
     "DINPUT8.dll",
@@ -69,6 +69,9 @@ class BuildLibrary(builder.Task):
                 if not os.path.isdir(path):
                     os.remove(path)
 
+        if IsCIBuild():
+            oldout = sys.stdout
+            sys.stdout = open(join('output', 'BuildLibrary_py2exe_log.txt'), 'w')
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
@@ -88,6 +91,9 @@ class BuildLibrary(builder.Task):
                 )
             )
         )
+        if IsCIBuild():
+            sys.stdout.close()
+            sys.stdout = oldout
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []

@@ -29,6 +29,7 @@ from os.path import exists, join
 
 # Local imports
 import builder
+from builder.Utils import IsCIBuild
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -56,6 +57,9 @@ class BuildInterpreters(builder.Task):
         manifest = file(
             join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read()
+        if IsCIBuild():
+            oldout = sys.stdout
+            sys.stdout = open(join('output', 'BuildInterpreter_py2exe_log.txt'), 'w')
         setup(
             script_args = ["py2exe"],
             options=dict(
@@ -81,6 +85,9 @@ class BuildInterpreters(builder.Task):
             ],
             verbose=0,
         )
+        if IsCIBuild():
+            sys.stdout.close()
+            sys.stdout = oldout
         shutil.copy(
             join(tmpDir, "dist", PY_BASE_NAME + ".exe"),
             buildSetup.sourceDir

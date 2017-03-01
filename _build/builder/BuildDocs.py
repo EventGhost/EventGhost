@@ -20,12 +20,13 @@ import codecs
 import os
 import re
 import shutil
+import sys
 import sphinx
 from os.path import join
 
 # Local imports
 import builder
-from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
+from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, IsCIBuild, StartProcess
 
 import eg
 from eg.Utils import GetFirstParagraph
@@ -97,7 +98,13 @@ class BuildChmDocs(builder.Task):
                 "HTML Help Workshop command line compiler not found"
             )
         hhpPath = join(tmpDir, "EventGhost.hhp")
+        if IsCIBuild():
+            oldout = sys.stdout
+            sys.stdout = open(join('output', 'HTML_HELP_Compiler_log.txt'), 'w')
         StartProcess(htmlHelpCompilerPath, hhpPath)
+        if IsCIBuild():
+            sys.stdout.close()
+            sys.stdout = oldout
         shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
 
 
