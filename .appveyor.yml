@@ -137,7 +137,10 @@ install:
       python "_build\Build.py" --build --package
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
       " "
+
       "=============== EventGhost build finished ==============="
+      " "
+      " "
 
 
 build:
@@ -156,11 +159,9 @@ build:
 
 artifacts:
   - path: _build\output\$(SetupExe)
+  - path: _build\output\Build.log
   - path: _build\output\CHANGELOG_THIS_RELEASE.bb
   - path: _build\output\CHANGELOG_THIS_RELEASE.md
-  - path: _build\output\BuildInterpreter_py2exe_log.txt
-  - path: _build\output\BuildLibrary_py2exe_log.txt
-  - path: _build\output\HTML_HELP_Compiler_log.txt
 
 
 #before_deploy:
