@@ -76,6 +76,7 @@ class BuildChmDocs(builder.Task):
         #warnings.simplefilter('ignore', DeprecationWarning)
         sphinx.build_main([
             None,
+            # '-q',  # be quiet
             "-a",  # always write all output files
             "-b", "htmlhelp",
             "-E",  # Don’t use a saved environment (the structure
@@ -86,6 +87,9 @@ class BuildChmDocs(builder.Task):
             "-D", "release=%s" % self.buildSetup.appVersion,
             "-D", "templates_path=[]",
             "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
+            '-v', '-v',  # verbosity, can be given up to three times
+            # write warnings and errors to file
+            # '-w', join('output', 'sphinx_log.txt'),
             EncodePath(DOCS_SOURCE_DIR),
             tmpDir,
         ])

@@ -18,15 +18,18 @@
 
 import logging
 import sys
+from os.path import join
+
 
 class StdHandler(object):
     indent = 0
 
-    def __init__(self, oldStream, logger):
+    def __init__(self, oldStream, logger, verbose=True):
         self.oldStream = oldStream
         self.encoding = oldStream.encoding
         self.buf = ""
         self.logger = logger
+        self.verbose = verbose
 
         # the following is a workaround for colorama (0.3.6),
         # which is called by sphinx (build CHM docs).
@@ -47,15 +50,22 @@ class StdHandler(object):
         for line in self.buf.split("\n")[:-1]:
             line = (self.indent * 4 * " ") + line.rstrip()
             self.logger(line)
-            self.oldStream.write(line + "\n")
+            if self.verbose:
+                self.oldStream.write(line + "\n")
         self.buf = lines[-1]
 
 
-def LogToFile(file):
-    logging.basicConfig(filename=file, level=logging.DEBUG,)
-    logging.getLogger().setLevel(20)
-    sys.stdout = StdHandler(sys.stdout, logging.info)
-    sys.stderr = StdHandler(sys.stderr, logging.error)
+class InfoFilter(logging.Filter):
+    def filter(self, rec):
+        if rec.levelno == 22:
+            sys.stdout.oldStream.write(rec.msg + "\n")
+        return True
 
-def SetIndent(level):
-    StdHandler.indent = level
+
+def LogToFile(file, verbose):
+    formatter = u'%(name)s:%(levelname)s: %(message)s'
+    logging.basicConfig(filename=file, level=logging.DEBUG, format=formatter)
+    logging.getLogger().setLevel(20)
+    logging.getLogger().addFilter(filter=InfoFilter())
+    sys.stdout = StdHandler(sys.stdout, logging.info, verbose)
+    sys.stderr = StdHandler(sys.stderr, logging.error)
