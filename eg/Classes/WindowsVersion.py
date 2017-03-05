@@ -16,95 +16,333 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-"""
-A convenience module for checking the windows version.
-Functions:
-    IsXP()
-    IsVista()
-    Is7()
-    Is8()
-    Is10()
-"""
+import platform
+from collections import OrderedDict
 
-import sys
-import wx
-
-PI = wx.PlatformInformation()
-
-WIN_10 = PI.CheckOSVersion(10, 0)
-WIN_8 = False
-WIN_7 = False
-WIN_VISTA = False
-WIN_XP = False
-
-if not WIN_10:
-    WIN_8 = PI.CheckOSVersion(6, 2) or PI.CheckOSVersion(6, 3)
-if True not in (WIN_10, WIN_8):
-    WIN_7 = PI.CheckOSVersion(6, 1)
-if True not in (WIN_10, WIN_8, WIN_7):
-    WIN_VISTA = PI.CheckOSVersion(6, 0)
-if True not in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
-    WIN_XP = PI.CheckOSVersion(5, 1) or PI.CheckOSVersion(5, 2)
+WINDOWS_VERSIONS = OrderedDict()
+WINDOWS_VERSIONS["XP"] = [[5, 1], [5, 2]]
+WINDOWS_VERSIONS["XP32"] = [5, 1]
+WINDOWS_VERSIONS["XP64"] = [5, 2]
+WINDOWS_VERSIONS["VISTA"] = [6, 0]
+WINDOWS_VERSIONS["7"] = [[6, 1], [6,2]]
+WINDOWS_VERSIONS["8"] = [6, 2]
+WINDOWS_VERSIONS["80"] = [6, 2]
+WINDOWS_VERSIONS["81"] = [6, 3]
+WINDOWS_VERSIONS["10"] = [10, 0]
 
 
-def IsXP():
+def _compare(opp, other):
+    if isinstance(other, int):
+        other = str(other)
+    else:
+        other = other.upper()
+
+    if other not in WINDOWS_VERSIONS.keys():
+        raise WindowsVersionError(other)
+
+    ver = platform.version().split('.')
+    this = [int(ver[0]), int(ver[1])]
+
+    versions = [WINDOWS_VERSIONS[other]]
+    if opp == '>':
+        return all(this > version for version in versions)
+    elif opp == '<':
+        return all(this < version for version in versions)
+    elif opp == '<=':
+        return all(this <= version for version in versions)
+    elif opp == '>=':
+        return all(this >= version for version in versions)
+    elif opp == '==':
+        return all(this == version for version in versions)
+    elif opp == '!=':
+        return all(this != version for version in versions)
+
+
+class WindowsVersionError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return (
+            "'{0}' is not in the list of supported values:\n"
+            "\t{1}\n".format(self.msg, ", ".join(WINDOWS_VERSIONS.keys()))
+        )
+
+
+class WindowsVersion:
     """
-    Checks if Windows version is:
-    Windows XP x86
-    Windows XP x64
-    Windows Server 2003
-    Windows 2003 R2
-    Windows Tablet PC
-    Windows Media Center Edition 2002
-    Windows Media Center Edition 2004
-    Windows Media Center Edition 2005
-    :return: Bool
+    A convenience module for checking the windows version.
+
+    In addition to the *IsXY()* methods, you can use comparison like this:
+
+    ``eg.WindowsVersion() OPERATOR "KEY"``
+
+    ``OPERATOR`` is one of ``<``, ``<=``, ``==``, ``!=``, ``>=``, ``>``
+
+    +-----------+--------------------------------------+
+    | ``KEY``   | Windows version(s)                   |
+    +===========+======================================+
+    | ``XP``    | *all of XP32 and XP64*               |
+    +-----------+--------------------------------------+
+    | ``XP32``  | Windows XP,                          |
+    |           | Windows XP 64-Bit Edition,           |
+    |           | Windows Tablet PC,                   |
+    |           | Windows Media Center Edition 2002,   |
+    |           | Windows Media Center Edition 2004,   |
+    |           | Windows Media Center Edition 2005    |
+    +-----------+--------------------------------------+
+    | ``XP64``  | Windows XP Professional x64 Edition, |
+    |           | Windows Server 2003,                 |
+    |           | Windows Server 2003 R2               |
+    +-----------+--------------------------------------+
+    | ``Vista`` | Windows Vista,                       |
+    |           | Windows Server 2008                  |
+    +-----------+--------------------------------------+
+    | ``7``     | Windows 7,                           |
+    |           | Windows Server 2008 R2               |
+    +-----------+--------------------------------------+
+    | ``8``     | *all of 80 and 81*                   |
+    +-----------+--------------------------------------+
+    | ``80``    | Windows 8,                           |
+    |           | Windows Server 2012,                 |
+    |           | Windows RT                           |
+    +-----------+--------------------------------------+
+    | ``81``    | Windows 8.1,                         |
+    |           | Windows 2012 R2,                     |
+    |           | Windows RT 8.1                       |
+    +-----------+--------------------------------------+
+    | ``10``    | Windows 10,                          |
+    |           | Windows Server 2016                  |
+    +-----------+--------------------------------------+
+
+    |
+    .. The above line gives some extra space after the table in the helpfile.
+       References:
+           https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx
+           https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
+           http://www.gaijin.at/lstwinver.php
     """
-    return WIN_XP
 
+    def __eq__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is equal
+        to *other* windows version.
 
-def IsVista():
-    """
-    Checks if Windows version is:
-    Windows Vista
-    Windows Server 2008
-    :return: Bool
-    """
-    return WIN_VISTA
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('==', other)
 
+    def __ne__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is not equal
+        to *other* windows version.
 
-def Is7():
-    """
-    Checks if Windows version is:
-    Windows 7
-    Windows Server 2008 R2
-    :return: Bool
-    """
-    return WIN_7
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('!=', other)
 
+    def __gt__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is newer
+        than *other* windows version.
 
-def Is8():
-    """
-    Checks if Windows version is:
-    Windows 8
-    Windows 8.1
-    Windows Server 2012
-    Windows 2012 R2
-    Windows RT
-    Windows RT 8.1
-    :return: Bool
-    """
-    return WIN_8
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('>', other)
 
+    def __ge__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is newer or equal
+        than *other* windows version.
 
-def Is10():
-    """
-    Checks if Windows version is:
-    Windows 10
-    Windows Server 2016
-    :return: Bool
-    """
-    return WIN_10
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('>=', other)
 
+    def __lt__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is older
+        than *other* windows version.
 
-WindowsVersion = sys.modules[__name__]
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('<', other)
+
+    def __le__(self, other):
+        # type: (str) -> bool
+        """
+        Checks if the installed Windows version is older or equal
+        than *other* windows version.
+
+        :type other: str
+        :rtype: bool
+        """
+        return _compare('<=', other)
+
+    def __str__(self):
+        # type: () -> str
+        """
+        Gives a string with the word 'Windows' followed by the (full)
+        version number for the installed Windows.
+
+        :rtype: str
+        """
+        return "{0} {1}".format(
+            platform.system(),
+            platform.version()
+        )
+
+    @staticmethod
+    def GetVersion():
+        # type: () -> list
+        """
+        Return the major and minor version number of the installed Windows.
+
+        :rtype: list
+        :return: [major, minor]
+
+        """
+        return platform.version().split('.')[:2]
+
+    @staticmethod
+    def IsXP():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows XP x86
+        * Windows XP x64
+        * Windows Server 2003
+        * Windows 2003 R2
+        * Windows Tablet PC
+        * Windows Media Center Edition 2002
+        * Windows Media Center Edition 2004
+        * Windows Media Center Edition 2005
+
+        :rtype: bool
+        """
+        return _compare('==', "XP")
+
+    @staticmethod
+    def IsXP32():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows XP x86
+        * Windows Tablet PC
+        * Windows Media Center Edition 2002
+        * Windows Media Center Edition 2004
+        * Windows Media Center Edition 2005
+
+        :rtype: bool
+        """
+        return _compare('==', "XP32")
+
+    @staticmethod
+    def IsXP64():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows XP x64
+        * Windows Server 2003
+        * Windows 2003 R2
+
+        :rtype: bool
+        """
+        return _compare('==', "XP64")
+
+    @staticmethod
+    def IsVista():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows Vista
+        * Windows Server 2008
+
+        :rtype: bool
+        """
+        return _compare('==', "Vista")
+
+    @staticmethod
+    def Is7():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows 7
+        * Windows Server 2008 R2
+
+        :rtype: bool
+        """
+        return _compare('==', "7")
+
+    @staticmethod
+    def Is8():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows 8
+        * Windows 8.1
+        * Windows Server 2012
+        * Windows 2012 R2
+        * Windows RT
+        * Windows RT 8.1
+
+        :rtype: bool
+        """
+        return _compare('==', "8")
+
+    @staticmethod
+    def Is80():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows 8
+        * Windows Server 2012
+        * Windows RT
+
+        :rtype: bool
+        """
+        return _compare('==', "80")
+
+    @staticmethod
+    def Is81():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows 8.1
+        * Windows 2012 R2
+        * Windows RT 8.1
+
+        :rtype: bool
+        """
+        return _compare('==', "81")
+
+    @staticmethod
+    def Is10():
+        # type: () -> bool
+        """
+        Checks if installed Windows version is one of:
+
+        * Windows 10
+        * Windows Server 2016
+
+        :rtype: bool
+        """
+        return _compare('==', "10")
