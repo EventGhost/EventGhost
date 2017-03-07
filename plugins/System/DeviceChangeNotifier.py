@@ -625,6 +625,11 @@ SEARCH = [
     GUID_DEVINTERFACE_USB_DEVICE,
 ]
 
+NOEVENT = (
+    MOUNTDEV_MOUNTED_DEVICE_GUID,
+    GUID_DEVINTERFACE_PHYSICALMEDIA
+)
+
 
 class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
     def __init__(self):
@@ -642,13 +647,18 @@ ASSOCIATORS = (
 class WMI(threading.Thread):
 
     def __init__(self, plugin):
+        """
+        Threading object that runs the WMI device lookup.
+
+        :param plugin: Instance of System plugin.
+        """
+
         threading.Thread.__init__(self, name='WMI Thread')
         self.plugin = plugin
         self.wmi = None
         self.queueEvent = threading.Event()
         self.stopEvent = threading.Event()
         self.queue = []
-        self.driveQueue = []
         self.currentDevices = {}
         self.networkDrives = {}
         self.localDrives = {}
@@ -657,6 +667,13 @@ class WMI(threading.Thread):
         self.wmi = None
 
     def GetDrives(self):
+        """
+        Generator that retrieves WMI instances that represent drives.
+
+        :return: WMI instances of Win32_DiskDrive, Win32_MappedLogicalDisk and
+        Win32_CDROMDrive.
+        """
+
         logicalDisks = self.wmi.ExecQuery(
             "Select * from Win32_LogicalDisk"
         )
@@ -704,6 +721,14 @@ class WMI(threading.Thread):
             yield suffix, storedDrives, drives
 
     def UnmountDrive(self, letter):
+        """
+        Called by the internal queue mechanism for generating a drive unmounted
+         event.
+
+        :param letter: str() Drive letter.
+        :return: None
+        """
+
         for suffix, storedDrives, drives in self.GetDrives():
             if 'Drive' in suffix:
                 suffix.append('Unmounted')
@@ -714,22 +739,26 @@ class WMI(threading.Thread):
 
             for deviceId in storedDrives.keys():
                 drive, payload = storedDrives[deviceId]
+
+                if payload['drive_letter'][:-1] != letter:
+                    continue
+
                 if deviceId in drives:
                     continue
 
-                suffix.extend([
-                    payload['name'],
-                    payload['drive_letter'][:-1]
-                ])
-
-                if suffix[-1] == letter:
-                    self.plugin.TriggerEvent(
-                        '.'.join(suffix),
-                        payload
-                    )
-                    del (storedDrives[deviceId])
+                suffix += [payload['name'], letter]
+                self.plugin.TriggerEvent('.'.join(suffix), payload)
+                del storedDrives[deviceId]
 
     def MountDrive(self, letter=None):
+        """
+        Called by the internal queue mechanism for generating a drive mounted
+        event.
+
+        :param letter: str() Drive letter.
+        :return: None
+        """
+        TriggerEvent = self.plugin.TriggerEvent
 
         for suffix, storedDrives, drives in self.GetDrives():
             for deviceId in drives.keys():
@@ -738,35 +767,32 @@ class WMI(threading.Thread):
 
                 if 'CD-Rom' in suffix:
                     cdrom = drives[deviceId]
-                    if cdrom.MediaLoaded:
-                        suffix.append('Inserted')
-                        payload = dict(
-                            drive_letter=cdrom.Drive,
-                            max_size=cdrom.MaxMediaSize,
-                            media_type=cdrom.MediaType,
-                            manufacturer=cdrom.Manufacturer,
-                            size=cdrom.Size,
-                            status=cdrom.Status,
-                            name=cdrom.Caption,
-                        )
-                        suffix.extend([
-                            cdrom.Caption,
-                            letter
-                        ])
-                        if cdrom.Drive[:-1] == letter or letter is None:
-                            storedDrives[deviceId] = (
-                                cdrom,
-                                payload
-                            )
-                            if letter is not None:
-                                self.plugin.TriggerEvent(
-                                    '.'.join(suffix),
-                                    payload
-                                )
+
+                    if letter and cdrom.Drive[:-1] != letter:
+                        continue
+                    if not cdrom.MediaLoaded:
+                        continue
+
+                    payload = dict(
+                        drive_letter=cdrom.Drive,
+                        max_size=cdrom.MaxMediaSize,
+                        media_type=cdrom.MediaType,
+                        manufacturer=cdrom.Manufacturer,
+                        size=cdrom.Size,
+                        status=cdrom.Status,
+                        name=cdrom.Caption,
+                    )
+                    storedDrives[deviceId] = (cdrom, payload)
+
+                    if letter:
+                        suffix += ['Inserted', cdrom.Caption, letter]
+                        TriggerEvent('.'.join(suffix), payload)
 
                 elif 'NetworkDrive' in suffix:
                     nDrive = drives[deviceId]
-                    suffix.append('Attached')
+
+                    if letter and nDrive.Name[:-1] != letter:
+                        continue
 
                     payload = dict(
                         network_path=nDrive.ProviderName,
@@ -776,21 +802,15 @@ class WMI(threading.Thread):
                         drive_letter=nDrive.Name,
                         free_space=nDrive.FreeSpace
                     )
-                    suffix.extend([
-                        nDrive.ProviderName.replace('\\', '\\\\'),
-                        letter
-                    ])
+                    storedDrives[deviceId] = (nDrive, payload)
 
-                    if nDrive.Name[:-1] == letter or letter is None:
-                        storedDrives[deviceId] = (
-                            nDrive,
-                            payload
-                        )
-                        if letter is not None:
-                            self.plugin.TriggerEvent(
-                                '.'.join(suffix),
-                                payload
-                            )
+                    if letter:
+                        suffix += [
+                            'Attached',
+                            nDrive.ProviderName.replace('\\', '\\\\'),
+                            letter
+                        ]
+                        TriggerEvent('.'.join(suffix), payload)
 
                 else:
                     drive = drives[deviceId]
@@ -807,7 +827,9 @@ class WMI(threading.Thread):
                             'LogicalDiskToPartition'
                         )
                         for disk in self.wmi.ExecQuery(diskQuery):
-                            suffix.append('Mounted')
+                            if letter and disk.DeviceID[:-1] != letter:
+                                continue
+
                             payload = dict(
                                 drive_letter=disk.DeviceID,
                                 free_space=disk.FreeSpace,
@@ -815,138 +837,173 @@ class WMI(threading.Thread):
                                 volume_name=disk.VolumeName,
                                 name=drive.Caption
                             )
-                            suffix.extend([
-                                drive.Caption,
-                                letter
-                            ])
-                            if disk.DeviceID[:-1] == letter or letter is None:
-                                storedDrives[deviceId] = (
-                                    disk,
-                                    payload
-                                )
-                                if letter is not None:
-                                    self.plugin.TriggerEvent(
-                                        '.'.join(suffix),
-                                        payload
-                                    )
+                            storedDrives[deviceId] = (disk, payload)
 
-    def Lookup(self, suffix, guid, data):
-        if data:
-            vendorId = data.replace('\\\\?\\', '').split('#')
-            vendorId = vendorId[:-1]
-            if len(vendorId) >= 3:
-                vendorId = '\\'.join(vendorId[:3]).upper()
-            else:
-                vendorId = '\\'.join(vendorId[:2]).upper()
+                            if letter:
+                                suffix += ['Mounted', drive.Caption, letter]
+                                TriggerEvent('.'.join(suffix), payload)
 
-            if guid in (
-                MOUNTDEV_MOUNTED_DEVICE_GUID,
-                GUID_DEVINTERFACE_PHYSICALMEDIA
-            ):
+    def ParseVendorId(self, vendorId):
+        """
+        Parses the vendor id that is received from a Windows notification.
+
+        :param vendorId: str() Notification vendor id
+        :return: str() Modified vendor id.
+        """
+
+        vendorId = vendorId.replace('\\\\?\\', '').split('#')
+        vendorId = vendorId[:-1]
+
+        if len(vendorId) >= 3:
+            vendorId = '\\'.join(vendorId[:3]).upper()
+        else:
+            vendorId = '\\'.join(vendorId[:2]).upper()
+
+        return vendorId
+
+    def Removed(self, guid, data):
+        """
+        Called by the internal queue mechanism for generating a device removed
+         event.
+
+        :param guid: str() guid of the calling Windows notification.
+        :param data: str() Vendor Id of the device that has changed.
+        :return: None
+        """
+
+        if guid in NOEVENT:
+            return
+
+        suffix = ['Device.Removed']
+        TriggerEvent = self.plugin.TriggerEvent
+
+        try:
+            display_name = DEVICES[guid][0]['display_name']
+        except KeyError:
+            TriggerEvent(suffix[0], [data])
+            return
+
+        if guid not in self.currentDevices:
+            self.currentDevices[guid] = {}
+
+        cDevices = self.currentDevices[guid]
+
+        if not cDevices:
+            return
+
+        vendorId = self.ParseVendorId(data)
+
+        for devId in cDevices.keys():
+            if devId.find(vendorId) == -1:
+                continue
+            payload = cDevices[devId]
+            suffix += [display_name.replace(' ', ''), payload['name']]
+
+            del cDevices[devId]
+            self.wmiDevices.remove(payload['device'])
+
+            TriggerEvent('.'.join(suffix), payload)
+            return
+
+    def Attached(self, guid, data):
+        """
+        Called by the internal queue mechanism for generating a device attached
+         event.
+
+        :param guid: str() guid of the calling Windows notification.
+        :param data: str() Vendor Id of the device that has changed.
+        :return: None
+        """
+
+        if guid in NOEVENT:
+            return
+
+        if guid not in self.currentDevices:
+            self.currentDevices[guid] = {}
+
+        cDevices = self.currentDevices[guid]
+        vendorId = self.ParseVendorId(data)
+        suffix = ['Device.Attached']
+        TriggerEvent = self.plugin.TriggerEvent
+
+        def FindDevices(cls_name, display_name, attr_names, **kwargs):
+            display_name = display_name.replace(' ', '')
+            devices = self.wmi.ExecQuery(
+                "Select * from Win32_" + cls_name
+            )
+
+            for device in devices:
+                if device in self.wmiDevices:
+                    continue
+
+                deviceId = ''
+                for attrName in ('DeviceId', 'DeviceID', 'HardwareId'):
+                    deviceId = getattr(device, attrName, None)
+
+                    if not isinstance(deviceId, tuple):
+                        deviceId = (deviceId,)
+                    for deviceId in list(deviceId)[:]:
+                        if deviceId and deviceId.upper().find(vendorId) > -1:
+                            break
+                        deviceId = None
+
+                    if deviceId is not None:
+                        break
+
+                if deviceId is None:
+                    continue
+
+                attr_names += ('Name', 'Description', 'Status')
+                payload = {
+                    attrName.lower(): getattr(device, attrName)
+                    for attrName in attr_names
+                }
+                payload['device_id'] = deviceId
+                payload['device'] = device
+                suffix.extend([display_name, device.Name])
+
+                cDevices[deviceId.upper()] = payload
+                self.wmiDevices.append(device)
+
+                TriggerEvent('.'.join(suffix), payload)
+                return True
+
+        if guid in DEVICES:
+            dev = DEVICES[guid][0]
+            if FindDevices(**dev):
                 return
 
-            if guid not in self.currentDevices:
-                self.currentDevices[guid] = {}
-
-            cDevices = self.currentDevices[guid]
-
-            if suffix == 'Removed':
-                try:
-                    displayName = (
-                        DEVICES[guid][0]['display_name'].replace(' ', '')
-                    )
-                except:
-                    self.plugin.TriggerEvent('Device' + suffix, [data])
+        for guid in SEARCH:
+            devs = DEVICES[guid]
+            for dev in devs:
+                if FindDevices(**dev):
                     return
 
-                if cDevices:
-                    for devId in cDevices.keys():
-                        if devId.find(vendorId) == -1:
-                            continue
-
-                        payload = cDevices[devId]
-
-                        sfx = [
-                            'Device' + suffix,
-                            displayName, payload['name']
-                        ]
-
-                        self.plugin.TriggerEvent('.'.join(sfx), payload)
-                        del (cDevices[devId])
-                        self.wmiDevices.remove(payload['device'])
-                        return
-            else:
-                def FindDevices(wmiName, displayName, attrs):
-                    displayName = displayName.replace(' ', '')
-                    devices = self.wmi.ExecQuery(
-                        "Select * from Win32_" + wmiName
-                    )
-
-                    for device in devices:
-                        if device in self.wmiDevices:
-                            continue
-
-                        def TriggerEvent(devId):
-                            payload = {
-                                attrName: getattr(device, attrName)
-                                for attrName in attrs
-                            }
-                            payload.update(dict(
-                                name=device.Name,
-                                description=device.Description,
-                                status=device.Status,
-                                device_id=devId,
-                                device=device
-                            ))
-
-                            cDevices[devId.upper()] = payload
-
-                            sufx = [
-                                'Device' + suffix,
-                                displayName,
-                                payload['name']
-                            ]
-
-                            self.plugin.TriggerEvent('.'.join(sufx), payload)
-                            self.wmiDevices.append(device)
-                            return True
-
-                        if hasattr(device, 'DeviceId'):
-                            if device.DeviceId.upper().find(vendorId) > -1:
-                                return TriggerEvent(device.DeviceId)
-                        elif hasattr(device, 'DeviceID'):
-                            if device.DeviceID.upper().find(vendorId) > -1:
-                                return TriggerEvent(device.DeviceID)
-                        elif hasattr(device, 'HardwareId'):
-                            if device.HardwareId.upper().find(vendorId) > -1:
-                                return TriggerEvent(device.HardwareId)
-
-                if guid in DEVICES:
-                    dev = DEVICES[guid][0]
-                    if FindDevices(
-                        dev['cls_name'],
-                        dev['display_name'],
-                        dev['attr_names']
-                    ):
-                        return
-                for guid in SEARCH:
-                    devs = DEVICES[guid]
-                    for dev in devs:
-                        if FindDevices(
-                            dev['cls_name'],
-                            dev['display_name'],
-                            dev['attr_names']
-                        ):
-                            return
-
-                self.plugin.TriggerEvent('Device' + suffix, [data])
+        TriggerEvent(suffix[0], [data])
 
     def DriveEvent(self, eventType, letter):
-        self.driveQueue.append((getattr(self, eventType), letter))
+        """
+        Puts the Windows notification data into the queue.
+
+        :param eventType: str() Attribute name for the event.
+        :param letter: str() Drive Letter
+        :return: None
+        """
+
+        self.queue.append((getattr(self, eventType), (letter,)))
         self.queueEvent.set()
 
-    def DeviceEvent(self, suffix, guid, data):
-        self.queue.append((suffix, guid, data))
+    def DeviceEvent(self, eventType, guid, data):
+        """
+        Puts the Windows notification data into the queue.
+
+        :param eventType: str() Attribute name for the event.
+        :param guid: str() Notification GUID
+        :param data: str() Vendor id
+        :return: None
+        """
+
+        self.queue.append((getattr(self, eventType), (guid, data)))
         self.queueEvent.set()
 
     def run(self):
@@ -961,6 +1018,7 @@ class WMI(threading.Thread):
 
             if guid not in self.currentDevices:
                 self.currentDevices[guid] = {}
+
             for dev in devs:
                 devices = wmi.ExecQuery(
                     "Select * from Win32_" + dev['cls_name']
@@ -976,30 +1034,24 @@ class WMI(threading.Thread):
                     else:
                         continue
 
+                    attrs = dev['attr_names']
+                    attrs += ('Name', 'Description', 'Status')
                     payload = {
-                        attrName: getattr(device, attrName)
-                        for attrName in dev['attr_names']
+                        attrName.lower(): getattr(device, attrName)
+                        for attrName in attrs
                     }
-                    payload.update(dict(
-                        name=device.Name,
-                        description=device.Description,
-                        status=device.Status,
-                        device_id=devId,
-                        device=device
-                    ))
-                    self.currentDevices[guid][devId.upper()] = (
-                        payload
-                    )
+                    payload['device_id'] = devId
+                    payload['device'] = device
+
+                    self.currentDevices[guid][devId.upper()] = payload
                     self.wmiDevices.append(device)
 
         while not self.stopEvent.isSet():
             self.queueEvent.wait()
             if not self.stopEvent.isSet():
                 while self.queue:
-                    self.Lookup(*self.queue.pop(0))
-                while self.driveQueue:
-                    func, letter = self.driveQueue.pop(0)
-                    func(letter)
+                    func, data = self.queue.pop(0)
+                    func(*data)
                 self.queueEvent.clear()
 
         del self.wmi
@@ -1017,7 +1069,11 @@ class DeviceChangeNotifier:
         self.plugin = plugin
         self.notifier = None
         self.WMI = WMI(plugin)
-        eg.messageReceiver.AddHandler(WM_DEVICECHANGE, self.OnDeviceChange)
+
+        eg.messageReceiver.AddHandler(
+            WM_DEVICECHANGE,
+            self.OnDeviceChange
+        )
 
         self.WMI.start()
         wx.CallAfter(self.Register)
@@ -1032,7 +1088,11 @@ class DeviceChangeNotifier:
     def Close(self):
         self.WMI.stop()
         UnregisterDeviceNotification(self.notifier)
-        eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
+
+        eg.messageReceiver.RemoveHandler(
+            WM_DEVICECHANGE,
+            self.OnDeviceChange
+        )
 
     def OnDeviceChange(self, hwnd, msg, wparam, lparam):
 
@@ -1052,10 +1112,15 @@ class DeviceChangeNotifier:
 
         def DeviceEvent(suffix):
             dbcc = DEV_BROADCAST_DEVICEINTERFACE.from_address(lparam)
+
             p = c_wchar_p()
-            oledll.ole32.StringFromCLSID(byref(dbcc.dbcc_classguid), byref(p))
+            oledll.ole32.StringFromCLSID(
+                byref(dbcc.dbcc_classguid),
+                byref(p)
+            )
             guid = p.value
             windll.ole32.CoTaskMemFree(p)
+
             self.WMI.DeviceEvent(
                 suffix,
                 guid,
@@ -1064,8 +1129,9 @@ class DeviceChangeNotifier:
 
         def VolumeEvent(mountType):
             dbcv = DEV_BROADCAST_VOLUME.from_address(lparam)
-            for driveLetter in DriveLettersFromMask(dbcv.dbcv_unitmask):
-                self.WMI.DriveEvent(mountType, driveLetter)
+            letters = DriveLettersFromMask(dbcv.dbcv_unitmask)
+            for letter in letters:
+                self.WMI.DriveEvent(mountType, letter)
 
         if wparam == DBT_DEVICEARRIVAL:
             if IsDeviceInterface():
@@ -1078,7 +1144,6 @@ class DeviceChangeNotifier:
                     DeviceEvent('Removed')
                 elif IsVolume():
                     VolumeEvent("UnmountDrive")
-
         return 1
 
 
@@ -1088,6 +1153,9 @@ class GetDevices(eg.ActionBase):
         'Returns a device object that represents a physical device\n'
         'on your computer.'
     )
+
+    def __init__(self):
+        self.result = None
 
     def __call__(self, pattern=None, **kwargs):
         if pattern is None and not kwargs:
@@ -1115,14 +1183,18 @@ class GetDevices(eg.ActionBase):
 
         win32com.client.pythoncom.CoInitialize()
         wmi = win32com.client.GetObject("winmgmts:\\root\\cimv2")
+
         for devs in DEVICES.values():
             for dev in devs:
                 if clsName == dev['cls_name']:
                     searchableItems.append(dev)
                     break
+
                 if clsName is None:
-                    if dev['display_name'].replace(' ', '') == dev['cls_name']:
+                    displayName = dev['display_name'].replace(' ', '')
+                    if displayName == dev['cls_name']:
                         searchableItems.append(dev)
+
             if clsName is not None and searchableItems:
                 break
 
@@ -1130,28 +1202,22 @@ class GetDevices(eg.ActionBase):
             primarySearch = searchCls['action_search']
             clsName = searchCls['cls_name']
             for device in wmi.ExecQuery("Select * from Win32_" + clsName):
-                primarySearch = [getattr(device, primarySearch)]
-                if hasattr(device, 'Name') and device.Name is not None:
-                    primarySearch.append(device.Name)
+                priSearch = [getattr(device, primarySearch)]
 
-                if hasattr(device, 'DeviceId') and device.DeviceId is not None:
-                    primarySearch.append(device.DeviceId)
-                if (
-                    hasattr(device, 'Description') and
-                    device.Description is not None
-                ):
-                    primarySearch.append(device.Description)
-                if (
-                    hasattr(device, 'HardwareId') and
-                    device.HardwareId is not None
-                ):
-                    primarySearch.append(device.HardwareId)
+                for attr in ('Name', 'DeviceId', 'Description'):
+                    priSearch.append(getattr(device, attr, None))
+
+                hardId = getattr(device, 'HardwareId', None)
+                if hardId and isinstance(hardId, tuple):
+                    priSearch.extend(list(hardId))
+                elif hardId:
+                    priSearch.append(hardId)
 
                 if '*' not in pattern and '?' not in pattern:
-                    if pattern in primarySearch:
+                    if pattern in priSearch:
                         foundDevices += (device,)
                 else:
-                    for search in primarySearch:
+                    for search in priSearch:
                         if fnmatch.fnmatch(search, pattern):
                             foundDevices += (device,)
                             break
@@ -1161,10 +1227,11 @@ class GetDevices(eg.ActionBase):
         return foundDevices
 
     def Configure(self, pattern=None):
+        
         filePath = os.path.join(os.path.split(__file__)[0], 'Help.zip')
-
         sys.path.insert(0, filePath)
-        import Help
+
+        Help = __import__('Help')
 
         win32com.client.pythoncom.CoInitialize()
         wmi = win32com.client.GetObject("winmgmts:\\root\\cimv2")
@@ -1176,6 +1243,7 @@ class GetDevices(eg.ActionBase):
         splitterWindow = wx.SplitterWindow(
             panel,
             -1,
+            size=(850, 400),
             style=(
                 wx.SP_LIVE_UPDATE |
                 wx.CLIP_CHILDREN |
@@ -1183,7 +1251,7 @@ class GetDevices(eg.ActionBase):
             )
         )
 
-        htmlHelp = iewin_old.IEHtmlWindow(splitterWindow)
+        htmlHelp = eg.HtmlWindow(splitterWindow)
 
         tree = wx.TreeCtrl(
             splitterWindow,
@@ -1196,21 +1264,20 @@ class GetDevices(eg.ActionBase):
         )
 
         root = tree.AddRoot('Devices')
+        tree.SetPyData(root, 'START')
 
         def SetHelp(cName):
-            cName = cName.upper()
-            if cName[0].isdigit():
-                helpName = cName[4:] + cName[:4]
-            else:
-                helpName = cName
-            htmlHelp.LoadString(getattr(Help, helpName))
+            if cName.startswith('1394'):
+                cName = cName[4:] + '1394'
+            htmlHelp.SetPage(getattr(Help, cName.upper()).encode('ascii'))
 
         deviceDict = {}
         for guid in DEVICES.keys():
             devices = DEVICES[guid]
             for device in devices:
-                if device['cls_name'] == device['display_name'].replace(' ', ''):
-                    deviceDict[device['cls_name']] = device
+                clsName = device['display_name'].replace(' ', '')
+                if device['cls_name'] == clsName:
+                    deviceDict[clsName] = device
 
         for clsName in sorted(deviceDict.keys()):
             dvc = deviceDict[clsName]
@@ -1243,7 +1310,6 @@ class GetDevices(eg.ActionBase):
                     panel.EnableButtons(False)
                     self.result = None
                 SetHelp(clsName)
-            evt.Skip()
 
         def OnSelectionChanged(evt):
             item = evt.GetItem()
@@ -1259,7 +1325,6 @@ class GetDevices(eg.ActionBase):
                     self.result = None
                     clsName = pyData
                 SetHelp(clsName)
-            evt.Skip()
 
         def OnClose(evt):
             self.event.set()
@@ -1276,10 +1341,11 @@ class GetDevices(eg.ActionBase):
 
         panel.sizer.Add(splitterWindow, 1, wx.EXPAND | wx.ALL, 10)
         SetHelp('START')
+        splitterWindow.SetSashPosition(200)
 
         while panel.Affirmed():
             panel.SetResult(self.result)
 
-        sys.path.pop(0)
         del wmi
         win32com.client.pythoncom.CoUninitialize()
+        sys.path.remove(filePath)
