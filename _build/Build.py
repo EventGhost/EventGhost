@@ -99,6 +99,8 @@ class MyBuilder(builder.Builder):
         "wx.lib.pdfwin_old",
         "wx.lib.pdfviewer",
         "wx.lib.pubsub"
+        "wx.lib.iewin",
+        "wx.lib.iewin_old"
     ]
 
     def BuildInstaller(self):
