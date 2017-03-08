@@ -1106,6 +1106,7 @@ class DeviceChangeNotifier:
     from the message and then passes it to the WMI thread so an event can be
      generated.
     """
+
     def __init__(self, plugin):
         """
         Registers for Windows notifications for Devices/Drives being attached
@@ -1227,6 +1228,8 @@ class GetDevices(eg.ActionBase):
     Help is located in the configuration dialog for this action.
     """
 
+    __docsort__ = ('__call__',)
+
     name = 'Get System Devices'
     description = (
         'Returns a device object that represents a physical device\n'
@@ -1237,6 +1240,45 @@ class GetDevices(eg.ActionBase):
         self.result = None
 
     def __call__(self, pattern=None, **kwargs):
+        """
+        Searches Windows WMI for devices matching a user supplied string.
+
+        Calls Windows WMI for device instances and then searches the instances
+         Caption, Name, HardwareId, DeviceId, DeviceID attributes to see if
+         they match the string that has been supplied.
+
+        Wildcards can be used :
+            ? Matches a single character
+            * Matches a  series of characters
+
+        When using this action it is advisable to pass the search text via a
+        keyword. the keyword you would use is the device type. it is very
+        expensive to iterate through all of the devices on a computer. If you
+        also use wildcards it could take a while to return the devices. The
+        device types can be gotten from the configuration dialog for this
+        action. They are container labels for the devices, all you need do is
+        remove any spaces.
+
+        The returned value is a tuple of device instances.. Each device comes
+        from a device type and each device type may have different attributes.
+        So you will need to read the Help for the different device types you
+        want to access. These help files contain all of the attribute names
+        and a description of them. The help is located in this actions
+        configuration panel, you just need to click on the device type you
+        want to know about and the help will load.
+
+        :param pattern: str() text to search for.
+
+        GetDevices('SOME HDD NAME')
+
+        :param kwargs: Keyword must be a valid device type. Value is the string
+         to search for.
+
+        GetDevices(DiskDrive='SOME HDD NAME')
+
+        :return: tuple() WMI instances that represent a device.
+        """
+
         if pattern is None and not kwargs:
             return
 
