@@ -27,7 +27,7 @@ import wx
 import sys
 import os
 import threading
-import platform
+
 from wx.lib import iewin_old
 
 # Local imports
@@ -53,12 +53,17 @@ from eg.WinApi.Dynamic import (
     windll
 )
 
-if platform.version() in ('5.2', '5.1'):
-    WIN_XP = True
-else:
-    WIN_XP = False
+try:
+    WIN_XP = eg.WindowsVersion.IsXP()
+except AttributeError:
+    import platform
 
-del platform
+    if platform.version().split('.')[:2] in (['5', '2'], ['5', '1']):
+        WIN_XP = True
+    else:
+        WIN_XP = False
+
+    del platform
 
 DEVICE_NOTIFY_ALL_INTERFACE_CLASSES = 0x00000004
 
@@ -645,6 +650,10 @@ ASSOCIATORS = (
 
 
 class WMI(threading.Thread):
+    """
+    Subclass of threading.Thread that handles the WMI lookup of devices as well
+     as generating events.
+    """
 
     def __init__(self, plugin):
         """
@@ -728,6 +737,21 @@ class WMI(threading.Thread):
         :param letter: str() Drive letter.
         :return: None
         """
+
+        driveTypes = [
+            [self.localDrives, ['Drive.Unmounted']],
+            [self.networkDrives, ['NetworkDrive.Detached']],
+            [self.cdromDrives, ['CD-Rom.Ejected']]
+        ]
+
+        while driveTypes:
+            storedDrives, suffix = driveTypes.pop(0)
+            if letter + ':' in storedDrives:
+                drive, payload = storedDrives[letter + ':']
+                suffix += [payload['name'], letter]
+                self.plugin.TriggerEvent('.'.join(suffix), payload)
+                del storedDrives[letter + ':']
+                return
 
         for suffix, storedDrives, drives in self.GetDrives():
             if 'Drive' in suffix:
@@ -1007,6 +1031,13 @@ class WMI(threading.Thread):
         self.queueEvent.set()
 
     def run(self):
+        """
+        Handles the population of devices when the thread starts. This also
+        loops and pulls data from the queue and sends it where it needs to go
+         for proper event generation.
+
+        :return: None
+        """
         win32com.client.pythoncom.CoInitialize()
         self.wmi = wmi = win32com.client.GetObject("winmgmts:\\root\\cimv2")
 
@@ -1059,13 +1090,29 @@ class WMI(threading.Thread):
         win32com.client.pythoncom.CoUninitialize()
 
     def stop(self):
+        """
+        Stops the thread.
+
+        :return: None
+        """
         self.stopEvent.set()
         self.queueEvent.set()
         self.join(1.0)
 
 
 class DeviceChangeNotifier:
+    """
+    This class receives the Windows notifications and grams any necessary data
+    from the message and then passes it to the WMI thread so an event can be
+     generated.
+    """
     def __init__(self, plugin):
+        """
+        Registers for Windows notifications for Devices/Drives being attached
+        or removed.
+
+        :param plugin: System plugin instance
+        """
         self.plugin = plugin
         self.notifier = None
         self.WMI = WMI(plugin)
@@ -1079,6 +1126,13 @@ class DeviceChangeNotifier:
         wx.CallAfter(self.Register)
 
     def Register(self):
+        """
+        Registers for the notifications. This gets called via the use of
+        wx.CallAfter. This is done because the actual registration seems to be
+        much happier when done from the main thread.
+
+        :return: None
+        """
         self.notifier = RegisterDeviceNotification(
             eg.messageReceiver.hwnd,
             pointer(DEV_BROADCAST_DEVICEINTERFACE()),
@@ -1086,6 +1140,12 @@ class DeviceChangeNotifier:
         )
 
     def Close(self):
+        """
+        Performs the shutdown of the WMI thread. Als unregisters for the
+        Windows notifications.
+
+        :return:None
+        """
         self.WMI.stop()
         UnregisterDeviceNotification(self.notifier)
 
@@ -1095,6 +1155,16 @@ class DeviceChangeNotifier:
         )
 
     def OnDeviceChange(self, hwnd, msg, wparam, lparam):
+        """
+        Callback method the Windows notification calls when a message needs to
+        be delivered.
+
+        :param hwnd: Some window handle.
+        :param msg: Some window message.
+        :param wparam: long() Notification type.
+        :param lparam: long() Memory address for notification class.
+        :return: None
+        """
 
         def DriveLettersFromMask(mask):
             return [
@@ -1148,6 +1218,15 @@ class DeviceChangeNotifier:
 
 
 class GetDevices(eg.ActionBase):
+    """
+    System.GetDevice action.
+
+    Searches for a device that the user specifies the name/vendorId.
+    Returns a WMI device instance for the device(s).
+
+    Help is located in the configuration dialog for this action.
+    """
+
     name = 'Get System Devices'
     description = (
         'Returns a device object that represents a physical device\n'
@@ -1227,7 +1306,7 @@ class GetDevices(eg.ActionBase):
         return foundDevices
 
     def Configure(self, pattern=None):
-        
+
         filePath = os.path.join(os.path.split(__file__)[0], 'Help.zip')
         sys.path.insert(0, filePath)
 
