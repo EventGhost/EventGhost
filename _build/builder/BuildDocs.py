@@ -51,6 +51,7 @@ MAIN_CLASSES = [
     "ConfigPanel",
     "Bunch",
     "WindowMatcher",
+    "WindowsVersion",
     "-EventGhostEvent",
     "-Scheduler",
     "-ControlProviderMixin",

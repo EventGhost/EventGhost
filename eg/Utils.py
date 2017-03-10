@@ -21,6 +21,7 @@ import os
 import sys
 import threading
 import time
+import warnings
 import wx
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
@@ -33,6 +34,13 @@ from types import ClassType
 
 # Local imports
 import eg
+
+# Make sure our deprecation warnings will be shown
+warnings.filterwarnings(
+    action="always",
+    category=DeprecationWarning,
+    module='^eg\..*'
+)
 
 __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
@@ -384,13 +392,25 @@ def IsVista():
     """
     Determine if we're running Vista or higher.
     """
-    return (sys.getwindowsversion()[0] >= 6)
+    warnings.warn(
+        "eg.Utils.IsVista() is deprecated. "
+        "Use eg.WindowsVersion.IsVista() instead",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return eg.WindowsVersion.IsVista()
 
 def IsXP():
     """
     Determine if we're running XP or higher.
     """
-    return (sys.getwindowsversion()[0:2] >= (5, 1))
+    warnings.warn(
+        "eg.Utils.IsXP() is deprecated. "
+        "Use eg.WindowsVersion.IsXP() instead",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return eg.WindowsVersion.IsXP()
 
 def LogIt(func):
     """

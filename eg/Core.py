@@ -53,6 +53,7 @@ eg.CORE_PLUGIN_GUIDS = (
     "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",  # "Window"
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
+
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
 eg.imagesDir = join(eg.mainDir, "images")

@@ -263,7 +263,7 @@ class RFXcom(eg.PluginClass):
         logStr = timeStamp+"\t"+s+"<br\n>"
         fileHandle = None
 
-        if eg.Utils.IsVista():
+        if eg.WindowsVersion.IsVista():
             progData = os.environ['ALLUSERSPROFILE']
             if (
                 not os.path.exists(progData+"/EventGhost/Log")
