@@ -62,29 +62,8 @@ SVR_ON = 0x1
 AWY_EXITING = 0x0
 AWY_ENTERING = 0x1
 
-PI = wx.PlatformInformation()
-# Windows 10 /  Server 2016
-WIN_10 = PI.CheckOSVersion(10, 0)
-WIN_8 = False
-WIN_7 = False
-WIN_VISTA = False
-WIN_XP = False
 
-if not WIN_10:
-    # Windows 8, 8.1 / Server 2012, 2012 R2 / RT, RT 8.1
-    WIN_8 = PI.CheckOSVersion(6, 2) or PI.CheckOSVersion(6, 3)
-if True not in (WIN_10, WIN_8):
-    # Windows 7 / Server 2008 R2
-    WIN_7 = PI.CheckOSVersion(6, 1)
-if True not in (WIN_10, WIN_8, WIN_7):
-    # Windows Vista / Server 2008
-    WIN_VISTA = PI.CheckOSVersion(6, 0)
-if True not in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
-    # Windows XP x86, x64 / Server 2003, 2003 R2 / Tablet PC, MCE
-    WIN_XP = PI.CheckOSVersion(5, 1) or PI.CheckOSVersion(5, 2)
-
-
-if True in (WIN_8, WIN_10):
+if eg.WindowsVersion >= 8:
     GUID_CONSOLE_DISPLAY_STATE = GUID(
         '{6fe69556-704a-47a0-8f24-c28d936fda47}'
     )
@@ -155,7 +134,7 @@ POWER_MESSAGES = {
     # PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
 }
 
-if WIN_XP:
+if eg.WindowsVersion.IsXP():
     POWER_MESSAGES.update({
         PBT_APMBATTERYLOW: 'BatteryLevel.Low', # pre win vista
         PBT_APMOEMEVENT: 'OemEvent', # pre win vista
@@ -219,7 +198,7 @@ class PowerBroadcastNotifier:
         self.savingNotify = None
         self.schemeNotify = None
 
-        if True in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
+        if eg.WindowsVersion >= 'Vista':
             wx.CallAfter(self.RegisterMessages)
 
         eg.messageReceiver.AddHandler(
@@ -236,7 +215,7 @@ class PowerBroadcastNotifier:
         self.schemeNotify = Register(GUID_POWERSCHEME_PERSONALITY)
 
     def Close(self):
-        if True in (WIN_10, WIN_8, WIN_7, WIN_VISTA):
+        if eg.WindowsVersion >= 'Vista':
             Unregister(self.monitorNotify)
             Unregister(self.awayNotify)
             Unregister(self.sourceNotify)
