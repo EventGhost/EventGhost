@@ -900,7 +900,7 @@ class MyServer(ThreadingMixIn, HTTPServer):
 
     def server_bind(self):
         """Called by constructor to bind the socket."""
-        if socket.has_ipv6 and eg.Utils.IsVista():
+        if socket.has_ipv6 and eg.WindowsVersion.IsVista():
             # make it a dual-stack socket if OS is Vista/Win7
             IPPROTO_IPV6 = 41
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)

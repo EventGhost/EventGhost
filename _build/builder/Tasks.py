@@ -16,12 +16,17 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import time
 from os.path import join
 from shutil import copy2
 
 # Local imports
 import builder
+
+
+logger = logging.getLogger()
+
 
 class BuildInstaller(builder.Task):
     description = "Build Setup.exe"
@@ -146,7 +151,7 @@ def Main(buildSetup):
     """
     for task in buildSetup.tasks:
         if task.activated:
-            print "---", task.description
+            logger.log(22, "--- {0}".format(task.description))
             task.DoTask()
             print ""
-    print "--- All done!"
+    logger.log(22, "--- All done!")
