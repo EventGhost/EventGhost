@@ -54,11 +54,6 @@ from eg.WinApi.Dynamic import (
 )
 
 
-import platform
-WIN_XP = platform.version().split('.')[:2] in (['5', '2'], ['5', '1'])
-WIN_10 = platform.version().split('.')[:2] in (['10', '0'],)
-del platform
-
 DEVICE_NOTIFY_ALL_INTERFACE_CLASSES = 0x00000004
 
 # XP and later
@@ -586,7 +581,7 @@ SEARCH = [
 ]
 
 
-if not WIN_XP:
+if eg.WindowsVersion.IsXP():
     DEVICES[GUID_DEVINTERFACE_DISK][0]['attr_names'] += (
         'FirmwareRevision',
     )
@@ -614,7 +609,7 @@ if not WIN_XP:
     )
     SEARCH.insert(0, GUID_DEVINTERFACE_NET)
 
-if not WIN_10:
+if not eg.WindowsVersion.Is10():
     DEVICES[GUID_DEVINTERFACE_FLOPPY] = (
         dict(
             cls_name='FloppyDrive',
