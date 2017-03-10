@@ -235,7 +235,7 @@ class System(eg.PluginBase):
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
         # start the session change notifications (only on Win XP and above)
-        if eg.Utils.IsXP():
+        if eg.WindowsVersion.IsXP():
             from SessionChangeNotifier import SessionChangeNotifier
             self.sessionChangeNotifier = SessionChangeNotifier(self)
 
@@ -244,7 +244,7 @@ class System(eg.PluginBase):
         eg.Bind("System.SessionUnlock", self.StartHookCode)
 
         # Use VistaVolume.dll from stridger for sound volume control on Vista
-        if eg.Utils.IsVista():
+        if eg.WindowsVersion.IsVista():
             import VistaVolEvents as vistaVolumeDll
             vistaVolumeDll.RegisterVolumeHandler(self.VolumeEvent)
             vistaVolumeDll.RegisterMuteHandler(self.MuteEvent)
@@ -1955,7 +1955,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        #if eg.Utils.IsVista():
+        #if eg.WindowsVersion.IsVista():
         #    deviceCtrl.SetValue(0)
         #    deviceCtrl.Enable(False)
 
@@ -2005,7 +2005,7 @@ class GetMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2033,7 +2033,7 @@ class MuteOff(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2061,7 +2061,7 @@ class MuteOn(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2159,7 +2159,7 @@ class SetMasterVolume(eg.ActionBase):
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
 #        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
@@ -2219,7 +2219,7 @@ class ToggleMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)

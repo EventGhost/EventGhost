@@ -179,7 +179,7 @@ class BuildChangelog(builder.Task):
                         pr["number"],
                         pr["user"]["login"],
                     )
-                changes['bb'].append("[/list]\n")
+                changes['bb'].append("[/list]")
 
         if len(changes['md']) == 1:
             text = "\nOnly minor changes in this release.\n"
@@ -188,6 +188,11 @@ class BuildChangelog(builder.Task):
             print text.strip()
 
         # write a changelog in bbcode for the news section in forum
+        changes['bb'].append(
+            "\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
+            "releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
+            "[/url][/size]\n".format(buildSetup.appVersion)
+        )
         try:
             fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.bb")
             out = open(fn, "w")

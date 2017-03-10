@@ -30,6 +30,7 @@ import win32api  # NOQA
 # Local imports
 import Cli
 from Utils import *  # NOQA
+from Classes.WindowsVersion import WindowsVersion
 
 class DynamicModule(object):
     def __init__(self):

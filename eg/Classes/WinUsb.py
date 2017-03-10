@@ -423,7 +423,7 @@ class WinUsb(object):
             try:
                 result = ExecAs(
                     "subprocess",
-                    eg.Utils.IsVista() or not IsAdmin(),
+                    eg.WindowsVersion.IsVista() or not IsAdmin(),
                     "call",
                     cmdLine.encode('mbcs'),
                 )
