@@ -116,18 +116,16 @@ def get_args():
         default=None,
         nargs='?'
     )
-
     parser.add_argument(
         '-d',
         '-debug',
         '--debug',
         dest='debugLevel',
         help='Debugging',
-        type=int,
+        type=Decoder,
         required=False,
-        default=0,
-        nargs='?',
-        const=1
+        default=False,
+        nargs='*'
     )
     parser.add_argument(
         '-n',
@@ -310,6 +308,13 @@ if isMain:
 
     sys.stdout = old_stdout
 
+    if args.debugLevel is False:
+        args.debugLevel = 0
+        setattr(args, 'debugVerbose', ())
+    else:
+        setattr(args, 'debugVerbose', tuple(args.debugLevel))
+        args.debugLevel = 1
+
     if args.netSend:
         from Classes.NetworkSend import Main
         Main(args.netSend)
@@ -387,6 +392,7 @@ else:
         allowMultiLoad = False
         configDir = None
         debugLevel = 0
+        debugVerbose = ()
         hideOnStartup = False
         install = False
         isMain = isMain

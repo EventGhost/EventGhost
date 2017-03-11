@@ -21,7 +21,6 @@ import os
 import sys
 import threading
 import time
-import warnings
 import wx
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
@@ -35,18 +34,11 @@ from types import ClassType
 # Local imports
 import eg
 
-# Make sure our deprecation warnings will be shown
-warnings.filterwarnings(
-    action="always",
-    category=DeprecationWarning,
-    module='^eg\..*'
-)
-
 __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow",
+    "ExecFile", "GetTopLevelWindow", "LogItVerbose", "LogItWithReturnVerbose"
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -392,31 +384,38 @@ def IsVista():
     """
     Determine if we're running Vista or higher.
     """
-    warnings.warn(
-        "eg.Utils.IsVista() is deprecated. "
-        "Use eg.WindowsVersion.IsVista() instead",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return eg.WindowsVersion.IsVista()
+    return (sys.getwindowsversion()[0] >= 6)
 
 def IsXP():
     """
     Determine if we're running XP or higher.
     """
-    warnings.warn(
-        "eg.Utils.IsXP() is deprecated. "
-        "Use eg.WindowsVersion.IsXP() instead",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return eg.WindowsVersion.IsXP()
+    return (sys.getwindowsversion()[0:2] >= (5, 1))
 
-def LogIt(func):
+
+def CheckVerbose(func):
+    modNames = func.__module__.split('.')
+    modName = ''
+    while modNames:
+        modName += modNames.pop(0)
+        if modName in eg.startupArguments.debugVerbose:
+            return True
+        modName += '.'
+    return False
+
+
+def LogItVerbose(func):
+    return LogIt(func, verbose=True)
+
+
+def LogIt(func, verbose=False):
     """
     Logs the function call, if eg.debugLevel is set.
     """
     if not eg.debugLevel:
+        return func
+
+    if verbose and not CheckVerbose(func):
         return func
 
     if func.func_code.co_flags & 0x20:
@@ -428,20 +427,30 @@ def LogIt(func):
         return func(*args, **kwargs)
     return update_wrapper(LogItWrapper, func)
 
-def LogItWithReturn(func):
+
+def LogItWithReturnVerbose(func):
+    return LogItWithReturn(func, verbose=True)
+
+
+def LogItWithReturn(func, verbose=False):
     """
     Logs the function call and return, if eg.debugLevel is set.
     """
     if not eg.debugLevel:
         return func
 
+    if verbose and not CheckVerbose(func):
+        return func
+
     def LogItWithReturnWrapper(*args, **kwargs):
         funcName, argString = GetFuncArgString(func, args, kwargs)
+
         eg.PrintDebugNotice(funcName + argString)
         result = func(*args, **kwargs)
         eg.PrintDebugNotice(funcName + " => " + repr(result))
         return result
     return update_wrapper(LogItWithReturnWrapper, func)
+
 
 def ParseString(text, filterFunc=None):
     start = 0
