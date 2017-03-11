@@ -25,12 +25,12 @@ import locale
 import os
 import pywintypes
 import sys
+import wx
+import argparse
 from os.path import abspath, dirname, join
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
-argvIter = (val.decode(ENCODING) for val in sys.argv)
-scriptPath = argvIter.next()
 
 # get program directory
 mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
@@ -38,88 +38,318 @@ mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 # determine the commandline parameters
 import __main__  # NOQA
 
-
-class args:
-    allowMultiLoad = False
-    configDir = None
-    debugLevel = 0
-    hideOnStartup = False
-    install = False
-    isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
-    pluginFile = None
-    startupEvent = None
-    startupFile = None
-    translate = False
+isMain = hasattr(__main__, "isMain")
 
 
-if args.isMain:
-    for arg in argvIter:
-        arg = arg.lower()
-        if arg.startswith('-debug'):
-            args.debugLevel = 1
-            if len(arg) > 6:
-                args.debugLevel = int(arg[6:])
-        elif arg in ("-n", "-netsend"):
-            from Classes.NetworkSend import Main
-            Main(list(argvIter))
-            sys.exit(0)
-        elif arg in ('-h', '-hide'):
-            args.hideOnStartup = True
-        elif arg == '-install':
-            import compileall
-            compileall.compile_dir(mainDir)
-            args.install = True
-        elif arg == '-uninstall':
-            for root, dirs, files in os.walk(mainDir):
-                for name in files:
-                    if name.lower().endswith((".pyc", ".pyo")):
-                        os.remove(join(root, name))
-            sys.exit(0)
-        elif arg in ('-m', '-multiload'):
-            args.allowMultiLoad = True
-        elif arg in ('-e', '-event'):
-            eventstring = argvIter.next()
-            payloads = list(argvIter)
-            if len(payloads) == 0:
-                payloads = None
-            args.startupEvent = (eventstring, payloads)
-        elif arg in ('-f', '-file'):
-            args.startupFile = abspath(argvIter.next())
-        elif arg in ('-p', '-plugin'):
-            args.pluginFile = abspath(argvIter.next())
-            #args.isMain = False
-        elif arg == '-configdir':
-            args.configDir = argvIter.next()
-        elif arg == '-translate':
-            args.translate = True
-        elif arg == "-restart":
-            import time
-            while True:
-                appMutex = ctypes.windll.kernel32.CreateMutexA(
-                    None,
-                    0,
-                    "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-                )
-                err = ctypes.GetLastError()
-                if appMutex:
-                    ctypes.windll.kernel32.CloseHandle(appMutex)
-                if err == 0:
-                    break
-                time.sleep(0.1)
+class StdOut(object):
+
+    def __init__(self):
+        self.app = None
+        self.dialog = None
+        self.textCtrl = None
+
+    def write(self, data):
+        if self.app is None:
+            self.app = wx.App()
+            self.app.MainLoop()
+            self.dialog = wx.Dialog(None)
+            self.textCtrl = wx.StaticText(self.dialog, -1, data)
+            self.dialog.Fit()
+            self.dialog.ShowModal()
+
+            def OnClose(evt):
+                self.dialog.EndModal(wx.ID_CANCEL)
+                self.app.ExitMainLoop()
+                wx.WakeUpMainThread()
+                sys.exit(1)
+
+            self.dialog.Bind(wx.EVT_CLOSE, OnClose)
         else:
-            path = abspath(arg)
-            ext = os.path.splitext(path)[1].lower()
-            if ext == ".egplugin":
-                args.pluginFile = path
-            elif ext in (".egtree", ".xml"):
+            text = self.textCtrl.GetLabel()
+            text += '\n'
+            text += data
+            self.textCtrl.SetLabel(text)
+            self.dialog.Fit()
+
+    def flush(self):
+        pass
+
+    def isatty(self):
+        return True
+
+
+def Decoder(val):
+    return val.decode(ENCODING)
+
+
+def DefaultValue(val):
+    val = Decoder(val)
+
+    if val == 'True':
+        return True
+    elif val == 'False':
+        return False
+    else:
+        print (
+            '\n\n%s is not a valid argument.\n'
+            'True or False is only accepted\n\n' %
+            val
+        )
+
+
+def AbsPath(val):
+    return abspath(Decoder(val))
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description='EventGhost Automation Software'
+    )
+
+    parser.add_argument(
+        dest='loadFile',
+        help=(
+            'Specify a save file (.egtree)'
+            ' or a plugin file (.egplugin) to load.'
+        ),
+        type=AbsPath,
+        default=None,
+        nargs='?'
+    )
+
+    parser.add_argument(
+        '-d',
+        '-debug',
+        '--debug',
+        dest='debugLevel',
+        help='Debugging',
+        type=int,
+        required=False,
+        default=0,
+        nargs='?',
+        const=1
+    )
+    parser.add_argument(
+        '-n',
+        '-netsend',
+        '--netsend',
+        dest='netSend',
+        help='Send data to another computer.',
+        type=Decoder,
+        required=False,
+        default=None,
+        nargs='*'
+    )
+    parser.add_argument(
+        '-mg',
+        '-minimizegui',
+        '--minimizegui',
+        dest='hideOnStartup',
+        help='Start EventGhost minimized.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-i',
+        '-install',
+        '--install',
+        dest='install',
+        help='Compile all EventGhost files.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-u',
+        '-uninstall',
+        '--uninstall',
+        dest='uninstall',
+        help='Remove all .pyc (python compiled) files.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-m',
+        '-multiload',
+        '--multiload',
+        dest='allowMultiLoad',
+        help='Open multiple instances of EventGhost.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-e',
+        '-event',
+        '--event',
+        dest='startupEvent',
+        help='Send an event.',
+        type=Decoder,
+        required=False,
+        default=None,
+        nargs='*'
+    )
+    parser.add_argument(
+        '-f',
+        '-file',
+        '--file',
+        dest='startupFile',
+        help='Specify which .egtree (save file) to load.',
+        type=AbsPath,
+        required=False,
+        default=None,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-p',
+        '-plugin',
+        '--plugin',
+        dest='pluginFile',
+        help='Install Plugin',
+        type=AbsPath,
+        required=False,
+        default=None,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-c',
+        '-configdir',
+        '--configdir',
+        dest='configDir',
+        help='Specify what config file to use.',
+        type=Decoder,
+        required=False,
+        default=None,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-t',
+        '-translate',
+        '--translate',
+        dest='translate',
+        help='Open Translation Editor.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        '-r',
+        '-restart',
+        '--restart',
+        dest='restart',
+        help='Restart EventGhost.',
+        type=DefaultValue,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+
+    return parser.parse_args()
+
+
+if isMain:
+    old_stdout = sys.stdout
+    sys.stdout = StdOut()
+
+    args = get_args()
+    setattr(args, 'isMain', isMain)
+    err = ''
+
+    if args.startupFile is True:
+        err += '\nWhen using -f, -file, or --file\n'
+        err += 'you must specify file path and file name.\n\n'
+
+    if args.pluginFile is True:
+        err += '\nWhen using -p, -plugin, or --plugin\n'
+        err += 'you must specify file path and file name.\n\n'
+
+    if args.configDir is True:
+        err += '\nWhen using -c, -configdir, or --configdir\n'
+        err += 'you must specify file path and file name.\n\n'
+
+    if args.startupEvent is not None and not args.startupEvent:
+        err += '\nWhen using -e, -event, or --event\n'
+        err += 'you must specify the event and payload (if any).\n\n'
+
+    if args.netSend is not None and not args.netSend:
+        err += '\nWhen using -n, -netsend, or --netsend\n'
+        err += 'you must specify the data to be sent.\n\n'
+
+    if args.loadFile:
+        path = args.saveFile
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".egplugin":
+            args.pluginFile = path
+        elif ext in (".egtree", ".xml"):
+            if args.startupFile:
+                err += '\nYou cannot use the switches -f, -file, or --file\n'
+                err += 'when specifying the file to load after the executable.'
+                err += '\n\n'
+
+            else:
                 args.startupFile = path
 
-    if (
-        not args.allowMultiLoad and
-        not args.translate and
-        args.isMain  #and
-        #not args.pluginFile
-    ):
+    if err:
+        print err
+
+    sys.stdout = old_stdout
+
+    if args.netSend:
+        from Classes.NetworkSend import Main
+        Main(args.netSend)
+        sys.exit(0)
+
+    if args.install:
+        import compileall
+        compileall.compile_dir(mainDir)
+
+    if args.uninstall:
+        for root, dirs, files in os.walk(mainDir):
+            for name in files:
+                if name.lower().endswith((".pyc", ".pyo")):
+                    os.remove(join(root, name))
+        sys.exit(0)
+
+    if args.startupEvent:
+        eventstring = args.startupEvent[0]
+        payload = args.startupEvent[1:]
+        if len(payload) == 0:
+            payload = None
+        args.startupEvent = (eventstring, payloads)
+
+    if args.restart:
+        import time
+
+        while True:
+            appMutex = ctypes.windll.kernel32.CreateMutexA(
+                None,
+                0,
+                "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+            )
+            err = ctypes.GetLastError()
+            if appMutex:
+                ctypes.windll.kernel32.CloseHandle(appMutex)
+            if err == 0:
+                break
+            time.sleep(0.1)
+
+    if not args.allowMultiLoad and not args.translate and isMain:
         # check if another instance of the program is running
         appMutex = ctypes.windll.kernel32.CreateMutexA(
             None,
@@ -135,10 +365,10 @@ if args.isMain:
                     e.OpenFile(args.startupFile)
                 if args.startupEvent is not None:
                     e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
-                elif args.pluginFile:
+                if args.pluginFile:
                     e.InstallPlugin(args.pluginFile)
-                else:
-                    e.BringToFront()
+
+                e.BringToFront()
             except pywintypes.com_error as err:
                 if err[0] in (-2147024156, -2147467259):
                     msg = (
@@ -151,3 +381,17 @@ if args.isMain:
                 ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
             finally:
                 ctypes.windll.kernel32.ExitProcess(0)
+
+else:
+    class args:
+        allowMultiLoad = False
+        configDir = None
+        debugLevel = 0
+        hideOnStartup = False
+        install = False
+        isMain = isMain
+        pluginFile = None
+        startupEvent = None
+        startupFile = None
+        translate = False
+
