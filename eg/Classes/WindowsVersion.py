@@ -346,3 +346,5 @@ class WindowsVersion:
         :rtype: bool
         """
         return _compare('==', "10")
+
+WindowsVersion = WindowsVersion()
