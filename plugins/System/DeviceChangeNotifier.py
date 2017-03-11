@@ -692,7 +692,7 @@ def _create_event(device_ids, attr_names, display_name, device):
 
     for device_id in device_ids:
         if device_id.startswith('WPDBUSENUMROOT'):
-            name = device.Description + '.' + device.Name[0]
+            name = device.Description.strip() + '.' + device.Name[0]
             payload['drive_letter'] = device.Name[:2]
 
     if hasattr(device, 'ClassGuid') and device.ClassGuid in SETUP_CLASS_GUIDS:
@@ -724,67 +724,23 @@ class WMI(threading.Thread):
         self.queue = []
         self.currentDevices = {}
         self.networkDrives = {}
+        self.removableDrives = {}
+        self.ramDrives = {}
         self.localDrives = {}
         self.cdromDrives = {}
         self.wmi = None
 
-    @eg.LogItWithReturn
-    def GetDrives(self):
-        """
-        Retrieves WMI instances that represent drives.
-
-        :return: WMI instances of Win32_DiskDrive, Win32_MappedLogicalDisk and
-        Win32_CDROMDrive.
-        """
-        res = ()
-        logicalDisks = self.wmi.ExecQuery(
-            "Select * from Win32_LogicalDisk"
+    def _get_drive_type(self, driveType):
+        driveTypes = (
+            ([], {}, None),
+            ([], {}, None),
+            (['RemovableDrive'], self.removableDrives, 'DiskDrive'),
+            (['Drive'], self.localDrives, 'DiskDrive'),
+            (['NetworkDrive'], self.networkDrives, 'MappedLogicalDisk'),
+            (['CD-Rom'], self.cdromDrives, 'CDROMDrive'),
+            (['RamDrive'], self.ramDrives, 'DiskDrive'),
         )
-
-        for disk in logicalDisks:
-            if disk.DriveType == 2: # Removable
-                suffix = []
-                storedDrives = {}
-                drives = {}
-
-            elif disk.DriveType == 3: # Local
-                suffix = ['Drive']
-                storedDrives = self.localDrives
-                diskDrives = self.wmi.ExecQuery(
-                    "Select * from Win32_DiskDrive"
-                )
-                drives = {drive.DeviceID: drive for drive in diskDrives}
-
-            elif disk.DriveType == 4: # Network
-                suffix = ['NetworkDrive']
-                storedDrives = self.networkDrives
-                mappedDrives = self.wmi.ExecQuery(
-                    "Select * from  Win32_MappedLogicalDisk"
-                )
-                drives = {drive.DeviceID: drive for drive in mappedDrives}
-
-            elif disk.DriveType == 5: # Compact
-                suffix = ['CD-Rom']
-                storedDrives = self.cdromDrives
-                cdromDrives = self.wmi.ExecQuery(
-                    "Select * from Win32_CDROMDrive"
-                )
-                drives = {drive.DeviceID: drive for drive in cdromDrives}
-
-            elif disk.DriveType == 6: # Ram
-                suffix = []
-                storedDrives = {}
-                drives = {}
-
-            else:
-                suffix = []
-                storedDrives = {}
-                drives = {}
-
-            if not suffix:
-                continue
-            res += ((suffix, storedDrives, drives),)
-        return res
+        return driveTypes[driveType]
 
     @eg.LogIt
     def UnmountDrive(self, letter):
@@ -796,41 +752,25 @@ class WMI(threading.Thread):
         :return: None
         """
 
-        driveTypes = [
-            [self.localDrives, ['Drive.Unmounted']],
-            [self.networkDrives, ['NetworkDrive.Detached']],
-            [self.cdromDrives, ['CD-Rom.Ejected']]
-        ]
+        eventTypes = (
+            None,
+            None,
+            'Unplugged',
+            'Unmounted',
+            'Detached',
+            'Ejected',
+            'Destroyed'
+        )
 
-        while driveTypes:
-            storedDrives, suffix = driveTypes.pop(0)
+        for i in range(2, 7):
+            suffix, storedDrives, _ = self._get_drive_type(i)
+
             if letter + ':' in storedDrives:
-                drive, payload = storedDrives[letter + ':']
-                suffix += [payload['name'], letter]
+                payload = storedDrives[letter + ':']
+                suffix += [eventTypes[i], payload['name'], letter]
                 self.plugin.TriggerEvent('.'.join(suffix), payload)
                 del storedDrives[letter + ':']
                 return
-
-        for suffix, storedDrives, drives in self.GetDrives():
-            if 'Drive' in suffix:
-                suffix.append('Unmounted')
-            elif 'NetworkDrive' in suffix:
-                suffix.append('Detached')
-            else:
-                suffix.append('Ejected')
-
-            for deviceId in storedDrives.keys():
-                drive, payload = storedDrives[deviceId]
-
-                if payload['drive_letter'][:-1] != letter:
-                    continue
-
-                if deviceId in drives:
-                    continue
-
-                suffix += [payload['name'], letter]
-                self.plugin.TriggerEvent('.'.join(suffix), payload)
-                del storedDrives[deviceId]
 
     @eg.LogIt
     def MountDrive(self, letter=None):
@@ -841,89 +781,113 @@ class WMI(threading.Thread):
         :param letter: str() Drive letter.
         :return: None
         """
-        TriggerEvent = self.plugin.TriggerEvent
 
-        for suffix, storedDrives, drives in self.GetDrives():
-            for deviceId in drives.keys():
-                if deviceId in storedDrives:
-                    continue
+        if letter:
+            TriggerEvent = self.plugin.TriggerEvent
+            logicalDisks = self.wmi.ExecQuery(
+                'Select * from Win32_LogicalDisk WHERE DeviceID="%s"' %
+                (letter + ':',)
+            )
 
-                if 'CD-Rom' in suffix:
-                    cdrom = drives[deviceId]
+        else:
+            def TriggerEvent(*args):
+                pass
 
-                    if letter and cdrom.Drive[:-1] != letter:
+            logicalDisks = self.wmi.ExecQuery(
+                "Select * from Win32_LogicalDisk"
+            )
+
+        for disk in logicalDisks:
+            suffix, storedDrives, clsName = (
+                self._get_drive_type(disk.DriveType)
+            )
+
+            if clsName is not None:
+                drives = self.wmi.ExecQuery(
+                    'Select * from Win32_' + clsName
+                )
+
+                for drive in drives:
+                    deviceId = drive.DeviceID
+
+                    if deviceId in storedDrives:
                         continue
-                    if not cdrom.MediaLoaded:
-                        continue
 
-                    payload = dict(
-                        drive_letter=cdrom.Drive,
-                        max_size=cdrom.MaxMediaSize,
-                        media_type=cdrom.MediaType,
-                        manufacturer=cdrom.Manufacturer,
-                        size=cdrom.Size,
-                        status=cdrom.Status,
-                        name=cdrom.Caption,
-                    )
-                    storedDrives[deviceId] = (cdrom, payload)
+                    if 'CD-Rom' in suffix:
+                        if letter and drive.Drive[:-1] != letter:
+                            continue
+                        if not drive.MediaLoaded:
+                            continue
 
-                    if letter:
-                        suffix += ['Inserted', cdrom.Caption, letter]
+                        payload = dict(
+                            drive_letter=disk.DeviceID,
+                            max_size=drive.MaxMediaSize,
+                            media_type=drive.MediaType,
+                            manufacturer=drive.Manufacturer,
+                            size=drive.Size,
+                            status=drive.Status,
+                            name=drive.Caption,
+                        )
+                        suffix += [
+                            'Inserted',
+                            drive.Caption,
+                            disk.DeviceID[:-1]
+                        ]
+
+                        storedDrives[disk.DeviceID] = payload
                         TriggerEvent('.'.join(suffix), payload)
 
-                elif 'NetworkDrive' in suffix:
-                    nDrive = drives[deviceId]
+                    elif 'NetworkDrive' in suffix:
+                        if letter and drive.Name[:-1] != letter:
+                            continue
 
-                    if letter and nDrive.Name[:-1] != letter:
-                        continue
-
-                    payload = dict(
-                        network_path=nDrive.ProviderName,
-                        name=nDrive.ProviderName.replace('\\', '\\\\'),
-                        volume_name=nDrive.VolumeName,
-                        size=nDrive.Size,
-                        drive_letter=nDrive.Name,
-                        free_space=nDrive.FreeSpace
-                    )
-                    storedDrives[deviceId] = (nDrive, payload)
-
-                    if letter:
+                        payload = dict(
+                            network_path=drive.ProviderName,
+                            name=drive.ProviderName.replace('\\', '\\\\'),
+                            volume_name=drive.VolumeName,
+                            size=drive.Size,
+                            drive_letter=disk.DeviceID,
+                            free_space=drive.FreeSpace
+                        )
                         suffix += [
                             'Attached',
-                            nDrive.ProviderName.replace('\\', '\\\\'),
-                            letter
+                            drive.ProviderName.replace('\\', '\\\\'),
+                            disk.DeviceID[:-1]
                         ]
+
+                        storedDrives[disk.DeviceID] = payload
                         TriggerEvent('.'.join(suffix), payload)
 
-                else:
-                    drive = drives[deviceId]
-
-                    partitionQuery = ASSOCIATORS % (
-                        'DiskDrive',
-                        deviceId.replace('\\', '\\\\'),
-                        'DiskDriveToDiskPartition'
-                    )
-                    for partition in self.wmi.ExecQuery(partitionQuery):
-                        diskQuery = ASSOCIATORS % (
-                            'DiskPartition',
-                            partition.DeviceID,
-                            'LogicalDiskToPartition'
+                    else:
+                        partitionQuery = ASSOCIATORS % (
+                            'DiskDrive',
+                            deviceId.replace('\\', '\\\\'),
+                            'DiskDriveToDiskPartition'
                         )
-                        for disk in self.wmi.ExecQuery(diskQuery):
-                            if letter and disk.DeviceID[:-1] != letter:
-                                continue
-
-                            payload = dict(
-                                drive_letter=disk.DeviceID,
-                                free_space=disk.FreeSpace,
-                                size=disk.Size,
-                                volume_name=disk.VolumeName,
-                                name=drive.Caption
+                        for partition in self.wmi.ExecQuery(partitionQuery):
+                            diskQuery = ASSOCIATORS % (
+                                'DiskPartition',
+                                partition.DeviceID,
+                                'LogicalDiskToPartition'
                             )
-                            storedDrives[deviceId] = (disk, payload)
+                            for disk in self.wmi.ExecQuery(diskQuery):
+                                if letter and disk.DeviceID[:-1] != letter:
+                                    continue
 
-                            if letter:
-                                suffix += ['Mounted', drive.Caption, letter]
+                                payload = dict(
+                                    drive_letter=disk.DeviceID,
+                                    free_space=disk.FreeSpace,
+                                    size=disk.Size,
+                                    volume_name=disk.VolumeName,
+                                    name=drive.Caption
+                                )
+                                suffix += [
+                                    'Mounted',
+                                    drive.Caption,
+                                    disk.DeviceID[:-1]
+                                ]
+
+                                storedDrives[disk.DeviceID] = payload
                                 TriggerEvent('.'.join(suffix), payload)
 
     @eg.LogIt
@@ -1417,40 +1381,41 @@ class GetDevices(eg.ActionBase):
                 if self.result == {clsName: deviceLabel}:
                     tree.SelectItem(deviceItem)
 
+        def SetResult(item, pyData):
+            deviceName = tree.GetItemText(item)
+            clsName = pyData['cls_name']
+            self.result = {clsName: deviceName}
+            panel.EnableButtons(True)
+            return clsName
+
         def OnActivated(evt):
             item = evt.GetItem()
             if item.IsOk():
                 pyData = tree.GetPyData(item)
                 if isinstance(pyData, dict):
-                    deviceName = tree.GetItemText(item)
-                    clsName = pyData['cls_name']
-                    self.result = {clsName: deviceName}
-                    panel.EnableButtons(True)
+                    helpName = SetResult(item, pyData)
                 else:
                     if tree.ItemHasChildren(item):
                         if tree.IsExpanded(item):
                             tree.Collapse(item)
                         else:
                             tree.Expand(item)
-                    clsName = pyData
+                    helpName = pyData
                     panel.EnableButtons(False)
                     self.result = None
-                SetHelp(clsName)
+                SetHelp(helpName)
 
         def OnSelectionChanged(evt):
             item = evt.GetItem()
             if item.IsOk():
                 pyData = tree.GetPyData(item)
                 if isinstance(pyData, dict):
-                    deviceName = tree.GetItemText(item)
-                    clsName = pyData['cls_name']
-                    self.result = {clsName: deviceName}
-                    panel.EnableButtons(True)
+                    helpName = SetResult(item, pyData)
                 else:
                     panel.EnableButtons(False)
                     self.result = None
-                    clsName = pyData
-                SetHelp(clsName)
+                    helpName = pyData
+                SetHelp(helpName)
 
         def OnClose(evt):
             self.event.set()
