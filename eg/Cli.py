@@ -16,32 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Parses the command line arguments of the program.
-"""
-
-import ctypes
-import locale
-import os
-import pywintypes
-import sys
-import wx
-import argparse
-from os.path import abspath, dirname, join
-
-ENCODING = locale.getdefaultlocale()[1]
-locale.setlocale(locale.LC_ALL, '')
-
-# get program directory
-mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
-
-# determine the commandline parameters
-import __main__  # NOQA
-
-isMain = hasattr(__main__, "isMain")
-
-
-HELP = '''Command Line Options
+"""Command Line Options
 ====================
 
 Usage:
@@ -59,7 +34,7 @@ Usage:
 
 The EventGhost main executable accepts the following command line arguments:
 
-.egtree, .egplugin
+egtree, egplugin
     Will load a save file or install a plugin
     eventghost Saved_Data.egtree
 
@@ -148,7 +123,27 @@ The EventGhost main executable accepts the following command line arguments:
 ** Now don't forget if you want an optional argument that has spaces in it
 to be treated as a single statement, you will need to wrap the statement in
 "double quotes"
-'''
+"""
+
+import ctypes
+import locale
+import os
+import pywintypes
+import sys
+import wx
+import argparse
+from os.path import abspath, dirname, join
+
+ENCODING = locale.getdefaultlocale()[1]
+locale.setlocale(locale.LC_ALL, '')
+
+# get program directory
+mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
+
+# determine the commandline parameters
+import __main__  # NOQA
+
+isMain = hasattr(__main__, "isMain")
 
 
 class StdOut(object):
@@ -418,12 +413,12 @@ if isMain:
     try:
         args = get_args()
     except:
-        print HELP
+        print __doc__
         stdout.ShowModal()
         sys.exit(1)
 
     if args.help:
-        print HELP
+        print __doc__
         stdout.ShowModal()
         sys.exit(1)
 
@@ -465,7 +460,7 @@ if isMain:
                 args.startupFile = path
 
     if err:
-        print err + '\n\n' + HELP
+        print err + '\n\n' + __doc__
         stdout.ShowModal()
         sys.exit(1)
 
