@@ -2,7 +2,7 @@ Command Line Options
 ====================
 
 Usage:
-    eventghost [.egtree/.egplugin file]
+    eventghost <.egtree, .egplugin file>
                [-?, /?, -help, --help] [-h, /h, -hide, --hide]
                [-i, /i, -install, --install] [-u, /u, -uninstall, --uninstall]
                [-m, /m, -multiload, --multiload] [-t, /t, -translate, --translate]
@@ -16,7 +16,7 @@ Usage:
 
 The EventGhost main executable accepts the following command line arguments:
 
-.. cmdoption:: .egtree file, .egplugin file
+.. cmdoption:: .egtree, .egplugin
     Will load a save file or install a plugin
     eventghost Saved_Data.egtree
 
