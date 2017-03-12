@@ -41,6 +41,78 @@ import __main__  # NOQA
 isMain = hasattr(__main__, "isMain")
 
 
+HELP = '''
+Usage:
+    eventghost [.egtree/.egplugin file]
+               [-?,   --help] [-h, --hide] [-i, --install] [-u, --uninstall]
+               [-m, --multiload] [-t, --translate] [-r, --restart]
+               [-n,   --netsend [data]] [-d, --debug [modules]]
+               [-e,   --event [event] [payload]] [-c, --configdir [config path]]
+               [-p,   --pluginfile [.egplugin file]] [-f, --file [.egtree file]]
+
+
+    .egtree/.egplugin file
+        will load a save file or install a plugin
+        eventghost C:\SomeDirectory\SomeFile.(egtree/egplugin)
+
+    -?,   --help              Show this help message and exit.
+    -h,   --hide             Start EventGhost minimized.
+    -i,    --install           Compile all EventGhost files.
+    -u,   --uninstall      Remove all .pyc (python compiled) files.
+    -m, --multiload     Open multiple instances of EventGhost.
+    -t,    --translate      Open Translation Editor.
+    -r,    --restart          Restart EventGhost.
+    -n,   --netsend       Send data to another computer.
+                                     --netsend "Some data to be sent"
+
+    -d,   --debug          Enable debugging. Optionally you can specify
+                                     module names to enable verbose debugging.
+                                     If the module supports verbose debugging.
+
+                                     enable verbose debugging globally.
+                                     --debug eg
+
+                                     enable debugging for all core plugins.
+                                     --debug eg.CorePluginModule
+
+                                     enable debugging for a specific core
+                                     plugin.
+                                     --debug eg.CorePluginModule.EventGhost
+
+                                     enable debugging for a specific module in
+                                     a core plugin.
+                                     --debug eg.CorePluginModule.Window.SendKeys
+
+                                     You can also specify more then one module
+                                     to set to verbose debugging just put a
+                                     space between them. Because this feature
+                                     uses a "Bottom Up" means to set the
+                                     verbose debugging doing the following is
+                                     pointless.
+                                     --debug eg.CorePluginModule eg
+
+                                     This is because eg is the bottom most
+                                     module and everything on top of it also
+                                     has verbose debugging set.
+
+    -e,    --event            Trigger an event.
+                                     --event Some.Triggered.Event PayloadData
+
+    -c,   --configdir      Specify what config file to use.
+                                     --configdir C:\SomeDirectory
+
+    -p,   --pluginfile     Install a plugin (.egplugin).
+                                     --pluginfile C:\SomeDir\PluginFile.egplugin
+
+    -f,   --file           Specify which .egtree (save file) to load.
+                                     --file C:\SomeDir\SaveFile.egtree
+
+    ** Now don't forget if you want an optional argument that has spaces in it
+    to be treated as a single statement, you will need to wrap the statement in
+    "double quotes"
+
+'''
+
 class StdOut(object):
 
     def __init__(self):
@@ -48,20 +120,39 @@ class StdOut(object):
         self.dialog = None
         self.textCtrl = None
 
+    def ShowModal(self):
+        self.dialog.ShowModal()
+
     def write(self, data):
         if self.app is None:
             self.app = wx.App()
             self.app.MainLoop()
-            self.dialog = wx.Dialog(None)
-            self.textCtrl = wx.StaticText(self.dialog, -1, data)
-            self.dialog.Fit()
-            self.dialog.ShowModal()
+            self.dialog = wx.Dialog(
+                None,
+                size=(475, 600),
+                title='Command Line Help',
+                style=(
+                    wx.CAPTION |
+                    wx.RESIZE_BORDER |
+                    wx.CLOSE_BOX
+                )
+            )
+            panel = wx.Panel(self.dialog)
+            sizer = wx.BoxSizer(wx.VERTICAL)
+            self.textCtrl = wx.TextCtrl(
+                panel,
+                -1,
+                data,
+                style=wx.TE_MULTILINE | wx.TE_READONLY
+            )
+
+            sizer.Add(self.textCtrl, 1, wx.EXPAND | wx.ALL, 10)
+            panel.SetSizer(sizer)
 
             def OnClose(evt):
                 self.dialog.EndModal(wx.ID_CANCEL)
                 self.app.ExitMainLoop()
                 wx.WakeUpMainThread()
-                sys.exit(1)
 
             self.dialog.Bind(wx.EVT_CLOSE, OnClose)
         else:
@@ -69,13 +160,15 @@ class StdOut(object):
             text += '\n'
             text += data
             self.textCtrl.SetLabel(text)
-            self.dialog.Fit()
+            self.dialog.Refresh()
 
     def flush(self):
         pass
 
     def isatty(self):
         return True
+
+stdout = StdOut()
 
 
 def Decoder(val):
@@ -95,6 +188,8 @@ def DefaultValue(val):
             'True or False is only accepted\n\n' %
             val
         )
+        stdout.ShowModal()
+        sys.exit(1)
 
 
 def AbsPath(val):
@@ -103,47 +198,54 @@ def AbsPath(val):
 
 def get_args():
     parser = argparse.ArgumentParser(
-        description='EventGhost Automation Software'
+        description='EventGhost Automation Software',
+        add_help=False
     )
 
     parser.add_argument(
-        dest='loadFile',
-        help=(
-            'Specify a save file (.egtree)'
-            ' or a plugin file (.egplugin) to load.'
-        ),
+        '-?',
+        '-help',
+        '--help',
+        dest='help',
+        type=Decoder,
+        required=False,
+        default=False,
+        nargs='?',
+        const=True
+    )
+    parser.add_argument(
+        dest='saveFile',
         type=AbsPath,
         default=None,
-        nargs='?'
+        nargs='?',
+
     )
     parser.add_argument(
         '-d',
         '-debug',
         '--debug',
         dest='debugLevel',
-        help='Debugging',
         type=Decoder,
         required=False,
         default=False,
-        nargs='*'
+        nargs='*',
+
     )
     parser.add_argument(
         '-n',
         '-netsend',
         '--netsend',
         dest='netSend',
-        help='Send data to another computer.',
         type=Decoder,
         required=False,
         default=None,
         nargs='*'
     )
     parser.add_argument(
-        '-mg',
-        '-minimizegui',
-        '--minimizegui',
+        '-h',
+        '-hide',
+        '--hide',
         dest='hideOnStartup',
-        help='Start EventGhost minimized.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -155,7 +257,6 @@ def get_args():
         '-install',
         '--install',
         dest='install',
-        help='Compile all EventGhost files.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -167,7 +268,6 @@ def get_args():
         '-uninstall',
         '--uninstall',
         dest='uninstall',
-        help='Remove all .pyc (python compiled) files.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -179,7 +279,6 @@ def get_args():
         '-multiload',
         '--multiload',
         dest='allowMultiLoad',
-        help='Open multiple instances of EventGhost.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -202,7 +301,6 @@ def get_args():
         '-file',
         '--file',
         dest='startupFile',
-        help='Specify which .egtree (save file) to load.',
         type=AbsPath,
         required=False,
         default=None,
@@ -226,7 +324,6 @@ def get_args():
         '-configdir',
         '--configdir',
         dest='configDir',
-        help='Specify what config file to use.',
         type=Decoder,
         required=False,
         default=None,
@@ -238,7 +335,6 @@ def get_args():
         '-translate',
         '--translate',
         dest='translate',
-        help='Open Translation Editor.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -250,7 +346,6 @@ def get_args():
         '-restart',
         '--restart',
         dest='restart',
-        help='Restart EventGhost.',
         type=DefaultValue,
         required=False,
         default=False,
@@ -263,9 +358,20 @@ def get_args():
 
 if isMain:
     old_stdout = sys.stdout
-    sys.stdout = StdOut()
+    sys.stdout = stdout
 
-    args = get_args()
+    try:
+        args = get_args()
+    except:
+        print HELP
+        stdout.ShowModal()
+        sys.exit(1)
+
+    if args.help:
+        print HELP
+        stdout.ShowModal()
+        sys.exit(1)
+
     setattr(args, 'isMain', isMain)
     err = ''
 
@@ -289,7 +395,7 @@ if isMain:
         err += '\nWhen using -n, -netsend, or --netsend\n'
         err += 'you must specify the data to be sent.\n\n'
 
-    if args.loadFile:
+    if args.saveFile:
         path = args.saveFile
         ext = os.path.splitext(path)[1].lower()
         if ext == ".egplugin":
@@ -304,7 +410,9 @@ if isMain:
                 args.startupFile = path
 
     if err:
-        print err
+        print err + '\n\n' + HELP
+        stdout.ShowModal()
+        sys.exit(1)
 
     sys.stdout = old_stdout
 
