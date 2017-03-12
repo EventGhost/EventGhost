@@ -16,7 +16,7 @@ Usage:
 
 The EventGhost main executable accepts the following command line arguments:
 
-.. cmdoption:: .egtree/.egplugin file
+.. cmdoption:: .egtree file, .egplugin file
     Will load a save file or install a plugin
     eventghost Saved_Data.egtree
 
