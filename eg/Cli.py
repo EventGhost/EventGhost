@@ -199,13 +199,15 @@ def AbsPath(val):
 def get_args():
     parser = argparse.ArgumentParser(
         description='EventGhost Automation Software',
-        add_help=False
+        add_help=False,
+        prefix_chars='-/'
     )
 
     parser.add_argument(
         '-?',
         '-help',
         '--help',
+        '/?',
         dest='help',
         type=Decoder,
         required=False,
@@ -213,6 +215,7 @@ def get_args():
         nargs='?',
         const=True
     )
+
     parser.add_argument(
         dest='saveFile',
         type=AbsPath,
@@ -220,10 +223,12 @@ def get_args():
         nargs='?',
 
     )
+
     parser.add_argument(
         '-d',
         '-debug',
         '--debug',
+        '/d',
         dest='debugLevel',
         type=Decoder,
         required=False,
@@ -235,6 +240,7 @@ def get_args():
         '-n',
         '-netsend',
         '--netsend',
+        '/n',
         dest='netSend',
         type=Decoder,
         required=False,
@@ -245,6 +251,7 @@ def get_args():
         '-h',
         '-hide',
         '--hide',
+        '/h',
         dest='hideOnStartup',
         type=DefaultValue,
         required=False,
@@ -256,6 +263,7 @@ def get_args():
         '-i',
         '-install',
         '--install',
+        '/i',
         dest='install',
         type=DefaultValue,
         required=False,
@@ -263,10 +271,12 @@ def get_args():
         nargs='?',
         const=True
     )
+
     parser.add_argument(
         '-u',
         '-uninstall',
         '--uninstall',
+        '/u',
         dest='uninstall',
         type=DefaultValue,
         required=False,
@@ -278,6 +288,7 @@ def get_args():
         '-m',
         '-multiload',
         '--multiload',
+        '/m',
         dest='allowMultiLoad',
         type=DefaultValue,
         required=False,
@@ -289,6 +300,7 @@ def get_args():
         '-e',
         '-event',
         '--event',
+        '/e',
         dest='startupEvent',
         help='Send an event.',
         type=Decoder,
@@ -300,6 +312,7 @@ def get_args():
         '-f',
         '-file',
         '--file',
+        '/f',
         dest='startupFile',
         type=AbsPath,
         required=False,
@@ -311,6 +324,7 @@ def get_args():
         '-p',
         '-plugin',
         '--plugin',
+        '/p',
         dest='pluginFile',
         help='Install Plugin',
         type=AbsPath,
@@ -323,6 +337,7 @@ def get_args():
         '-c',
         '-configdir',
         '--configdir',
+        '/c',
         dest='configDir',
         type=Decoder,
         required=False,
@@ -334,6 +349,7 @@ def get_args():
         '-t',
         '-translate',
         '--translate',
+        '/t',
         dest='translate',
         type=DefaultValue,
         required=False,
@@ -345,6 +361,7 @@ def get_args():
         '-r',
         '-restart',
         '--restart',
+        '/r',
         dest='restart',
         type=DefaultValue,
         required=False,
