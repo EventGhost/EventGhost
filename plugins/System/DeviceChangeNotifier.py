@@ -644,13 +644,6 @@ ASSOCIATORS = (
 
 
 def _parse_vendor_id(vendor_id):
-    """
-    Parses the vendor id that is received from a Windows notification.
-
-    :param vendor_id: str() Notification vendor id
-    :return: str() Modified vendor id.
-    """
-
     vendor_id = vendor_id.replace('\\\\?\\', '').split('#')
     vendor_id = vendor_id[:-1]
 
@@ -713,7 +706,7 @@ class WMI(threading.Thread):
         """
         Threading object that runs the WMI device lookup.
 
-        :param plugin: Instance of System plugin.
+        :type plugin: instance
         """
 
         threading.Thread.__init__(self, name='WMI Thread')
@@ -748,8 +741,8 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a drive unmounted
          event.
 
-        :param letter: str() Drive letter.
-        :return: None
+        :type letter: str
+        :rtype: None
         """
 
         eventTypes = (
@@ -778,8 +771,8 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a drive mounted
         event.
 
-        :param letter: str() Drive letter.
-        :return: None
+        :type letter: str
+        :rtype: None
         """
 
         if letter:
@@ -896,9 +889,9 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a device removed
          event.
 
-        :param guid: str() guid of the calling Windows notification.
-        :param data: str() Vendor Id of the device that has changed.
-        :return: None
+        :type guid: str
+        :type data: str
+        :rtype: None
         """
 
         TriggerEvent = self.plugin.TriggerEvent
@@ -930,9 +923,9 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a device attached
          event.
 
-        :param guid: str() guid of the calling Windows notification.
-        :param data: str() Vendor Id of the device that has changed.
-        :return: None
+        :type guid: str
+        :type data: str
+        :rtype: None
         """
 
         if guid in NOEVENT:
@@ -987,9 +980,9 @@ class WMI(threading.Thread):
         """
         Puts the Windows notification data into the queue.
 
-        :param eventType: str() Attribute name for the event.
-        :param letter: str() Drive Letter
-        :return: None
+        :type eventType: str
+        :type letter: str
+        :rtype: None
         """
 
         self.queue.append((getattr(self, eventType), (letter,)))
@@ -999,10 +992,10 @@ class WMI(threading.Thread):
         """
         Puts the Windows notification data into the queue.
 
-        :param eventType: str() Attribute name for the event.
-        :param guid: str() Notification GUID
-        :param data: str() Vendor id
-        :return: None
+        :type eventType: str
+        :type guid: str
+        :type data: str
+        :rtype: None
         """
 
         self.queue.append((getattr(self, eventType), (guid, data)))
@@ -1020,7 +1013,7 @@ class WMI(threading.Thread):
         loops and pulls data from the queue and sends it where it needs to go
          for proper event generation.
 
-        :return: None
+        :rtype: None
         """
         win32com.client.pythoncom.CoInitialize()
         self.wmi = wmi = win32com.client.GetObject("winmgmts:\\root\\cimv2")
@@ -1062,7 +1055,7 @@ class WMI(threading.Thread):
         """
         Stops the thread.
 
-        :return: None
+        :rtype: None
         """
         self.stopEvent.set()
         self.queueEvent.set()
@@ -1081,7 +1074,7 @@ class DeviceChangeNotifier:
         Registers for Windows notifications for Devices/Drives being attached
         or removed.
 
-        :param plugin: System plugin instance
+        :type plugin: instance
         """
         self.plugin = plugin
         self.notifier = None
@@ -1101,7 +1094,7 @@ class DeviceChangeNotifier:
         wx.CallAfter. This is done because the actual registration seems to be
         much happier when done from the main thread.
 
-        :return: None
+        :rtype: None
         """
         self.notifier = RegisterDeviceNotification(
             eg.messageReceiver.hwnd,
@@ -1114,7 +1107,7 @@ class DeviceChangeNotifier:
         Performs the shutdown of the WMI thread. Als unregisters for the
         Windows notifications.
 
-        :return:None
+        :rtype: None
         """
         self.WMI.stop()
         UnregisterDeviceNotification(self.notifier)
@@ -1129,11 +1122,11 @@ class DeviceChangeNotifier:
         Callback method the Windows notification calls when a message needs to
         be delivered.
 
-        :param hwnd: Some window handle.
-        :param msg: Some window message.
-        :param wparam: long() Notification type.
-        :param lparam: long() Memory address for notification class.
-        :return: None
+        :type hwnd: long
+        :type msg: long
+        :type wparam: long
+        :type lparam: long
+        :rtype: None
         """
 
         def DriveLettersFromMask(mask):
@@ -1236,16 +1229,12 @@ class GetDevices(eg.ActionBase):
         configuration panel, you just need to click on the device type you
         want to know about and the help will load.
 
-        :param pattern: str() text to search for.
-
         GetDevices('SOME HDD NAME')
-
-        :param kwargs: Keyword must be a valid device type. Value is the string
-         to search for.
-
         GetDevices(DiskDrive='SOME HDD NAME')
 
-        :return: tuple() WMI instances that represent a device.
+        :type pattern: str
+        :type kwargs: dict
+        :rtype: tuple
         """
 
         if pattern is None and not kwargs:
