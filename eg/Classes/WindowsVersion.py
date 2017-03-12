@@ -44,21 +44,21 @@ def _compare(opp, other):
     this = [int(ver[0]), int(ver[1])]
 
     versions = WINDOWS_VERSIONS[other]
-    if other not in  ("8", "XP"):
+    if other not in ("8", "XP"):
         versions = [versions]
 
     if opp == '>':
-        return bool(max([this > version for version in versions]))
+        return any(this > version for version in versions)
     elif opp == '<':
-        return bool(max([this < version for version in versions]))
+        return any(this < version for version in versions)
     elif opp == '<=':
-        return bool(max([this <= version for version in versions]))
+        return any(this <= version for version in versions)
     elif opp == '>=':
-        return bool(max([this >= version for version in versions]))
+        return any(this >= version for version in versions)
     elif opp == '==':
-        return bool(max([this == version for version in versions]))
+        return any(this == version for version in versions)
     elif opp == '!=':
-        return bool(max([this != version for version in versions]))
+        return any(this != version for version in versions)
 
 
 class WindowsVersionError(Exception):
@@ -349,4 +349,3 @@ class WindowsVersion:
         :rtype: bool
         """
         return _compare('==', "10")
-
