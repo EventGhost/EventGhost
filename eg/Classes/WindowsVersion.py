@@ -24,8 +24,8 @@ WINDOWS_VERSIONS["XP"] = [[5, 1], [5, 2]]
 WINDOWS_VERSIONS["XP32"] = [5, 1]
 WINDOWS_VERSIONS["XP64"] = [5, 2]
 WINDOWS_VERSIONS["VISTA"] = [6, 0]
-WINDOWS_VERSIONS["7"] = [[6, 1], [6,2]]
-WINDOWS_VERSIONS["8"] = [6, 2]
+WINDOWS_VERSIONS["7"] = [6, 1]
+WINDOWS_VERSIONS["8"] = [[6, 2], [6, 3]]
 WINDOWS_VERSIONS["80"] = [6, 2]
 WINDOWS_VERSIONS["81"] = [6, 3]
 WINDOWS_VERSIONS["10"] = [10, 0]
@@ -43,19 +43,22 @@ def _compare(opp, other):
     ver = platform.version().split('.')
     this = [int(ver[0]), int(ver[1])]
 
-    versions = [WINDOWS_VERSIONS[other]]
+    versions = WINDOWS_VERSIONS[other]
+    if other not in  ("8", "XP"):
+        versions = [versions]
+
     if opp == '>':
-        return all(this > version for version in versions)
+        return bool(max([this > version for version in versions]))
     elif opp == '<':
-        return all(this < version for version in versions)
+        return bool(max([this < version for version in versions]))
     elif opp == '<=':
-        return all(this <= version for version in versions)
+        return bool(max([this <= version for version in versions]))
     elif opp == '>=':
-        return all(this >= version for version in versions)
+        return bool(max([this >= version for version in versions]))
     elif opp == '==':
-        return all(this == version for version in versions)
+        return bool(max([this == version for version in versions]))
     elif opp == '!=':
-        return all(this != version for version in versions)
+        return bool(max([this != version for version in versions]))
 
 
 class WindowsVersionError(Exception):
@@ -347,4 +350,3 @@ class WindowsVersion:
         """
         return _compare('==', "10")
 
-WindowsVersion = WindowsVersion()
