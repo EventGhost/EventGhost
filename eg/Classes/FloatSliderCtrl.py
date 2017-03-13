@@ -1581,50 +1581,53 @@ class FloatSliderCtrl(wx.PyPanel):
 
 # ------------------------- END SLIDER CODE  ---------------------
 
-
-STYLES = [
-    wx.SL_HORIZONTAL | wx.SL_TOP,
-    wx.SL_HORIZONTAL | wx.SL_BOTTOM,
-    wx.SL_VERTICAL | wx.SL_LEFT,
-    wx.SL_VERTICAL | wx.SL_RIGHT
-]
-
-import sys
-
-mod = sys.modules[__name__]
-
-app = wx.App()
-
-
-position = (0, 0)
-
-for i, style in enumerate(STYLES):
-    style |= wx.SL_AUTOTICKS | wx.SL_LABELS
-    name = 'Slider' + str(i)
-    frame = wx.Frame(
-        None,
-        pos=position,
-        title=name
-    )
-    position = (position[0] + 200, position[1] + 200)
-
-    if style | wx.SL_HORIZONTAL == style:
-        size = (400, 150)
-    else:
-        size = (150, 400)
-
-    sizer = wx.BoxSizer(wx.HORIZONTAL)
-    slider = FloatSliderCtrl(
-        frame,
-        -1,
-        value=50.0,
-        minValue=10.4,
-        maxValue=78.8,
-        increment=0.2,
-        style=style,
-    )
-    sizer.Add(slider, 1, wx.EXPAND | wx.ALL, 10)
-    frame.SetSizerAndFit(sizer)
-    setattr(mod, name, frame)
-    frame.Show()
-app.MainLoop()
+# ----------- Uncomment below to run tests without EG present--------------
+# This will create 4 slider controls one for each of the 4 direction types.
+#
+# STYLES = [
+#     wx.SL_HORIZONTAL | wx.SL_TOP,
+#     wx.SL_HORIZONTAL | wx.SL_BOTTOM,
+#     wx.SL_VERTICAL | wx.SL_LEFT,
+#     wx.SL_VERTICAL | wx.SL_RIGHT
+# ]
+#
+# import sys
+#
+# mod = sys.modules[__name__]
+#
+# app = wx.App()
+#
+#
+# position = (0, 0)
+#
+# for i, style in enumerate(STYLES):
+#     style |= wx.SL_AUTOTICKS | wx.SL_LABELS
+#     name = 'Slider' + str(i)
+#     frame = wx.Frame(
+#         None,
+#         pos=position,
+#         title=name
+#     )
+#     position = (position[0] + 200, position[1] + 200)
+#
+#     if style | wx.SL_HORIZONTAL == style:
+#         size = (400, 150)
+#     else:
+#         size = (150, 400)
+#
+#     sizer = wx.BoxSizer(wx.HORIZONTAL)
+#     slider = FloatSliderCtrl(
+#         frame,
+#         -1,
+#         value=50.0,
+#         minValue=10.4,
+#         maxValue=78.8,
+#         increment=0.2,
+#         style=style,
+#         # size=size
+#     )
+#     sizer.Add(slider, 1, wx.EXPAND | wx.ALL, 10)
+#     frame.SetSizerAndFit(sizer)
+#     setattr(mod, name, frame)
+#     frame.Show()
+# app.MainLoop()
