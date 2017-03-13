@@ -243,7 +243,7 @@ NUMBER_CODES = {
     wx.WXK_NUMPAD8: 8,
     wx.WXK_NUMPAD9: 9
 }
-NUMBER_CODES.update({i: i for i in range(10)})
+NUMBER_CODES.update({i + 48: i for i in range(10)})
 
 PAGE_CODES = (
     wx.WXK_PAGEUP,
