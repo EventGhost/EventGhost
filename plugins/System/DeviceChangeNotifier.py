@@ -581,7 +581,7 @@ SEARCH = [
 ]
 
 
-if eg.WindowsVersion.IsXP():
+if not eg.WindowsVersion.IsXP():
     DEVICES[GUID_DEVINTERFACE_DISK][0]['attr_names'] += (
         'FirmwareRevision',
     )
