@@ -231,6 +231,38 @@ BOTTOM_THUMB_ACTIVE = (
     '\x00\x49\x45\x4E\x44\xAE\x42\x60\x82'
 )
 
+NUMBER_CODES = {
+    wx.WXK_NUMPAD0: 0,
+    wx.WXK_NUMPAD1: 1,
+    wx.WXK_NUMPAD2: 2,
+    wx.WXK_NUMPAD3: 3,
+    wx.WXK_NUMPAD4: 4,
+    wx.WXK_NUMPAD5: 5,
+    wx.WXK_NUMPAD6: 6,
+    wx.WXK_NUMPAD7: 7,
+    wx.WXK_NUMPAD8: 8,
+    wx.WXK_NUMPAD9: 9
+}
+NUMBER_CODES.update({i: i for i in range(10)})
+
+PAGE_CODES = (
+    wx.WXK_PAGEUP,
+    wx.WXK_NUMPAD_PAGEUP,
+    wx.WXK_PAGEDOWN,
+    wx.WXK_NUMPAD_PAGEDOWN
+)
+
+DIRECTION_CODES = (
+    wx.WXK_RIGHT,
+    wx.WXK_NUMPAD_RIGHT,
+    wx.WXK_UP,
+    wx.WXK_NUMPAD_UP,
+    wx.WXK_LEFT,
+    wx.WXK_NUMPAD_LEFT,
+    wx.WXK_DOWN,
+    wx.WXK_NUMPAD_DOWN
+)
+
 
 def GetBitmap(pngData):
     pil = GetImage(pngData)
@@ -255,6 +287,15 @@ def CheckColour(colour):
 
 
 class SliderHandler(object):
+    """
+    Cache object for FloatSliderCtrl
+
+    This object holds the data for the various parts of the float slider.
+    The object will do calculations when necessary and record the results and
+    when those results are needed are handed back. If something gets changed
+    that would alter the results the results get cleared. The next time they
+    are requested the calculation gets done again and the results ge stored.
+    """
     def __init__(self):
         self.floatFormat = None
         self.minValue = None
@@ -280,6 +321,7 @@ class SliderHandler(object):
         self.Left = False
         self.AutoTicks = False
         self.Inverse = False
+        self.PageSize = 10
 
         self.cache = {}
 
@@ -320,7 +362,7 @@ class SliderHandler(object):
 
     def SetValue(self, value):
         self.Reset()
-        remainder = value % self.Increment
+        remainder = (value % self.Increment) - self.Increment
         value -= remainder
         self.value = value
 
@@ -439,15 +481,13 @@ class SliderHandler(object):
         self.selEnd = maxVal
 
     def GetMinMaxPosition(self):
-
         minW, minH = self.MinSize
         maxW, maxH = self.MaxSize
-
         width, height = self.Size
 
         if self.Horizontal:
-            minX = 0
-            maxX = width - maxW
+            minX = 3
+            maxX = width - maxW - 3
             if self.Top:
                 minY = (height / 2) - minH
                 maxY = (height / 2) - maxH
@@ -456,8 +496,8 @@ class SliderHandler(object):
                 maxY = (height / 2)
 
         else:
-            minY = 0
-            maxY = height - maxH
+            minY = 2
+            maxY = height - maxH - 2
             if self.Left:
                 minX = (width / 2) - minW
                 maxX = (width / 2) - maxW
@@ -492,7 +532,6 @@ class SliderHandler(object):
                     y = (height / 2) - 1
 
                 y += pos
-
                 sliderLines.append([x, y, width - x2 - 4, y])
             else:
                 y = 5
@@ -510,7 +549,6 @@ class SliderHandler(object):
                     x = (width / 2) - 1
 
                 x += pos
-
                 sliderLines.append([x, y, x, height - y2 - 4])
 
         return sliderLines
@@ -518,39 +556,44 @@ class SliderHandler(object):
     def SetThumb(self, mousePos):
         minW, minH = self.MinSize
 
-        if self.Horizontal:
-            pos = mousePos[0] - 26
-            if self.MinMaxLabels:
-                pos -= minW
-        else:
-            pos = mousePos[1] - 26
-            if self.MinMaxLabels:
-                pos -= minH
-
         if self.Inverse:
             minVal, maxVal = self.MaxValue, self.MinValue
         else:
             minVal, maxVal = self.MinValue, self.MaxValue
 
-        sliderRange = maxVal - minVal
+        minR = 0
 
-        newValue = sliderRange * (float(pos) / float(self.SliderLength - 20))
+        if self.Horizontal:
+            pos = mousePos[0]
+            if self.MinMaxLabels:
+                minR += minW - 5
+                pos -= minW + 3
+        else:
+            pos = mousePos[1]
+            if self.MinMaxLabels:
+                minR += minH - 5
+                pos -= minH + 3
 
-        if minVal <= newValue <= maxVal:
-            oldThumb = self.GetThumb()
-            newThumb = self.GetThumb(newValue)
-            if oldThumb != newThumb:
-                self.SetValue(newValue)
-                try:
-                    del(self.cache['ValueSize'])
-                except KeyError:
-                    pass
-                try:
-                    del(self.cache['ValueText'])
-                except KeyError:
-                    pass
-                return True
-        return False
+        newValue = (
+            ((pos - minR) * (maxVal - minVal)) / (self.SliderLength - minR)
+        ) + minVal
+
+        if minVal > newValue:
+            newValue = minVal
+
+        elif maxVal < newValue:
+            newValue = maxVal
+
+        self.SetValue(newValue)
+        try:
+            del(self.cache['ValueSize'])
+        except KeyError:
+            pass
+        try:
+            del(self.cache['ValueText'])
+        except KeyError:
+            pass
+        return True
 
     def GetValuePosition(self):
         width, height = self.Size
@@ -562,21 +605,32 @@ class SliderHandler(object):
             if self.Top:
                 valY = (height / 2) + 8
             else:
-                valY = (height / 2) - valH - 8
+                valY = (height / 2) - valH - 9
         else:
             valY = thumbPos - (valH / 2)
 
             if self.Left:
-                valX = (width / 2) + 10
+                valX = (width / 2) + 8
             else:
-                valX = (width / 2) - valW - 10
+                valX = (width / 2) - valW - 9
 
         return valX, valY
 
     def GetThumb(self, value=None):
         if value is None:
             value = self.Value
-        thumbPos = int(value / self.Increment)
+
+        if self.Inverse:
+            minVal, maxVal = self.MaxValue, self.MinValue
+        else:
+            minVal, maxVal = self.MinValue, self.MaxValue
+
+        thumbPos = int((value - minVal) / self.Increment)
+
+        if value == minVal:
+            thumbPos = 0
+        elif value == maxVal:
+            thumbPos = len(self.TickPosition) - 1
 
         try:
             if self.Horizontal:
@@ -628,7 +682,7 @@ class SliderHandler(object):
 
         tickList = []
 
-        for i in range(steps):
+        for _ in range(steps):
             tickX1, tickY1 = tickX, tickY
 
             if self.Horizontal:
@@ -829,14 +883,18 @@ class FloatSliderCtrl(wx.PyPanel):
             size=size
         )
 
+        self.keyboardFocus = False
+        self.thumbJump = None
+
         # binding mouse and keystrokes to move the slider and generate events
         self.Bind(wx.EVT_LEFT_DOWN, self._OnMouseDown)
         self.Bind(wx.EVT_LEFT_UP, self._OnMouseUp)
         self.Bind(wx.EVT_MOTION, self._OnMouseMotion)
         self.Bind(wx.EVT_MOUSEWHEEL, self._OnMouseWheel)
         self.Bind(wx.EVT_SIZE, self._OnSize)
-        self.Bind(wx.EVT_ENTER_WINDOW, self._OnMouseEnter)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self._OnMouseLeave)
+        self.Bind(wx.EVT_CHAR_HOOK, self._OnChar)
+
+        self.Bind(wx.EVT_KILL_FOCUS, self._OnKillFocus)
         # binding paint events to draw the custom widget
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -982,30 +1040,97 @@ class FloatSliderCtrl(wx.PyPanel):
 
 # ----------------- EVENTS
 
+    def _OnKillFocus(self, evt):
+        if self.HasCapture():
+            self.ReleaseMouse()
+        self.keyboardFocus = False
+        self.thumbJump = None
+        self.Refresh()
+        evt.Skip()
+
+    def _OnChar(self, evt):
+        if self.keyboardFocus:
+            keyCode = evt.GetKeyCode()
+            sh = self.SliderHandler
+            value = self.GetValue()
+
+            if keyCode in DIRECTION_CODES:
+                increment = sh.Increment
+                if (
+                    (sh.Horizontal and keyCode in DIRECTION_CODES[4:-2]) or
+                    (not sh.Horizontal and keyCode in DIRECTION_CODES[2:-4])
+                ):
+                    increment = -increment
+
+                if (
+                    sh.Horizontal and keyCode in
+                    DIRECTION_CODES[-2:] + DIRECTION_CODES[2:-4]
+                ):
+                    keyCode = None
+                    increment = 0
+                elif (
+                    not sh.Horizontal and keyCode in
+                    DIRECTION_CODES[:2] + DIRECTION_CODES[4:-2]
+                ):
+                    keyCode = None
+                    increment = 0
+
+                if keyCode in DIRECTION_CODES[:4]:
+                    self._LineUp()
+                else:
+                    self._LineDown()
+
+                value += increment
+
+            elif keyCode in PAGE_CODES:
+                increment = (sh.MaxValue - sh.MinValue) / sh.PageSize
+
+                if (
+                    (sh.Horizontal and keyCode in PAGE_CODES[2:]) or
+                    (not sh.Horizontal and keyCode in PAGE_CODES[:2])
+                ):
+                    increment = -increment
+
+                if keyCode in PAGE_CODES[2:]:
+                    self._PageDown()
+                else:
+                    self._PageUp()
+
+                value += increment
+                if value + increment > sh.MaxValue:
+                    value = sh.MaxValue
+                elif value + increment < sh.MinValue:
+                    value = sh.MinValue
+
+            elif keyCode in NUMBER_CODES:
+                value = (
+                    self.GetMin() +
+                    (self.GetMax() * ((float(NUMBER_CODES[keyCode])) * 0.1))
+                )
+
+            if value >= self.GetMax():
+                value = self.GetMax()
+                self._Top()
+            elif value <= self.GetMin():
+                value = self.GetMin()
+                self._Bottom()
+
+            self.SetValue(value)
+        evt.Skip()
+
     def _OnMouseDown(self, evt):
-        startX, startY = self.SliderHandler.GetThumbPosition()
+        sh = self.SliderHandler
+        startX, startY = sh.GetThumbPosition()
         w, h = self.thumb.GetSize()
         stopX = startX + w
         stopY = startY + h
         mouseX, mouseY = evt.GetPosition()
 
-        goodX = startX <= mouseX <= stopX
-        goodY = startY <= mouseY <= stopY
-
-        if goodX and goodY:
+        if startX <= mouseX <= stopX and startY <= mouseY <= stopY:
             self.CaptureMouse()
             self.Refresh()
 
-    def _OnMouseUp(self, evt):
-        mouseX, mouseY = evt.GetPosition()
-        if self.HasCapture():
-            self.ReleaseMouse()
-            self.SliderHandler.SetThumb((mouseX, mouseY))
-            self.Refresh()
-            self._ThumbRelease()
-
         else:
-            sh = self.SliderHandler
             w, h = sh.Size
             minW, minH = sh.MinSize
             sliderLen = sh.SliderLength
@@ -1019,28 +1144,45 @@ class FloatSliderCtrl(wx.PyPanel):
                 if sh.Top:
                     startY = h / 2
                 else:
-                    startY = (h / 2) - 4
+                    startY = (h / 2)
                 stopX = startX + sliderLen
-                stopY = startY + 4
+                stopY = startY + 8
+                startY -= 8
             else:
                 startY = 10
                 if minMaxLabels or valueLabel:
                     startY += minH
                 if sh.Left:
-                    startX = (w / 2) - 4
+                    startX = (w / 2)
                 else:
                     startX = w / 2
 
-                stopX = startX + 4
+                stopX = startX + 8
                 stopY = startY + sliderLen
+                startX -= 8
 
-            goodX = startX <= mouseX <= stopX
-            goodY = startY <= mouseY <= stopY
+            if startX <= mouseX <= stopX and startY <= mouseY <= stopY:
+                self.thumbJump = (mouseX, mouseY)
+            else:
+                self.thumbJump = None
+        evt.Skip()
 
-            if goodX and goodY:
-                if sh.SetThumb((mouseX, mouseY)):
-                    self.Refresh()
-                    self._Changed()
+    def _OnMouseUp(self, evt):
+        if self.HasCapture():
+            self.ReleaseMouse()
+            self.SliderHandler.SetThumb(evt.GetPosition())
+            self.Refresh()
+            self._ThumbRelease()
+
+        elif self.thumbJump is not None:
+            if self.SliderHandler.SetThumb(self.thumbJump):
+                self.Refresh()
+                self._Changed()
+            self.thumbJump = None
+        else:
+            self.keyboardFocus = True
+            self.Refresh()
+        evt.Skip()
 
     def _OnMouseMotion(self, evt):
         if evt.Dragging() and evt.LeftIsDown() and self.HasCapture():
@@ -1055,40 +1197,75 @@ class FloatSliderCtrl(wx.PyPanel):
             if self.SliderHandler.Horizontal:
                 if rotation < 0:
                     value = self.GetValue() - self.GetIncrement()
-                    if value >= self.GetMin():
-                        self.SetValue(value)
                 else:
                     value = self.GetValue() + self.GetIncrement()
-                    if value <= self.GetMax():
-                        self.SetValue(value)
             else:
                 if rotation > 0:
                     value = self.GetValue() - self.GetIncrement()
-                    if value >= self.GetMin():
-                        self.SetValue(value)
                 else:
                     value = self.GetValue() + self.GetIncrement()
-                    if value <= self.GetMax():
-                        self.SetValue(value)
 
-        evt.Skip()
+            if value < self.GetMin():
+                value = self.GetMin()
+            if value > self.GetMax():
+                value = self.GetMax()
 
-    def _OnMouseLeave(self, evt):
-        self._parent.SetFocus()
-        evt.Skip()
-
-    def _OnMouseEnter(self, evt):
-        self.SetFocus()
+            self.SetValue(value)
         evt.Skip()
 
     def _OnSize(self, evt):
         self.SliderHandler.SetSize(evt.GetSize())
-        self.Refresh()
-        # self._ReDraw()
         # self.Refresh()
+        self._ReDraw()
+        # self.Refresh()
+        evt.Skip()
+
+    def _GetActualSliderPosition(self):
+        s_width, s_height = self._GetActualSliderSize()
+        c_width, c_height = self.GetSizeTuple()
+
+        pos_x = (c_width / 2) - (s_width / 2)
+        pos_y = (c_height / 2) - (s_height / 2)
+
+        return pos_x, pos_y
+
+    def _GetActualSliderSize(self):
+        sh = self.SliderHandler
+
+        minW, minH = sh.MinSize
+        maxW, maxH = sh.MaxSize
+
+        minMaxLabel = sh.MinMaxLabels
+        valueLabel = sh.ValueLabel
+        autoTicks = sh.AutoTicks
+
+        sliderLength = sh.SliderLength
+
+        if sh.Horizontal:
+            w = 26 + sliderLength
+            if minMaxLabel:
+                w += minW + maxW
+            elif valueLabel:
+                w += (minW / 2) + (maxW / 2) - 11
+            h = 42
+            if autoTicks:
+                h += 6
+            if valueLabel:
+                h += maxH
+        else:
+            w = 40
+            if autoTicks:
+                w += 6
+            if valueLabel:
+                w += maxW
+            h = 10 + sliderLength
+            if minMaxLabel:
+                h += maxH * 2
+
+        return w, h
 
     def DoGetClientSize(self, *args, **kwargs):
-        return self.SliderHandler.Size
+        return self.DoGetBestSize()
 
     def DoGetBestSize(self, *args, **kwargs):
         sh = self.SliderHandler
@@ -1104,31 +1281,25 @@ class FloatSliderCtrl(wx.PyPanel):
         sliderLength = (sliderSteps * sh.Increment) + 10
 
         if sh.Horizontal:
-            w = 26 + sliderLength
+            w = 36 + sliderLength
             if minMaxLabel:
                 w += minW + maxW
             elif valueLabel:
-                w += (minW / 2) + (maxW / 2)
-
-            h = 22
+                w += (minW / 2) + (maxW / 2) - 11
+            h = 42
             if autoTicks:
                 h += 6
             if valueLabel:
                 h += maxH
         else:
-            w = 22
-            if autoTicks and not minMaxLabel:
+            w = 40
+            if autoTicks:
                 w += 6
-            if minMaxLabel:
-                w += maxW
             if valueLabel:
                 w += maxW
 
-            h = 26 + sliderLength
-            if valueLabel and not minMaxLabel:
-                if maxH / 2 > 17:
-                    h += (maxH / 2) - 17
-            elif minMaxLabel:
+            h = 36 + sliderLength
+            if minMaxLabel:
                 h += maxH * 2
 
         return wx.Size(w, h)
@@ -1137,8 +1308,8 @@ class FloatSliderCtrl(wx.PyPanel):
 
     def _ReDraw(self):
         self.SliderHandler.Reset()
-        self.SliderHandler.SetSize(self.DoGetBestSize())
-        self.SetSize(SliderHandler.Size)
+        # self.SliderHandler.SetSize(self.DoGetBestSize())
+        self.SetSize(self.SliderHandler.GetSize())
         self.Refresh()
 
     def OnEraseBackground(self, evt):
@@ -1163,11 +1334,23 @@ class FloatSliderCtrl(wx.PyPanel):
         dc.SetBrush(wx.Brush(wx.Colour(*self.GetBackgroundColour())))
         dc.Clear()
 
+        if self.keyboardFocus:
+            dc.SetPen(wx.Pen(
+                wx.Colour(*self.fontColour),
+                width=1,
+                style=wx.PENSTYLE_DOT
+            ))
+
+            s_rectangle = (
+                self._GetActualSliderPosition() + self._GetActualSliderSize()
+            )
+            dc.DrawRectangle(*s_rectangle)
+
         dc.SetFont(self.SliderHandler.Font)
         dc.SetTextForeground(wx.Colour(*self.fontColour))
         dc.SetTextBackground(wx.Colour(*self.GetBackgroundColour()))
-        dc.SetPen(wx.Pen(wx.Colour(*self.GetForegroundColour()), 1))
         dc.SetBrush(wx.Brush(wx.Colour(*self.GetForegroundColour())))
+        dc.SetPen(wx.Pen(wx.Colour(*self.GetForegroundColour()), 2))
 
         self._DrawMinMaxLabels(dc)
         self._DrawTicks(dc)
@@ -1350,6 +1533,12 @@ class FloatSliderCtrl(wx.PyPanel):
         self.SliderHandler.SetIncrement(float(increment))
         self._ReDraw()
 
+    def SetPageSize(self, pageSize):
+        self.SliderHandler.PageSize = pageSize
+
+    def GetPageSize(self):
+        return self.SliderHandler.PageSize
+
     def GetSelStart(self):
         """
         Retruns a float of the current selection start value, or None if one
@@ -1392,3 +1581,50 @@ class FloatSliderCtrl(wx.PyPanel):
 
 # ------------------------- END SLIDER CODE  ---------------------
 
+
+STYLES = [
+    wx.SL_HORIZONTAL | wx.SL_TOP,
+    wx.SL_HORIZONTAL | wx.SL_BOTTOM,
+    wx.SL_VERTICAL | wx.SL_LEFT,
+    wx.SL_VERTICAL | wx.SL_RIGHT
+]
+
+import sys
+
+mod = sys.modules[__name__]
+
+app = wx.App()
+
+
+position = (0, 0)
+
+for i, style in enumerate(STYLES):
+    style |= wx.SL_AUTOTICKS | wx.SL_LABELS
+    name = 'Slider' + str(i)
+    frame = wx.Frame(
+        None,
+        pos=position,
+        title=name
+    )
+    position = (position[0] + 200, position[1] + 200)
+
+    if style | wx.SL_HORIZONTAL == style:
+        size = (400, 150)
+    else:
+        size = (150, 400)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    slider = FloatSliderCtrl(
+        frame,
+        -1,
+        value=50.0,
+        minValue=10.4,
+        maxValue=78.8,
+        increment=0.2,
+        style=style,
+    )
+    sizer.Add(slider, 1, wx.EXPAND | wx.ALL, 10)
+    frame.SetSizerAndFit(sizer)
+    setattr(mod, name, frame)
+    frame.Show()
+app.MainLoop()
