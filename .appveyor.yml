@@ -1,0 +1,191 @@
+# In AppVeyor's web config add an enviremont variable named GITHUB_TOKEN.
+# Set it to a token you've created on GitHub.
+# To draft a release on GitHub with AppVeyor, create a tag on master.
+
+
+version: '{build}-{branch}'
+
+
+#init:
+#  # Enable Remotedesktop and pause the build execution
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
+environment:
+  PYTHON: 'C:\Stackless27'
+  PYTHONPATH: 'C:\Stackless27;C:\Stackless27\Scripts;C:\Stackless27\DLLs;C:\Stackless27\Lib;C:\Stackless27\Lib\site-packages;'
+
+
+matrix:
+  fast_finish: true
+
+
+cache:
+  - '%PYTHON%'
+  # Manually clear cache:
+  # from agithub.AppVeyor import AppVeyor
+  # ci = AppVeyor(<your appveyor API token>)
+  # status, data = ci.api.projects.<appveyor username>.<appveyor projectname>.buildcache.delete()
+  # print status  # 204 = Ok, cache deleted
+
+
+install:
+  # HTML Help Workshop 1.32
+  # - cinst html-help-workshop
+
+  # Microsoft Visual C++ Redistributable 2008 (version min: 9.0.21022.8)
+  # - cinst vcredist2008
+
+  #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  - ps: |
+      $Env:PATH = $Env:PATH -replace "Python27", "Stackless27"
+      $PythonFolder = $Env:PYTHON
+      $PythonScripts = $PythonFolder + "\Scripts"
+      $SitePackages = $PythonFolder + "\lib\site-packages"
+      $SysWOW = $Env:SYSTEMROOT + "\SysWOW64"
+      $PythonWindowsDLL = $SysWOW + "\python27.dll"
+      $PythonDLL = $PythonFolder + "\python27.dll"
+      $InstallersFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
+      #$wget = "c:\wget64\wget64.exe"
+
+      Remove-Item $PythonWindowsDLL
+      New-Item $InstallersFolder -type directory | Out-Null
+      " "
+      "=============== prepare EventGhost build environment ==============="
+      If (-not (Test-Path $PythonFolder))
+      {
+        Function PipInstall ($msg, $mod)
+        {
+          " "
+          "--- " + $msg
+          "    Installing..."
+          pip install -q $mod
+          "    Done."
+        }
+        " "
+        "--- Stackless 2.7.12150 x86"
+        $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
+        $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
+        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
+        Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
+        "    Installing..."
+        Start-Process MsiExec.exe -Arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
+        "    Done."
+        " "
+        "--- wxPython 3.0.2.0"
+        $WXInstaller = $InstallersFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
+        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
+        Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
+        "    Installing..."
+        Start-Process $WXInstaller -Arg "/VERYSILENT /SUPPRESSMSGBOXES" -NoNewWindow -Wait
+        "    Done."
+        " "
+        "--- pip 9.0.1"
+        "    Updating..."
+        python -m pip install -q -U "pip==9.0.1"
+        "    Done."
+        " "
+        "--- setuptools 34.3.0"
+        "    Updating..."
+        pip install -q -U "setuptools==34.3.0"
+        "    Done."
+        " "
+        PipInstall "wheel 0.29.0" "wheel==0.29.0"
+        # sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
+        # jinja2 >= 2.9 has an async module which py2exe has
+        # problems with (build of eg will fail)
+        PipInstall "jinja2 2.8.1" "jinja2==2.8.1"
+        PipInstall "sphinx 1.4.8" "sphinx==1.4.8"
+        PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
+        PipInstall "pillow 3.4.2" "pillow==3.4.2"
+        PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
+        PipInstall "pycrypto 2.6.1" "pycrypto==2.6.1"
+        PipInstall "comtypes 1.1.3" "https://github.com/enthought/comtypes/archive/1.1.3.zip"
+        PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
+        #pip list --format=columns
+        " "
+        "--- pywin32 220 -----------"
+        $PyWinInstaller = $InstallersFolder + "pywin32-220.win32-py2.7.exe"
+        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
+        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
+        "    Installing..."
+        cd $InstallersFolder
+        7z x -bd -y "pywin32-220.win32-py2.7.exe" -opywin32 | Out-Null
+        cd pywin32
+        Copy-Item -Path ".\PLATLIB\*" -Destination $SitePackages -recurse
+        Copy-Item -Path ".\SCRIPTS\*" -Destination $PythonScripts -recurse
+        cd $Env:APPVEYOR_BUILD_FOLDER
+        "    Done."
+      }
+      " "
+      "--- pywin32 post install"
+      $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
+      Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
+      "    Done."
+      " "
+      "--- Inno Setup 5.5.9"
+      $InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
+      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
+      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
+      "    Installing..."
+      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
+      "    Done."
+      " "
+      " "
+      "=============== start the EventGhost build ==============="
+      " "
+      python "_build\Build.py" --build --package
+      $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
+      " "
+
+      "=============== EventGhost build finished ==============="
+      " "
+      " "
+
+
+build:
+  off
+  # If we don't turn build off, we get an error from appveyor telling us,
+  # we should decide, which project or solution file to use, because the
+  # folder contains more than one project or solution file.
+  # We don't really "build" (with a compiler), but Appveyor finds the
+  # solution files in the extension sub-directories and complains.
+
+
+#after_test:
+#  - cmd:  echo "=============== EventGhost build finished ==============="
+#  # - cmd: START /WAIT %setup-exe% /VERYSILENT /SUPPRESSMSGBOXES /NOCLOSEAPPLICATIONS
+
+
+artifacts:
+  - path: _build\output\$(SetupExe)
+  - path: _build\output\Build.log
+  - path: _build\output\CHANGELOG_THIS_RELEASE.bb
+  - path: _build\output\CHANGELOG_THIS_RELEASE.md
+
+
+#before_deploy:
+#  - cmd: python -c "fh=open('_build\\output\\CHANGELOG.md'); txt=fh.read().replace('\n','\\n'); print txt[txt.find('**'):]" > tmp
+#  - cmd: set /P CHANGELOG=< tmp
+
+
+deploy:
+    # Deploy to GitHub Releases
+  - provider: GitHub
+    auth_token: $(GITHUB_TOKEN)
+    draft: true
+    prerelease: true
+    artifact: _build\output\$(setup-exe)
+    force_update: true
+    # tag: EventGhost_0.5.0-beta6
+    # release: EventGhost_0.5.0-beta6
+    # description: $(CHANGELOG)
+    description: 'Put the contents of [CHANGELOG_THIS_RELEASE.md](https://ci.appveyor.com/api/buildjobs/$(APPVEYOR_JOB_ID)/artifacts/_build%2Foutput%2FCHANGELOG_THIS_RELEASE.md) here instead of this text.'
+    on:
+      #branch: master          # release from master branch only
+      appveyor_repo_tag: true # deploy on tag push only
+
+
+#on_finish:
+#  # Enable Remotedesktop and pause the build execution
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

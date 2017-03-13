@@ -111,6 +111,7 @@ class LogCtrl(wx.ListCtrl):
         self.isOdd = False
         self.data = collections.deque()
         eg.log.SetCtrl(self)
+        wx.CallAfter(self.SetData, eg.log.GetData())
 
     if eg.debugLevel:
         @eg.LogIt
@@ -275,16 +276,25 @@ class LogCtrl(wx.ListCtrl):
             self.Refresh()
 
     def Scroll(self):
-        if len(self.data) <= (self.GetTopItem() + self.GetCountPerPage() + 2):
+        if self.IsAutoscroll():
             self.ScrollList(0, 1000000)
+
+    def IsAutoscroll(self):
+        val = self.GetTopItem() + self.GetCountPerPage() + 2
+        return len(self.data) <= val
 
     @eg.AssertInMainThread
     def SetData(self, data):
-        #self.Freeze()
+        # self.Freeze()
         self.data = collections.deque(data)
         self.SetItemCount(len(data))
-        #self.Thaw()
-        self.Scroll()
+
+        if eg.document.visibleLogItem:
+            self.EnsureVisible(eg.document.visibleLogItem)
+        else:
+            self.EnsureVisible(len(self.data) - 1)
+
+        # self.Thaw()
 
     def SetIndent(self, shouldIndent):
         if shouldIndent:

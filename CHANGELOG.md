@@ -1,3 +1,48 @@
+## [0.5.0-beta6](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-beta6) (2017-02-12)
+
+**Enhancements:**
+
+* Add the Widget Inspection Tool to the Help menu. [\#153](https://github.com/EventGhost/EventGhost/pull/153) ([topic2k](https://github.com/topic2k))
+* \[System\] PowerBroadcastNotifier, Adds additional notifications [\#175](https://github.com/EventGhost/EventGhost/pull/175) ([kdschlosser](https://github.com/kdschlosser))
+
+**Fixed bugs:**
+
+* Fix for empty Logctrl after restoring from tray \(fixes \#138\) [\#149](https://github.com/EventGhost/EventGhost/pull/149) ([topic2k](https://github.com/topic2k))
+* \[Speech\] Fix wxGridSizer error when adding action [\#155](https://github.com/EventGhost/EventGhost/pull/155) ([per1234](https://github.com/per1234))
+* Avoid duplicate GUIDs of tree Items on copy/paste [\#161](https://github.com/EventGhost/EventGhost/pull/161) ([kdschlosser](https://github.com/kdschlosser))
+* Add six to included modules \(fixes \#169\) [\#171](https://github.com/EventGhost/EventGhost/pull/171) ([topic2k](https://github.com/topic2k))
+* \[System\] MonitorPowerOn not working in Windows 8 & 10 [\#174](https://github.com/EventGhost/EventGhost/pull/174) ([kdschlosser](https://github.com/kdschlosser))
+* Add module for patching pywin32 [\#177](https://github.com/EventGhost/EventGhost/pull/177) ([kdschlosser](https://github.com/kdschlosser))
+* \[Speech\] nearly complete rewrite of the plugin [\#179](https://github.com/EventGhost/EventGhost/pull/179) ([topic2k](https://github.com/topic2k))
+* SpinNumCtrl: Re-add workaround for traceback if min value \> 0 [\#188](https://github.com/EventGhost/EventGhost/pull/188) ([kdschlosser](https://github.com/kdschlosser))
+* Removes accidentally added SetMin\(\) from SpinNumCtrl [\#192](https://github.com/EventGhost/EventGhost/pull/192) ([kdschlosser](https://github.com/kdschlosser))
+* WinUsbWrapper.dll broken in 0.5 builds [\#195](https://github.com/EventGhost/EventGhost/pull/195) ([kdschlosser](https://github.com/kdschlosser))
+
+**Other changes:**
+
+* \[System\] Allow multiple quoted arguments in calls to CMD via /S [\#150](https://github.com/EventGhost/EventGhost/pull/150) ([edemaine](https://github.com/edemaine))
+* \[Remote Event Mapper\] Fix rendering of reStructuredText in description [\#170](https://github.com/EventGhost/EventGhost/pull/170) ([per1234](https://github.com/per1234))
+* Change "Search our issue tracker" link to also show closed issues and PRs [\#173](https://github.com/EventGhost/EventGhost/pull/173) ([per1234](https://github.com/per1234))
+
+
+## [0.5.0-beta5](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-beta5) (2016-12-24)
+
+**Enhancements:**
+
+* Finish the new "Add Event..." dialog [\#110](https://github.com/EventGhost/EventGhost/pull/110) ([topic2k](https://github.com/topic2k))
+* Documentation improvements [\#114](https://github.com/EventGhost/EventGhost/pull/114) ([per1234](https://github.com/per1234))
+* Bring back the -debug command line argument [\#118](https://github.com/EventGhost/EventGhost/pull/118) ([topic2k](https://github.com/topic2k))
+* Popup menu and hotkey for "Select All" in LogCtrl [\#124](https://github.com/EventGhost/EventGhost/pull/124) ([topic2k](https://github.com/topic2k))
+* Adds GUID to treeItems [\#133](https://github.com/EventGhost/EventGhost/pull/133) ([kdschlosser](https://github.com/kdschlosser))
+* \[Webserver\] plugin updates \(with commit for each version\) [\#134](https://github.com/EventGhost/EventGhost/pull/134) ([per1234](https://github.com/per1234))
+* \[EventGhost\] add skin selection to ShowOSD [\#136](https://github.com/EventGhost/EventGhost/pull/136) ([topic2k](https://github.com/topic2k))
+
+**Fixed bugs:**
+
+* \[Broadcaster\] fix Unicode encoding and decoding [\#122](https://github.com/EventGhost/EventGhost/pull/122) ([david-mark](https://github.com/david-mark))
+* Fix typo in build warning message [\#135](https://github.com/EventGhost/EventGhost/pull/135) ([per1234](https://github.com/per1234))
+
+
 ## [0.5.0-beta4](https://github.com/blackwind/EventGhost/releases/tag/v0.5.0-beta4) (2016-09-14)
 
 **Enhancements:**

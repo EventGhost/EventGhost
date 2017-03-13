@@ -1,0 +1,24 @@
+engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+        python:
+          mass_threshold: 35
+  eslint:
+    enabled: true
+  fixme:
+    enabled: true
+  radon:
+    enabled: true
+    config:
+      python_version: 2
+      threshold: "D"
+ratings:
+  paths:
+  - "**.py"
+exclude_paths:
+  - "lib27/"
+  - "languages/"
+  - "ez_setup.py"
+  

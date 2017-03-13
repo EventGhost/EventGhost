@@ -65,6 +65,7 @@ class Document(object):
         self.frame = None
         self.reentrantLock = Lock()
         self.expandedNodes = set()
+        self.visibleLogItem = 0
 
     def AfterLoad(self):
         if (
@@ -300,8 +301,19 @@ class Document(object):
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
+                    logCtrl = self.frame.logCtrl
+                    if logCtrl.IsAutoscroll():
+                        self.visibleLogItem = 0
+                    else:
+                        self.visibleLogItem = (
+                            logCtrl.GetTopItem() + logCtrl.GetCountPerPage()
+                        )
+
+                        if self.visibleLogItem:
+                            self.visibleLogItem -= 1
+
                     self.frame.Destroy()
-                    self.frame = None
+                    self.frame = eg.mainFrame = None
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
@@ -463,9 +475,10 @@ class Document(object):
     def ShowFrame(self):
         if self.reentrantLock.acquire(False):
             if self.frame is None:
-                self.frame = eg.MainFrame(self)
+                self.frame = eg.mainFrame = eg.MainFrame(self)
                 self.frame.Show()
-            self.frame.Raise()
+            else:
+                self.frame.Iconize(False)
             self.reentrantLock.release()
 
     def StartSession(self, filePath):

@@ -17,6 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import logging
 import os
 import sys
 import tempfile
@@ -30,6 +31,10 @@ from builder.Logging import LogToFile
 from builder.Utils import (
     GetGitHubConfig, GetVersion, Is64bitInterpreter, IsCIBuild
 )
+
+
+logger = logging.getLogger()
+
 
 class Task(object):
     value = None
@@ -49,6 +54,9 @@ class Task(object):
     @classmethod
     def GetId(cls):
         return cls.__module__ + "." + cls.__name__
+
+    def Print(self, *args):
+        logger.log(22, " ".join(args))
 
 
 class Builder(object):
@@ -95,13 +103,17 @@ class Builder(object):
             self.args.release or
             self.args.sync
         )
+        if os.environ.get(
+                "APPVEYOR_REPO_COMMIT_MESSAGE", ""
+        ).upper().startswith("VERBOSE:"):
+            self.args.verbose = True
 
         os.chdir(self.buildDir)
 
         if not exists(self.outputDir):
             os.mkdir(self.outputDir)
 
-        LogToFile(join(self.outputDir, "Build.log"))
+        LogToFile(join(self.outputDir, "Build.log"), self.args.verbose)
 
         from CheckDependencies import CheckDependencies
         if not CheckDependencies(self):
@@ -119,7 +131,10 @@ class Builder(object):
             if type(e) is ValueError:
                 msg = "WARNING: Specified `github.token` is invalid!\n" + msg
             if not IsCIBuild():
+                token = ""
                 print msg
+            else:
+                token = os.environ["GITHUB_TOKEN"]
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {
@@ -131,7 +146,7 @@ class Builder(object):
                 "branch": "master",
                 "repo": "EventGhost",
                 "repo_full": "EventGhost/EventGhost",
-                "token": "",
+                "token": token,
                 "user": "EventGhost",
             }
 
@@ -171,6 +186,11 @@ class Builder(object):
             "-s", "--sync",
             action="store_true",
             help="build and synchronize website",
+        )
+        parser.add_argument(
+            "-vv", "--verbose",
+            action="store_true",
+            help="give a more verbose output",
         )
         parser.add_argument(
             "-v", "--version",

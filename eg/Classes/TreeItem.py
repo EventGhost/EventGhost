@@ -20,6 +20,7 @@ import wx
 import xml.etree.cElementTree as ElementTree
 from cStringIO import StringIO
 from xml.sax.saxutils import escape, quoteattr
+from comtypes import GUID
 
 # Local imports
 import eg
@@ -52,6 +53,7 @@ class TreeItem(object):
     document = None
     root = None
     icon = None
+    guid = None
 
     @eg.AssertInActionThread
     def __init__(self, parent, node):
@@ -60,6 +62,13 @@ class TreeItem(object):
         node.attrib = dict([(k.lower(), v) for k, v in node.attrib.items()])
         get = node.attrib.get
         self.name = get("name", "")
+        guid = get("xml_guid", None)
+        if guid is None:
+            eg.document.SetIsDirty(True)
+            self.guid = eg.GUID.NewId(self)
+        else:
+            self.guid = eg.GUID.AddId(self, guid)
+
         if isinstance(self.name, str):
             self.name = unicode(self.name, "utf8")
         self.isEnabled = not get('enabled') == "False"
@@ -212,6 +221,7 @@ class TreeItem(object):
             attr.append(('id', self.xmlId))
         if not self.isEnabled:
             attr.append(('Enabled', 'False'))
+        attr.append(('XML_Guid', str(self.guid)))
         return attr, None
 
     def GetDependantsOutside(self, allItems):
@@ -269,6 +279,8 @@ class TreeItem(object):
         path = []
         while item is not root:
             parent = item.parent
+            if parent is None:
+                return None
             path.append(parent.childs.index(item))
             item = parent
         path.reverse()

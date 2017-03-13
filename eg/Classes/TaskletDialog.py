@@ -164,8 +164,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             eg.PrintTraceback()
         self.__done = True
         self.__resultsChannel.send((None, None))
-        if self.setupFinished:
-            self.Destroy()
+        self.Destroy()
 
     @eg.LogItWithReturn
     def SetResult(self, *args):

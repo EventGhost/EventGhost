@@ -355,6 +355,7 @@ class MainFrame(wx.Frame):
         Append("CheckUpdate")
         menu.AppendSeparator()
         Append("PythonShell", "\tShift+Ctrl+I")
+        Append("WIT")
         menu.AppendSeparator()
         Append("About")
 
@@ -521,12 +522,47 @@ class MainFrame(wx.Frame):
         pos = info.find(";dir=") + 5
         return info[pos]
 
+    def SetWindowStyleFlag(self, *args, **kwargs):
+        """
+        Changes the main frame style depending on the display of the tray icon.
+
+        Sets the style flags for the minimize button. It will be grayed out if
+        the tray icon is shown and there child dialogs open.
+        If the tray icon is not shown the minimize button will function as
+        usual.
+
+        :param args: unused, kept for compatibility with
+        wxFrame.SetWindowStyleFlag()
+        :param kwargs: unused, kept for compatibility with
+        wxFrame.SetWindowStyleFlag()
+        :return: None
+        """
+        if eg.config.showTrayIcon:
+            if len(self.openDialogs):
+                style = ~(wx.MINIMIZE_BOX | wx.CLOSE_BOX) & self.style
+            else:
+                style = self.style
+        else:
+            style = self.style
+
+        wx.Frame.SetWindowStyleFlag(self, style)
+
+    @eg.LogIt
+    def Iconize(self, flag=True):
+        if flag and eg.config.showTrayIcon:
+            self.document.HideFrame()
+        else:
+            wx.Frame.Iconize(self, flag)
+
+            for dialog in self.openDialogs:
+                dialog.Iconize(flag)
+
     def OnAddDialog(self, dialog):
         if dialog.GetParent() != self:
             return
         self.openDialogs.append(dialog)
         dialog.Bind(wx.EVT_WINDOW_DESTROY, self.OnDialogDestroy)
-        self.SetWindowStyleFlag(~(wx.MINIMIZE_BOX | wx.CLOSE_BOX) & self.style)
+        self.SetWindowStyleFlag()
 
     @eg.LogIt
     def OnClipboardChange(self, dummyValue):
@@ -539,12 +575,12 @@ class MainFrame(wx.Frame):
         """
         Handle wx.EVT_CLOSE
         """
-        if len(self.openDialogs) == 0:
-            if eg.config.hideOnClose:
-                self.document.HideFrame()
-            else:
-                eg.app.Exit()
+        if eg.config.hideOnClose:
+            self.Iconize(True)
+        elif len(self.openDialogs) == 0:
+            eg.app.Exit()
         else:
+            self.Iconize(False)
             self.RequestUserAttention()
 
     @eg.LogIt
@@ -554,12 +590,11 @@ class MainFrame(wx.Frame):
             self.openDialogs.remove(dialog)
         except ValueError:
             pass
-        if len(self.openDialogs) == 0:
-            self.SetWindowStyleFlag(self.style)
+        self.SetWindowStyleFlag()
 
     def OnDocumentChange(self, isDirty):
-        self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
-        self.menuBar.Enable(wx.ID_SAVE, bool(isDirty))
+        wx.CallAfter(self.toolBar.EnableTool, wx.ID_SAVE, bool(isDirty))
+        wx.CallAfter(self.menuBar.Enable, wx.ID_SAVE, bool(isDirty))
 
     def OnDocumentFileChange(self, filepath):
         self.SetTitle(self.document.GetTitle())
@@ -586,12 +621,11 @@ class MainFrame(wx.Frame):
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
     @eg.LogIt
-    def OnIconize(self, dummyEvent):
+    def OnIconize(self, event):
         """
         Handle wx.EVT_ICONIZE
         """
-        # On iconizing, we actually destroy the frame completely
-        self.document.HideFrame()
+        self.Iconize(event.Iconized())
 
     def OnLogCtrlSize(self, evt):
         if self.mainSizeFlag:
@@ -952,6 +986,15 @@ class MainFrame(wx.Frame):
 
     def OnCmdCheckUpdate(self):
         eg.CheckUpdate.CheckUpdateManually()
+
+    def OnCmdWIT(self):
+        if eg.wit:
+            eg.wit.Show(refreshTree=True)
+            return
+
+        from wx.lib.inspection import InspectionTool
+        eg.wit = InspectionTool()
+        eg.wit.Show(refreshTree=True)
 
     def OnCmdPythonShell(self):
         if eg.pyCrustFrame:

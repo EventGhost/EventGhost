@@ -42,8 +42,8 @@ eg.RegisterPlugin(
     version = version,
     kind = "other",
     guid = "{FF85940E-9E93-453C-903B-736FCE0863FF}",
-    description = u'''
-<rst>**This plugin is designed for easy remapping of events from remote controls.**
+    description = u'''<rst>
+**This plugin is designed for easy remapping of events from remote controls.**
 
 Using this plugin has several advantages:
 

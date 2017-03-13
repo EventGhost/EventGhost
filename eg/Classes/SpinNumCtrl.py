@@ -20,13 +20,13 @@ import wx
 from wx import SystemSettings_GetColour as GetColour
 from wx.lib import masked
 
-# Local imports
 import eg
 
 l = wx.Locale()
 l.Init2(language=wx.LANGUAGE_DEFAULT, flags=wx.LOCALE_LOAD_DEFAULT)
 THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
+
 
 class SpinNumCtrl(wx.Window):
     """
@@ -56,8 +56,7 @@ class SpinNumCtrl(wx.Window):
         **kwargs
     ):
         if "increment" in kwargs:
-            self.increment = kwargs["increment"]
-            del kwargs["increment"]
+            self.increment = kwargs.pop("increment")
         else:
             self.increment = 1
 
@@ -65,8 +64,7 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
-        minValue = kwargs.pop("min")
-        if minValue < 0:
+        if kwargs['min'] < 0:
             kwargs["allowNegative"] = True
         if "max" not in kwargs:
             kwargs["max"] = (
@@ -78,18 +76,17 @@ class SpinNumCtrl(wx.Window):
         numCtrl = masked.NumCtrl(
             self,
             -1,
-            0,  # Can't set value here, to avoid bug in NumCtrl
+            0, # Can't set value here, to avoid bug in NumCtrl
             pos,
             size,
             style,
             validator,
             name,
             allowNone=True,
-            #**kwargs # Can't set kwargs here, to avoid bug in NumCtrl
+            # **kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
         numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
         numCtrl.SetValue(value)  # To avoid bug in NumCtrl
-        numCtrl.SetMin(minValue)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
@@ -157,7 +154,7 @@ class SpinNumCtrl(wx.Window):
         if minValue is not None and value < minValue:
             value = minValue
         res = self.numCtrl.SetValue(value)
-        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value = value))
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value=value))
         return res
 
     def __OnSpin(self, pos):
@@ -165,7 +162,6 @@ class SpinNumCtrl(wx.Window):
         This is the function that gets called in response to up/down arrow or
         bound spin button events.
         """
-        #self.__IncrementValue(key, self.__posCurrent)   # changes the value
 
         # Ensure adjusted control regains focus and has adjusted portion
         # selected:

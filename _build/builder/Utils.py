@@ -163,10 +163,11 @@ def GetGitHubConfig():
         if rc == 200:
             for repo in data:
                 if repo["name"] == "EventGhost":
+                    usr, rep = repo["full_name"].split("/")
                     page2 = 1
                     branches = []
                     while page2 > 0:
-                        rc2, data2 = gh.repos[gitcfg["user"]][repo["name"]].branches.get(page=page2)
+                        rc2, data2 = gh.repos[usr][rep].branches.get(page=page2)
                         if rc2 == 200:
                             for br in data2:
                                 branches.append(br["name"])
@@ -368,7 +369,11 @@ def ParseVersion(ver):
     """
     Return string and tuple versions of the specified string.
     """
-    if not ver or ver == "0.0.0":
+    if (
+        not ver or ver == "0.0.0"
+        or os.environ.get("APPVEYOR", False)
+        and os.environ["APPVEYOR_REPO_TAG"] == "false"
+    ):
         return (time.strftime("WIP-%Y.%m.%d-%H.%M.%S"), ("0",) * 6)
     else:
         match = re.search(

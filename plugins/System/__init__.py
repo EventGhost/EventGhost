@@ -24,6 +24,8 @@ import thread
 import time
 import wx
 import _winreg
+import win32con
+import win32gui
 from base64 import b64decode, b64encode
 from PIL import Image
 from qrcode import QRCode, constants as QRconstants
@@ -107,6 +109,22 @@ EVENT_LIST = (
     ("DeviceAttached", None),
     ("DeviceRemoved", None),
 )
+
+MONITOR_STATES = dict(
+    OFF=2,
+    STANDBY=1,
+    ON=-1
+)
+
+
+def MonitorState(state):
+    win32gui.SendMessage(
+        win32con.HWND_BROADCAST,
+        win32con.WM_SYSCOMMAND,
+        SC_MONITORPOWER,
+        MONITOR_STATES[state]
+    )
+
 
 class Text:
     class MonitorGroup:
@@ -216,7 +234,7 @@ class System(eg.PluginBase):
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
         # start the session change notifications (only on Win XP and above)
-        if eg.Utils.IsXP():
+        if eg.WindowsVersion.IsXP():
             from SessionChangeNotifier import SessionChangeNotifier
             self.sessionChangeNotifier = SessionChangeNotifier(self)
 
@@ -225,7 +243,7 @@ class System(eg.PluginBase):
         eg.Bind("System.SessionUnlock", self.StartHookCode)
 
         # Use VistaVolume.dll from stridger for sound volume control on Vista
-        if eg.Utils.IsVista():
+        if eg.WindowsVersion.IsVista():
             import VistaVolEvents as vistaVolumeDll
             vistaVolumeDll.RegisterVolumeHandler(self.VolumeEvent)
             vistaVolumeDll.RegisterMuteHandler(self.MuteEvent)
@@ -681,7 +699,7 @@ class MonitorPowerOff(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 2)
+        MonitorState('OFF')
 
 
 class MonitorPowerOn(eg.ActionBase):
@@ -693,7 +711,7 @@ class MonitorPowerOn(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, -1)
+        MonitorState('ON')
 
 
 class MonitorStandby(eg.ActionBase):
@@ -702,7 +720,7 @@ class MonitorStandby(eg.ActionBase):
     iconFile = "icons/Display"
 
     def __call__(self):
-        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 1)
+        MonitorState('STANDBY')
 
 
 class SetDisplayPreset(eg.ActionBase):
@@ -1936,7 +1954,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        #if eg.Utils.IsVista():
+        #if eg.WindowsVersion.IsVista():
         #    deviceCtrl.SetValue(0)
         #    deviceCtrl.Enable(False)
 
@@ -1986,7 +2004,7 @@ class GetMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2014,7 +2032,7 @@ class MuteOff(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2042,7 +2060,7 @@ class MuteOn(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2140,7 +2158,7 @@ class SetMasterVolume(eg.ActionBase):
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
 #        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
@@ -2200,7 +2218,7 @@ class ToggleMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.Utils.IsVista():
+        """if eg.WindowsVersion.IsVista():
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)

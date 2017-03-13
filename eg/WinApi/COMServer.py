@@ -41,7 +41,10 @@ class EventGhostCom:
     _reg_clsctx_ = pythoncom.CLSCTX_LOCAL_SERVER
 
     def BringToFront(self):
-        eg.document.ShowFrame()
+        if eg.mainFrame is not None:
+            eg.mainFrame.Iconize(False)
+        else:
+            eg.document.ShowFrame()
 
     def InstallPlugin(self, pluginFile):
         import wx

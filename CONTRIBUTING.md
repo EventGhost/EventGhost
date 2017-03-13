@@ -11,8 +11,8 @@ Great! Bugs are, unfortunately, a fact of software development life, but with yo
 
 Before continuing, be sure to:
 
-* Search [our issue tracker](https://github.com/EventGhost/EventGhost/issues) to see if your bug has already been identified. If you find a match, +1s aren't helpful to us, but any further light you can shed on the issue absolutely is.
-* Try [the latest stable version](http://www.eventghost.org/downloads/) and [the latest development version](https://ci.appveyor.com/project/blackwind/eventghost/build/artifacts). Your bug might already be fixed!
+* Search [our issue tracker](https://github.com/EventGhost/EventGhost/issues?q=) to see if your bug has already been identified. If you find a match, +1s aren't helpful to us, but any further light you can shed on the issue absolutely is.
+* Try [the latest stable version](http://www.eventghost.org/downloads/) and [the latest development version](https://ci.appveyor.com/project/topic2k/eventghost/branch/master/artifacts). Your bug might already be fixed!
 
 ### Things to include in your bug report
 

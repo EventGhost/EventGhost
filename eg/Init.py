@@ -76,6 +76,8 @@ def ImportAll():
     Traverse(eg.corePluginDir, "eg.CorePluginModule")
 
 def Init():
+    import WinApi.pywin32_patches # NOQA
+
     if eg.startupArguments.isMain or eg.startupArguments.install:
         import WinApi.COMServer  # NOQA
 
@@ -91,8 +93,13 @@ def InitGui():
 
     eg.document = eg.Document()
 
-    if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+    if eg.config.showTrayIcon:
+        if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+            eg.document.ShowFrame()
+    else:
         eg.document.ShowFrame()
+        if eg.config.hideOnStartup or eg.startupArguments.hideOnStartup:
+            eg.mainFrame.Iconize(True)
 
     eg.actionThread.Start()
 
@@ -122,7 +129,7 @@ def InitGui():
             wx.CallAfter(eg.CheckUpdate.Start)
 
     # Register restart handler for easy crash recovery.
-    if eg.Utils.IsVista():
+    if eg.WindowsVersion.IsVista():
         args = " ".join(eg.app.GetArguments())
         windll.kernel32.RegisterApplicationRestart(args, 8)
 

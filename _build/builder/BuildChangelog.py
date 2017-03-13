@@ -126,7 +126,7 @@ class BuildChangelog(builder.Task):
                 prs[title_notice].append(pr)
             elif "enhancement" in labels:
                 prs[title_enhancement].append(pr)
-            elif "bug" in labels:
+            elif any(lbl in ["bug", "bugfix"] for lbl in labels):
                 prs[title_bug].append(pr)
             else:
                 prs[title_other].append(pr)
@@ -136,35 +136,79 @@ class BuildChangelog(builder.Task):
         releaseUrl = "https://github.com/{0}/{1}/releases/tag/v{2}".format(
             user, repo, buildSetup.appVersion
         )
-
-        changes = ["## [{0}]({1}) ({2})\n".format(
-            buildSetup.appVersion,
-            releaseUrl,
-            buildDate,
-        )]
+        changes = dict(
+            md = ["## [{0}]({1}) ({2})\n".format(
+                buildSetup.appVersion,
+                releaseUrl,
+                buildDate
+            )],
+            bb = ["[size=150][b][url={0}]{1}[/url] ({2})[/b][/size]\n".format(
+                releaseUrl,
+                buildSetup.appVersion,
+                buildDate
+            )]
+        )
         print "## {0} ({1})".format(buildSetup.appVersion, buildDate)
         for title, items in prs.iteritems():
             if items:
-                changes.append("\n**{0}:**\n\n".format(title))
+                changes['md'].append("\n**{0}:**\n\n".format(title))
+                changes['bb'].append("\n[b]{0}:[/b]\n[list]\n".format(title))
                 print "\n{0}:\n".format(title)
                 for pr in items:
-                    changes.append("* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
-                        EscapeMarkdown(pr["title"]),
-                        pr["number"],
-                        pr["html_url"],
-                        EscapeMarkdown(pr["user"]["login"]),
-                        pr["user"]["html_url"],
-                    ))
+                    changes['md'].append(
+                        "* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
+                            EscapeMarkdown(pr["title"]),
+                            pr["number"],
+                            pr["html_url"],
+                            EscapeMarkdown(pr["user"]["login"]),
+                            pr["user"]["html_url"],
+                        )
+                    )
+                    changes['bb'].append(
+                        "[*] {0} [url={1}]{2}[/url] "
+                        "([url={3}]{4}[/url])\n".format(
+                            pr["title"],
+                            pr["html_url"],
+                            pr["number"],
+                            pr["user"]["html_url"],
+                            EscapeMarkdown(pr["user"]["login"])
+                        )
+                    )
                     print "* {0} #{1} ({2})".format(
                         pr["title"],
                         pr["number"],
                         pr["user"]["login"],
                     )
+                changes['bb'].append("[/list]")
 
-        if len(changes) == 1:
+        if len(changes['md']) == 1:
             text = "\nOnly minor changes in this release.\n"
-            changes.append(text)
+            changes['md'].append(text)
+            changes['bb'].append(text)
             print text.strip()
+
+        # write a changelog in bbcode for the news section in forum
+        changes['bb'].append(
+            "\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
+            "releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
+            "[/url][/size]\n".format(buildSetup.appVersion)
+        )
+        try:
+            fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.bb")
+            out = open(fn, "w")
+            out.writelines(changes['bb'])
+            out.close()
+        except:
+            pass
+
+            # write a short changelog in markdown for release description
+        try:
+            fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.md")
+            out = open(fn, "w")
+            out.writelines(changes['md'][1:])
+            out.close()
+        except:
+            pass
 
         # read the existing changelog...
         try:
@@ -190,7 +234,7 @@ class BuildChangelog(builder.Task):
                                    style=wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         else:
-            outfile.writelines(changes)
+            outfile.writelines(changes['md'])
             if old_changes:
                 outfile.write('\n\n')
                 outfile.write(old_changes)
