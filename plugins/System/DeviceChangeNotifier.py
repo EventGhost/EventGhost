@@ -55,7 +55,6 @@ from eg.WinApi.Dynamic import (
 
 
 DEVICE_NOTIFY_ALL_INTERFACE_CLASSES = 0x00000004
-
 # XP and later
 BUS1394_CLASS_GUID = '{6BDD1FC1-810F-11D0-BEC7-08002BE2092F}'
 KSCATEGORY_AUDIO = '{6994AD04-93EF-11D0-A3CC-00A0C9223196}'
@@ -103,9 +102,16 @@ GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR = ( # S Dev
 
 MOUNTDEV_MOUNTED_DEVICE_GUID = '{53F5630D-B6BF-11D0-94F2-00A0C91EFB8B}'
 # Vista and later
-GUID_DEVINTERFACE_NET = '{CAC88484-7515-4C03-82E6-71A87ABAC361}'
+
+GUID_DEVINTERFACE_NET1 = '{CAC88484-7515-4C03-82E6-71A87ABAC361}'
+GUID_DEVINTERFACE_NET2 = '{AD498944-762F-11D0-8DCB-00C04FC3358C}'
 GUID_DEVINTERFACE_I2C = '{2564AA4F-DDDB-4495-B497-6AD4A84163D7}'
 GUID_DEVINTERFACE_PHYSICALMEDIA = '{F33FDC04-D1AC-4E8E-9A30-19BBD4B108AE}'
+
+GUID_DEVINTERFACE_NET = (
+    GUID_DEVINTERFACE_NET1,
+    GUID_DEVINTERFACE_NET2
+)
 
 DEVICES = {
     GUID_DEVINTERFACE_KEYBOARD: (
@@ -593,7 +599,7 @@ if not eg.WindowsVersion.IsXP():
             display_name='I2C Device'
         ),
     )
-    DEVICES[GUID_DEVINTERFACE_NET] = (
+    DEVICES[GUID_DEVINTERFACE_NET1] = (
         dict(
             cls_name='NetworkAdapter',
             attr_names=(
@@ -607,7 +613,9 @@ if not eg.WindowsVersion.IsXP():
             display_name='Network Adapter'
         ),
     )
-    SEARCH.insert(0, GUID_DEVINTERFACE_NET)
+    DEVICES[GUID_DEVINTERFACE_NET2] = DEVICES[GUID_DEVINTERFACE_NET1]
+    SEARCH.insert(0, GUID_DEVINTERFACE_NET1)
+    SEARCH.insert(0, GUID_DEVINTERFACE_NET2)
 
 if not eg.WindowsVersion.Is10():
     DEVICES[GUID_DEVINTERFACE_FLOPPY] = (
@@ -657,14 +665,16 @@ def _parse_vendor_id(vendor_id):
 
 def _get_ids(device):
     res = ()
-    for attr_name in ('DeviceId', 'DeviceID', 'HardwareId'):
-        if hasattr(device, attr_name):
-            device_id = getattr(device, attr_name)
-            if device_id is None:
-                continue
-            if not isinstance(device_id, tuple):
-                device_id = (device_id,)
-            res += device_id
+
+    if hasattr(device, 'PNPDeviceID') and device.PNPDeviceID is not None:
+        res = (device.PNPDeviceID,)
+    else:
+        for attr_name in ('DeviceId', 'DeviceID', 'HardwareId'):
+            device_id = getattr(device, attr_name, None)
+            if device_id is not None:
+                if not isinstance(device_id, tuple):
+                    device_id = (device_id,)
+                res += device_id
     return res
 
 
@@ -672,26 +682,48 @@ def _create_key(device_ids):
     return tuple(device_id.upper() for device_id in device_ids)
 
 
-def _create_event(device_ids, attr_names, display_name, device):
+def _create_event(
+    device,
+    device_ids,
+    current_devices,
+    display_name,
+    attr_names,
+    **kwargs
+):
+
     attr_names += ('Name', 'Description', 'Status')
     payload = {
         attrName.lower(): getattr(device, attrName)
         for attrName in attr_names
     }
-    payload['device_id'] = device_ids
+    if hasattr(device, 'DeviceId'):
+        payload['device_id'] = device.DeviceId
+    elif hasattr(device, 'DeviceID'):
+        payload['device_id'] = device.DeviceId
     payload['device'] = device
 
     name = device.Name
+    if name.endswith('.'):
+        name = name[:-1]
 
     for device_id in device_ids:
         if device_id.startswith('WPDBUSENUMROOT'):
             name = device.Description.strip() + '.' + device.Name[0]
             payload['drive_letter'] = device.Name[:2]
+            device_ids += (payload['device_id'],)
 
     if hasattr(device, 'ClassGuid') and device.ClassGuid in SETUP_CLASS_GUIDS:
         suffix = [SETUP_CLASS_GUIDS[device.ClassGuid], name]
     else:
         suffix = [display_name.replace(' ', ''), name]
+
+    key = _create_key(device_ids)
+    if not key:
+        return False, False
+    if key in current_devices:
+        return None, None
+
+    current_devices[key] = (suffix, payload)
 
     return suffix, payload
 
@@ -896,26 +928,22 @@ class WMI(threading.Thread):
 
         TriggerEvent = self.plugin.TriggerEvent
 
-        if guid in NOEVENT:
+        if guid in NOEVENT or guid == GUID_DEVINTERFACE_NET2:
             return
 
         cDevices = self._current_devices(guid)
-        if not cDevices or guid not in DEVICES:
-            TriggerEvent('Device.Removed', [data])
-            return
-
         vendor_id = _parse_vendor_id(data)
 
         for device_ids in cDevices.keys():
             for device_id in device_ids:
-                if device_id.find(vendor_id) == -1:
-                    continue
+                if device_id.find(vendor_id) > -1:
+                    suffix, payload = cDevices[device_ids]
+                    TriggerEvent('.'.join(['Device.Removed'] + suffix), payload)
 
-                suffix, payload = cDevices[device_ids]
-                TriggerEvent('.'.join(['Device.Removed'] + suffix), payload)
+                    del cDevices[device_ids]
+                    return
 
-                del cDevices[device_ids]
-                return
+        TriggerEvent('Device.Removed', [data])
 
     @eg.LogIt
     def Attached(self, guid, data):
@@ -931,6 +959,9 @@ class WMI(threading.Thread):
         if guid in NOEVENT:
             return
 
+        if guid in GUID_DEVINTERFACE_NET:
+            guid = GUID_DEVINTERFACE_NET1
+
         vendor_id = _parse_vendor_id(data)
         current_devices = self._current_devices(guid)
         TriggerEvent = self.plugin.TriggerEvent
@@ -942,37 +973,64 @@ class WMI(threading.Thread):
                     return device_ids
             return ()
 
-        def FindDevices(cls_name, display_name, attr_names, **kwargs):
-            devices = self.wmi.ExecQuery(
-                "Select * from Win32_" + cls_name
-            )
+        def FindDevices(cls_name, **kwargs):
 
-            for device in devices:
-                device_ids = FindId(device)
-
-                key = _create_key(device_ids)
-                if not key or key in current_devices:
-                    continue
-
+            def ProcessDevices(devc, devc_ids):
                 suffix, payload = _create_event(
-                    device_ids,
-                    attr_names,
-                    display_name,
-                    device
+                    devc,
+                    devc_ids,
+                    current_devices,
+                    **kwargs
                 )
 
-                current_devices[key] = (suffix, payload)
-                TriggerEvent('.'.join(['Device.Attached'] + suffix), payload)
+                if not suffix:
+                    return suffix
+
+                TriggerEvent(
+                    '.'.join(['Device.Attached'] + suffix),
+                    payload
+                )
                 return True
 
-        if guid in DEVICES:
-            if FindDevices(**DEVICES[guid][0]):
-                return
+            try:
+                query = (
+                    "SELECT * from Win32_{0} WHERE PNPDeviceID LIKE '%{1}%'"
+                )
+                devices = self.wmi.ExecQuery(
+                    query.format(cls_name, vendor_id.split('\\')[-1].lower())
+                )
 
-        for guid in SEARCH:
-            for dev in DEVICES[guid]:
-                if FindDevices(**dev):
-                    return
+                if not len(devices):
+                    raise ValueError
+
+                for device in devices:
+                    result = ProcessDevices(device, (device.PNPDeviceID,))
+                    if result is False:
+                        continue
+                return True
+
+            except (win32com.client.pythoncom.com_error, ValueError):
+                query = "SELECT * from Win32_{0}"
+                devices = self.wmi.ExecQuery(
+                    query.format(cls_name)
+                )
+                for device in devices:
+                    result = ProcessDevices(device, FindId(device))
+                    if result is False:
+                        continue
+                    return result
+            return False
+
+        if guid in DEVICES:
+            res = FindDevices(**DEVICES[guid][0])
+            if res is not False:
+                return
+        else:
+            for guid in SEARCH:
+                for dev in DEVICES[guid]:
+                    res = FindDevices(**dev)
+                    if res is not False:
+                        return
 
         TriggerEvent('Device.Attached', [data])
 
@@ -1021,22 +1079,20 @@ class WMI(threading.Thread):
         self.MountDrive()
 
         for guid in DEVICES.keys():
-            current_devices = self._current_devices(guid)
+            if guid == GUID_DEVINTERFACE_NET2:
+                continue
+
             for dev in DEVICES[guid]:
                 devices = wmi.ExecQuery(
                     "Select * from Win32_" + dev['cls_name']
                 )
 
                 for device in devices:
-                    device_ids = _get_ids(device)
-                    if not device_ids:
-                        continue
-
-                    current_devices[_create_key(device_ids)] = _create_event(
-                        device_ids,
-                        dev['attr_names'],
-                        dev['display_name'],
-                        device
+                    _create_event(
+                        device,
+                        _get_ids(device),
+                        self._current_devices(guid),
+                        **dev
                     )
 
         while not self.stopEvent.isSet():
