@@ -738,6 +738,7 @@ class WMI(threading.Thread):
         """
         Threading object that runs the WMI device lookup.
 
+        :param plugin: System plugin instance
         :type plugin: instance
         """
 
@@ -773,7 +774,9 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a drive unmounted
          event.
 
+        :param letter: Drive letter.
         :type letter: str
+        :return: None
         :rtype: None
         """
 
@@ -803,7 +806,9 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a drive mounted
         event.
 
+        :param letter: Drive letter.
         :type letter: str
+        :return: None
         :rtype: None
         """
 
@@ -921,8 +926,11 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a device removed
          event.
 
+        :param guid: Guid of the notification.
         :type guid: str
+        :param data: Vendor id from the notification.
         :type data: str
+        :return: None
         :rtype: None
         """
 
@@ -951,8 +959,11 @@ class WMI(threading.Thread):
         Called by the internal queue mechanism for generating a device attached
          event.
 
+        :param guid: Guid of the notification.
         :type guid: str
+        :param data: Vendor id from the notification.
         :type data: str
+        :return: None
         :rtype: None
         """
 
@@ -1038,8 +1049,11 @@ class WMI(threading.Thread):
         """
         Puts the Windows notification data into the queue.
 
+        :param eventType: Method name to use for processing the notification.
         :type eventType: str
+        :param letter: Drive letter.
         :type letter: str
+        :return: None
         :rtype: None
         """
 
@@ -1050,9 +1064,13 @@ class WMI(threading.Thread):
         """
         Puts the Windows notification data into the queue.
 
+        :param eventType: Method name to use for processing the notification.
         :type eventType: str
+        :param guid: Guid of the notification.
         :type guid: str
+        :param data: Vendor id from the notification.
         :type data: str
+        :return: None
         :rtype: None
         """
 
@@ -1070,7 +1088,7 @@ class WMI(threading.Thread):
         Handles the population of devices when the thread starts. This also
         loops and pulls data from the queue and sends it where it needs to go
          for proper event generation.
-
+        :return: None
         :rtype: None
         """
         win32com.client.pythoncom.CoInitialize()
@@ -1110,7 +1128,7 @@ class WMI(threading.Thread):
     def stop(self):
         """
         Stops the thread.
-
+        :return: None
         :rtype: None
         """
         self.stopEvent.set()
@@ -1130,6 +1148,7 @@ class DeviceChangeNotifier:
         Registers for Windows notifications for Devices/Drives being attached
         or removed.
 
+        :param plugin: System plugin instance.
         :type plugin: instance
         """
         self.plugin = plugin
@@ -1150,6 +1169,7 @@ class DeviceChangeNotifier:
         wx.CallAfter. This is done because the actual registration seems to be
         much happier when done from the main thread.
 
+        :return: None
         :rtype: None
         """
         self.notifier = RegisterDeviceNotification(
@@ -1163,6 +1183,7 @@ class DeviceChangeNotifier:
         Performs the shutdown of the WMI thread. Als unregisters for the
         Windows notifications.
 
+        :return: None
         :rtype: None
         """
         self.WMI.stop()
@@ -1178,10 +1199,15 @@ class DeviceChangeNotifier:
         Callback method the Windows notification calls when a message needs to
         be delivered.
 
+        :param hwnd: Window handle.
         :type hwnd: long
+        :param msg: Message.
         :type msg: long
+        :param wparam: Notification type.
         :type wparam: long
+        :param lparam: Memory address of notification class.
         :type lparam: long
+        :return: None
         :rtype: None
         """
 
@@ -1288,9 +1314,13 @@ class GetDevices(eg.ActionBase):
         GetDevices('SOME HDD NAME')
         GetDevices(DiskDrive='SOME HDD NAME')
 
+        :param pattern: Text to search for.
         :type pattern: str
-        :type kwargs: dict
-        :rtype: tuple
+        :param kwargs: Keyword must be a valid device type. Value is the string
+         to search for.
+        :type kwargs: str
+        :return: WMI instances that represent a device.
+        :rtype: tuple of instances
         """
 
         if pattern is None and not kwargs:
