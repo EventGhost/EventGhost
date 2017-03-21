@@ -138,6 +138,9 @@ class Text:
     class SoundGroup:
         name = description = "Audio"
 
+    class NetworkGroup:
+        name = description = "Network"
+
     forced        = "Forced: %s"
     forcedCB      = "Force close of all programs"
     primaryDevice = "Primary Sound Driver"
