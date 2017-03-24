@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+from .. import Cli
+
 import platform
 from collections import OrderedDict
+
 
 WINDOWS_VERSIONS = OrderedDict()
 WINDOWS_VERSIONS["XP"] = [[5, 1], [5, 2]]
@@ -349,3 +352,6 @@ class WindowsVersion:
         :rtype: bool
         """
         return _compare('==', "10")
+
+if Cli.args.isMain:
+    WindowsVersion = WindowsVersion()
