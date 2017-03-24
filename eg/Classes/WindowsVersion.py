@@ -81,7 +81,7 @@ class WindowsVersion:
 
     In addition to the *IsXY()* methods, you can use comparison like this:
 
-    ``eg.WindowsVersion() OPERATOR "KEY"``
+    ``eg.WindowsVersion OPERATOR "KEY"``
 
     ``OPERATOR`` is one of ``<``, ``<=``, ``==``, ``!=``, ``>=``, ``>``
 
