@@ -2,11 +2,15 @@
 
 **Enhancements:**
 
+* PluginInstall: added backup, GUID check, better user notification, pretty print the info.py [\#137](https://github.com/EventGhost/EventGhost/pull/137) ([kdschlosser](https://github.com/kdschlosser))
+* Ask to delete config data of plugin if uninstalled [\#140](https://github.com/EventGhost/EventGhost/pull/140) ([kdschlosser](https://github.com/kdschlosser))
+* Add checking for hidden or system files on plugin import/export [\#146](https://github.com/EventGhost/EventGhost/pull/146) ([kdschlosser](https://github.com/kdschlosser))
 * Add the Widget Inspection Tool to the Help menu. [\#153](https://github.com/EventGhost/EventGhost/pull/153) ([topic2k](https://github.com/topic2k))
 * \[System\] PowerBroadcastNotifier, Adds additional notifications [\#175](https://github.com/EventGhost/EventGhost/pull/175) ([kdschlosser](https://github.com/kdschlosser))
 
 **Fixed bugs:**
 
+* Not being able to restore from a minimized state if tray icon is not shown and empty log [\#145](https://github.com/EventGhost/EventGhost/pull/145) ([kdschlosser](https://github.com/kdschlosser))
 * Fix for empty Logctrl after restoring from tray \(fixes \#138\) [\#149](https://github.com/EventGhost/EventGhost/pull/149) ([topic2k](https://github.com/topic2k))
 * \[Speech\] Fix wxGridSizer error when adding action [\#155](https://github.com/EventGhost/EventGhost/pull/155) ([per1234](https://github.com/per1234))
 * Avoid duplicate GUIDs of tree Items on copy/paste [\#161](https://github.com/EventGhost/EventGhost/pull/161) ([kdschlosser](https://github.com/kdschlosser))
@@ -14,7 +18,8 @@
 * \[System\] MonitorPowerOn not working in Windows 8 & 10 [\#174](https://github.com/EventGhost/EventGhost/pull/174) ([kdschlosser](https://github.com/kdschlosser))
 * Add module for patching pywin32 [\#177](https://github.com/EventGhost/EventGhost/pull/177) ([kdschlosser](https://github.com/kdschlosser))
 * \[Speech\] nearly complete rewrite of the plugin [\#179](https://github.com/EventGhost/EventGhost/pull/179) ([topic2k](https://github.com/topic2k))
-* SpinNumCtrl: Re-add workaround for traceback if min value \> 0 [\#188](https://github.com/EventGhost/EventGhost/pull/188) ([kdschlosser](https://github.com/kdschlosser))
+* Dialog gets stuck if a traceback occurs during it's creation. [\#184](https://github.com/EventGhost/EventGhost/pull/184) ([kdschlosser](https://github.com/kdschlosser))
+* \[eg.SpinNumCtrl\] Re-add workaround for traceback if min value \> 0 [\#188](https://github.com/EventGhost/EventGhost/pull/188) ([kdschlosser](https://github.com/kdschlosser))
 * Removes accidentally added SetMin\(\) from SpinNumCtrl [\#192](https://github.com/EventGhost/EventGhost/pull/192) ([kdschlosser](https://github.com/kdschlosser))
 * WinUsbWrapper.dll broken in 0.5 builds [\#195](https://github.com/EventGhost/EventGhost/pull/195) ([kdschlosser](https://github.com/kdschlosser))
 
