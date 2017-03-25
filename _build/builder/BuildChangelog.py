@@ -63,6 +63,11 @@ class BuildChangelog(builder.Task):
                 per_page=100,
                 page=page
             )
+            # rc, data = gh.repos[user][repo].commits.get(
+            #     sha=branch,
+            #     per_page=100,
+            #     page=page
+            # )
             if rc != 200:
                 raise BuildError(data["message"])
             all_tags.extend(data)
