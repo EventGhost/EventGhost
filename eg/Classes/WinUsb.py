@@ -266,7 +266,7 @@ class WinUsb(object):
                 hardwareIds.append(hardwareId)
                 names.append(name)
 
-        outfile = codecs.open(infPath, "wt", 'mbcs')
+        outfile = codecs.open(infPath, "w", 'mbcs')
         template = string.Template(HEADER)
         outfile.write(template.substitute(DRIVER_VERSION=DRIVER_VERSION))
         outfile.write("[Remotes.NTx86]\n")
