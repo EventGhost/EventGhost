@@ -270,13 +270,13 @@ class System(eg.PluginBase):
                 deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 newvalue = None  # NOQA
                 try:
-                    newValue = not vistaVolumeDll.GetMute(deviceId)
-                    vistaVolumeDll.SetMute(newValue, deviceId)
+                    newvalue = not vistaVolumeDll.GetMute(deviceId)
+                    vistaVolumeDll.SetMute(newvalue, deviceId)
                     eg.Utils.time.sleep(0.1)  # workaround
-                    newValue = vistaVolumeDll.GetMute(deviceId)  # workaround
+                    newvalue = vistaVolumeDll.GetMute(deviceId)  # workaround
                 except:
                     pass
-                return newValue
+                return newvalue
 
             def GetMute2(self, deviceId=0):
                 try:
