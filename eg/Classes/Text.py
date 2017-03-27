@@ -117,6 +117,7 @@ class Default:
             SaveAs = "Save &As..."
             Options = "O&ptions..."
             Restart = "&Restart"
+            RestartAsAdmin = "Restart as Administrator"
             Exit = "E&xit"
 
             EditMenu = "&Edit"

@@ -197,13 +197,13 @@ class App(wx.App):
         self.firstQuery = True
         ShutdownBlockReasonDestroy(self.hwnd)
 
-    def Restart(self):
+    def Restart(self, asAdmin=False):
         def Do():
             from eg.WinApi.PipedProcess import RunAs
             args = self.GetArguments()
             args.append("-restart")
             if self.Exit():
-                RunAs(sys.executable, False, *args)
+                RunAs(sys.executable, asAdmin, *args)
                 return True
             else:
                 return False
@@ -211,3 +211,6 @@ class App(wx.App):
             return Do()
         else:
             return eg.CallWait(Do)
+
+    def RestartAsAdmin(self):
+        self.Restart(asAdmin=True)
