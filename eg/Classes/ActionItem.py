@@ -197,6 +197,7 @@ class ActionItem(TreeItem):
 
     @eg.AssertInActionThread
     def SetArguments(self, args):
+        eg.currentItem = self
         if self.args != args:
             self.args = args
             try:
