@@ -85,29 +85,29 @@ import wx
 
 
 class Text:
-    suffix = "SpeakingFinished"
-    ttsError = 'Speech: Unable to start the TTS engine'
 
+    label = "Speak: %s"
+    errorCreate = "Cannot create voice object"
+    buttonInsertTime = "Insert time HH:MM:SS"
+    buttonInsertTime1 = "Insert time HH:MM"
+    buttonInsertDate = "Insert date (20XX)"
+    buttonInsertDate1 = "Insert date (XX)"
+    normal = "Normal"
+    slow = "Slow"
+    fast = "Fast"
+    silent = "Silent"
+    loud = "Loud"
+    labelVoice = "Voice:"
+    labelRate = "Rate:"
+    labelVolume = "Volume:"
+    voiceProperties = "Voice properties"
+    textBoxLabel = "Text"
+    suffix = "SpeakingFinished"
+    addSuffix = "Additional event suffix:"
+    device = "Output device:"
     class TextToSpeech:
         name = "Text to speech"
         description = "Uses the Microsoft Speech API (SAPI) to speak a text."
-        label = "Speak: %s"
-        buttonInsertTime = "Insert time HH:MM:SS"
-        buttonInsertTime1 = "Insert time HH:MM"
-        buttonInsertDate = "Insert date (20XX)"
-        buttonInsertDate1 = "Insert date (XX)"
-        normal = "Normal"
-        slow = "Slow"
-        fast = "Fast"
-        silent = "Silent"
-        loud = "Loud"
-        labelVoice = "Voice:"
-        labelRate = "Rate:"
-        labelVolume = "Volume:"
-        voiceProperties = "Voice properties"
-        textBoxLabel = "Text"
-        addSuffix = "Additional event suffix:"
-        device = "Output device:"
 
 
 class CustomSlider(wx.Window):
@@ -278,7 +278,12 @@ class Speech(eg.PluginClass):
 
 
 class TextToSpeech(eg.ActionClass):
-    def __call__(self, voice, rate, voiceText, suffix, volume, audio=None):
+
+    baseText = Text()
+
+    def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
+        self.suff = suff if suff != 0 else ""
+
 
         def filterFunc(s):
             formatString = '</context><context ID = "%s">%s</context><context>'
@@ -302,7 +307,21 @@ class TextToSpeech(eg.ActionClass):
             '</context>'
         )
 
-        self.plugin.AddThread(voice, rate, voiceText, suffix, volume, audio)
+
+        sp=Speaker(
+            self.plugin,
+            voiceText,
+            voiceName,
+            rate,
+            volume,
+            suff,
+            device
+        )
+
+
+    def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
+        return self.baseText.label % voiceText
+
 
     def GetLabel(self, *args):
         # args = voiceName, rate, voiceText, suff, volume, device
@@ -317,7 +336,10 @@ class TextToSpeech(eg.ActionClass):
         volume=100,
         device=None
     ):
-        text = self.text
+
+        suff = suff if suff != 0 else ""
+        text = self.baseText
+
         panel = eg.ConfigPanel()
 
         textCtrl = wx.TextCtrl(panel, wx.ID_ANY, voiceText)
