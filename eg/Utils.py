@@ -23,6 +23,7 @@ import threading
 import time
 import warnings
 import wx
+from locale import windows_locale
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
@@ -50,6 +51,7 @@ __all__ = [
 ]
 
 USER_CLASSES = (type, ClassType)
+
 
 class Bunch(object):
     """
@@ -130,6 +132,7 @@ def AppUrl(description, url):
         description = DecodeReST(description)
     return description + txt
 
+
 def AssertInActionThread(func):
     if not eg.debugLevel:
         return func
@@ -141,9 +144,9 @@ def AssertInActionThread(func):
                 (func.__name__, func.__module__)
             )
         return func(*args, **kwargs)
-        return func(*args, **kwargs)
 
     return update_wrapper(AssertWrapper, func)
+
 
 def AssertInMainThread(func):
     if not eg.debugLevel:
@@ -159,10 +162,12 @@ def AssertInMainThread(func):
 
     return update_wrapper(AssertWrapper, func)
 
+
 def AsTasklet(func):
     def Wrapper(*args, **kwargs):
         eg.Tasklet(func)(*args, **kwargs).run()
     return update_wrapper(Wrapper, func)
+
 
 def CollectGarbage():
     import gc
@@ -184,8 +189,10 @@ def CollectGarbage():
     #from pprint import pprint
     #pprint(gc.garbage)
 
+
 def DecodeMarkdown(source):
     return commonmark(source)
+
 
 def DecodeReST(source):
     #print repr(source)
@@ -196,6 +203,7 @@ def DecodeReST(source):
     )
     #print repr(res)
     return res['body']
+
 
 def EnsureVisible(window):
     """
@@ -258,10 +266,12 @@ def EnsureVisible(window):
     # set the new position and size
     window.SetRect((left, top, right - left, bottom - top))
 
+
 def EqualizeWidths(ctrls):
     maxWidth = max((ctrl.GetBestSize()[0] for ctrl in ctrls))
     for ctrl in ctrls:
         ctrl.SetMinSize((maxWidth, -1))
+
 
 def ExecFile(filename, globals=None, locals=None):
     """
@@ -271,6 +281,7 @@ def ExecFile(filename, globals=None, locals=None):
     FSE = sys.getfilesystemencoding()
     flnm = filename.encode(FSE) if isinstance(filename, unicode) else filename
     return execfile(flnm, globals, locals)
+
 
 def GetBootTimestamp(unix_timestamp = True):
     """
@@ -287,21 +298,28 @@ def GetBootTimestamp(unix_timestamp = True):
         return st if "." not in st else st[:st.index(".")]
     return now - up
 
+
 def GetClosestLanguage():
     """
     Returns the language file closest to system locale.
     """
     langDir = join(dirname(abspath(sys.executable)), "languages")
     if exists(langDir):
-        locale = wx.Locale()
-        name = locale.GetLanguageCanonicalName(locale.GetSystemLanguage())
-        if exists(join(langDir, name + ".py")):
-            return name
-        else:
-            for f in [f for f in os.listdir(langDir) if f.endswith(".py")]:
-                if f.startswith(name[0:3]):
-                    return f[0:5]
-    return "en_EN"
+        uiLang = windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
+
+        langFiles = tuple(
+            f[:-3] for f in os.listdir(langDir)
+            if f.endswith(".py") and (
+                f.startswith(uiLang) or f.startswith(uiLang[:3])
+            )
+        )
+        if uiLang in langFiles:
+            return uiLang
+        if langFiles:
+            return langFiles[0]
+
+    return "en_US"
+
 
 def GetFirstParagraph(text):
     """
@@ -331,6 +349,7 @@ def GetFirstParagraph(text):
             result += " " + line
         return ' '.join(result.split())
 
+
 def GetFuncArgString(func, args, kwargs):
     classname = ""
     argnames = inspect.getargspec(func)[0]
@@ -348,6 +367,7 @@ def GetFuncArgString(func, args, kwargs):
     fname = classname + func.__name__
     return fname, "(" + ", ".join(res) + ")"
 
+
 def GetMyRepresentation(value):
     """
     Give a shorter representation of some wx-objects. Returns normal repr()
@@ -360,6 +380,7 @@ def GetMyRepresentation(value):
     if typeString.startswith("<class 'wx._controls."):
         return "=<wx.%s>" % typeString[len("<class 'wx._controls."): -2]
     return "=" + repr(value)
+
 
 def GetTopLevelWindow(window):
     """
@@ -375,7 +396,8 @@ def GetTopLevelWindow(window):
             return parent
         result = parent
 
-def GetUpTime(seconds = True):
+
+def GetUpTime(seconds=True):
     """
     Returns a runtime of system in seconds.
     If seconds == False, returns the number of days, hours, minutes and seconds.
@@ -387,6 +409,7 @@ def GetUpTime(seconds = True):
         delta = str(td(seconds = ticks))
         return delta if "." not in delta else delta[:delta.index(".")]
     return ticks
+
 
 def IsVista():
     """
@@ -400,6 +423,7 @@ def IsVista():
     )
     return eg.WindowsVersion.IsVista()
 
+
 def IsXP():
     """
     Determine if we're running XP or higher.
@@ -411,6 +435,7 @@ def IsXP():
         stacklevel=2
     )
     return eg.WindowsVersion.IsXP()
+
 
 def LogIt(func):
     """
@@ -428,6 +453,7 @@ def LogIt(func):
         return func(*args, **kwargs)
     return update_wrapper(LogItWrapper, func)
 
+
 def LogItWithReturn(func):
     """
     Logs the function call and return, if eg.debugLevel is set.
@@ -442,6 +468,7 @@ def LogItWithReturn(func):
         eg.PrintDebugNotice(funcName + " => " + repr(result))
         return result
     return update_wrapper(LogItWithReturnWrapper, func)
+
 
 def ParseString(text, filterFunc=None):
     start = 0
@@ -473,6 +500,7 @@ def ParseString(text, filterFunc=None):
     chunks.append(text[start:])
     return "".join(chunks)
 
+
 def PrepareDocstring(docstring):
     """
     Convert a docstring into lines of parseable reST.  Return it as a list of
@@ -502,6 +530,7 @@ def PrepareDocstring(docstring):
         lines.append('')
     return "\n".join(lines)
 
+
 def Reset():
     eg.stopExecutionFlag = True
     eg.programCounter = None
@@ -510,6 +539,7 @@ def Reset():
     eg.actionThread.ClearPendingEvents()
     eg.PrintError("Execution stopped by user")
 
+
 def SetDefault(targetCls, defaultCls):
     targetDict = targetCls.__dict__
     for defaultKey, defaultValue in defaultCls.__dict__.iteritems():
@@ -517,6 +547,7 @@ def SetDefault(targetCls, defaultCls):
             setattr(targetCls, defaultKey, defaultValue)
         elif type(defaultValue) in USER_CLASSES:
             SetDefault(targetDict[defaultKey], defaultValue)
+
 
 def SplitFirstParagraph(text):
     """
@@ -555,6 +586,7 @@ def SplitFirstParagraph(text):
             result += " " + line
         return ' '.join(result.split()), remaining
 
+
 def TimeIt(func):
     """ Decorator to measure the execution time of a function.
 
@@ -571,6 +603,7 @@ def TimeIt(func):
         return res
 
     return update_wrapper(TimeItWrapper, func)
+
 
 def UpdateStartupShortcut(create):
     from eg import Shortcut
