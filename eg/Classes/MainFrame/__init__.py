@@ -285,6 +285,7 @@ class MainFrame(wx.Frame):
         Append("Options", "\tCtrl+P")
         menu.AppendSeparator()
         Append("Restart", "\tShift+Ctrl+~")
+        Append("RestartAsAdmin")
         menu.AppendSeparator()
         Append("Exit")
 
@@ -844,6 +845,9 @@ class MainFrame(wx.Frame):
 
     def OnCmdRestart(self):
         eg.app.Restart()
+
+    def OnCmdRestartAsAdmin(self):
+        eg.app.RestartAsAdmin()
 
     def OnCmdExit(self):
         eg.app.Exit()
