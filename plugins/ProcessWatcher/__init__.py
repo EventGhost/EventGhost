@@ -18,19 +18,21 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import eg
+
 eg.RegisterPlugin(
-    name = "Process Watcher",
-    author = (
+    name="Process Watcher",
+    author=(
         "Bitmonster",
         "DranDane",
     ),
-    version = "1.0.",
-    guid = "{82BADF9F-D809-4EBC-A540-CCBF7563F8DF}",
-    description = (
+    version="1.1.",
+    guid="{82BADF9F-D809-4EBC-A540-CCBF7563F8DF}",
+    description=(
         "Generates events if a process is created or destoyed"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=10&t=1207",
-    icon = (
+    url="http://www.eventghost.org/forum/viewtopic.php?f=10&t=1207",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABuklEQVR42o1Sv0tCYRQ9"
         "L1FccpCEB73wVy1NjTrUPxD1lgZp0dWKaAhXxWhoyWgoIUjHBEH65RSE0CAUgWIPLAqR"
         "gkAQIQXR8nW/Z0ai6btweJfDd847934fhz8VCARkqCjTmBGra+sc67kOGQqFZIfDMVCo"
@@ -44,43 +46,45 @@ eg.RegisterPlugin(
     ),
 )
 
-from eg.cFunctions import GetProcessDict
-from threading import Thread
-from time import sleep
-from os.path import splitext
-import threading
-from eg.WinApi.Dynamic import (
-# functions:
-    CreateEvent,
-    PulseEvent,
-)
+from eg.cFunctions import GetProcessDict # NOQA
+from threading import Thread # NOQA
+from os.path import splitext # NOQA
+import threading # NOQA
+
 
 class Process(eg.PluginClass):
 
-    def __start__(self):
-        self.stopEvent = CreateEvent(None, 1, 0, None)
+    def __init__(self):
+        self.thread = None
         self.startException = None
-        startupEvent = threading.Event()
+        self.event = threading.Event()
+
+    def __start__(self):
         self.thread = threading.Thread(
             target=self.ThreadLoop,
-            name="ProcessWatcherThread",
-            args=(startupEvent,)
+            name="ProcessWatcherThread"
         )
+
         self.thread.start()
-        startupEvent.wait(3)
+        self.event.wait(3)
         if self.startException is not None:
             raise self.Exception(self.startException)
 
     def __stop__(self):
+        self.event.set()
         if self.thread is not None:
-            PulseEvent(self.stopEvent)
             self.thread.join(5.0)
+        self.thread = None
+        self.startException = None
 
-    def ThreadLoop(self, stopThreadEvent):
+    def ThreadLoop(self):
+        while self.event.isSet():
+            pass
+
         oldProcesses = GetProcessDict()
         oldPids = set(oldProcesses.iterkeys())
 
-        while True:
+        while not self.event.isSet():
             newProcesses = GetProcessDict()
             newPids = set(newProcesses.iterkeys())
             for pid in newPids.difference(oldPids):
@@ -91,4 +95,5 @@ class Process(eg.PluginClass):
                 eg.TriggerEvent("Destroyed." + name, prefix="Process")
             oldProcesses = newProcesses
             oldPids = newPids
-            sleep(0.1)
+            self.event.wait(0.1)
+        self.event.clear()
