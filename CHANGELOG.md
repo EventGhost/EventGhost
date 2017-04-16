@@ -1,3 +1,28 @@
+## [0.5.0-rc1](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc1) (2017-04-16)
+
+**Important changes for plugin developers:**
+
+* Add class for windows version checking [\#210](https://github.com/EventGhost/EventGhost/pull/210) ([topic2k](https://github.com/topic2k))
+
+**Enhancements:**
+
+* WindowsVersion, Fixes issue with help [\#215](https://github.com/EventGhost/EventGhost/pull/215) ([kdschlosser](https://github.com/kdschlosser))
+* Add menu to restart EG with admin rights [\#218](https://github.com/EventGhost/EventGhost/pull/218) ([topic2k](https://github.com/topic2k))
+
+**Fixed bugs:**
+
+* Fixes log being scrolled to the top after restored from tray icon [\#199](https://github.com/EventGhost/EventGhost/pull/199) ([kdschlosser](https://github.com/kdschlosser))
+* \[System\] Adds Windows XP support and moves the registering of the GUID's to the main thread [\#204](https://github.com/EventGhost/EventGhost/pull/204) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes exit not working from system tray icon when minimized [\#207](https://github.com/EventGhost/EventGhost/pull/207) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes incorrect reporting of windows version [\#211](https://github.com/EventGhost/EventGhost/pull/211) ([kdschlosser](https://github.com/kdschlosser))
+* \[EventGhost\] \(PythonScript\) Fixes PrintError traceback [\#219](https://github.com/EventGhost/EventGhost/pull/219) ([kdschlosser](https://github.com/kdschlosser))
+* \[ProcessWatcher\] Fixes thread not closing properly [\#220](https://github.com/EventGhost/EventGhost/pull/220) ([kdschlosser](https://github.com/kdschlosser))
+
+**Other changes:**
+
+* \[System\] Removes disabling of widgets if extension not in %PATHEXT% [\#189](https://github.com/EventGhost/EventGhost/pull/189) ([kdschlosser](https://github.com/kdschlosser))
+
+
 ## [0.5.0-beta6](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-beta6) (2017-02-12)
 
 **Enhancements:**
