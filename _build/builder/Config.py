@@ -17,6 +17,8 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import ConfigParser
+from builder.Utils import IsCIBuild
+
 
 class Config(object):
     def __init__(self, buildSetup, configFilePath):
@@ -29,7 +31,8 @@ class Config(object):
         Load the ini file and set all options.
         """
         configParser = ConfigParser.ConfigParser()
-        configParser.read(self._configFilePath)
+        if not IsCIBuild():
+            configParser.read(self._configFilePath)
         for task in self.buildSetup.tasks:
             section = task.GetId()
             if not configParser.has_section(section):

@@ -134,7 +134,19 @@ install:
       " "
       "=============== start the EventGhost build ==============="
       " "
-      python "_build\Build.py" --build --package
+      If ($Env:APPVEYOR_REPO_TAG.tolower() -eq "true" -and
+        $Env:APPVEYOR_REPO_TAG_NAME.tolower().startswith("deploy"))
+      {
+        # to do a release, create a tag in the form "Deploy_VERSION"
+        # VERSION must be a valid version string (without leading 'v')
+        # this tag will be deleted and a new release "vVERSION" created.
+        git checkout -q master
+        $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
+        python "_build\Build.py" --build --package --release --version $release
+      } Else {
+        # WIP
+        python "_build\Build.py" --build --package
+      }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
       " "
 
@@ -160,32 +172,16 @@ build:
 artifacts:
   - path: _build\output\$(SetupExe)
   - path: _build\output\Build.log
+  - path: _build\output\CHANGELOG.md
   - path: _build\output\CHANGELOG_THIS_RELEASE.bb
   - path: _build\output\CHANGELOG_THIS_RELEASE.md
-
-
-#before_deploy:
-#  - cmd: python -c "fh=open('_build\\output\\CHANGELOG.md'); txt=fh.read().replace('\n','\\n'); print txt[txt.find('**'):]" > tmp
-#  - cmd: set /P CHANGELOG=< tmp
-
-
-deploy:
-    # Deploy to GitHub Releases
-  - provider: GitHub
-    auth_token: $(GITHUB_TOKEN)
-    draft: true
-    prerelease: true
-    artifact: _build\output\$(setup-exe)
-    force_update: true
-    # tag: EventGhost_0.5.0-beta6
-    # release: EventGhost_0.5.0-beta6
-    # description: $(CHANGELOG)
-    description: 'Put the contents of [CHANGELOG_THIS_RELEASE.md](https://ci.appveyor.com/api/buildjobs/$(APPVEYOR_JOB_ID)/artifacts/_build%2Foutput%2FCHANGELOG_THIS_RELEASE.md) here instead of this text.'
-    on:
-      #branch: master          # release from master branch only
-      appveyor_repo_tag: true # deploy on tag push only
 
 
 #on_finish:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
+# notifications:
+#   - provider: GitHubPullRequest
+#     template: "{{#passed}}:white_check_mark: [Setup.exe](https://ci.appveyor.com/api/buildjobs/$(APPVEYOR_JOB_ID)/artifacts/_build%2Foutput%2F$(setup-exe)){{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})"
