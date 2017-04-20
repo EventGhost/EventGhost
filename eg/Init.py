@@ -129,7 +129,7 @@ def InitGui():
             wx.CallAfter(eg.CheckUpdate.Start)
 
     # Register restart handler for easy crash recovery.
-    if eg.WindowsVersion.IsVista():
+    if eg.WindowsVersion >= 'Vista':
         args = " ".join(eg.app.GetArguments())
         windll.kernel32.RegisterApplicationRestart(args, 8)
 
