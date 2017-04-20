@@ -63,7 +63,7 @@ AWY_EXITING = 0x0
 AWY_ENTERING = 0x1
 
 
-if eg.WindowsVersion >= 8:
+if eg.WindowsVersion >= '8':
     GUID_CONSOLE_DISPLAY_STATE = GUID(
         '{6fe69556-704a-47a0-8f24-c28d936fda47}'
     )
