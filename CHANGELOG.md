@@ -1,3 +1,10 @@
+## [0.5.0-rc2](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc2) (2017-04-20)
+
+**Fixed bugs:**
+
+* Fixes incorrect replacement usage of IsVista\(\) and IsXP\(\) [\#221](https://github.com/EventGhost/EventGhost/pull/221) ([kdschlosser](https://github.com/kdschlosser))
+
+
 ## [0.5.0-rc1](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc1) (2017-04-16)
 
 **Important changes for plugin developers:**
