@@ -17,6 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+from threading import Lock, ThreadError
 
 # Local imports
 import eg
@@ -27,6 +28,7 @@ from eg.WinApi.Dynamic import (
 
 class MainMessageReceiver(eg.MessageReceiver):
     def __init__(self):
+        self.finishLock = Lock()
         self.hwndNextViewer = None
         eg.MessageReceiver.__init__(self, "EventGhost Message Receiver")
 
@@ -39,6 +41,10 @@ class MainMessageReceiver(eg.MessageReceiver):
                 self.hwndNextViewer = None
         elif self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
+        try:
+            self.finishLock.acquire()
+        except ThreadError:
+            pass
         return 0
 
     def OnDrawClipboard(self, dummyHwnd, mesg, wParam, lParam):
@@ -53,6 +59,11 @@ class MainMessageReceiver(eg.MessageReceiver):
         self.hwndNextViewer = SetClipboardViewer(self.hwnd)
         self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
 
-    def Stop(self):
+    def Finish(self):
         ChangeClipboardChain(self.hwnd, self.hwndNextViewer)
+        self.finishLock.acquire()
+        eg.MessageReceiver.Finish(self)
+        
+    def Stop(self):
+        self.finishLock.acquire()
         eg.MessageReceiver.Stop(self)
