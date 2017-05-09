@@ -53,6 +53,7 @@ class MainMessageReceiver(eg.MessageReceiver):
         self.hwndNextViewer = SetClipboardViewer(self.hwnd)
         self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
 
-    def Finish(self):
-        ChangeClipboardChain(self.hwnd, self.hwndNextViewer)
-        eg.MessageReceiver.Finish(self)
+    @eg.LogIt
+    def Stop(self):
+        self.Func(ChangeClipboardChain)(self.hwnd, self.hwndNextViewer)
+        eg.MessageReceiver.Stop(self)
