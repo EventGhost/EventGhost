@@ -343,8 +343,8 @@ Nearly all configuration dialogs follow the same scheme.
    to panel.sizer, but therefore you need more knowledge of wx.Sizers.)
 #. Then you call panel.Affirmed() in a loop. This method of the panel will 
    finish the setup of the dialog and display it to the user. If the user 
-   dismisses the dialog with the cancel button, this method will return False 
-   and you are done.
+   dismisses the dialog with the :guilabel:`Cancel` button, this method will 
+   return False and you are done.
 #. If panel.Affirmed() returns True, you have to return the current settings 
    the user has made through panel.SetResult(...). In this case we get the 
    current setting of the text box by using GetValue() on it. 
@@ -354,7 +354,7 @@ will find that if you reconfigure the plugin this text is already set. It will
 even survive if you save your EventGhost configuration and restart EventGhost.
 
 It is needed to use panel.Affirmed() and panel.SetResult(...) in a loop, 
-because the user might also use the :guilabel:`Apply button` and EventGhost 
+because the user might also use the :guilabel:`Apply` button and EventGhost 
 needs to know the current settings from the panel without dismissing it 
 completely.
 
