@@ -122,6 +122,7 @@ class WindowsVersion:
     +-----------+--------------------------------------+
 
     |
+
     .. The above line gives some extra space after the table in the helpfile.
        References:
            https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx
