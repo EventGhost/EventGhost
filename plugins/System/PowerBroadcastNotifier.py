@@ -152,7 +152,7 @@ else:
 
 
     def Unregister(cls):
-        windll.user32.UnregisterDeviceNotification(cls)
+        windll.user32.UnregisterPowerSettingNotification(cls)
 
 
 def CreatePowerClass(lParam, cls):
@@ -242,7 +242,10 @@ class PowerBroadcastNotifier:
         ]
 
         while msg is None and msgCls:
-            msg = CreatePowerClass(lParam, msgCls.pop(0))
+            try:
+                msg = CreatePowerClass(lParam, msgCls.pop(0))
+            except ValueError:
+                continue
 
         if msg is not None:
             eg.eventThread.TriggerEventWait(
