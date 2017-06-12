@@ -212,6 +212,7 @@ if args.isMain:
                             )
                         )
 
+                    ctypes.windll.kernel32.ExitProcess(0)
                     res = (
                         ctypes.windll.shell32.ShellExecuteExW(
                             ctypes.byref(sei)
@@ -231,7 +232,7 @@ if args.isMain:
                     msg = "%s:\n\n%s" % (str(err[2][1]), str(err[2][2]))
                 else:
                     msg = "Failed to launch for unknown reasons: %s" % err
-                    
+
                 if msg:
                     ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
             finally:
