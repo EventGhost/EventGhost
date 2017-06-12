@@ -18,13 +18,15 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import eg
+
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote (Vista+)",
     author = (
         "Brett Stottlemyer",
         "Sem;colon",
     ),
-    version = "1.1.1",
+    version = "1.1.4",
     kind = "remote",
     guid = "{A7DB04BB-9F0A-486A-BCA1-CA87B9620D54}",
     description = 'Plugin for the Microsoft MCE remote.  Requires installation of AlternateMceIrService.',
@@ -48,7 +50,6 @@ eg.RegisterPlugin(
 )
 
 
-import eg
 import time
 from threading import Timer, Thread
 import win32file
@@ -211,6 +212,7 @@ class IRLearnDialog(wx.Dialog):
 
     def OnClose(self, event):
         event.Skip()
+        self.Destroy()
 
     def OnCancel(self, event):
         self.Close()
@@ -419,7 +421,11 @@ class MceMessageReceiver(object):
         """
         self.plugin = plugin
         self.file = None
-
+        self.connecting = False
+        self.receiving = False
+        self.sentMessageOnce = True
+        self.receivingTimeout = None
+        
         try:
             scmanager = win32service.OpenSCManager(None, None, win32service.SC_MANAGER_CONNECT)
             self.service = win32service.OpenService(scmanager, MCE_SERVICE_NAME, win32service.SERVICE_START | win32service.SERVICE_QUERY_STATUS)
@@ -465,7 +471,12 @@ class MceMessageReceiver(object):
         This will be called to detect available IR Blasters.
         """
         if not self.file:
-            return False
+            if not self.connecting:
+                self.Connect()
+            else:
+                return False
+        while self.receiving:
+            time.sleep(0.05)
         writeOvlap = win32file.OVERLAPPED()
         writeOvlap.hEvent = win32event.CreateEvent(None, 0, 0, None)
         win32file.WriteFile(self.file, transmitData, writeOvlap)
@@ -546,14 +557,19 @@ class MceMessageReceiver(object):
         This function tries to connect to the named pipe from AlternateMceIrService.  If it can't connect, it will periodically
         retry until the plugin is stopped or the connection is made.
         """
+        self.connecting = True
         #eg.PrintNotice("MCE_Vista: Connect started")
-        self.sentMessageOnce = False
         while self.file is None and self.keepRunning:
+            self.SetReceiving(False)
             try:
                 self.file = win32file.CreateFile(r'\\.\pipe\MceIr',win32file.GENERIC_READ
                                         |win32file.GENERIC_WRITE,0,None,
                                         win32file.OPEN_EXISTING,win32file.FILE_ATTRIBUTE_NORMAL
                                         |win32file.FILE_FLAG_OVERLAPPED,None)
+                if self.sentMessageOnce:
+                    eg.PrintNotice("MCE_Vista: Connected to MceIr pipe, started handling IR events")
+                    self.plugin.TriggerEvent("Connected")
+                    self.sentMessageOnce = False
             except:
                 if not self.sentMessageOnce:
                     eg.PrintNotice("MCE_Vista: MceIr pipe is not available, app doesn't seem to be running")
@@ -562,20 +578,28 @@ class MceMessageReceiver(object):
                     self.plugin.TriggerEvent("Disconnected")
                     self.sentMessageOnce = True
 
-                if self.service and IsServiceStopped(self.service):
-                    eg.PrintNotice("MCE_Vista: MceIr service is stopped, trying to start it...")
-                    StartService(self.service)
+                #if self.service and IsServiceStopped(self.service):
+                #    eg.PrintNotice("MCE_Vista: MceIr service is stopped, trying to start it...")
+                #    StartService(self.service)
 
                 time.sleep(1)
+        self.connecting = False
         return
 
+    def SetReceiving(self,targetValue):
+        try:
+            eg.scheduler.CancelTask(self.receivingTimeout)
+        except:
+            pass
+        self.receiving = targetValue
+                
     def HandleData(self):
         """
         This runs once a connection to the named pipe is made.  It receives the ir data and passes it to the plugins IRDecoder.
         """
-        if self.sentMessageOnce:
-            eg.PrintNotice("MCE_Vista: Connected to MceIr pipe, started handling IR events")
-            self.plugin.TriggerEvent("Connected")
+        #if self.sentMessageOnce:
+        #    eg.PrintNotice("MCE_Vista: Connected to MceIr pipe, started handling IR events")
+        #    self.plugin.TriggerEvent("Connected")
         nMax = 2048;
         self.result = []
         self.freqs = [0]
@@ -589,8 +613,10 @@ class MceMessageReceiver(object):
             except:
                 win32file.CloseHandle(self.file)
                 self.file = None
-                return
+                break
+            self.receivingTimeout = eg.scheduler.AddTask(0.3,self.SetReceiving,False)
             rc = win32event.WaitForMultipleObjects(handles, False, self.timeout)
+            self.SetReceiving(True)
             if rc == win32event.WAIT_OBJECT_0: #Finished event
                 self.keepRunning = False
                 break
@@ -641,6 +667,7 @@ class MceMessageReceiver(object):
                             self.timeout = self.learnTimeout
             except:
                 pass
+        self.SetReceiving(False)
         #eg.PrintNotice("MCE_Vista: Handle Data finished")
 
     def CodeValid(self,code):
