@@ -212,7 +212,6 @@ if args.isMain:
                             )
                         )
 
-                    ctypes.windll.kernel32.ExitProcess(0)
                     res = (
                         ctypes.windll.shell32.ShellExecuteExW(
                             ctypes.byref(sei)
@@ -220,7 +219,7 @@ if args.isMain:
                     )
 
                     if res:
-                        msg = ''
+                        sys.exit(0)
                     else:
                         msg = (
                             "Unable to run elevated and unelevated "
