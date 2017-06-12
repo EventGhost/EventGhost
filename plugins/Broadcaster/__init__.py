@@ -83,7 +83,7 @@ class Server(asyncore.dispatcher):
         pass
 
     def handle_read(self):
-        data, addr = self.recvfrom(1024)
+        data, addr = self.socket.recvfrom(1024)
 
         # Check if the sending address is any of our interfaces
         my_addr = addr[0] in self.addresses
