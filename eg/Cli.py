@@ -78,11 +78,8 @@ if args.isMain:
         elif arg in ('-m', '-multiload'):
             args.allowMultiLoad = True
         elif arg in ('-e', '-event'):
-            eventstring = argvIter.next()
-            payloads = list(argvIter)
-            if len(payloads) == 0:
-                payloads = None
-            args.startupEvent = (eventstring, payloads)
+            args.startupEvent = tuple(argvIter)
+
         elif arg in ('-f', '-file'):
             args.startupFile = abspath(argvIter.next())
         elif arg in ('-p', '-plugin'):
@@ -133,25 +130,26 @@ if args.isMain:
 
             if args.startupFile is not None:
                 NamedPipe.send_message(
-                    'open_file:%s' %
+                    'eg.document.Open, (%r,)' %
                     args.startupFile
                 )
 
             if args.startupEvent is not None:
                 NamedPipe.send_message(
-                    'trigger_event:%s^%s' %
-                    (args.startupEvent[0], str(args.startupEvent[1]))
+                    'eg.TriggerEvent, %s' %
+                    str(args.startupEvent)
                 )
 
             if args.pluginFile:
                 NamedPipe.send_message(
-                    'plugin_install:%s' %
+                    'eg.PluginInstall.Import, (%r,)' %
                     args.pluginFile
                 )
 
             if args.hideOnStartup:
                 NamedPipe.send_message(
-                    'hide_frame:True'
+                    'eg.document.HideFrame, ()'
                 )
 
             ctypes.windll.kernel32.ExitProcess(0)
+

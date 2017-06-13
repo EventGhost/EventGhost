@@ -19,12 +19,12 @@
 import win32pipe
 import win32file
 import threading
+import ast
 import wx
 
 
 class Server:
     def __init__(self):
-        self.eg = __import__('eg')
         self._event = threading.Event()
         self._thread = None
 
@@ -45,6 +45,7 @@ class Server:
             self._thread.join(1)
 
     def run(self):
+        import eg
 
         while not self._event.isSet():
 
@@ -63,42 +64,82 @@ class Server:
             else:
                 data = win32file.ReadFile(pipe, 4096)
                 if data[0] == 0:
-
                     command = ''
                     for char in data[1]:
-                        if ord(char) > 31:
+                        if ord(char) != 0:
                             command += char
+                    try:
+                        command, data = command.split(',', 1)
+                    except ValueError:
+                        data = '()'
 
-                    command, data = command.split(':', 1)
+                    command = command.strip()
+                    data = data.strip()
 
-                    hide_frame = False
+                    if '=' in command:
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Command not allowed: ' + command
+                        )
 
-                    if command == 'plugin_install':
-                        wx.CallAfter(self.eg.PluginInstall.Import, data)
+                    if not data.startswith('dict') and '=' in data:
+                        eg.PrintError(
+                            'Named Pipe Error: ' 
+                            'Data not allowed: ' + data
+                        )
+                        continue
 
-                    elif command == 'trigger_event':
-                        event, payload = data.split('^')
-                        payload = eval(payload)
-                        wx.CallAfter(self.eg.TriggerEvent, event, payload)
+                    if (
+                        data[0] not in ('(', '[', '{') and
+                        not data.startswith('dict')
+                    ):
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Data not allowed: ' + data
+                        )
+                        continue
 
-                    elif command == 'open_file':
-                        wx.CallAfter(self.eg.document.Open, data)
-
-                    elif command == 'hide_frame':
-                        hide_frame = True
+                    try:
+                        command = eval(command.split('(', 1)[0])
+                    except SyntaxError:
+                        eg.PrintTraceback(
+                            'Named Pipe Error: '
+                            'Command malformed: ' + command
+                        )
+                        continue
                     else:
-                        print command, data
+                        if isinstance(command, (str, unicode)):
+                            eg.PrintError(
+                                'Named Pipe Error: '
+                                'Command does not exist: ' + command
+                            )
+                            continue
+                    try:
+                        data = eval(data.strip())
+                    except SyntaxError:
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Data malformed: ' + data
+                        )
+                        continue
 
-                    if hide_frame and self.eg.mainFrame is not None:
-                        wx.CallAfter(self.eg.mainFrame.Iconize, True)
-
-                    else:
-                        if self.eg.mainFrame is not None:
-                            wx.CallAfter(self.eg.mainFrame.Iconize, False)
+                    if command is not None:
+                        if isinstance(data, dict):
+                            wx.CallAfter(command, **data)
+                        elif isinstance(data, (tuple, list)):
+                            wx.CallAfter(command, *data)
                         else:
-                            wx.CallAfter(self.eg.document.ShowFrame)
+                            eg.PrintError(
+                                'Named Pipe Error: '
+                                'Data malformed: ' + str(data)
+                            )
+                            continue
+
                 else:
-                    print 'ERROR', data
+                    eg.PrintError(
+                        'Named Pipe Error: '
+                        'Unknown Error: ' + str(data)
+                    )
 
         self._event.clear()
         self._thread = None
@@ -118,3 +159,4 @@ def send_message(msg):
 
     win32pipe.ConnectNamedPipe(p, None)
     win32file.WriteFile(p, msg)
+
