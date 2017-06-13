@@ -133,6 +133,8 @@ class App(wx.App):
             eg.PrintDebugNotice("The following threads did not terminate:")
             for thread in threads:
                 eg.PrintDebugNotice(" ", thread, thread.getName())
+
+        eg.namedPipe.stop()
         eg.PrintDebugNotice("Done!")
         ExitProcess(0)
 

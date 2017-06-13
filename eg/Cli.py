@@ -26,16 +26,6 @@ import os
 import pywintypes
 import sys
 from os.path import abspath, dirname, join
-from ctypes.wintypes import (
-    DWORD,
-    HWND,
-    LPCWSTR,
-    HINSTANCE,
-    LPVOID,
-    HANDLE,
-    HKEY,
-    INT
-)
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -60,35 +50,6 @@ class args:
     startupEvent = None
     startupFile = None
     translate = False
-
-
-class N18_SHELLEXECUTEINFOW5DOLLAR_249E(ctypes.Union):
-    _pack_ = 1
-    _fields_ = [
-        ('hIcon', HANDLE),
-        ('hMonitor', HANDLE),
-    ]
-
-class SHELLEXECUTEINFO(ctypes.Structure):
-    _pack_ = 1
-    _anonymous_ = ['_0']
-    _fields_ = [
-        ('cbSize', DWORD),
-        ('fMask', DWORD),
-        ('hwnd', HWND),
-        ('lpVerb', LPCWSTR),
-        ('lpFile', LPCWSTR),
-        ('lpParameters', LPCWSTR),
-        ('lpDirectory', LPCWSTR),
-        ('nShow', INT),
-        ('hInstApp', HINSTANCE),
-        ('lpIDList', LPVOID),
-        ('lpClass', LPCWSTR),
-        ('hkeyClass', HKEY),
-        ('dwHotKey', DWORD),
-        ('_0', N18_SHELLEXECUTEINFOW5DOLLAR_249E),
-        ('hProcess', HANDLE),
-    ]
 
 
 if args.isMain:
@@ -156,8 +117,8 @@ if args.isMain:
     if (
         not args.allowMultiLoad and
         not args.translate and
-        args.isMain  #and
-        #not args.pluginFile
+        args.isMain and
+        not args.pluginFile
     ):
         # check if another instance of the program is running
         appMutex = ctypes.windll.kernel32.CreateMutexA(
@@ -167,72 +128,30 @@ if args.isMain:
         )
         if ctypes.GetLastError() != 0:
             # another instance of EventGhost is running
-            from win32com.client import Dispatch
-            try:
-                e = Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-                if args.startupFile is not None:
-                    e.OpenFile(args.startupFile)
-                if args.startupEvent is not None:
-                    e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
-                elif args.pluginFile:
-                    e.InstallPlugin(args.pluginFile)
-                else:
-                    e.BringToFront()
 
-            except pywintypes.com_error as err:
-                if err[0] in (-2147024156, -2146959355):
-                    lpParameters = []
-                    if args.configDir:
-                        lpParameters += ['-configDir', args.configDir]
-                    if args.debugLevel:
-                        lpParameters += ['-debug']
-                    if args.hideOnStartup:
-                        lpParameters += ['hide']
-                    if args.pluginFile:
-                        lpParameters += ['-plugin', args.pluginFile]
-                    if args.startupEvent:
-                        lpParameters += ['-event', args.startupEvent[0]]
-                        if args.startupEvent[1]:
-                            lpParameters += [args.startupEvent[1]]
-                    if args.startupFile:
-                        lpParameters += ['-file', args.startupFile]
+            import NamedPipe
 
-                    sei = SHELLEXECUTEINFO()
+            if args.startupFile is not None:
+                NamedPipe.send_message(
+                    'open_file:%s' %
+                    args.startupFile
+                )
 
-                    sei.cbSize = ctypes.sizeof(SHELLEXECUTEINFO)
-                    sei.fMask = 256 | 1024 | 64
-                    sei.lpVerb = u"runas"
-                    sei.lpFile = sys.executable
-                    sei.nShow = 1
+            if args.startupEvent is not None:
+                NamedPipe.send_message(
+                    'trigger_event:%s^%s' %
+                    (args.startupEvent[0], str(args.startupEvent[1]))
+                )
 
-                    sei.lpParameters = " ".join(
-                            list(
-                                '"%s"' % arg.replace('"', '""')
-                                for arg in lpParameters
-                            )
-                        )
+            if args.pluginFile:
+                NamedPipe.send_message(
+                    'plugin_install:%s' %
+                    args.pluginFile
+                )
 
-                    res = (
-                        ctypes.windll.shell32.ShellExecuteExW(
-                            ctypes.byref(sei)
-                        )
-                    )
+            if args.hideOnStartup:
+                NamedPipe.send_message(
+                    'hide_frame:True'
+                )
 
-                    if res:
-                        sys.exit(0)
-                    else:
-                        msg = (
-                            "Unable to run elevated and unelevated "
-                            "simultaneously: %s" %
-                            ctypes.FormatError(ctypes.GetLastError())
-                        )
-
-                elif err[2]:
-                    msg = "%s:\n\n%s" % (str(err[2][1]), str(err[2][2]))
-                else:
-                    msg = "Failed to launch for unknown reasons: %s" % err
-
-                if msg:
-                    ctypes.windll.user32.MessageBoxA(0, msg, "EventGhost", 48)
-            finally:
-                ctypes.windll.kernel32.ExitProcess(0)
+            ctypes.windll.kernel32.ExitProcess(0)
