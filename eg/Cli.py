@@ -117,8 +117,8 @@ if args.isMain:
     if (
         not args.allowMultiLoad and
         not args.translate and
-        args.isMain and
-        not args.pluginFile
+        args.isMain # and
+        # not args.pluginFile
     ):
         # check if another instance of the program is running
         appMutex = ctypes.windll.kernel32.CreateMutexA(

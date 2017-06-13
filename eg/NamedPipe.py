@@ -19,6 +19,7 @@
 import win32pipe
 import win32file
 import threading
+import wx
 
 
 class Server:
@@ -73,14 +74,15 @@ class Server:
                     hide_frame = False
 
                     if command == 'plugin_install':
-                        import wx
                         wx.CallAfter(self.eg.PluginInstall.Import, data)
 
                     elif command == 'trigger_event':
-                        self.eg.TriggerEvent(*data.split('^'))
+                        event, payload = data.split('^')
+                        payload = eval(payload)
+                        wx.CallAfter(self.eg.TriggerEvent, event, payload)
 
                     elif command == 'open_file':
-                        self.eg.document.Open(data)
+                        wx.CallAfter(self.eg.document.Open, data)
 
                     elif command == 'hide_frame':
                         hide_frame = True
@@ -88,12 +90,13 @@ class Server:
                         print command, data
 
                     if hide_frame and self.eg.mainFrame is not None:
-                        self.eg.mainFrame.Iconize(True)
+                        wx.CallAfter(self.eg.mainFrame.Iconize, True)
+
                     else:
                         if self.eg.mainFrame is not None:
-                            self.eg.mainFrame.Iconize(False)
+                            wx.CallAfter(self.eg.mainFrame.Iconize, False)
                         else:
-                            self.eg.document.ShowFrame()
+                            wx.CallAfter(self.eg.document.ShowFrame)
                 else:
                     print 'ERROR', data
 
