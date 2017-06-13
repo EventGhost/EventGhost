@@ -37,6 +37,7 @@ class Server:
                 name='EventGhost.Pipe.Thread',
                 target=self.run
             )
+            self._thread.daemon = True
             self._thread.start()
 
     def stop(self):
@@ -50,19 +51,27 @@ class Server:
         while not self._event.isSet():
 
             try:
-                pipe = win32file.CreateFile(
+                pipe = win32pipe.CreateNamedPipe(
                     r'\\.\pipe\eventghost_pipe',
-                    win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-                    0,
-                    None,
-                    win32file.OPEN_EXISTING,
-                    0,
+                    win32pipe.PIPE_ACCESS_DUPLEX,
+                    (
+                        win32pipe.PIPE_TYPE_MESSAGE |
+                        win32pipe.PIPE_WAIT |
+                        win32pipe.PIPE_READMODE_MESSAGE
+                    ),
+                    255,
+                    4096,
+                    4096,
+                    50,
                     None
                 )
+                win32pipe.ConnectNamedPipe(pipe, None)
+
             except win32file.error:
                 self._event.wait(0.5)
             else:
                 data = win32file.ReadFile(pipe, 4096)
+                win32file.WriteFile(pipe, '')
                 if data[0] == 0:
                     command = ''
                     for char in data[1]:
@@ -146,17 +155,10 @@ class Server:
 
 
 def send_message(msg):
-    p = win32pipe.CreateNamedPipe(
+    win32pipe.CallNamedPipe(
         r'\\.\pipe\eventghost_pipe',
-        win32pipe.PIPE_ACCESS_DUPLEX,
-        win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_WAIT,
-        1,
-        65536,
-        65536,
-        300,
-        None
+        msg,
+        4096,
+        win32pipe.NMPWAIT_WAIT_FOREVER
     )
-
-    win32pipe.ConnectNamedPipe(p, None)
-    win32file.WriteFile(p, msg)
 
