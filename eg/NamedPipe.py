@@ -19,7 +19,7 @@
 import win32pipe
 import win32file
 import threading
-import ast
+import pywintypes
 import wx
 
 
@@ -48,121 +48,164 @@ class Server:
     def run(self):
         import eg
 
-
-
-
         while not self._event.isSet():
-            pipe = win32pipe.CreateNamedPipe(
-                r'\\.\pipe\eventghost_pipe',
-                win32pipe.PIPE_ACCESS_DUPLEX,
-                (
-                    win32pipe.PIPE_TYPE_MESSAGE |
-                    win32pipe.PIPE_WAIT |
-                    win32pipe.PIPE_READMODE_MESSAGE
-                ),
-                255,
-                4096,
-                4096,
-                50,
-                None
-            )
-
-            win32pipe.ConnectNamedPipe(pipe, None)
-            data = win32file.ReadFile(pipe, 4096)
-            if data[0] == 0:
-                command = ''
-                for char in data[1]:
-                    if ord(char) != 0:
-                        command += char
-                try:
-                    command, data = command.split(',', 1)
-                except ValueError:
-                    data = '()'
-
-                command = command.strip()
-                data = data.strip()
-
-                if '=' in command:
-                    eg.PrintError(
-                        'Named Pipe Error: '
-                        'Command not allowed: ' + command
-                    )
-
-                if not data.startswith('dict') and '=' in data:
-                    eg.PrintError(
-                        'Named Pipe Error: ' 
-                        'Data not allowed: ' + data
-                    )
-                    continue
-
-                if (
-                    data[0] not in ('(', '[', '{') and
-                    not data.startswith('dict')
-                ):
-                    eg.PrintError(
-                        'Named Pipe Error: '
-                        'Data not allowed: ' + data
-                    )
-                    continue
-
-                try:
-                    command = eval(command.split('(', 1)[0])
-                except SyntaxError:
-                    eg.PrintTraceback(
-                        'Named Pipe Error: '
-                        'Command malformed: ' + command
-                    )
-                    continue
-                else:
-                    if isinstance(command, (str, unicode)):
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Command does not exist: ' + command
-                        )
-                        continue
-                try:
-                    data = eval(data.strip())
-                except SyntaxError:
-                    eg.PrintError(
-                        'Named Pipe Error: '
-                        'Data malformed: ' + data
-                    )
-                    continue
-
-                if command is not None:
-                    if isinstance(data, dict):
-                        wx.CallAfter(command, **data)
-                    elif isinstance(data, (tuple, list)):
-                        wx.CallAfter(command, *data)
-                    else:
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Data malformed: ' + str(data)
-                        )
-                        continue
-
-            else:
-                eg.PrintError(
-                    'Named Pipe Error: '
-                    'Unknown Error: ' + str(data)
+            try:
+                pipe = win32pipe.CreateNamedPipe(
+                    r'\\.\pipe\eventghost_pipe_1',
+                    win32pipe.PIPE_ACCESS_DUPLEX,
+                    (
+                        win32pipe.PIPE_TYPE_MESSAGE |
+                        # win32pipe.PIPE_WAIT |
+                        win32pipe.PIPE_READMODE_MESSAGE
+                    ),
+                    255,
+                    4096,
+                    4096,
+                    50,
+                    None
                 )
+                win32pipe.ConnectNamedPipe(pipe, None)
+            except win32pipe.error:
+                try:
+                    pipe = win32file.CreateFile(
+                        r'\\.\pipe\eventghost_pipe_2',
+                        win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                        0,
+                        None,
+                        win32file.OPEN_EXISTING,
+                        0,
+                        None,
+                    )
 
-            win32pipe.DisconnectNamedPipe(pipe)
+                except win32file.error:
+                    pipe = None
+
+            if pipe is not None:
+                data = win32file.ReadFile(pipe, 4096)
+                try:
+                    win32pipe.DisconnectNamedPipe(pipe)
+                except win32pipe.error:
+                    pass
+
+                if data[0] == 0:
+                    command = ''
+                    for char in data[1]:
+                        if ord(char) != 0:
+                            command += char
+                    try:
+                        command, data = command.split(',', 1)
+                    except ValueError:
+                        data = '()'
+
+                    command = command.strip()
+                    data = data.strip()
+
+                    if '=' in command:
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Command not allowed: ' + command
+                        )
+
+                    if not data.startswith('dict') and '=' in data:
+                        eg.PrintError(
+                            'Named Pipe Error: ' 
+                            'Data not allowed: ' + data
+                        )
+                        continue
+
+                    if (
+                        data[0] not in ('(', '[', '{') and
+                        not data.startswith('dict')
+                    ):
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Data not allowed: ' + data
+                        )
+                        continue
+
+                    try:
+                        command = eval(command.split('(', 1)[0])
+                    except SyntaxError:
+                        eg.PrintTraceback(
+                            'Named Pipe Error: '
+                            'Command malformed: ' + command
+                        )
+                        continue
+                    else:
+                        if isinstance(command, (str, unicode)):
+                            eg.PrintError(
+                                'Named Pipe Error: '
+                                'Command does not exist: ' + command
+                            )
+                            continue
+                    try:
+                        data = eval(data.strip())
+                    except SyntaxError:
+                        eg.PrintError(
+                            'Named Pipe Error: '
+                            'Data malformed: ' + data
+                        )
+                        continue
+
+                    if command is not None:
+                        if isinstance(data, dict):
+                            wx.CallAfter(command, **data)
+                        elif isinstance(data, (tuple, list)):
+                            wx.CallAfter(command, *data)
+                        else:
+                            eg.PrintError(
+                                'Named Pipe Error: '
+                                'Data malformed: ' + str(data)
+                            )
+                            continue
+
+                else:
+                    eg.PrintError(
+                        'Named Pipe Error: '
+                        'Unknown Error: ' + str(data)
+                    )
+
         self._event.clear()
         self._thread = None
 
 
 def send_message(msg):
 
-    pipe = win32file.CreateFile(
-        r'\\.\pipe\eventghost_pipe',
-        win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-        0,
-        None,
-        win32file.OPEN_EXISTING,
-        0,
-        None,
-    )
-    win32file.WriteFile(pipe, msg)
+    while True:
+        try:
+            pipe = win32file.CreateFile(
+                r'\\.\pipe\eventghost_pipe_1',
+                win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                0,
+                None,
+                win32file.OPEN_EXISTING,
+                0,
+                None,
+            )
+            win32file.WriteFile(pipe, msg)
+            return
+
+        except win32file.error as err:
+            if err[0] == 5:
+                pipe = win32pipe.CreateNamedPipe(
+                    r'\\.\pipe\eventghost_pipe_2',
+                    win32pipe.PIPE_ACCESS_DUPLEX,
+                    (
+                        win32pipe.PIPE_TYPE_MESSAGE |
+                        win32pipe.PIPE_WAIT |
+                        win32pipe.PIPE_READMODE_MESSAGE
+                    ),
+                    255,
+                    4096,
+                    4096,
+                    50,
+                    None
+                )
+                win32pipe.ConnectNamedPipe(pipe, None)
+
+                win32file.WriteFile(pipe, msg)
+                win32pipe.DisconnectNamedPipe(pipe)
+                return
+
 
 
