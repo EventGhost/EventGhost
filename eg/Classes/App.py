@@ -134,7 +134,6 @@ class App(wx.App):
             for thread in threads:
                 eg.PrintDebugNotice(" ", thread, thread.getName())
 
-        eg.namedPipe.stop()
         eg.PrintDebugNotice("Done!")
         ExitProcess(0)
 

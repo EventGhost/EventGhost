@@ -23,7 +23,6 @@ Parses the command line arguments of the program.
 import ctypes
 import locale
 import os
-import pywintypes
 import sys
 from os.path import abspath, dirname, join
 
@@ -50,6 +49,7 @@ class args:
     startupEvent = None
     startupFile = None
     translate = False
+    restart = False
 
 
 if args.isMain:
@@ -90,19 +90,7 @@ if args.isMain:
         elif arg == '-translate':
             args.translate = True
         elif arg == "-restart":
-            import time
-            while True:
-                appMutex = ctypes.windll.kernel32.CreateMutexA(
-                    None,
-                    0,
-                    "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-                )
-                err = ctypes.GetLastError()
-                if appMutex:
-                    ctypes.windll.kernel32.CloseHandle(appMutex)
-                if err == 0:
-                    break
-                time.sleep(0.1)
+            args.restart = True
         else:
             path = abspath(arg)
             ext = os.path.splitext(path)[1].lower()
@@ -118,38 +106,48 @@ if args.isMain:
         # not args.pluginFile
     ):
         # check if another instance of the program is running
+
         appMutex = ctypes.windll.kernel32.CreateMutexA(
             None,
             0,
             "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
         )
+
         if ctypes.GetLastError() != 0:
             # another instance of EventGhost is running
-
             import NamedPipe
 
-            if args.startupFile is not None:
-                NamedPipe.send_message(
-                    'eg.document.Open, (%r,)' %
-                    args.startupFile
-                )
+            if args.restart:
+                import time
 
-            if args.startupEvent is not None:
-                NamedPipe.send_message(
-                    'eg.TriggerEvent, %s' %
-                    str(args.startupEvent)
-                )
+                NamedPipe.send_message('eg.app.Exit, ()')
 
-            if args.pluginFile:
-                NamedPipe.send_message(
-                    'eg.PluginInstall.Import, (%r,)' %
-                    args.pluginFile
-                )
+                while ctypes.GetLastError() != 0:
+                    time.sleep(0.1)
 
-            if args.hideOnStartup:
-                NamedPipe.send_message(
-                    'eg.document.HideFrame, ()'
-                )
+                    appMutex = ctypes.windll.kernel32.CreateMutexA(
+                        None,
+                        0,
+                        "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+                    )
 
-            ctypes.windll.kernel32.ExitProcess(0)
+            else:
+                if args.startupFile is not None:
+                    NamedPipe.send_message(
+                        'eg.document.Open, (%r,)' % args.startupFile
+                    )
 
+                if args.startupEvent is not None:
+                    NamedPipe.send_message(
+                        'eg.TriggerEvent, %s' % str(args.startupEvent)
+                    )
+
+                if args.pluginFile:
+                    NamedPipe.send_message(
+                        'eg.PluginInstall.Import, (%r,)' % args.pluginFile
+                    )
+
+                if args.hideOnStartup:
+                    NamedPipe.send_message('eg.document.HideFrame, ()')
+
+                ctypes.windll.kernel32.ExitProcess(0)
