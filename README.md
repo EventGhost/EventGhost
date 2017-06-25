@@ -8,24 +8,25 @@
 
 Control your HTPC with an infrared remote, move your mouse cursor with your gamepad, communicate with another instance of EventGhost over your network, send yourself an email when your website goes down, turn on your lights when the sun sets... with the right plugin, the right macro, and a little ingenuity, the sky's the limit!
 
+For more information read the [Documentation](http://www.eventghost.org/docs/) and take a look at our [Wiki](http://www.eventghost.org/mediawiki/). There's also an very active [Forum](http://www.eventghost.org/forum/).
 
-|
+
 
 Found a bug?
 ------------
 
 Great (ehm, well, of course not good :) ). Before you file an issue, [please read this](CONTRIBUTING.md#i-want-to-report-a-bug)
 
-|
+
 
 Contributing
 ------------
 
-Please note that this project is released with a Contributor [Code of Conduct](code_of_conduct.md). By participating in this project you agree to abide by its terms.
+Please note that this project is released with a contributor [Code of Conduct](code_of_conduct.md). By participating in this project you agree to abide by its terms.
 
 If you'd like to contribute to this project please read the [contributing](CONTRIBUTING.md) guide.
 
-|
+
 
 License
 -------
