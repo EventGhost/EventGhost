@@ -69,6 +69,14 @@ class BuildLibrary(builder.Task):
                 if not os.path.isdir(path):
                     os.remove(path)
 
+        wip_version = None
+        if buildSetup.appVersion.startswith("WIP-"):
+            # this is to avoid a py2exe warning when building a WIP version
+            wip_version = buildSetup.appVersion
+            buildSetup.appVersion = ".".join(
+                buildSetup.appVersion.split("-")[1].split(".")
+            )
+
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
@@ -88,6 +96,9 @@ class BuildLibrary(builder.Task):
                 )
             )
         )
+
+        if wip_version:
+            buildSetup.appVersion = wip_version
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []
