@@ -21,7 +21,8 @@ matrix:
 
 
 cache:
-  - '%PYTHON%'
+  # Invalidate cache if .appveyor.yml has changed
+  - C:\Stackless27 -> .appveyor.yml
   # Manually clear cache:
   # from agithub.AppVeyor import AppVeyor
   # ci = AppVeyor(<your appveyor API token>)
@@ -146,7 +147,7 @@ install:
       } Else {
         # WIP
         python "_build\Build.py" --build --package
-        eventghost -install
+        .\EventGhost.exe -install
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
       " "
