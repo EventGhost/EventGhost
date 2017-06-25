@@ -45,6 +45,7 @@ from os.path import exists, join
 # Local imports
 import eg
 import Init
+import NamedPipe
 
 eg.APP_NAME = "EventGhost"
 eg.CORE_PLUGIN_GUIDS = (
@@ -53,6 +54,9 @@ eg.CORE_PLUGIN_GUIDS = (
     "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",  # "Window"
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
+
+eg.namedPipe = NamedPipe.Server()
+eg.namedPipe.start()
 
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
