@@ -1,15 +1,15 @@
 :tocdepth: 2
 
 EventGhost documentation
-======================================
+========================
 
-Welcome! This is the documentation for EventGhost |release|, last updated |today|. 
+Welcome! This is the documentation for EventGhost |release|, last updated |today|.
 
 .. toctree::
    :maxdepth: 2
 
    user_docs
-   
+
 .. toctree::
    :maxdepth: 2
 
@@ -18,9 +18,9 @@ Welcome! This is the documentation for EventGhost |release|, last updated |today
 .. toctree::
    :hidden:
    :glob:
-   
+
    eg/*
-   
+
 Indices and tables
 ==================
 

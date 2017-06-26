@@ -96,7 +96,7 @@ install:
         # jinja2 >= 2.9 has an async module which py2exe has
         # problems with (build of eg will fail)
         PipInstall "jinja2 2.8.1" "jinja2==2.8.1"
-        PipInstall "sphinx 1.4.8" "sphinx==1.4.8"
+        PipInstall "sphinx 1.5.6" "sphinx==1.5.6"
         PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
         PipInstall "pillow 3.4.2" "pillow==3.4.2"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
