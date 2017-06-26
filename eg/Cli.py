@@ -118,18 +118,45 @@ if args.isMain:
             import NamedPipe
 
             if args.restart:
-                import time
+                # import time
 
-                NamedPipe.send_message('eg.app.Exit, ()')
+                try:
+                    if NamedPipe.send_message('eg.document.IsDirty, ()'):
+                        answer = ctypes.windll.user32.MessageBoxA(
+                            0,
+                            'EventGhost cannot restart.        \n\n'
+                            'Save configuration changes?.      \n',
+                            "EventGhost Restart Error",
+                            3 | 40000
+                        )
 
-                while ctypes.GetLastError() != 0:
-                    time.sleep(0.1)
+                        if answer == 2:
+                            ctypes.windll.kernel32.ExitProcess(0)
+                        elif answer == 7:
+                            NamedPipe.send_message(
+                                'eg.document.SetIsDirty, (False,)'
+                            )
+                        elif answer == 6:
+                            import wx
 
-                    appMutex = ctypes.windll.kernel32.CreateMutexA(
-                        None,
-                        0,
-                        "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-                    )
+                            answer = NamedPipe.send_message(
+                                'eg.document.Save, ()'
+                            )
+
+                            if answer == wx.ID_CANCEL:
+                                ctypes.windll.kernel32.ExitProcess(0)
+
+                    if not NamedPipe.send_message('eg.app.Exit, ()'):
+                        ctypes.windll.user32.MessageBoxA(
+                            0,
+                            'EventGhost cannot restart - unknown error.\n',
+                            "EventGhost Restart Error",
+                            0 | 40000
+                        )
+
+                        ctypes.windll.kernel32.ExitProcess(1)
+                except NamedPipe.NamedPipeConnectionError:
+                    ctypes.windll.kernel32.ExitProcess(0)
 
             else:
                 if args.startupFile is not None:

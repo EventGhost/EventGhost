@@ -23,6 +23,14 @@ import threading
 import wx
 
 
+def process_data(in_data):
+    out_data = ''
+    for char in in_data:
+        if ord(char) != 0:
+            out_data += char
+    return out_data
+
+
 class Server:
     """
     Receiving thread class for the eventghost named pipe.
@@ -124,14 +132,14 @@ class Server:
             win32pipe.ConnectNamedPipe(pipe, None)
             data = win32file.ReadFile(pipe, 4096)
             eg.PrintDebugNotice('Named Pipe: Data received')
-            win32pipe.DisconnectNamedPipe(pipe)
 
             if data[0] == 0:
+                event = threading.Event()
+                res = ['']
+
                 def run_command(d):
-                    command = ''
-                    for char in d[1]:
-                        if ord(char) != 0:
-                            command += char
+
+                    command = process_data(d)
                     try:
                         command, d = command.split(',', 1)
                     except ValueError:
@@ -195,34 +203,74 @@ class Server:
 
                     if command is not None:
                         if isinstance(d, dict):
-                            command(**d)
+                            res[0] = command(**d)
                         elif isinstance(d, (tuple, list)):
-                            command(*d)
+                            res[0] = command(*d)
                         else:
                             eg.PrintError(
                                 'Named Pipe Error: '
                                 'Data malformed: ' + str(d)
                             )
+                    event.set()
 
-                wx.CallAfter(run_command, data)
+                wx.CallAfter(run_command, data[1])
+
+                while not event.isSet():
+                    pass
+
+                eg.PrintDebugNotice(
+                    'Named Pipe: return data: ' + str(res[0])
+                )
+
+                win32file.WriteFile(pipe, str(res[0]))
+                win32pipe.DisconnectNamedPipe(pipe)
 
             else:
                 eg.PrintError(
-                    'Named Pipe Error: '
+                    'Named Pipe Data Error: '
                     'Unknown Error: ' + str(data)
                 )
 
 
 def send_message(msg):
+    try:
+        pipe = win32file.CreateFile(
+            r'\\.\pipe\eventghost',
+            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+            0,
+            None,
+            win32file.OPEN_EXISTING,
+            0,
+            None
+        )
+        win32file.WriteFile(pipe, msg)
+        # while not win32pipe.PeekNamedPipe(pipe, 4096):
+        #     pass
+        data = win32file.ReadFile(pipe, 4096)
+        if data[0] == 0:
+            data = process_data(data[1])
+            if data != '':
+                return eval(data)
+            else:
+                return data
+        else:
+            raise NamedPipeDataError('Error in data received: ' + str(data))
 
-    pipe = win32file.CreateFile(
-        r'\\.\pipe\eventghost',
-        win32file.GENERIC_WRITE | win32file.GENERIC_READ,
-        0,
-        None,
-         win32file.OPEN_EXISTING,
-        0,
-        None,
-    )
+    except win32pipe.error as err:
+        raise NamedPipeConnectionError('Unexpected error: ' + str(err))
 
-    win32file.WriteFile(pipe, msg)
+
+class NamedPipeException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class NamedPipeDataError(NamedPipeException):
+    pass
+
+
+class NamedPipeConnectionError(NamedPipeException):
+    pass
