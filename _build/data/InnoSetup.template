@@ -1,5 +1,8 @@
+[Messages]
+BeveledLabel=https://www.eventghost.net
+
 [Setup]
-AppCopyright=(C) 2005-2016 EventGhost Project
+AppCopyright=(C) 2005-2017 EventGhost Project
 AppId=EventGhost
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 AppName=EventGhost
@@ -18,6 +21,7 @@ InfoBeforeFile=%(dataDir)s\LICENSE.RTF
 InternalCompressLevel=ultra
 OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
 OutputDir=%(outputDir)s
+SetupIconFile=%(docsDir)s\_static\logo.ico
 ShowLanguageDialog=auto
 SolidCompression=yes
 VersionInfoDescription=EventGhost Installer
@@ -28,6 +32,10 @@ VersionInfoVersion={#Copy('%(appVersion)s', 1, Pos('-', '%(appVersion)s') - 1)}
 #else
 VersionInfoVersion=%(appVersion)s
 #endif
+WizardImageAlphaFormat=defined
+WizardImageFile=%(docsDir)s\_static\logo.bmp
+WizardImageStretch=no
+WizardSmallImageFile=%(docsDir)s\_static\logo_small.bmp
 
 [Code]
 function GetValue(Value: String): String;

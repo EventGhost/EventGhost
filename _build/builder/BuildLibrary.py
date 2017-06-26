@@ -122,7 +122,7 @@ class BuildLibrary(builder.Task):
 class Target:
     def __init__(self, buildSetup):
         self.icon_resources = []
-        iconPath = join(buildSetup.dataDir, "Main.ico")
+        iconPath = join(buildSetup.docsDir, "_static", "logo.ico")
         if exists(iconPath):
             self.icon_resources.append((1, iconPath))
         manifest = file(
