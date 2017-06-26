@@ -90,7 +90,8 @@ class BuildHtmlDocs(builder.Task):
         if self.buildSetup.showGui:
             self.activated = False
         else:
-            self.activated = bool(self.buildSetup.args.sync)
+            self.activated = self.buildSetup.args.docs and \
+                             bool(self.buildSetup.args.websiteUrl)
 
     def DoTask(self):
         call_sphinx('html', self.buildSetup, join(self.buildSetup.websiteDir, "docs"))

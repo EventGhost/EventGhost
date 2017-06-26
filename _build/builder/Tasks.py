@@ -90,31 +90,30 @@ class ReleaseToWeb(builder.Task):
 
 class SynchronizeWebsite(builder.Task):
     description = "Synchronize website"
-    options = {"url": ""}
 
     def Setup(self):
-        if not self.options["url"]:
-            self.enabled = False
-            self.activated = False
-        elif not self.buildSetup.showGui:
-            self.activated = bool(self.buildSetup.args.sync)
+        self.activated = self.buildSetup.args.docs and \
+                         bool(self.buildSetup.args.websiteUrl)
 
     def DoTask(self):
         from SftpSync import SftpSync
 
-        syncer = SftpSync(self.options["url"])
-        addFiles = [
-            (join(self.buildSetup.websiteDir, "index.html"), "index.html"),
+        syncer = SftpSync(self.buildSetup.args.websiteUrl)
+        addFiles = [  # (local file, remote file)
+            # (
+            #     join(self.buildSetup.websiteDir, 'docs', 'index.html'),
+            #     'docs/index.html'
+            # ),
         ]
         syncer.Sync(self.buildSetup.websiteDir, addFiles)
         # touch wiki file, to force re-evaluation of the header template
-        syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
+        # syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
 
         # clear forum cache, to force re-building of the templates
-        syncer.ClearDirectory(
-            syncer.remotePath + "forum/cache",
-            excludes=["index.htm", ".htaccess"]
-        )
+        # syncer.ClearDirectory(
+        #     syncer.remotePath + "forum/cache",
+        #     excludes=["index.htm", ".htaccess"]
+        # )
         syncer.Close()
 
 
@@ -153,5 +152,5 @@ def Main(buildSetup):
         if task.activated:
             logger.log(22, "--- {0}".format(task.description))
             task.DoTask()
-            print ""
+            logger.log(22, "")
     logger.log(22, "--- All done!")
