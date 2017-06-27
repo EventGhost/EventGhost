@@ -54,7 +54,6 @@ STARTUP_DATA = [
     'Windows Version: %s' % ' '.join(
         list(platform.win32_ver())
     ),
-    'Computer Name: %s' % platform.node(),
     'Processor: %s' % platform.processor(),
     'Python: %s%s' % (
         sys.version.split('(')[0],
@@ -116,56 +115,72 @@ class Log(object):
                         oldStdOut.write(data.decode("mbcs"))
 
         class StdErr:
+            header_printed = False
+
             def write(self, data):
                 log.Write(data, ERROR_ICON)
                 if eg.debugLevel:
-                    module_name = caller_name()
+                    splitLog = getattr(eg.config, 'splitDebuggingLog', None)
 
-                    if 'CorePluginModule' in module_name:
-                        module_name = module_name[2]
+                    if splitLog:
+                        module_name = caller_name()
 
-                    elif 'UserPluginModule' in module_name:
-                        module_name = module_name[2]
+                        if 'CorePluginModule' in module_name:
+                            module_name = module_name[2]
+
+                        elif 'UserPluginModule' in module_name:
+                            module_name = module_name[2]
+                        else:
+                            module_name = 'Core'
+
+                        if module_name not in debug_logs:
+                            import os
+
+                            prgName = os.path.splitext(
+                                os.path.basename(sys.executable)
+                            )[0]
+                            prgAppDataPath = os.path.join(
+                                os.environ["APPDATA"],
+                                prgName
+                            )
+
+                            logPath = os.path.join(
+                                prgAppDataPath,
+                                "logs"
+                            )
+                            logFilePath = os.path.join(
+                                logPath,
+                                module_name + '.txt'
+                            )
+
+                            if not os.path.exists(logPath):
+                                os.mkdir(logPath)
+
+                            debug_logs[module_name] = logFilePath
+
+                            f = open(logFilePath, 'a')
+                            f.write('\n'.join(STARTUP_DATA) + '\n\n')
+
+                        else:
+                            f = open(debug_logs[module_name], 'a')
+
+                        file_writer = codecs.lookup(
+                            "ascii"
+                        ).streamwriter(
+                            f,
+                            'backslashreplace'
+                        )
                     else:
-                        module_name = 'Core'
 
-                    if module_name not in debug_logs:
-                        import os
+                        class f:
+                            @staticmethod
+                            def close():
+                                pass
 
-                        prgName = os.path.splitext(
-                            os.path.basename(sys.executable)
-                        )[0]
-                        prgAppDataPath = os.path.join(
-                            os.environ["APPDATA"],
-                            prgName
-                        )
-
-                        logPath = os.path.join(
-                            prgAppDataPath,
-                            "logs"
-                        )
-                        logFilePath = os.path.join(
-                            logPath,
-                            module_name + '.txt'
-                        )
-
-                        if not os.path.exists(logPath):
-                            os.mkdir(logPath)
-
-                        debug_logs[module_name] = logFilePath
-
-                        f = open(logFilePath, 'a')
-                        f.write('\n'.join(STARTUP_DATA) + '\n\n')
-
-                    else:
-                        f = open(debug_logs[module_name], 'a')
-
-                    file_writer = codecs.lookup(
-                        "ascii"
-                    ).streamwriter(
-                        f,
-                        'backslashreplace'
-                    )
+                        file_writer = sys.stderr
+                        if not self.header_printed:
+                            self.header_printed = True
+                            file_writer.write('\n'.join(STARTUP_DATA) + '\n\n')
 
                     try:
                         file_writer.write(data)
@@ -173,6 +188,9 @@ class Log(object):
                         file_writer.write(data.decode("mbcs"))
                     finally:
                         f.close()
+                else:
+                    if self.header_printed:
+                        self.header_printed = False
 
         if eg.startupArguments.isMain:
             sys.stdout = StdOut()
