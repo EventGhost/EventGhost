@@ -56,8 +56,8 @@ STARTUP_DATA = [
     ),
     'Computer Name: %s' % platform.node(),
     'Processor: %s' % platform.processor(),
-    'Python: %s %s' % (
-        platform.python_version(),
+    'Python: %s%s' % (
+        sys.version.split('(')[0],
         platform.python_implementation()
     ),
     'Python Compiler: %s' % platform.python_compiler(),
