@@ -124,8 +124,9 @@ if args.isMain:
                     if NamedPipe.send_message('eg.document.IsDirty, ()'):
                         answer = ctypes.windll.user32.MessageBoxA(
                             0,
-                            'EventGhost cannot restart.        \n\n'
-                            'Save configuration changes?.      \n',
+                            'EventGhost cannot restart.             \n\n'
+                            'Configuration contains unsaved changes.\n'
+                            'Do you want to save before continuing? \n',
                             "EventGhost Restart Error",
                             3 | 40000
                         )
@@ -149,7 +150,8 @@ if args.isMain:
                     if not NamedPipe.send_message('eg.app.Exit, ()'):
                         ctypes.windll.user32.MessageBoxA(
                             0,
-                            'EventGhost cannot restart - unknown error.\n',
+                            'EventGhost cannot restart.             \n\n'
+                            'Unknown Error.                         \n',
                             "EventGhost Restart Error",
                             0 | 40000
                         )
