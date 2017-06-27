@@ -174,7 +174,7 @@ class Default:
 
         class SaveChanges:
             mesg = (
-                "Configuration contains unsaved changed.\n\n"
+                "Configuration contains unsaved changes.\n\n"
                 "Do you want to save before continuing?"
             )
             saveButton = "&Save"
