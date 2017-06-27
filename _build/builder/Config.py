@@ -60,6 +60,9 @@ class Config(object):
                 "branch": configParser.get('GitHub', "Branch")
             })
 
+        if configParser.has_option("Website", "url"):
+            self.buildSetup.args.websiteUrl = configParser.get('Website', "url")
+
     def SaveSettings(self):
         """
         Save all options to the ini file.
@@ -79,6 +82,10 @@ class Config(object):
         repo = "{user}/{repo}".format(**self.buildSetup.gitConfig)
         config.set('GitHub', "Repository", repo)
         config.set('GitHub', "Branch", self.buildSetup.gitConfig["branch"])
+
+        if not config.has_section('Website'):
+                config.add_section('Website')
+        config.set('Website', "url", self.buildSetup.args.websiteUrl)
 
         configFile = open(self._configFilePath, "w")
         config.write(configFile)

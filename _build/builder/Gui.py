@@ -24,6 +24,7 @@ import wx
 import builder
 from builder.Utils import GetVersion, ParseVersion
 
+
 class MainDialog(wx.Dialog):
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
@@ -93,9 +94,10 @@ class MainDialog(wx.Dialog):
         grdSzr.SetFlexibleDirection(wx.BOTH)
         grdSzr.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
         grdSzr.Add(lblRepo, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
-        grdSzr.Add(self.chcRepo, 0, wx.ALL, 5)
+        grdSzr.Add(self.chcRepo, 0, wx.ALL | wx.EXPAND, 5)
         grdSzr.Add(lblBranch, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
-        grdSzr.Add(self.chcBranch, 0, wx.ALL, 5)
+        grdSzr.Add(self.chcBranch, 0, wx.ALL | wx.EXPAND, 5)
+        grdSzr.AddGrowableCol(1)
         ghSzr.Add(grdSzr, 1, wx.EXPAND)
 
         if not self.buildSetup.gitConfig["token"]:
@@ -121,19 +123,36 @@ class MainDialog(wx.Dialog):
 
         egSzr.Add(lblVersion, 0, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
-        egSzr.Add(self.versionStr, 0, wx.ALIGN_CENTER_VERTICAL |
+        egSzr.Add(self.versionStr, 1, wx.ALIGN_CENTER_VERTICAL |
                   wx.LEFT | wx.RIGHT, 5)
         egSzr.Add(refreshVersion, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         if not self.buildSetup.gitConfig["token"]:
             refreshVersion.Disable()
 
+        # widgets for website updating
+        web_szr = wx.StaticBoxSizer(
+            wx.StaticBox(self, wx.ID_ANY, u"Website (docs)"), wx.VERTICAL)
+        sb = web_szr.GetStaticBox()
+        url_txt = 'URL (sftp://<user>:<pw>@<domain.net>:' \
+                  '<port>/<root/of/website>/)'
+        lbl_url = wx.StaticText(
+            parent=sb,
+            label=url_txt
+        )
+        lbl_url.SetToolTipString(url_txt)
+        self.url = wx.TextCtrl(sb, value=self.buildSetup.args.websiteUrl)
+        self.url.SetToolTipString(url_txt)
+        web_szr.Add(lbl_url)
+        web_szr.Add(self.url, 0, wx.EXPAND)
+
         # combine all controls to a main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(ghSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        mainSizer.Add(egSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
+        mainSizer.Add(ghSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND, 5)
+        mainSizer.Add(egSzr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND, 5)
+        mainSizer.Add(web_szr, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND, 5)
         mainSizer.Add(sizer2, 1, wx.ALL | wx.EXPAND, 10)
-        mainSizer.Add(btnSizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
+        mainSizer.Add(btnSizer, 0, wx.ALL | wx.ALIGN_RIGHT | wx.EXPAND, 10)
         self.SetSizerAndFit(mainSizer)
         self.Center()
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -206,6 +225,8 @@ class MainDialog(wx.Dialog):
             "repo": repo,
             "branch": self.chcBranch.GetStringSelection(),
         })
+        self.buildSetup.args.websiteUrl = self.url.GetValue()
+
         self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()

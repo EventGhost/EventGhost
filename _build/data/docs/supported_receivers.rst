@@ -59,7 +59,7 @@ Already supported devices
 
 
 Not directly supported devices
---------------------------------
+------------------------------
 
 * `LIRC Serial Port Receiver <http://www.lirc.org/receivers.html>`_
 * `IgorPlug <https://web.archive.org/web/20160414132435/http://www.cesko.host.sk/girderplugin.htm>`_
