@@ -19,6 +19,8 @@
 import codecs
 import sys
 import wx
+import inspect
+import platform
 from collections import deque
 from threading import currentThread
 from time import strftime, time
@@ -34,10 +36,58 @@ _oldStdErr = sys.stderr
 
 oldStdOut = codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
 oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
+debug_logs = {}
 
 INFO_ICON = eg.Icons.INFO_ICON
 ERROR_ICON = eg.Icons.ERROR_ICON
 NOTICE_ICON = eg.Icons.NOTICE_ICON
+
+STARTUP_DATA = [
+    '-' * 40,
+    '        %s started' % eg.APP_NAME,
+    strftime('      %d/%m/%Y - %H:%M:%S'),
+    '-' * 40,
+    '%s Version: %s' % (
+        eg.APP_NAME,
+        eg.Version.string
+    ),
+    'Windows Version: %s' % ' '.join(
+        list(platform.win32_ver())
+    ),
+    'Computer Name: %s' % platform.node(),
+    'Processor: %s' % platform.processor(),
+    'Python: %s %s' % (
+        platform.python_version(),
+        platform.python_implementation()
+    ),
+    'Python Compiler: %s' % platform.python_compiler(),
+    'Python Build Date: %s' % (
+        platform.python_build()[1],
+    ),
+    '-' * 40,
+]
+
+
+def caller_name(start=3):
+    stack = inspect.stack()
+    parent_frame = stack[start][0]
+    name = []
+    module = inspect.getmodule(parent_frame)
+
+    if module:
+        name.append(module.__name__)
+    if 'self' in parent_frame.f_locals:
+        name.append(parent_frame.f_locals['self'].__class__.__name__)
+    codename = parent_frame.f_code.co_name
+    if codename != '<module>':
+        name.append(codename)
+    del parent_frame
+
+    if name[-1] == 'LogItWrapper':
+        return caller_name(5)
+    else:
+        return name[0].split('.')
+
 
 class DummyLogCtrl(object):
     def WriteLine(self, line, icon, wRef, when, indent):
@@ -69,10 +119,60 @@ class Log(object):
             def write(self, data):
                 log.Write(data, ERROR_ICON)
                 if eg.debugLevel:
+                    module_name = caller_name()
+
+                    if 'CorePluginModule' in module_name:
+                        module_name = module_name[2]
+
+                    elif 'UserPluginModule' in module_name:
+                        module_name = module_name[2]
+                    else:
+                        module_name = 'Core'
+
+                    if module_name not in debug_logs:
+                        import os
+
+                        prgName = os.path.splitext(
+                            os.path.basename(sys.executable)
+                        )[0]
+                        prgAppDataPath = os.path.join(
+                            os.environ["APPDATA"],
+                            prgName
+                        )
+
+                        logPath = os.path.join(
+                            prgAppDataPath,
+                            "logs"
+                        )
+                        logFilePath = os.path.join(
+                            logPath,
+                            module_name + '.txt'
+                        )
+
+                        if not os.path.exists(logPath):
+                            os.mkdir(logPath)
+
+                        debug_logs[module_name] = logFilePath
+
+                        f = open(logFilePath, 'a')
+                        f.write('\n'.join(STARTUP_DATA) + '\n\n')
+
+                    else:
+                        f = open(debug_logs[module_name], 'a')
+
+                    file_writer = codecs.lookup(
+                        "ascii"
+                    ).streamwriter(
+                        f,
+                        'backslashreplace'
+                    )
+
                     try:
-                        oldStdErr.write(data)
+                        file_writer.write(data)
                     except:
-                        oldStdErr.write(data.decode("mbcs"))
+                        file_writer.write(data.decode("mbcs"))
+                    finally:
+                        f.close()
 
         if eg.startupArguments.isMain:
             sys.stdout = StdOut()
@@ -81,25 +181,9 @@ class Log(object):
             if hasattr(_oldStdErr, "_displayMessage"):
                 _oldStdErr._displayMessage = False
         if eg.debugLevel:
-            import platform
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
-            self.PrintDebugNotice("----------------------------------------")
-            self.PrintDebugNotice("        {0} started".format(eg.APP_NAME))
-            self.PrintDebugNotice("----------------------------------------")
-            self.PrintDebugNotice(eg.APP_NAME, "Version:", eg.Version.string)
-            self.PrintDebugNotice("Machine type:", platform.machine())
-            self.PrintDebugNotice("Processor:", platform.processor())
-            self.PrintDebugNotice("Architecture:", platform.architecture())
-            self.PrintDebugNotice(
-                "Python:",
-                platform.python_branch(),
-                platform.python_version(),
-                platform.python_implementation(),
-                platform.python_build(),
-                "[{0}]".format(platform.python_compiler())
-            )
-            self.PrintDebugNotice("----------------------------------------")
+
 
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
@@ -155,7 +239,7 @@ class Log(object):
         if eg.debugLevel:
             threadName = str(currentThread().getName())
             taskletName = str(eg.Tasklet.GetCurrentId())
-            strs = [strftime("%H:%M:%S:")]
+            strs = [strftime("%d/%m/%Y - %H:%M:%S:")]
             strs.append(taskletName + " " + threadName + ":")
 
             for arg in args:
