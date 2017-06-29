@@ -19,6 +19,7 @@
 import codecs
 import sys
 import wx
+import os
 import inspect
 import platform
 from collections import deque
@@ -120,9 +121,7 @@ class Log(object):
             def write(self, data):
                 log.Write(data, ERROR_ICON)
                 if eg.debugLevel:
-                    splitLog = getattr(eg.config, 'splitDebuggingLog', None)
-
-                    if splitLog:
+                    if getattr(eg.config, 'splitDebuggingLog', None):
                         module_name = caller_name()
 
                         if 'CorePluginModule' in module_name:
@@ -134,18 +133,9 @@ class Log(object):
                             module_name = 'Core'
 
                         if module_name not in debug_logs:
-                            import os
-
-                            prgName = os.path.splitext(
-                                os.path.basename(sys.executable)
-                            )[0]
-                            prgAppDataPath = os.path.join(
-                                os.environ["APPDATA"],
-                                prgName
-                            )
 
                             logPath = os.path.join(
-                                prgAppDataPath,
+                                eg.configDir,
                                 "logs"
                             )
                             logFilePath = os.path.join(
@@ -170,12 +160,10 @@ class Log(object):
                             f,
                             'backslashreplace'
                         )
+                        close = f.close
                     else:
-
-                        class f:
-                            @staticmethod
-                            def close():
-                                pass
+                        def close():
+                            pass
 
                         file_writer = sys.stderr
                         if not self.header_printed:
@@ -187,7 +175,7 @@ class Log(object):
                     except:
                         file_writer.write(data.decode("mbcs"))
                     finally:
-                        f.close()
+                        close()
                 else:
                     if self.header_printed:
                         self.header_printed = False
