@@ -47,6 +47,8 @@ import eg
 import Init
 import NamedPipe
 
+Init.InitPathsAndBuiltins()
+
 eg.APP_NAME = "EventGhost"
 eg.CORE_PLUGIN_GUIDS = (
     "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",  # "EventGhost"
@@ -55,18 +57,13 @@ eg.CORE_PLUGIN_GUIDS = (
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
 
+
 eg.namedPipe = NamedPipe.Server()
 eg.namedPipe.start()
 
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
-eg.imagesDir = join(eg.mainDir, "images")
-eg.languagesDir = join(eg.mainDir, "languages")
-eg.sitePackagesDir = join(
-    eg.mainDir,
-    "lib%d%d" % sys.version_info[:2],
-    "site-packages"
-)
+
 eg.revision = 2000  # Deprecated
 eg.startupArguments = eg.Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
@@ -91,7 +88,6 @@ eg.lastFoundWindows = []
 eg.currentItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
-eg.folderPath = eg.FolderPath()
 eg.GUID = eg.GUID()
 
 def _CommandEvent():
@@ -121,24 +117,6 @@ eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = eg.CommandEvent()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
-if eg.startupArguments.configDir is None:
-    eg.configDir = join(eg.folderPath.RoamingAppData, eg.APP_NAME)
-else:
-    eg.configDir = eg.startupArguments.configDir
-if not exists(eg.configDir):
-    try:
-        os.makedirs(eg.configDir)
-    except:
-        pass
-if eg.startupArguments.isMain:
-    if exists(eg.configDir):
-        os.chdir(eg.configDir)
-    else:
-        os.chdir(eg.mainDir)
-eg.localPluginDir = join(eg.folderPath.ProgramData, eg.APP_NAME, "plugins")
-eg.corePluginDir = join(eg.mainDir, "plugins")
-eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
-Init.InitPathsAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId  # NOQA
 eg.processId = GetCurrentProcessId()
 Init.InitPil()
