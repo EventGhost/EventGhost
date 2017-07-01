@@ -147,21 +147,21 @@ def InitPathsAndBuiltins():
     eg.languagesDir = eg.folderPath.languagesDir
     eg.sitePackagesDir = eg.folderPath.sitePackagesDir
 
-    if eg.Cli.args.isMain:
-        if not exists(eg.localPluginDir):
-            try:
-                makedirs(eg.localPluginDir)
-            except:
-                eg.localPluginDir = ''
 
-        if exists(eg.configDir):
-            chdir(eg.configDir)
-        else:
-            try:
-                makedirs(eg.configDir)
-                chdir(eg.configDir)
-            except:
-                chdir(eg.mainDir)
+    try:
+        makedirs(eg.localPluginDir)
+    except:
+        eg.localPluginDir = ''
+
+    try:
+        makedirs(eg.configDir)
+    except:
+        pass
+
+    if eg.Cli.args.isMain and exists(eg.configDir):
+        chdir(eg.configDir)
+    elif eg.Cli.args.isMain:
+        chdir(eg.mainDir)
 
     __builtin__.wx = wx
 
