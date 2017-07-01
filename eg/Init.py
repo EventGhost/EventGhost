@@ -158,10 +158,11 @@ def InitPathsAndBuiltins():
     except:
         pass
 
-    if eg.Cli.args.isMain and exists(eg.configDir):
-        chdir(eg.configDir)
-    elif eg.Cli.args.isMain:
-        chdir(eg.mainDir)
+    if eg.Cli.args.isMain:
+        if exists(eg.configDir):
+            chdir(eg.configDir)
+        else:
+            chdir(eg.mainDir)
 
     __builtin__.wx = wx
 
