@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+from os.path import join, split
 from ctypes import c_int, create_unicode_buffer, HRESULT, windll
 from ctypes.wintypes import DWORD, HANDLE, HWND, LPWSTR
+
+import eg
 
 GetTempPathW = windll.kernel32.GetTempPathW
 GetTempPathW.restype = DWORD
@@ -86,6 +89,62 @@ class FolderPath(object):
     __ALL__ = CSIDL.keys() + ["TemporaryFiles"]
     TemporaryFiles = temporaryFiles
     __repr__ = object.__repr__
+
+
+    @property
+    def mainDir(self):
+        return eg.Cli.PythonPaths.mainDir
+
+    @property
+    def configDir(self):
+        install_name = split(eg.Cli.PythonPaths.install_directory)[1]
+        config_dir = join(
+            self.RoamingAppData,
+            install_name
+        )
+
+        if eg.Cli.args.configDir and config_dir != eg.Cli.args.configDir:
+            config_dir = eg.Cli.args.configDir
+
+        return config_dir
+
+    @property
+    def corePluginDir(self):
+        return join(
+            self.mainDir,
+            "plugins"
+        )
+
+    @property
+    def localPluginDir(self):
+        if self.configDir == eg.Cli.args.configDir:
+            return self.corePluginDir
+
+        else:
+            install_name = split(eg.Cli.PythonPaths.install_directory)[1]
+            return join(
+                self.ProgramData,
+                install_name,
+                'plugins'
+            )
+
+    @property
+    def imagesDir(self):
+        return join(
+            self.mainDir,
+            "images"
+        )
+
+    @property
+    def languagesDir(self):
+        return join(
+            self.mainDir,
+            "languages"
+        )
+
+    @property
+    def sitePackagesDir(self):
+        return eg.Cli.PythonPaths.sitePackagesDir
 
     def __getattr__(self, name):
         csidl = CSIDL[name]

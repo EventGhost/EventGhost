@@ -26,13 +26,14 @@ import os
 import sys
 from os.path import abspath, dirname, join
 
+import PythonPaths
+
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
 argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
-# get program directory
-mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
+mainDir = PythonPaths.mainDir
 
 # determine the commandline parameters
 import __main__  # NOQA
