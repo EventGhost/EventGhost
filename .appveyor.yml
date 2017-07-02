@@ -175,10 +175,15 @@ build:
 
 artifacts:
   - path: _build\output\$(SetupExe)
+    name: $(SetupExe)
   - path: _build\output\Build.log
+    name: Build.log
   - path: _build\output\CHANGELOG.md
-  - path: _build\output\CHANGELOG_THIS_RELEASE.bb
+    name: CHANGELOG.md
   - path: _build\output\CHANGELOG_THIS_RELEASE.md
+    name: CHANGELOG_THIS_RELEASE.md
+  - path: _build\output\CHANGELOG_THIS_RELEASE.bb
+    name: CHANGELOG_THIS_RELEASE.bb
 
 
 #on_finish:
