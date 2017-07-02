@@ -147,16 +147,17 @@ def InitPathsAndBuiltins():
     eg.languagesDir = eg.folderPath.languagesDir
     eg.sitePackagesDir = eg.folderPath.sitePackagesDir
 
+    if not exists(eg.configDir):
+        try:
+            os.makedirs(eg.configDir)
+        except:
+            pass
 
-    try:
-        makedirs(eg.localPluginDir)
-    except:
-        eg.localPluginDir = ''
-
-    try:
-        makedirs(eg.configDir)
-    except:
-        pass
+    if not exists(eg.localPluginDir):
+        try:
+            makedirs(eg.localPluginDir)
+        except:
+            eg.localPluginDir = eg.corePluginDir
 
     if eg.Cli.args.isMain:
         if exists(eg.configDir):
