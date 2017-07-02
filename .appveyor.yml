@@ -191,10 +191,14 @@ notifications:
   template: >-
     [Build {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}})
 
+
     Artifacts:
+    
     {{#jobs}}
     {{#artifacts}}
+    
     [{{name}}]({{url}})
+    
     {{/artifacts}}
     {{/jobs}}
 
