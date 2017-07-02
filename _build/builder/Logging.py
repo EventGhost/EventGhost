@@ -52,13 +52,16 @@ class StdHandler(object):
             self.logger(line)
             if self.verbose:
                 self.oldStream.write(line + "\n")
+                self.oldStream.flush()
         self.buf = lines[-1]
+        self.flush()
 
 
 class InfoFilter(logging.Filter):
     def filter(self, rec):
         if rec.levelno == 22:
             sys.stdout.oldStream.write(rec.msg + "\n")
+            sys.stdout.oldStream.flush()
         return True
 
 
