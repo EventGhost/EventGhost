@@ -1,3 +1,29 @@
+## [0.5.0-rc3](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc3) (2017-07-03)
+
+**Enhancements:**
+
+* Document all command line options [\#235](https://github.com/EventGhost/EventGhost/pull/235) ([per1234](https://github.com/per1234))
+* Add Named pipe support to solve the problem with elevations [\#240](https://github.com/EventGhost/EventGhost/pull/240) ([kdschlosser](https://github.com/kdschlosser))
+* eg.WinApi: Functions to get information about logged in user [\#254](https://github.com/EventGhost/EventGhost/pull/254) ([kdschlosser](https://github.com/kdschlosser))
+
+**Fixed bugs:**
+
+* MainMessageReceiver: Fixes broken clipboard chain in windows 10 \(reported by saue0\) [\#227](https://github.com/EventGhost/EventGhost/pull/227) ([kdschlosser](https://github.com/kdschlosser))
+* \[SchedulGhost\] update plugin to 0.1.18 [\#238](https://github.com/EventGhost/EventGhost/pull/238) ([topic2k](https://github.com/topic2k))
+* Fixes incorrect checking of powerbroadcast notification message [\#241](https://github.com/EventGhost/EventGhost/pull/241) ([kdschlosser](https://github.com/kdschlosser))
+* \[Broadcaster\] Fixes depreciation warning from asyncore.dispatcher [\#242](https://github.com/EventGhost/EventGhost/pull/242) ([kdschlosser](https://github.com/kdschlosser))
+* \[USBUIRT\] Fixes learn ir dialog not closing [\#243](https://github.com/EventGhost/EventGhost/pull/243) ([kdschlosser](https://github.com/kdschlosser))
+* \[MCERemoteVista\] Upgrades MCERemoteVista to version 1.4 [\#244](https://github.com/EventGhost/EventGhost/pull/244) ([kdschlosser](https://github.com/kdschlosser))
+* \[System\] fix GetMasterVolume \(move use of VistaVolEvents to eg.WinApi.SoundMixer\) [\#246](https://github.com/EventGhost/EventGhost/pull/246) ([kdschlosser](https://github.com/kdschlosser))
+* NamedPipe: Fixes possible endless loop if -restart is used at the CLI [\#247](https://github.com/EventGhost/EventGhost/pull/247) ([kdschlosser](https://github.com/kdschlosser))
+* Typo - Text.py, Fixes typo in save dialog [\#250](https://github.com/EventGhost/EventGhost/pull/250) ([kdschlosser](https://github.com/kdschlosser))
+* Moves initialization of python paths to the first thing that EG does [\#253](https://github.com/EventGhost/EventGhost/pull/253) ([kdschlosser](https://github.com/kdschlosser))
+
+**Other changes:**
+
+* Remove wiki content from documentation [\#234](https://github.com/EventGhost/EventGhost/pull/234) ([per1234](https://github.com/per1234))
+
+
 ## [0.5.0-rc2](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc2) (2017-04-20)
 
 **Fixed bugs:**
