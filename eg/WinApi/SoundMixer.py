@@ -254,10 +254,11 @@ def GetDeviceId(deviceId, strVal=False):
     if isinstance(deviceId, int):
         if strVal:
             devices = GetMixerDevices()
-            if deviceId < len(devices) - 1 and deviceId > -1:
+
+            if -1 < deviceId < len(devices) - 1:
                 return devices[deviceId]
             else:
-                #return devices[0]
+                # return devices[0]
                 raise SoundMixerException()
         else:
             return deviceId
@@ -313,8 +314,7 @@ def GetMasterVolume(deviceId=0):
     import eg
 
     if eg.WindowsVersion >= 'Vista':
-        if isinstance(deviceId, int):
-            deviceId = GetDeviceId(deviceId, True)
+        deviceId = GetDeviceId(deviceId, True)
 
         import VistaVolEvents
 
@@ -406,8 +406,7 @@ def GetMute(deviceId=0):
     import eg
 
     if eg.WindowsVersion >= 'Vista':
-        if isinstance(deviceId, int):
-            deviceId = GetDeviceId(deviceId, True)
+        deviceId = GetDeviceId(deviceId, True)
 
         import VistaVolEvents
 
@@ -454,24 +453,21 @@ def SetMasterVolume(value, deviceId=0):
     import eg
 
     if eg.WindowsVersion >= 'Vista':
-        if isinstance(deviceId, int):
-            deviceId = GetDeviceId(deviceId, True)
+        deviceId = GetDeviceId(deviceId, True)
 
         import VistaVolEvents
 
         value = float(value) / 100.0
         if value > 1.0:
-            value = 1.0
+            newValue = 1.0
         elif value < 0.0:
-            value = 0.0
+            newValue = 0.0
+        else:
+            newValue = value
 
-        try:
-            VistaVolEvents.SetMasterVolume(value, deviceId)
-            eg.Utils.time.sleep(0.5)
-        except:
-            import traceback
-            traceback.print_exc()
-            pass
+        VistaVolEvents.SetMasterVolume(newValue, deviceId)
+        eg.Utils.time.sleep(0.5)
+
     else:
         deviceId = GetDeviceId(deviceId)
         # Obtain the volumne control object
@@ -490,16 +486,20 @@ def SetMasterVolume(value, deviceId=0):
             newValue = maximum
         SetControlValue(hmixer, volCtrl, newValue)
 
-    return GetMasterVolume(deviceId)
+    try:
+        return GetMasterVolume(deviceId)
+    except:
+        return newValue
+
 
 def SetMute(mute=True, deviceId=0):
     import eg
 
     if eg.WindowsVersion >= 'Vista':
-        if isinstance(deviceId, int):
-            deviceId = GetDeviceId(deviceId, True)
+        deviceId = GetDeviceId(deviceId, True)
 
         import VistaVolEvents
+
         VistaVolEvents.SetMute(int(mute), deviceId)
 
     else:

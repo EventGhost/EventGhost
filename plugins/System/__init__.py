@@ -1861,10 +1861,8 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         text2 = "percent."
 
     def __call__(self, value, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-        SoundMixer.ChangeMasterVolumeBy(value, deviceId)
-        return SoundMixer.GetMasterVolume(deviceId)
+        return SoundMixer.ChangeMasterVolumeBy(value, deviceId)
 
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
@@ -1940,7 +1938,6 @@ class MuteOff(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(False, deviceId)
         return False
 
@@ -1968,7 +1965,6 @@ class MuteOn(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(True, deviceId)
         return True
 
@@ -2064,10 +2060,8 @@ class SetMasterVolume(eg.ActionBase):
         text2 = "percent."
 
     def __call__(self, value, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-        SoundMixer.SetMasterVolume(value, deviceId)
-        return SoundMixer.GetMasterVolume(deviceId)
+        return SoundMixer.SetMasterVolume(value, deviceId)
 
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
@@ -2127,7 +2121,6 @@ class ToggleMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.ToggleMute(deviceId)
 
     def Configure(self, deviceId=0):
