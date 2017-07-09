@@ -22,19 +22,9 @@ import wx
 import eg
 from eg.WinApi.Display import GetDisplay, GetDisplays
 
-class ChangeDisplaySettings(eg.ActionBase):
-    name = "Change Display Settings"
-    description = "Changes display settings."
-    iconFile = "icons/Display"
 
-    class text:
-        label = "Set Display%d to mode %dx%d@%d Hz"
-        display = "Display:"
-        resolution = "Resolution:"
-        frequency = "Frequency:"
-        colourDepth = "Colour Depth:"
-        includeAll = "Include modes this monitor might not support."
-        storeInRegistry = "Store mode in the registry."
+class ChangeDisplaySettings(eg.ActionBase):
+    iconFile = "icons/Display"
 
     def __call__(
         self,
@@ -117,14 +107,14 @@ class ChangeDisplaySettings(eg.ActionBase):
                 event.Skip()
 
         def UpdateFrequencies(event=None):
-            depth = GetClientData(depthChoice)
-            frequencyList = settings.depthDict[depth]
+            color_depth = GetClientData(depthChoice)
+            frequencyList = settings.depthDict[color_depth]
             frequencyChoice.Clear()
             sel = 0
-            for pos, frequency in enumerate(frequencyList):
-                frequencyChoice.Append("%d Hz" % frequency)
-                frequencyChoice.SetClientData(pos, frequency)
-                if frequency == frequency:
+            for pos, freq in enumerate(frequencyList):
+                frequencyChoice.Append("%d Hz" % freq)
+                frequencyChoice.SetClientData(pos, freq)
+                if freq == frequency:
                     sel = pos
             frequencyChoice.Select(sel)
             if event:

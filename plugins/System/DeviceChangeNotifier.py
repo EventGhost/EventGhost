@@ -18,13 +18,14 @@
 
 # Local imports
 import eg
+
 from eg.WinApi.Dynamic import (
     CLSIDFromString,
     DBT_DEVICEARRIVAL,
     DBT_DEVICEREMOVECOMPLETE,
     DBT_DEVTYP_DEVICEINTERFACE,
     DBT_DEVTYP_VOLUME,
-    DEV_BROADCAST_DEVICEINTERFACE,
+    DEV_BROADCAST_DEVICEINTERFACE as _DEV_BROADCAST_DEVICEINTERFACE,
     DEV_BROADCAST_HDR,
     DEV_BROADCAST_VOLUME,
     pointer,
@@ -34,6 +35,7 @@ from eg.WinApi.Dynamic import (
     WM_DEVICECHANGE,
     wstring_at,
 )
+
 
 class DeviceChangeNotifier:
     def __init__(self, plugin):
@@ -45,8 +47,8 @@ class DeviceChangeNotifier:
             eg.messageReceiver.hwnd,
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
-                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-                    dbcc_classguid = "{53f56307-b6bf-11d0-94f2-00a0c91efb8b}"
+                    dbcc_devicetype=DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid="{53f56307-b6bf-11d0-94f2-00a0c91efb8b}"
                 )
             ),
             0
@@ -56,8 +58,8 @@ class DeviceChangeNotifier:
             eg.messageReceiver.hwnd,
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
-                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-                    dbcc_classguid = "{4d1e55b2-f16f-11cf-88cb-001111000030}"
+                    dbcc_devicetype=DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid="{4d1e55b2-f16f-11cf-88cb-001111000030}"
                 )
             ),
             0
@@ -67,8 +69,8 @@ class DeviceChangeNotifier:
             eg.messageReceiver.hwnd,
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
-                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-                    dbcc_classguid = "{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
+                    dbcc_devicetype=DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid="{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
                 )
             ),
             0
@@ -78,8 +80,8 @@ class DeviceChangeNotifier:
             eg.messageReceiver.hwnd,
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
-                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-                    dbcc_classguid = "{E6F07B5F-EE97-4a90-B076-33F57BF4EAA7}"
+                    dbcc_devicetype=DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid="{E6F07B5F-EE97-4a90-B076-33F57BF4EAA7}"
                 )
             ),
             0
@@ -121,7 +123,7 @@ class DeviceChangeNotifier:
         return 1
 
 
-class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
+class DEV_BROADCAST_DEVICEINTERFACE(_DEV_BROADCAST_DEVICEINTERFACE):
     def __init__(self, dbcc_devicetype=0, dbcc_classguid=None):
         self.dbcc_devicetype = dbcc_devicetype
         CLSIDFromString(dbcc_classguid, self.dbcc_classguid)

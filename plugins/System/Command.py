@@ -23,35 +23,42 @@ from os.path import join
 from subprocess import PIPE, Popen, STARTF_USESHOWWINDOW, STARTUPINFO
 from threading import Thread
 from time import time as ttime
-from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+from win32file import (
+    Wow64DisableWow64FsRedirection,
+    Wow64RevertWow64FsRedirection
+)
 
 # Local imports
 import eg
 from eg.WinApi import IsWin64
 from eg.WinApi.Dynamic import (
-    byref, CloseHandle, DWORD, FormatError, GetExitCodeProcess, INFINITE,
-    SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFO, sizeof, WaitForSingleObject,
+    byref,
+    CloseHandle,
+    DWORD,
+    FormatError,
+    GetExitCodeProcess,
+    INFINITE,
+    SEE_MASK_NOCLOSEPROCESS,
+    SHELLEXECUTEINFO,
+    sizeof,
+    WaitForSingleObject,
     windll,
 )
 
+
 class Command(eg.ActionBase):
-    name = "Run Command"
-    description = "Runs a Windows command-line statement."
     iconFile = "icons/Execute"
 
-    class text:
-        Command = "Command Line:"
-        waitCheckbox = "Wait until command is terminated before proceeding"
-        eventCheckbox = "Trigger event when command is terminated"
-        wow64Checkbox = "Disable WOW64 filesystem redirection for this command"
-        eventSuffix = "WindowsCommand"
-        disableParsing = "Disable parsing of string"
-        additionalSuffix = "Additional Suffix:"
-        payload = "Use result as payload"
-        runAsAdminCheckbox = "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
-
     class TriggerEvent(Thread):
-        def __init__(self, processInformation, suffix, prefix, filename, cp, pld):
+        def __init__(
+            self,
+            processInformation,
+            suffix,
+            prefix,
+            filename,
+            cp,
+            pld
+        ):
             Thread.__init__(self)
             self.processInformation = processInformation
             self.suffix = suffix
@@ -83,34 +90,35 @@ class Command(eg.ActionBase):
 
                 eg.TriggerEvent(
                     self.suffix,
-                    prefix = self.prefix,
-                    payload = returnValue.rstrip()
+                    prefix=self.prefix,
+                    payload=returnValue.rstrip()
                 )
             else:
-                eg.TriggerEvent(self.suffix, prefix = self.prefix)
+                eg.TriggerEvent(self.suffix, prefix=self.prefix)
 
     def __call__(
         self,
-        command = '',
-        waitForCompletion = True,
-        triggerEvent = False,
-        additionalSuffix = "",
-        disableParsingCommand = True,
-        disableParsingAdditionalSuffix = True,
-        payload = False,
+        command='',
+        waitForCompletion=True,
+        triggerEvent=False,
+        additionalSuffix="",
+        disableParsingCommand=True,
+        disableParsingAdditionalSuffix=True,
+        payload=False,
         disableWOW64=False,
-        runAsAdmin = False,
+        runAsAdmin=False,
     ):
         if eg.config.refreshEnv:
             eg.Environment.Refresh()
         prefix = self.plugin.info.eventPrefix
         suffix = self.text.eventSuffix
+
+        if not disableParsingAdditionalSuffix:
+            additionalSuffix = eg.ParseString(additionalSuffix)
         if additionalSuffix != "":
             suffix = "%s.%s" % (suffix, additionalSuffix)
         if not disableParsingCommand:
             command = eg.ParseString(command)
-        if not disableParsingAdditionalSuffix:
-            additionalSuffix = eg.ParseString(additionalSuffix)
 
         processInformation = self.processInformation = SHELLEXECUTEINFO()
         processInformation.cbSize = sizeof(processInformation)
@@ -123,15 +131,23 @@ class Command(eg.ActionBase):
             data = proc.communicate()[0]
             if not proc.returncode:
                 cp = "cp" + data.split()[-1].replace(".", "")
+            else:
+                cp = None
+
             proc.stdout.close()
             filename = join(
                 eg.folderPath.TemporaryFiles,
                 "EventGhost-output-%s.txt" % ttime()
             )
-            processInformation.lpParameters = '/S/C "%s" > %s' % (command, filename)
+            processInformation.lpParameters = (
+                '/S/C "%s" > %s' % (command, filename)
+            )
             processInformation.fMask = SEE_MASK_NOCLOSEPROCESS
         else:
             processInformation.lpParameters = '/S/C "%s"' % command
+            filename = None
+            cp = None
+
         if runAsAdmin:
             processInformation.lpVerb = "runas"
         processInformation.nShow = 0
@@ -140,6 +156,9 @@ class Command(eg.ActionBase):
         disableWOW64 = disableWOW64 and IsWin64()
         if disableWOW64:
             prevVal = Wow64DisableWow64FsRedirection()
+        else:
+            prevVal = None
+
         if not windll.shell32.ShellExecuteExW(byref(processInformation)):
             raise self.Exception(FormatError())
         if disableWOW64:
@@ -165,30 +184,37 @@ class Command(eg.ActionBase):
                 if payload:
                     eg.TriggerEvent(
                         suffix,
-                        prefix = prefix,
-                        payload = returnValue.rstrip()
+                        prefix=prefix,
+                        payload=returnValue.rstrip()
                     )
                 else:
-                    eg.TriggerEvent(suffix, prefix = prefix)
+                    eg.TriggerEvent(suffix, prefix=prefix)
             CloseHandle(processInformation.hProcess)
             return returnValue.rstrip()
         elif triggerEvent:
-            te = self.TriggerEvent(processInformation, suffix, prefix, filename, cp, payload)
+            te = self.TriggerEvent(
+                processInformation,
+                suffix,
+                prefix,
+                filename,
+                cp,
+                payload
+            )
             te.start()
         else:
             CloseHandle(processInformation.hProcess)
 
     def Configure(
         self,
-        command = '',
-        waitForCompletion = True,
-        triggerEvent = False,
-        additionalSuffix = "",
-        disableParsingCommand = True,
-        disableParsingAdditionalSuffix = False,
-        payload = False,
+        command='',
+        waitForCompletion=True,
+        triggerEvent=False,
+        additionalSuffix="",
+        disableParsingCommand=True,
+        disableParsingAdditionalSuffix=False,
+        payload=False,
         disableWOW64=False,
-        runAsAdmin = False,
+        runAsAdmin=False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -227,7 +253,7 @@ class Command(eg.ActionBase):
         lowerSizer2 = wx.GridBagSizer(2, 0)
         stTxt = SText(text.additionalSuffix)
         lowerSizer2.AddMany([
-            ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
+            (eventCheckBox, (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             ((1, 1), (0, 1), (1, 1), wx.EXPAND),
             (pldCheckBox, (0, 2), (1, 1)),
             (stTxt, (1, 2), (1, 1), wx.ALIGN_BOTTOM),
@@ -238,7 +264,7 @@ class Command(eg.ActionBase):
         lowerSizer2.AddGrowableCol(1)
         lowerSizer2.AddGrowableCol(3)
 
-        def onEventCheckBox(evt = None):
+        def onEventCheckBox(evt=None):
             enable = eventCheckBox.GetValue()
             stTxt.Enable(enable)
             additionalSuffixCtrl.Enable(enable)
@@ -255,18 +281,18 @@ class Command(eg.ActionBase):
 
         panel.sizer.AddMany([
             (SText(text.Command)),
-            ((1, 2)),
+            (1, 2),
             (commandCtrl, 0, wx.EXPAND),
-            ((1, 2)),
-            (disableParsingCommandBox),
-            ((10, 15)),
-            (waitCheckBox),
-            ((10, 8)),
+            (1, 2),
+            disableParsingCommandBox,
+            (10, 15),
+            waitCheckBox,
+            (10, 8),
             (lowerSizer2, 0, wx.EXPAND),
-            ((10, 8)),
-            (wow64CheckBox),
-            ((10, 8)),
-            (runAsAdminCheckBox),
+            (10, 8),
+            wow64CheckBox,
+            (10, 8),
+            runAsAdminCheckBox,
         ])
 
         while panel.Affirmed():
@@ -282,15 +308,15 @@ class Command(eg.ActionBase):
                 runAsAdminCheckBox.GetValue()
             )
 
-    def GetLabel(self, command = '', *dummyArgs):
+    def GetLabel(self, command='', *dummyArgs):
         return "%s: %s" % (self.name, command)
 
 
 def popen(cmd, si):
     return Popen(
         'cmd /S/C "%s"' % cmd,
-        stdout = PIPE,
-        stderr = open(devnull),
-        startupinfo = si,
-        shell = False
+        stdout=PIPE,
+        stderr=open(devnull),
+        startupinfo=si,
+        shell=False
     )

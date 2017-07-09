@@ -80,6 +80,7 @@ WTS_WPARAM_DICT = {
     9: "SessionRemoteControl"
 }
 
+
 class SessionChangeNotifier:
     inited = False
 

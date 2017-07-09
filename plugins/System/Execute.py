@@ -19,11 +19,18 @@
 import os
 import wx
 from os.path import (
-    abspath, basename, dirname, expandvars, isdir, split, splitext
+    abspath,
+    basename,
+    dirname,
+    expandvars,
+    isdir,
+    split,
+    splitext
 )
 from threading import Thread
 from win32file import (
-    Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+    Wow64DisableWow64FsRedirection,
+    Wow64RevertWow64FsRedirection
 )
 from win32process import GetPriorityClass, SetPriorityClass
 
@@ -31,10 +38,21 @@ from win32process import GetPriorityClass, SetPriorityClass
 import eg
 from eg.WinApi import IsWin64
 from eg.WinApi.Dynamic import (
-    AttachThreadInput, byref, CloseHandle, DWORD, FormatError,
-    GetCurrentThreadId, GetExitCodeProcess, GetForegroundWindow,
-    GetWindowThreadProcessId, INFINITE, SEE_MASK_NOCLOSEPROCESS,
-    SHELLEXECUTEINFO, sizeof, WaitForSingleObject, windll,
+    AttachThreadInput,
+    byref,
+    CloseHandle,
+    DWORD,
+    FormatError,
+    GetCurrentThreadId,
+    GetExitCodeProcess,
+    GetForegroundWindow,
+    GetWindowThreadProcessId,
+    INFINITE,
+    SEE_MASK_NOCLOSEPROCESS,
+    SHELLEXECUTEINFO,
+    sizeof,
+    WaitForSingleObject,
+    windll,
 )
 
 PATHEXT = tuple(os.environ.get(
@@ -58,48 +76,9 @@ WINSTATE_FLAGS = (
     0,  # SW_HIDE
 )
 
-class Execute(eg.ActionBase):
-    name = "Run Application"
-    description = "Runs an executable file or opens any file or folder."
-    iconFile = "icons/Execute"
 
-    class text:
-        label = "Run Application: %s"
-        labelFile = "Open File: %s"
-        labelFolder = "Open Folder: %s"
-        FilePath = "File or folder to open:"
-        WorkingDir = "Working directory:"
-        Parameters = "Command line options:"
-        WindowOptionsDesc = "Window options:"
-        WindowOptions = (
-            "Normal window",
-            "Minimized",
-            "Maximized",
-            "Hidden"
-        )
-        ProcessOptionsDesc = "Process priority:"
-        ProcessOptions = (
-            "Realtime",
-            "High",
-            "Above normal",
-            "Normal",
-            "Below normal",
-            "Idle"
-        )
-        waitCheckbox = "Wait until application is terminated before proceeding"
-        eventCheckbox = "Trigger event when application is terminated"
-        wow64Checkbox = (
-            "Disable WOW64 filesystem redirection for this application"
-        )
-        runAsAdminCheckbox = (
-            "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
-        )
-        eventSuffix = "Application.Terminated"
-        browseExecutableDialogTitle = "Choose the executable"
-        browseWorkingDirDialogTitle = "Choose the working directory"
-        disableParsing = "Disable parsing of string"
-        additionalSuffix = "Additional Suffix:"
-        priorityIssue = "WARNING: Couldn't set priority!"
+class Execute(eg.ActionBase):
+    iconFile = "icons/Execute"
 
     class TriggerEvent(Thread):
         def __init__(self, processInformation, suffix, prefix):
@@ -119,7 +98,7 @@ class Execute(eg.ActionBase):
             CloseHandle(self.processInformation.hProcess)
             if hasattr(self.processInformation, "hThread"):
                 CloseHandle(self.processInformation.hThread)
-            eg.TriggerEvent(self.suffix, prefix = self.prefix)
+            eg.TriggerEvent(self.suffix, prefix=self.prefix)
 
     def __call__(
         self,
@@ -135,11 +114,11 @@ class Execute(eg.ActionBase):
         disableParsingPathname=False,
         disableParsingArguments=False,
         disableParsingAdditionalSuffix=False,
-        runAsAdmin = False,
+        runAsAdmin=False,
     ):
         if eg.config.refreshEnv:
             eg.Environment.Refresh()
-        returnValue = None
+
         pathname = expandvars(pathname)
         arguments = expandvars(arguments)
         workingDir = expandvars(workingDir)
@@ -165,6 +144,8 @@ class Execute(eg.ActionBase):
         disableWOW64 = disableWOW64 and IsWin64()
         if disableWOW64:
             prevVal = Wow64DisableWow64FsRedirection()
+        else:
+            prevVal = None
         activeThread = GetWindowThreadProcessId(GetForegroundWindow(), None)
         currentThread = GetCurrentThreadId()
         attached = AttachThreadInput(currentThread, activeThread, True)
@@ -214,7 +195,7 @@ class Execute(eg.ActionBase):
                 raise self.Exception(FormatError())
             returnValue = exitCode.value
             if triggerEvent:
-                eg.TriggerEvent(suffix, prefix = prefix)
+                eg.TriggerEvent(suffix, prefix=prefix)
             CloseHandle(processInformation.hProcess)
             return returnValue
         elif triggerEvent:
@@ -237,7 +218,7 @@ class Execute(eg.ActionBase):
         disableParsingPathname=False,
         disableParsingArguments=False,
         disableParsingAdditionalSuffix=False,
-        runAsAdmin = False,
+        runAsAdmin=False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -259,7 +240,7 @@ class Execute(eg.ActionBase):
             workingDir or "",
             dialogTitle=text.browseWorkingDirDialogTitle
         )
-        #workingDirCtrl.SetValue(workingDir)
+        # workingDirCtrl.SetValue(workingDir)
         winStateChoice = panel.Choice(winState, text.WindowOptions)
         priorityChoice = panel.Choice(5 - priority, text.ProcessOptions)
         waitCheckBox = panel.CheckBox(
@@ -301,7 +282,7 @@ class Execute(eg.ActionBase):
         lowerSizer2 = wx.GridBagSizer(2, 0)
         stTxt = SText(text.additionalSuffix)
         lowerSizer2.AddMany([
-            ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
+            (eventCheckBox, (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             ((1, 1), (0, 1), (1, 1), wx.EXPAND),
             (stTxt, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
             (additionalSuffixCtrl, (1, 2)),
@@ -311,7 +292,7 @@ class Execute(eg.ActionBase):
         lowerSizer2.AddGrowableCol(1)
         lowerSizer2.AddGrowableCol(3)
 
-        def OnPathnameChanged(evt = None):
+        def OnPathnameChanged(evt=None):
             path = filepathCtrl.GetValue().upper()
             if not isdir(path):
                 enable = True
@@ -327,7 +308,7 @@ class Execute(eg.ActionBase):
         filepathCtrl.changeCallback = OnPathnameChanged
         OnPathnameChanged()
 
-        def OnEventCheckBox(evt = None):
+        def OnEventCheckBox(evt=None):
             enable = eventCheckBox.GetValue()
             stTxt.Enable(enable)
             additionalSuffixCtrl.Enable(enable)
@@ -340,26 +321,26 @@ class Execute(eg.ActionBase):
         OnEventCheckBox()
 
         panel.sizer.AddMany([
-            (SText(text.FilePath)),
+            SText(text.FilePath),
             (filepathCtrl, 0, wx.EXPAND),
-            (disableParsingPathnameBox),
-            ((10, 10)),
-            (SText(text.Parameters)),
+            disableParsingPathnameBox,
+            (10, 10),
+            SText(text.Parameters),
             (argumentsCtrl, 0, wx.EXPAND),
-            ((10, 2)),
-            (disableParsingArgumentsBox),
-            ((10, 10)),
-            (SText(text.WorkingDir)),
+            (10, 2),
+            disableParsingArgumentsBox,
+            (10, 10),
+            SText(text.WorkingDir),
             (workingDirCtrl, 0, wx.EXPAND),
             (lowerSizer, 0, wx.EXPAND),
-            ((10, 15)),
-            (waitCheckBox),
-            ((10, 8)),
+            (10, 15),
+            waitCheckBox,
+            (10, 8),
             (lowerSizer2, 0, wx.EXPAND),
-            ((10, 8)),
-            (wow64CheckBox),
-            ((10, 8)),
-            (runAsAdminCheckBox),
+            (10, 8),
+            wow64CheckBox,
+            (10, 8),
+            runAsAdminCheckBox,
         ])
 
         while panel.Affirmed():
