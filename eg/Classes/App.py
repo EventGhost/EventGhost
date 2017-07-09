@@ -200,13 +200,11 @@ class App(wx.App):
     def Restart(self, asAdmin=False):
         def Do():
             from eg.WinApi.PipedProcess import RunAs
+
             args = self.GetArguments()
-            args.append("-multiload")
-            if self.Exit():
-                RunAs(sys.executable, asAdmin, *args)
-                return True
-            else:
-                return False
+            args.append("-restart")
+            RunAs(sys.executable, asAdmin, *args)
+            return True
 
         if threading.currentThread() == eg.mainThread:
             return Do()

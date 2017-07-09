@@ -260,7 +260,10 @@ def send_message(msg):
             raise NamedPipeDataError('Error in data received: ' + str(data))
 
     except win32pipe.error as err:
-        raise NamedPipeConnectionError('Unexpected error: ' + str(err))
+        if err[0] == 231:
+            return send_message(msg)
+
+        raise NamedPipeConnectionError(err)
 
 
 class NamedPipeException(Exception):
@@ -268,7 +271,7 @@ class NamedPipeException(Exception):
         self.msg = msg
 
     def __str__(self):
-        return self.msg
+        return str(self.msg)
 
 
 class NamedPipeDataError(NamedPipeException):
@@ -276,4 +279,9 @@ class NamedPipeDataError(NamedPipeException):
 
 
 class NamedPipeConnectionError(NamedPipeException):
-    pass
+
+    def __getitem__(self, item):
+        if item in self.__dict__:
+            return self.__dict__[item]
+        
+        return self.msg[item]
