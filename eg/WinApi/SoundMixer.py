@@ -466,7 +466,7 @@ def SetMasterVolume(value, deviceId=0):
             newValue = value
 
         VistaVolEvents.SetMasterVolume(newValue, deviceId)
-        eg.Utils.time.sleep(0.5)
+        # eg.Utils.time.sleep(0.5)
 
     else:
         deviceId = GetDeviceId(deviceId)
