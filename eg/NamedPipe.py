@@ -253,10 +253,7 @@ def send_message(msg):
         if data[0] == 0:
             data = process_data(data[1])
             if data != '':
-                try:
-                    return eval(data)
-                except SyntaxError:
-                    return data
+                return eval(data)
             else:
                 return data
         else:
