@@ -92,6 +92,9 @@ class Server:
             self._thread.daemon = True
             self._thread.start()
 
+    def ping(self):
+        return 'pong'
+
     def run(self):
         import eg
         # This is where the permissions get created for the pipe
@@ -222,7 +225,7 @@ class Server:
                     'Named Pipe: return data: ' + str(res[0])
                 )
 
-                win32file.WriteFile(pipe, str(res[0]))
+                win32file.WriteFile(pipe, str(repr(res[0])))
                 win32pipe.DisconnectNamedPipe(pipe)
 
             else:
@@ -250,7 +253,10 @@ def send_message(msg):
         if data[0] == 0:
             data = process_data(data[1])
             if data != '':
-                return eval(data)
+                try:
+                    return eval(data)
+                except SyntaxError:
+                    return data
             else:
                 return data
         else:
