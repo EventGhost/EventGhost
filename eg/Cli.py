@@ -27,6 +27,7 @@ import sys
 from os.path import abspath, dirname, join
 
 import PythonPaths
+import NamedPipe
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -45,13 +46,54 @@ class args:
     debugLevel = 0
     hideOnStartup = False
     install = False
-    isMain = hasattr(__main__, "isMain")  #splitext(basename(scriptPath))[0].lower() == "eventghost"
+    # splitext(basename(scriptPath))[0].lower() == "eventghost"
+    isMain = hasattr(__main__, "isMain")
     pluginFile = None
     startupEvent = None
     startupFile = None
     translate = False
     restart = False
 
+
+def restart():
+    if send_message('eg.document.IsDirty'):
+        answer = ctypes.windll.user32.MessageBoxA(
+            0,
+            'EventGhost cannot restart.             \n\n'
+            'Configuration contains unsaved changes.\n'
+            'Do you want to save before continuing? \n',
+            "EventGhost Restart Error",
+            3 | 40000
+        )
+
+        if answer == 2:
+            sys.exit(0)
+        elif answer == 7:
+            send_message('eg.document.SetIsDirty', False)
+        elif answer == 6:
+            import wx
+
+            answer = send_message('eg.document.Save')
+            if answer == wx.ID_CANCEL:
+                sys.exit(0)
+
+    if not send_message('eg.app.Exit'):
+        ctypes.windll.user32.MessageBoxA(
+            0,
+            'EventGhost cannot restart.             \n\n'
+            'Unknown Error.                         \n',
+            "EventGhost Restart Error",
+            0 | 40000
+        )
+        sys.exit(1)
+
+    return True
+
+
+def send_message(msg, *msg_args):
+    return NamedPipe.send_message(
+        '%s, %s' % (msg, str(msg_args))
+    )
 
 if args.isMain:
     for arg in argvIter:
@@ -85,7 +127,7 @@ if args.isMain:
             args.startupFile = abspath(argvIter.next())
         elif arg in ('-p', '-plugin'):
             args.pluginFile = abspath(argvIter.next())
-            #args.isMain = False
+            # args.isMain = False
         elif arg == '-configdir':
             args.configDir = argvIter.next()
         elif arg == '-translate':
@@ -106,78 +148,30 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        # check if another instance of the program is running
+        try:
+            if send_message('eg.namedPipe.ping') == 'pong':
+                if args.restart:
+                    restart()
+                else:
+                    if args.startupFile is not None:
+                        send_message('eg.document.Open', args.startupFile)
+                    if args.startupEvent is not None:
+                        send_message('eg.TriggerEvent', *args.startupEvent)
+                    if args.pluginFile:
+                        send_message(
+                            'eg.PluginInstall.Import',
+                            args.pluginFile
+                        )
+                    if args.hideOnStartup:
+                        send_message('eg.document.HideFrame')
+                    sys.exit(0)
+            else:
+                sys.exit(1)
+        except NamedPipe.NamedPipeConnectionError:
+            pass
 
         appMutex = ctypes.windll.kernel32.CreateMutexA(
             None,
             0,
             "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
         )
-
-        if ctypes.GetLastError() != 0:
-            # another instance of EventGhost is running
-            import NamedPipe
-
-            if args.restart:
-                # import time
-
-                try:
-                    if NamedPipe.send_message('eg.document.IsDirty, ()'):
-                        answer = ctypes.windll.user32.MessageBoxA(
-                            0,
-                            'EventGhost cannot restart.             \n\n'
-                            'Configuration contains unsaved changes.\n'
-                            'Do you want to save before continuing? \n',
-                            "EventGhost Restart Error",
-                            3 | 40000
-                        )
-
-                        if answer == 2:
-                            ctypes.windll.kernel32.ExitProcess(0)
-                        elif answer == 7:
-                            NamedPipe.send_message(
-                                'eg.document.SetIsDirty, (False,)'
-                            )
-                        elif answer == 6:
-                            import wx
-
-                            answer = NamedPipe.send_message(
-                                'eg.document.Save, ()'
-                            )
-
-                            if answer == wx.ID_CANCEL:
-                                ctypes.windll.kernel32.ExitProcess(0)
-
-                    if not NamedPipe.send_message('eg.app.Exit, ()'):
-                        ctypes.windll.user32.MessageBoxA(
-                            0,
-                            'EventGhost cannot restart.             \n\n'
-                            'Unknown Error.                         \n',
-                            "EventGhost Restart Error",
-                            0 | 40000
-                        )
-
-                        ctypes.windll.kernel32.ExitProcess(1)
-                except NamedPipe.NamedPipeConnectionError:
-                    ctypes.windll.kernel32.ExitProcess(0)
-
-            else:
-                if args.startupFile is not None:
-                    NamedPipe.send_message(
-                        'eg.document.Open, (%r,)' % args.startupFile
-                    )
-
-                if args.startupEvent is not None:
-                    NamedPipe.send_message(
-                        'eg.TriggerEvent, %s' % str(args.startupEvent)
-                    )
-
-                if args.pluginFile:
-                    NamedPipe.send_message(
-                        'eg.PluginInstall.Import, (%r,)' % args.pluginFile
-                    )
-
-                if args.hideOnStartup:
-                    NamedPipe.send_message('eg.document.HideFrame, ()')
-
-                ctypes.windll.kernel32.ExitProcess(0)

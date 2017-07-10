@@ -92,6 +92,9 @@ class Server:
             self._thread.daemon = True
             self._thread.start()
 
+    def ping(self):
+        return 'pong'
+
     def run(self):
         import eg
         # This is where the permissions get created for the pipe
@@ -222,7 +225,7 @@ class Server:
                     'Named Pipe: return data: ' + str(res[0])
                 )
 
-                win32file.WriteFile(pipe, str(res[0]))
+                win32file.WriteFile(pipe, str(repr(res[0])))
                 win32pipe.DisconnectNamedPipe(pipe)
 
             else:
@@ -261,7 +264,10 @@ def send_message(msg):
             raise NamedPipeDataError('Error in data received: ' + str(data))
 
     except win32pipe.error as err:
-        raise NamedPipeConnectionError('Unexpected error: ' + str(err))
+        if err[0] == 231:
+            return send_message(msg)
+
+        raise NamedPipeConnectionError(err)
 
 
 class NamedPipeException(Exception):
@@ -269,7 +275,7 @@ class NamedPipeException(Exception):
         self.msg = msg
 
     def __str__(self):
-        return self.msg
+        return str(self.msg)
 
 
 class NamedPipeDataError(NamedPipeException):
@@ -277,4 +283,9 @@ class NamedPipeDataError(NamedPipeException):
 
 
 class NamedPipeConnectionError(NamedPipeException):
-    pass
+
+    def __getitem__(self, item):
+        if item in self.__dict__:
+            return self.__dict__[item]
+        
+        return self.msg[item]
