@@ -35,7 +35,7 @@ from threading import Event, Thread
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.6.33",
+    version = "0.6.35",
     kind = "program",
     guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
@@ -702,7 +702,10 @@ class BuiltInFunctions(eg.ActionBase):
 					return text
 
 				URL = 'http://kodi.wiki/view/List_of_built-in_functions'
-				request = urllib2.Request(URL)
+				UserAgent = 'XBMC2 EventGhost plugin'
+				hdr = {'User-Agent': UserAgent}
+
+				request = urllib2.Request(URL, headers=hdr)
 				try:
 					w = urllib2.urlopen(request)
 				except (urllib2.HTTPError, urllib2.URLError):
@@ -1185,7 +1188,7 @@ def readData(filename):
 			print "Reading:", filename
 			return pickle.load(f)
 	except IOError:
-		eg.PrintError('XBMC2: Error opening: ' + filename)
+		#eg.PrintError('XBMC2: Error opening: ' + filename)
 		raise
 
 def writeData(filename, data):
@@ -1543,7 +1546,7 @@ class XBMC2(eg.PluginClass):
     def Configure(self, pluginConfig={}, *args):
 				def UpdateActions(event):
 					def GetActions():
-						URL = 'https://raw.githubusercontent.com/xbmc/xbmc/master/xbmc/input/ButtonTranslator.cpp'
+						URL = 'https://raw.githubusercontent.com/xbmc/xbmc/Krypton/xbmc/input/ButtonTranslator.cpp'
 						request = urllib2.Request(URL)
 						#try:
 						w = urllib2.urlopen(request)
@@ -1582,9 +1585,11 @@ class XBMC2(eg.PluginClass):
 
 							return text
 
-						URL = 'http://wiki.xbmc.org/?title=Action_IDs'
-						#URL = 'http://kodi.wiki/view/Action_IDs'
-						request = urllib2.Request(URL)
+						UserAgent = 'XBMC2 EventGhost plugin'
+						URL = 'http://kodi.wiki/view/Action_IDs'
+						hdr = {'User-Agent': UserAgent}
+
+						request = urllib2.Request(URL, headers=hdr)
 						w = urllib2.urlopen(request)
 
 						Page2 = w.read()
@@ -2003,7 +2008,7 @@ class XBMC2(eg.PluginClass):
 				_PacketSize = 4096
 				Buffer = deque()
 				rlist = [Socket, ]
-				while True:
+				while not stopJSONRPCNotifications.isSet():
 					if Buffer:
 						ready, _, _ = select.select(rlist, [], [], 0)
 						if ready:
@@ -2018,8 +2023,12 @@ class XBMC2(eg.PluginClass):
 							data = Socket.recv(_PacketSize)
 						except socket.timeout:
 							#logging.debug('SSDPListener: Wait for event: Timeout.')
+							if debug:
+								print 'XBMC2: SSDP: Wait for event: Timeout.'
 							continue
 					Buffer.append(data)
+				if debug:
+					print 'XBMC2: SSDP: Wait for event: Stop recieving messages.'
 
 			def WaitForXBMC(Socket):
 				USNCache = []
@@ -2040,8 +2049,13 @@ class XBMC2(eg.PluginClass):
 						if debug:
 							print 'XBMC2: SSDP: Wait for event: Timeout.'
 						pass
+					except StopIteration:
+						continue
 					else:
 						try:
+							if debug:
+								with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a+') as f:
+									f.write("Got ssdp message.")
 							if "NOTIFY * HTTP/1.1" == headers['Start-line']:
 								try:
 									if headers['USN'].split(':', 2)[1] not in USNCache:
@@ -2053,7 +2067,7 @@ class XBMC2(eg.PluginClass):
 											for modelName in doc.getElementsByTagName("modelName"):
 												if modelName.firstChild.data in ('Kodi', 'XBMC Media Center', 'XBMC'):
 													if debug:
-														with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+														with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a+') as f:
 															f.write(data)
 															f.write(urllib2.urlopen(headers['LOCATION']).read())
 														print 'XBMC2: SSDP modelName:', modelName.firstChild.data
@@ -2079,7 +2093,7 @@ class XBMC2(eg.PluginClass):
 															XBMCDetected = True
 												else:
 													if debug:
-														with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+														with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a+') as f:
 															f.write(data)
 															f.write(urllib2.urlopen(headers['LOCATION']).read())
 														print 'XBMC2: SSDP unknown modelName:', modelName.firstChild.data
@@ -2168,8 +2182,8 @@ class XBMC2(eg.PluginClass):
 								messages = [json.loads(message)]
 							except:
 								#eg.PrintError('XBMC2: Error: JSON-RPC event ')
-								import sys, traceback
-								traceback.print_exc()
+								#import sys, traceback
+								#traceback.print_exc()
 								#eg.PrintError('XBMC2: Error decoding: JSON-RPC event \n' + "Raw event: %s" % repr(message))
 								#continue
 								messages = JSONSplit(message)
