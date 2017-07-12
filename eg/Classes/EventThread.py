@@ -75,7 +75,7 @@ class EventThread(ThreadWorker):
         actionThread.Func(actionThread.StartSession, 120)(filename)
         self.TriggerEvent("OnInit")
         if self.startupEvent is not None:
-            self.TriggerEvent(self.startupEvent[0], self.startupEvent[1])
+            self.TriggerEvent(*self.startupEvent)
             self.startupEvent = None
 
     @eg.LogIt
