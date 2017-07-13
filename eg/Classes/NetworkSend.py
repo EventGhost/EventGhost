@@ -18,21 +18,20 @@
 
 import locale
 import socket
-import wx
 from hashlib import md5
 
 ENCODING = locale.getdefaultlocale()[1]
 
 
 def ShowError(msg):
-    app = wx.PyApp()
-    wx.MessageBox(
-        message=msg,
-        caption="EventGhost - warning",
-        style=wx.ICON_EXCLAMATION | wx.OK,
-        parent=None
-    )
+    import ctypes
 
+    ctypes.windll.user32.MessageBoxA(
+        0,
+        msg,
+        "EventGhost - warning",
+        0 | 40000
+    )
 
 def NetworkSend(host, port, password, eventString, payload=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
