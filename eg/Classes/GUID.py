@@ -54,7 +54,19 @@ class GUIDBase(object):
         return self.target
 
 
+class GuidException(Exception):
+
+    def __init__(self, guid):
+        self.guid = guid
+
+    def __str__(self):
+        return 'No GUID %r exists' % self.guid
+
+
 class GUID(object):
+
+    GuidException = GuidException
+
     def __init__(self):
         self.guidObjects = {}
 
@@ -64,9 +76,20 @@ class GUID(object):
         return guid
 
     def AddId(self, target, guid):
-        guid = GUIDBase(target, guid)
-        self.guidObjects[guid.guid] = guid
-        return guid
+        if guid in self.guidObjects:
+            new = self.NewId(guid)
+            eg.PrintDebugMessage(
+                'GUID %r already exists, '
+                'New GUID: %r, '
+                'Existing Object: %r, '
+                'New Object: %s' %
+                (guid, new.guid, self.guidObjects[guid], target)
+            )
+            return new
+        else:
+            guid = GUIDBase(target, guid)
+            self.guidObjects[guid.guid] = guid
+            return guid
 
     def __call__(self, guid):
         if guid in self.guidObjects:
@@ -74,4 +97,4 @@ class GUID(object):
         try:
             return self.guidObjects[guid.guid]
         except KeyError:
-            raise AttributeError('%r has no attribute %r' % (self, guid))
+            raise self.GuidException(guid)
