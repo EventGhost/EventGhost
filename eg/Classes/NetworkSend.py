@@ -23,6 +23,17 @@ from hashlib import md5
 
 ENCODING = locale.getdefaultlocale()[1]
 
+
+def ShowError(msg):
+    app = wx.PyApp()
+    wx.MessageBox(
+        message=msg,
+        caption="EventGhost - warning",
+        style=wx.ICON_EXCLAMATION | wx.OK,
+        parent=None
+    )
+
+
 def NetworkSend(host, port, password, eventString, payload=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -32,12 +43,10 @@ def NetworkSend(host, port, password, eventString, payload=None):
             sock.connect((host, port))
         except Exception, e:
             if e[0] == 10061:
-                wx.PySimpleApp()
-                wx.MessageBox(
-                    '%s.\n\nMaybe the destination computer has not installed\nthe plugin "Network event receiver" ?' % e[1],
-                    caption = "EventGhost - warning",
-                    style=wx.ICON_EXCLAMATION | wx.OK,
-                    parent = None
+                ShowError(
+                    '%s.\n\n'
+                    'Maybe the destination computer has not installed\n'
+                    'the plugin "Network event receiver" ?\n' % e[1]
                 )
             sock.close()
             return False
@@ -95,9 +104,25 @@ def NetworkSend(host, port, password, eventString, payload=None):
     return True
 
 def Main(argv):
-    host, port = argv[0].split(":")
-    password = argv[1]
-    eventstring = argv[2]
+    try:
+        host, port = argv[0].split(":")
+    except ValueError:
+        ShowError(
+            "Missing Port number.\n\n"
+            "EventGhost.exe -netsend <host>:<port> <password> "
+            "<eventname> [<payload> ...]"
+        )
+        exit(1)
+    try:
+        password = argv[1]
+        eventstring = argv[2]
+    except IndexError:
+        ShowError(
+            "Not enough parameters.\n\n"
+            "EventGhost.exe -netsend <host>:<port> <password> "
+            "<eventname> [<payload> ...]"
+        )
+        exit(1)
     payloads = argv[3:]
     NetworkSend(host, int(port), password, eventstring, payloads)
 
