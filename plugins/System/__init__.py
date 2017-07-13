@@ -94,6 +94,7 @@ eg.RegisterPlugin(
 )
 
 ACV = wx.ALIGN_CENTER_VERTICAL
+MOUSEEVENTF_MOVE = 0x0001
 
 oldGetDeviceId = SoundMixer.GetDeviceId
 def GetDeviceId_(*args, **kwargs):
@@ -116,14 +117,16 @@ MONITOR_STATES = dict(
     ON=-1
 )
 
-
 def MonitorState(state):
-    win32gui.SendMessage(
-        win32con.HWND_BROADCAST,
-        win32con.WM_SYSCOMMAND,
-        SC_MONITORPOWER,
-        MONITOR_STATES[state]
-    )
+    if state == 'ON':
+        ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, 0)
+    else:
+        win32gui.SendMessage(
+            win32con.HWND_BROADCAST,
+            win32con.WM_SYSCOMMAND,
+            SC_MONITORPOWER,
+            MONITOR_STATES[state]
+        )
 
 
 class Text:
