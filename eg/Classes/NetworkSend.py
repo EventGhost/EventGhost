@@ -18,10 +18,20 @@
 
 import locale
 import socket
-import wx
 from hashlib import md5
 
 ENCODING = locale.getdefaultlocale()[1]
+
+
+def ShowError(msg):
+    import ctypes
+
+    ctypes.windll.user32.MessageBoxA(
+        0,
+        msg,
+        "EventGhost - warning",
+        0 | 40000
+    )
 
 def NetworkSend(host, port, password, eventString, payload=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,12 +42,10 @@ def NetworkSend(host, port, password, eventString, payload=None):
             sock.connect((host, port))
         except Exception, e:
             if e[0] == 10061:
-                wx.PySimpleApp()
-                wx.MessageBox(
-                    '%s.\n\nMaybe the destination computer has not installed\nthe plugin "Network event receiver" ?' % e[1],
-                    caption = "EventGhost - warning",
-                    style=wx.ICON_EXCLAMATION | wx.OK,
-                    parent = None
+                ShowError(
+                    '%s.\n\n'
+                    'Maybe the destination computer has not installed\n'
+                    'the plugin "Network event receiver" ?\n' % e[1]
                 )
             sock.close()
             return False
@@ -95,11 +103,27 @@ def NetworkSend(host, port, password, eventString, payload=None):
     return True
 
 def Main(argv):
-    host, port = argv[0].split(":")
-    password = argv[1]
-    eventstring = argv[2]
-    payloads = argv[3:]
-    NetworkSend(host, int(port), password, eventstring, payloads)
+    try:
+        host, port = argv[0].split(":")
+        password = argv[1]
+        eventstring = argv[2]
+        payloads = argv[3:]
+    except ValueError:
+        ShowError(
+            "Missing Port number.\n\n"
+            "EventGhost.exe -netsend <host>:<port> <password> "
+            "<eventname> [<payload> ...]"
+        )
+        exit(1)
+    except IndexError:
+        ShowError(
+            "Not enough parameters.\n\n"
+            "EventGhost.exe -netsend <host>:<port> <password> "
+            "<eventname> [<payload> ...]"
+        )
+        exit(1)
+    else:
+        NetworkSend(host, int(port), password, eventstring, payloads)
 
 if __name__ == '__main__':
     import sys
