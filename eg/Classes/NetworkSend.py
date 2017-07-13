@@ -106,6 +106,9 @@ def NetworkSend(host, port, password, eventString, payload=None):
 def Main(argv):
     try:
         host, port = argv[0].split(":")
+        password = argv[1]
+        eventstring = argv[2]
+        payloads = argv[3:]
     except ValueError:
         ShowError(
             "Missing Port number.\n\n"
@@ -113,9 +116,6 @@ def Main(argv):
             "<eventname> [<payload> ...]"
         )
         exit(1)
-    try:
-        password = argv[1]
-        eventstring = argv[2]
     except IndexError:
         ShowError(
             "Not enough parameters.\n\n"
@@ -123,8 +123,8 @@ def Main(argv):
             "<eventname> [<payload> ...]"
         )
         exit(1)
-    payloads = argv[3:]
-    NetworkSend(host, int(port), password, eventstring, payloads)
+    else:
+        NetworkSend(host, int(port), password, eventstring, payloads)
 
 if __name__ == '__main__':
     import sys
