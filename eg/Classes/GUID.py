@@ -78,12 +78,12 @@ class GUID(object):
     def AddId(self, target, guid):
         if guid in self.guidObjects:
             new = self.NewId(guid)
-            eg.PrintDebugMessage(
+            eg.PrintDebugNotice(
                 'GUID %r already exists, '
                 'New GUID: %r, '
                 'Existing Object: %r, '
                 'New Object: %s' %
-                (guid, new.guid, self.guidObjects[guid], target)
+                (guid, new.guid, self.guidObjects[guid].target, target)
             )
             return new
         else:
@@ -98,3 +98,4 @@ class GUID(object):
             return self.guidObjects[guid.guid]
         except KeyError:
             raise self.GuidException(guid)
+
