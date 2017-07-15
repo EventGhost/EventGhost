@@ -77,18 +77,19 @@ class GUID(object):
 
     def AddId(self, target, guid):
         if guid in self.guidObjects:
-            new = self.NewId(guid)
-            eg.PrintDebugNotice(
-                'GUID %r already exists, '
-                'New GUID: %r, '
-                'Existing Object: %r, '
-                'New Object: %s' %
-                (guid, new.guid, self.guidObjects[guid].target, target)
-            )
-            return new
+            self.guidObjects[guid].target = target
+            # new = self.NewId(guid)
+            # eg.PrintDebugNotice(
+            #     'GUID %r already exists, '
+            #     'New GUID: %r, '
+            #     'Existing Object: %r, '
+            #     'New Object: %s' %
+            #     (guid, new.guid, self.guidObjects[guid].target, target)
+            # )
+            return self.guidObjects[guid]
         else:
             guid = GUIDBase(target, guid)
-            self.guidObjects[guid.guid] = guid
+            self.guidObjects[str(guid)] = guid
             return guid
 
     def __call__(self, guid):
@@ -96,6 +97,9 @@ class GUID(object):
             return self.guidObjects[guid]
         try:
             return self.guidObjects[guid.guid]
+        except AttributeError:
+            guid = self.AddId(None, guid)
+            return guid
         except KeyError:
             raise self.GuidException(guid)
 

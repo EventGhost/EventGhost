@@ -48,6 +48,8 @@ class TreeLink(object):
 
     @classmethod
     def CreateFromArgument(cls, owner, xmlId):
+        if not isinstance(xmlId, int):
+            return xmlId
         self = TreeLink(owner)
         cls.linkList.append((self, xmlId))
         return self
