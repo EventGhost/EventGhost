@@ -261,7 +261,10 @@ class AddPluginDialog(eg.TaskletDialog):
                     self.click_count = 0
                     dialog = eg.MessageDialog(
                         parent=None,
-                        message='Enable using GUID\'s?\n\n',
+                        message=(
+                            'Warning: This will save all EventGhost Data!!\n\n'
+                            'Enable using GUID\'s?\n\n'
+                        ),
                         style=wx.YES_NO | wx.STAY_ON_TOP
                     )
                     if dialog.ShowModal() == wx.ID_YES:
@@ -269,6 +272,10 @@ class AddPluginDialog(eg.TaskletDialog):
                     else:
                         setattr(eg.config, 'useTreeItemGUID', False)
                     dialog.Destroy()
+
+                    eg.document.SetIsDirty(True)
+                    eg.document.Save()
+                    eg.Config.Save()
 
             evt.Skip()
 
