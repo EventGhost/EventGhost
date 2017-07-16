@@ -78,14 +78,6 @@ class GUID(object):
     def AddId(self, target, guid):
         if guid in self.guidObjects:
             self.guidObjects[guid].target = target
-            # new = self.NewId(guid)
-            # eg.PrintDebugNotice(
-            #     'GUID %r already exists, '
-            #     'New GUID: %r, '
-            #     'Existing Object: %r, '
-            #     'New Object: %s' %
-            #     (guid, new.guid, self.guidObjects[guid].target, target)
-            # )
             return self.guidObjects[guid]
         else:
             guid = GUIDBase(target, guid)

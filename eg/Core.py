@@ -47,6 +47,9 @@ import eg
 import Init
 import NamedPipe
 
+
+useTreeItemGUID = False
+
 Init.InitPathsAndBuiltins()
 
 eg.APP_NAME = "EventGhost"

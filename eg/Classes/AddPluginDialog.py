@@ -262,25 +262,26 @@ class AddPluginDialog(eg.TaskletDialog):
                     dialog = eg.MessageDialog(
                         parent=None,
                         message=(
-                            'Warning: This will save all EventGhost Data!!\n\n'
+                            'Warning: This process cannot be undone so make\n'
+                            '                  a backup copy of your save file now.\n\n'
+                            'This process will modify and save all EventGhost Data!!\n'
                             'Enable using GUID\'s?\n\n'
                         ),
                         style=wx.YES_NO | wx.STAY_ON_TOP
                     )
                     if dialog.ShowModal() == wx.ID_YES:
-                        setattr(eg.config, 'useTreeItemGUID', True)
-                    else:
-                        setattr(eg.config, 'useTreeItemGUID', False)
-                    dialog.Destroy()
+                        eg.useTreeItemGUID = True
+                        eg.document.SetIsDirty(True)
+                        eg.document.Save()
+                        eg.config.Save()
 
-                    eg.document.SetIsDirty(True)
-                    eg.document.Save()
-                    eg.config.Save()
+                    dialog.Destroy()
 
             evt.Skip()
 
-        self.Bind(wx.EVT_LEFT_DOWN, on_left_down)
-        self.Bind(wx.EVT_LEFT_UP, on_left_up)
+        if eg.useTreeItemGUID is False:
+            self.Bind(wx.EVT_LEFT_DOWN, on_left_down)
+            self.Bind(wx.EVT_LEFT_UP, on_left_up)
 
 # -----------------------------------------------------------------------------
 
