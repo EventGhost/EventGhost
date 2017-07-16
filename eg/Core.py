@@ -48,7 +48,7 @@ import Init
 import NamedPipe
 
 
-useTreeItemGUID = False
+eg.useTreeItemGUID = False
 
 Init.InitPathsAndBuiltins()
 
