@@ -275,7 +275,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
                     eg.document.SetIsDirty(True)
                     eg.document.Save()
-                    eg.Config.Save()
+                    eg.config.Save()
 
             evt.Skip()
 
