@@ -267,7 +267,7 @@ class AddPluginDialog(eg.TaskletDialog):
                     if dialog.ShowModal() == wx.ID_YES:
                         setattr(eg.config, 'useTreeItemGUID', True)
                     else:
-                        getattr(eg.config, 'useTreeItemGUID', False)
+                        setattr(eg.config, 'useTreeItemGUID', False)
                     dialog.Destroy()
 
             evt.Skip()
