@@ -108,7 +108,6 @@ class Paste(UndoHandlerBase):
                 if pos + 1 == len(before.parent.childs):
                     pos = -1
             newNode = childCls(selection, childXmlNode)
-            newNode.guid = eg.GUID.NewId(newNode)
             newNode.RestoreState()
             selection.AddChild(newNode, pos)
             self.items.append(eg.TreePosition(newNode))

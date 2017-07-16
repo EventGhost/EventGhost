@@ -221,6 +221,70 @@ class AddPluginDialog(eg.TaskletDialog):
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
 
+
+# -------- This code is for setting the use GUID instead of XmlIdLink ---------
+        self.click_count = 0
+
+        def on_left_down(evt):
+            x, y = evt.GetPosition()
+            width, height = self.GetClientSize()
+
+            start_x = width - 20
+            stary_y = 0
+
+            stop_x = start_x + 20
+            stop_y = stary_y + 20
+
+            if stop_x > x > start_x and stop_y > y > stary_y:
+                if not self.click_count:
+                    self.CaptureMouse()
+
+            start_x = 0
+            stary_y = height - 20
+
+            stop_x = start_x + 20
+            stop_y = stary_y + 20
+
+            if stop_x > x > start_x and stop_y > y > stary_y:
+                if self.click_count:
+                    self.CaptureMouse()
+
+            evt.Skip()
+
+        def on_left_up(evt):
+            if self.HasCapture():
+
+                self.ReleaseMouse()
+                self.click_count += 1
+
+                if self.click_count == 2:
+                    self.click_count = 0
+                    dialog = eg.MessageDialog(
+                        parent=None,
+                        message=(
+                            'Warning: This process cannot be undone so make\n'
+                            '                  a backup copy of your save file now.\n\n'
+                            'This process will modify and save all EventGhost Data!!\n'
+                            'Enable using GUID\'s?\n\n'
+                        ),
+                        style=wx.YES_NO | wx.STAY_ON_TOP
+                    )
+                    if dialog.ShowModal() == wx.ID_YES:
+                        eg.useTreeItemGUID = True
+                        eg.document.SetIsDirty(True)
+                        eg.document.Save()
+                        eg.config.Save()
+
+                    dialog.Destroy()
+
+            evt.Skip()
+
+        if eg.useTreeItemGUID is False:
+            self.Bind(wx.EVT_LEFT_DOWN, on_left_down)
+            self.Bind(wx.EVT_LEFT_UP, on_left_up)
+
+# -----------------------------------------------------------------------------
+
         while self.Affirmed():
             if self.CheckMultiload():
                 self.SetResult(self.resultData)
