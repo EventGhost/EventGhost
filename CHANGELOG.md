@@ -3,6 +3,12 @@
 **Enhancements:**
 
 * Changes XmlIdLink to eg.GUID \(see comment for more info\) [\#264](https://github.com/EventGhost/EventGhost/pull/264) ([kdschlosser](https://github.com/kdschlosser))
+  
+  The use of XmlId made it difficult to share code that used 'Enable/Disable Action' or 'Exlusive Enable' (and others). Now with the use of GUID's this hurdle is gone.
+
+  To turn it on you would open the add plugin dialog and left click once in the upper right hand corner of the dialog (client area) and then click once in the lower left hand corner of the dialog (client area). There is a 20x20 pixel target for each of the spots so the chance of someone doing this accidentally is probably not going to happen. But in the event it does, a message box asking if you want to enable or disable it pops up.
+
+  **Warning: This process cannot be undone, so make a backup copy of your config tree before enabling it.**
 
 **Fixed bugs:**
 
