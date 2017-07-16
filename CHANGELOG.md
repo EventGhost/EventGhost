@@ -1,3 +1,24 @@
+## [0.5.0-rc4](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc4) (2017-07-16)
+
+**Enhancements:**
+
+* Changes XmlIdLink to eg.GUID \(see comment for more info\) [\#264](https://github.com/EventGhost/EventGhost/pull/264) ([kdschlosser](https://github.com/kdschlosser))
+
+**Fixed bugs:**
+
+* SoundMixer: Fixes traceback when using the Primary Sound Driver [\#255](https://github.com/EventGhost/EventGhost/pull/255) ([kdschlosser](https://github.com/kdschlosser))
+* NamedPipe: Fixes traceback if returned item is not able to be evaluated [\#256](https://github.com/EventGhost/EventGhost/pull/256) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes restart not working from the file dropdown menu [\#257](https://github.com/EventGhost/EventGhost/pull/257) ([kdschlosser](https://github.com/kdschlosser))
+* SoundMixer: Fixes lag when setting the relative volume [\#258](https://github.com/EventGhost/EventGhost/pull/258) ([kdschlosser](https://github.com/kdschlosser))
+* EventThread: Fixes -event not working from cli if there is no EG running [\#261](https://github.com/EventGhost/EventGhost/pull/261) ([kdschlosser](https://github.com/kdschlosser))
+* \[System\] Fix Monitor On action not functioning properly in Windows \> 8 [\#262](https://github.com/EventGhost/EventGhost/pull/262) ([kdschlosser](https://github.com/kdschlosser))
+* CLI: fix bug when showing message on -netsend failure [\#263](https://github.com/EventGhost/EventGhost/pull/263) ([topic2k](https://github.com/topic2k))
+
+**Other changes:**
+
+* \[XBMC2\] update plugin to 0.6.33 [\#259](https://github.com/EventGhost/EventGhost/pull/259) ([topic2k](https://github.com/topic2k))
+
+
 ## [0.5.0-rc3](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc3) (2017-07-03)
 
 **Enhancements:**
