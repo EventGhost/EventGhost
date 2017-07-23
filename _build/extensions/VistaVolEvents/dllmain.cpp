@@ -298,6 +298,7 @@ void SelectDevice(char *deviceId) {
     PropVariantInit(&varName);
     hr = pProps->GetValue(PKEY_Device_FriendlyName, &varName);
     char buffer[256];
+#pragma warning(suppress : 4996)
     wcstombs(buffer, varName.pwszVal, 256);
     if (strncmp(buffer, deviceId, sizeof(deviceId)) == 0) {
       hr = selectedDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID *)&selectedVolume);
