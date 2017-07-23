@@ -31,8 +31,9 @@ void ErrorExit(LPTSTR lpszFunction)
 }
 
 
-void dbgprint(const char *fmt, ...)
+void DBG(const char *fmt, ...)
 {
+#ifdef DEBUG
 	char buf[1024];
 	va_list ap;
 	//PyGILState_STATE gil;
@@ -45,5 +46,5 @@ void dbgprint(const char *fmt, ...)
 	//gil = PyGILState_Ensure();
 	//PySys_WriteStdout("%s\n", buf);
 	//PyGILState_Release(gil);
-	
+#endif
 }
