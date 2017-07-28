@@ -109,6 +109,8 @@ class ButtonRow(object):
         self.numSpecialCtrls += 1
 
     def OnApply(self, event):
+        if hasattr(self, 'okButton'):
+            self.okButton.Enable(True)
         if hasattr(self.parent, "OnApply"):
             self.parent.OnApply(event)
         else:

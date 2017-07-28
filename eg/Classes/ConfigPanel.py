@@ -52,6 +52,9 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.resultCode = None
         self.buttonsEnabled = True
         self.dialog.buttonRow.applyButton.Enable(False)
+        self.dialog.buttonRow.okButton.Enable(
+            not self.dialog.treeItem.NeedsStartupConfiguration()
+        )
 
     def AddCtrl(self, ctrl):
         self.sizer.Add(ctrl, 0, wx.BOTTOM, 10)
@@ -120,6 +123,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             buttonRow.applyButton.Enable(True)
         else:
             buttonRow.applyButton.Enable(False)
+            if self.dialog.treeItem.NeedsStartupConfiguration():
+                buttonRow.okButton.Enable(False)
 
     def FinishSetup(self):
         self.shown = True
