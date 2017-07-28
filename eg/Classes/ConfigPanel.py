@@ -53,7 +53,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.buttonsEnabled = True
         self.dialog.buttonRow.applyButton.Enable(False)
         self.dialog.buttonRow.okButton.Enable(
-            not self.dialog.treeItem.NeedsStartupConfiguration()
+            not self.dialog.treeItem.isFirstConfigure
         )
 
     def AddCtrl(self, ctrl):
@@ -123,8 +123,6 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             buttonRow.applyButton.Enable(True)
         else:
             buttonRow.applyButton.Enable(False)
-            if self.dialog.treeItem.NeedsStartupConfiguration():
-                buttonRow.okButton.Enable(False)
 
     def FinishSetup(self):
         self.shown = True
@@ -158,6 +156,11 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     @eg.LogIt
     def SetIsDirty(self, flag=True):
         self.isDirty = flag
+        if flag and self.dialog.treeItem.isFirstConfigure:
+            self.dialog.buttonRow.okButton.Enable(True)
+        elif self.dialog.treeItem.isFirstConfigure:
+            self.dialog.buttonRow.okButton.Enable(False)
+
         if flag and self.buttonsEnabled:
             self.dialog.buttonRow.applyButton.Enable(True)
 

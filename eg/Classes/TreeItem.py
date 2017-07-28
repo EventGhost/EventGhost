@@ -43,6 +43,7 @@ class TreeItem(object):
     childs = ()
     isDeactivatable = True
     isConfigurable = False
+    isFirstConfigure = False
     isRenameable = True
     isExecutable = False
     isMoveable = True
@@ -172,7 +173,6 @@ class TreeItem(object):
     def DropTest(self, dropNode):
         return self.dropBehaviour.get(dropNode.xmlTag, HINT_NO_DROP)
 
-    @eg.AssertInActionThread
     def Execute(self):
         return None, None
 
