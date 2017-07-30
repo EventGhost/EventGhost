@@ -149,7 +149,7 @@ def InitPathsAndBuiltins():
 
     if not exists(eg.configDir):
         try:
-            os.makedirs(eg.configDir)
+            makedirs(eg.configDir)
         except:
             pass
 
