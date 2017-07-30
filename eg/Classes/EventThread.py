@@ -49,20 +49,6 @@ class EventThread(ThreadWorker):
             self.filters[source] = [filterFunc]
 
     def Poll(self):
-        if eg.config.limitMemory and eg.document.frame is None:
-            try:
-                if 0 == SetProcessWorkingSetSize(
-                    self.hHandle,
-                    3670016,
-                    eg.config.limitMemorySize * 1048576
-                ):
-                    #TODO: what to do here?
-                    eg.PrintDebugNotice(FormatError())
-                    self.__class__.Poll = self.Poll2
-            except:
-                self.__class__.Poll = self.Poll2
-
-    def Poll2(self):
         pass
 
     def RemoveFilter(self, source, filterFunc):
