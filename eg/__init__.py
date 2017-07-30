@@ -33,6 +33,9 @@ from Utils import *  # NOQA
 from Classes.WindowsVersion import WindowsVersion
 
 class DynamicModule(object):
+
+    APP_NAME = "EventGhost"
+    
     def __init__(self):
         mod = sys.modules[__name__]
         self.__dict__ = mod.__dict__
