@@ -164,6 +164,13 @@ class App(wx.App):
             self.shouldVeto = True
             event.Veto(True)
             ShutdownBlockReasonCreate(self.hwnd, "Unsaved data")
+            if eg.config.allowShutdown:
+                if eg.config.saveOnShutdown:
+                    eg.document.Save()
+                self.shouldVeto = False
+                ShutdownBlockReasonDestroy(self.hwnd)
+                wx.CallAfter(self.OnEndSession, None)
+                return
             res = eg.document.CheckFileNeedsSave()
             if res == wx.ID_YES:
                 # file was saved, reset everything
@@ -187,7 +194,11 @@ class App(wx.App):
         if not self.firstQuery:
             return
         self.firstQuery = False
-        if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
+        if eg.config.allowShutdown:
+            if eg.config.saveOnShutdown:
+                eg.document.Save()
+            event.Veto()
+        elif eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             event.Veto()
         wx.CallAfter(self.Reset)
 
