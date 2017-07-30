@@ -97,10 +97,9 @@ class FolderPath(object):
 
     @property
     def configDir(self):
-        install_name = split(eg.Cli.PythonPaths.install_directory)[1]
         config_dir = join(
             self.RoamingAppData,
-            install_name
+            eg.APP_NAME
         )
 
         if eg.Cli.args.configDir and config_dir != eg.Cli.args.configDir:
