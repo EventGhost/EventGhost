@@ -197,6 +197,8 @@ class System(eg.PluginBase):
         group.AddAction(MonitorPowerOn)
         group.AddAction(MonitorPowerOff)
         group.AddAction(MonitorStandby)
+        group.AddAction(MonitorBlackoutOn)
+        group.AddAction(MonitorBlackoutOff)
 
         group = self.AddGroup(
             text.PowerGroup.name,
@@ -642,6 +644,90 @@ class MonitorStandby(eg.ActionBase):
 
     def __call__(self):
         MonitorState('STANDBY')
+
+
+class MonitorBlackoutBase(eg.ActionBase):
+    name = ''
+    description = ''
+    iconFile = "icons/Display"
+
+    def __call__(self, monitor):
+        raise NotImplementedError
+
+    def _get_display(self, display):
+        if isinstance(display, int):
+            display_number = display
+            display_name = None
+        else:
+            display = display.split(': ')
+            if len(display) == 2:
+                display_number, display_name = display
+            else:
+                if display[0].isdigit():
+                    display_number = int(display[0])
+                    display_name = None
+                else:
+                    display_name = display[0]
+                    display_number = None
+
+        displays = eg.DesktopDisplay.displays
+
+        display_names = list(d.name for d in displays)
+
+        if display_name in display_names:
+            if display_names.count(display_name) > 1:
+                if display_number is not None:
+                    return displays[display_number - 1]
+            else:
+                return displays[display_names.index(display_name)]
+
+    def Configure(self, display=''):
+        panel = eg.ConfigPanel()
+
+        choices = list(
+            str(display.number) + ': ' + display.name
+            for display in eg.DesktopDisplay.displays
+        )
+        if display in choices:
+            display = choices.index(display)
+        else:
+            display = 0
+
+        display_st = panel.StaticText('Display:')
+        display_ctrl = panel.Choice(display, choices=choices)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(display_st, 0, wx.ALL, 5)
+        sizer.Add(display_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+        panel.sizer.Add(sizer, 0, wx.EXPAND)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                display_ctrl.GetStringSelection()
+            )
+
+
+class MonitorBlackoutOn(MonitorBlackoutBase):
+    name = "Monitor Blackout On"
+    description = (
+        "This does not turn the monitor off but it makes the screen black.\n"
+        "This is useful in multi monitor setups."
+    )
+
+    def __call__(self, display):
+        display = self._get_display(display)
+        if display is not None and not display.blackout:
+            display.blackout = True
+
+
+class MonitorBlackoutOff(MonitorBlackoutBase):
+    name = "Monitor Blackout Off"
+    description = "Turns off the monitor blackout to show the screen again."
+
+    def __call__(self, display):
+        display = self._get_display(display)
+        if display is not None and display.blackout:
+            display.blackout = False
 
 
 class SetDisplayPreset(eg.ActionBase):
