@@ -16,9 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 
-# Local imports
 import eg
 
 class DisplayChoice(eg.Choice):
@@ -26,6 +24,14 @@ class DisplayChoice(eg.Choice):
     A wx.Choice control, that shows all available displays.
     """
     def __init__(self, parent, value, *args, **kwargs):
-        numDisplays = wx.Display().GetCount()
-        choices = ["Monitor %d" % (i + 1) for i in range(numDisplays)]
+        choices = list(
+            display.number + ': ' + display.name
+            for display in eg.DesktopDisplay.displays
+        )
         eg.Choice.__init__(self, parent, value, choices, *args, **kwargs)
+
+    def GetStringSelection(self):
+        return 'Monitor ' + str(self.GetSelection() + 1)
+
+    def GetDisplaySelection(self):
+        return eg.Choice.GetStringSelection(self).split(': ', 1)[1]
