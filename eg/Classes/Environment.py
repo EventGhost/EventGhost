@@ -58,8 +58,11 @@ class Environment:
                 del os.environ[var]
 
     @staticmethod
-    def Get():
-        return Environment.Sort(os.environ)
+    def Get(variable=None):
+        if variable is None:
+            return Environment.Sort(os.environ)
+        else:
+            return os.environ.get(variable, None)
 
     @staticmethod
     def GetLatest():
