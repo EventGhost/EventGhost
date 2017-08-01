@@ -26,6 +26,7 @@ import wx
 import _winreg
 import win32con
 import win32gui
+import win32com
 from base64 import b64decode, b64encode
 from PIL import Image
 from qrcode import QRCode, constants as QRconstants
@@ -72,8 +73,9 @@ eg.RegisterPlugin(
     author = (
         "Bitmonster",
         "blackwind",
+        "K"
     ),
-    version = "1.1.10",
+    version = "1.1.11",
     description = (
         "Actions to control various aspects of your system, including "
         "audio, display, power, and registry."
@@ -138,6 +140,9 @@ class Text:
 
     class SoundGroup:
         name = description = "Audio"
+
+    class NetworkGroup:
+        name = description = "Network"
 
     forced        = "Forced: %s"
     forcedCB      = "Force close of all programs"
@@ -218,6 +223,15 @@ class System(eg.PluginBase):
         )
         group.AddAction(Registry.RegistryChange)
         group.AddAction(Registry.RegistryQuery)
+
+        if eg.WindowsVersion() >= 'Vista':
+
+            group = self.AddGroup(
+                text.NetworkGroup.name,
+                text.NetworkGroup.description,
+            )
+            group.AddAction(EnableNetworkAdapter)
+            group.AddAction(DisableNetworkAdapter)
 
     def __start__(self):
         eg.Bind("ClipboardChange", self.OnClipboardChange)
@@ -2142,6 +2156,143 @@ class ToggleMute(eg.ActionBase):
 
     def GetLabel(self, *args):
         return self.text.name
+
+
+class NetworkAdapterBase(eg.ActionBase):
+    """
+    Base action class for enabling and disabling network adapters.
+    """
+
+    name = ''
+    description = ''
+
+    class NetworkAdapterError(Exception):
+        """
+        Exception class for errors when enabling or disabling network adapters
+        """
+
+        def __init__(self, msg, deviceState=None):
+
+            state = [
+                ''
+                'Other',
+                'Unknown',
+                'Running/Full Power',
+                'Warning',
+                'In Test',
+                'Not Applicable',
+                'Power Off',
+                'Off Line',
+                'Off Duty',
+                'Degraded',
+                'Not Installed',
+                'Install Error',
+                'Power Save - Unknown',
+                'Power Save - Low Power Mode',
+                'Power Save - Standby',
+                'Power Cycle',
+                'Power Save - Warning',
+                'Paused',
+                'Not Ready',
+                'Not Configured',
+                'Quiesced'
+            ]
+
+            if deviceState is None:
+                self.msg = str(msg) + ' network adapter not found'
+            else:
+                self.msg = str(msg) + 'State: ' + state[deviceState]
+
+        def __str__(self):
+            return self.msg
+
+    def _GetNetworkAdapter(self, adapter=None):
+        """
+        Calls WMI to retrieve the network adapters.
+
+        Makes the call to Windows WMI to retrieve device instances. If the
+        adapter parameter is not None it will return a network adapter where
+        the name matches. Otherwise it will return all network devices.
+
+        :type adapter: str
+        :rtype: tuple(instances)
+        """
+        win32com.client.pythoncom.CoInitialize()
+        wmi = win32com.client.GetObject("winmgmts:\\root\\cimv2")
+        query = 'Select * from Win32_NetworkAdapter'
+        if adapter is not None:
+            query += ' WHERE Name="%s"' % adapter
+        try:
+            return wmi.ExecQuery(query)
+        finally:
+            del wmi
+            win32com.client.pythoncom.CoUninitialize()
+
+    def GetLabel(self, adapter):
+        return self.text.name + ': ' + adapter
+
+    def _run(self, adapter):
+        raise NotImplementedError
+
+    def __call__(self, adapter):
+        try:
+            device = self._GetNetworkAdapter(adapter)[0]
+        except:
+            raise self.NetworkAdapterError(adapter)
+
+        try:
+            if device.Installed and device.NetEnabled is not None:
+                self._run(device)
+        except:
+            self.NetworkAdapterError(device.Name, device.Availability)
+
+    def Configure(self, adapter=''):
+        panel = eg.ConfigPanel()
+
+        adapters = self._GetNetworkAdapter()
+        try:
+            choices = list(
+                device.Name for device in adapters
+                if device.Installed and device.NetEnabled is not None
+            )
+        except:
+            choices = []
+
+        if adapter in choices:
+            selection = choices.index(adapter)
+        else:
+            selection = 0
+
+        adapterCtrl = panel.Choice(selection, choices=choices)
+        panel.AddLine(self.plugin.text.device, adapterCtrl)
+        while panel.Affirmed():
+            panel.SetResult(adapterCtrl.GetStringSelection())
+
+
+class EnableNetworkAdapter(NetworkAdapterBase):
+    """
+    Enable network adapter action.
+    """
+
+    name = "Enable Network Adapter"
+    description = "Enable a network adapter"
+
+    def _run(self, adapter):
+        if not adapter.NetEnabled:
+            adapter.Enable()
+
+
+class DisableNetworkAdapter(NetworkAdapterBase):
+    """
+    Disable network adapter action.
+    """
+
+    name = "Disable Network Adapter"
+    description = "Disable a network adapter"
+
+    def _run(self, adapter):
+        if adapter.NetEnabled:
+            adapter.Disable()
 
 
 def _CreateShowPictureFrame():
