@@ -64,10 +64,10 @@ install:
           "    Done."
         }
         " "
-        "--- Stackless 2.7.12150 x86"
-        $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
+        "--- Stackless 2.7.13150 x86"
+        $StacklessInstaller = $InstallersFolder + "python-2.7.13150-stackless.msi"
         $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
-        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
+        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.13150-stackless.msi"
         Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
         "    Installing..."
         Start-Process MsiExec.exe -Arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
@@ -193,19 +193,19 @@ notifications:
 
 
     Artifacts:
-    
+
     {{#jobs}}
     {{#artifacts}}
     [{{name}}]({{url}})
-    
+
     {{/artifacts}}
     {{/jobs}}
 
   on_build_success: true
   on_build_failure: true
   on_build_status_changed: false
-  
-  
+
+
 #on_finish:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
