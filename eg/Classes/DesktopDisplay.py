@@ -141,17 +141,11 @@ class Display(object):
 
     @property
     def size(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        w = metrics['Monitor'][2] + -metrics['Monitor'][0]
-        h = metrics['Monitor'][3] + -metrics['Monitor'][1]
-        return w, h
+        return self.w, self.h
 
     @property
     def pos(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        x = metrics['Monitor'][0]
-        y = metrics['Monitor'][1]
-        return x, y
+        return self.x, self.y
 
     def __str__(self):
         return (
