@@ -98,25 +98,29 @@ class Display(object):
             self._frame.Destroy()
             self._frame = None
 
+    def _metrics(self, idx1, idx2=None):
+        metrics = win32api.GetMonitorInfo(self._handle)
+        if idx2 is None:
+            return metrics['Monitor'][idx1]
+        else:
+            return metrics['Monitor'][idx1] + -metrics['Monitor'][idx2]
+
+
     @property
     def x(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        return metrics['Monitor'][0]
+        return self._metrics(0)
 
     @property
     def y(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        return metrics['Monitor'][1]
+        return self._metrics(1)
 
     @property
     def w(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        return metrics['Monitor'][2] + -metrics['Monitor'][0]
+        return self._metrics(2, 0)
 
     @property
     def h(self):
-        metrics = win32api.GetMonitorInfo(self._handle)
-        return metrics['Monitor'][3] + -metrics['Monitor'][1]
+        return self._metrics(3, 1)
 
     @property
     def primary(self):
