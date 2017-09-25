@@ -103,9 +103,9 @@ class Builder(object):
             self.args.release or
             self.args.sync
         )
-        if os.environ.get(
+        if "[VERBOSE]" in os.environ.get(
                 "APPVEYOR_REPO_COMMIT_MESSAGE", ""
-        ).upper().startswith("VERBOSE:"):
+        ).upper():
             self.args.verbose = True
 
         os.chdir(self.buildDir)
