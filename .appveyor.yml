@@ -60,7 +60,7 @@ install:
           " "
           "--- " + $msg
           "    Installing..."
-          pip install -q -U $mod
+          pip install -U $mod
           "    Done."
         }
         " "
