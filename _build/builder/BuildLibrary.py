@@ -80,13 +80,23 @@ class BuildLibrary(builder.Task):
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
-            verbose=0,
+            verbose=1,
             zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
             options = dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "Imports"],
+                    includes=[
+                        "agithub",
+                        "agithub.GitHub",
+                        "encodings",
+                        "encodings.*",
+                        "Imports",
+                        "qrcode",
+                        "requests",
+                        "tornado",
+                        "websocket",
+                    ],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = DLL_EXCLUDES,
                     dist_dir = EncodePath(buildSetup.sourceDir),
