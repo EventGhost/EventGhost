@@ -37,6 +37,11 @@ from builder.Utils import (
     WrapText,
 )
 
+INSTALLED_MODULES = {
+    item.project_name: item.version
+    for item in pip.get_installed_distributions()
+
+}
 # Exceptions
 class MissingChocolatey(Exception):
     pass
@@ -143,49 +148,29 @@ class InnoSetupDependency(DependencyBase):
 
 class ModuleDependency(DependencyBase):
     def Check(self):
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                module = __import__(self.module)
-        except ImportError:
-            raise MissingDependency
-        if self.attr and hasattr(module, self.attr):
-            version = getattr(module, self.attr)
-        elif hasattr(module, "__version__"):
-            version = module.__version__
-        elif hasattr(module, "VERSION"):
-            version = module.VERSION
-        elif hasattr(module, "version"):
-            version = module.version
-        else:
-            result = [
-                p.version
-                for p in pip.get_installed_distributions()
-                if str(p).startswith(self.name + " ")
-            ]
-            if result:
-                version = result[0]
+        if self.name not in INSTALLED_MODULES:
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    module = __import__(self.module)
+            except ImportError:
+                raise MissingDependency
+            if self.attr and hasattr(module, self.attr):
+                version = getattr(module, self.attr)
+            elif hasattr(module, "__version__"):
+                version = module.__version__
+            elif hasattr(module, "VERSION"):
+                version = module.VERSION
+            elif hasattr(module, "version"):
+                version = module.version
             else:
                 raise Exception("Can't get version information")
+        else:
+            version = INSTALLED_MODULES[self.name]
+
         if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
-        if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
 
-
-class PyWin32Dependency(DependencyBase):
-    name = "pywin32"
-    version = "220"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
-
-    def Check(self):
-        versionFilePath = join(
-            sys.prefix, "lib/site-packages/pywin32.version.txt"
-        )
-        try:
-            version = open(versionFilePath, "rt").readline().strip()
-        except IOError:
-            raise MissingDependency
         if CompareVersion(version, self.version) < 0:
             raise WrongVersion
 
@@ -205,6 +190,12 @@ class StacklessDependency(DependencyBase):
 
 
 DEPENDENCIES = [
+    ModuleDependency(
+        name = "pywin32",
+        module = "",
+        version = "220",
+        url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl",
+    ),
     ModuleDependency(
         name = "CommonMark",
         module = "CommonMark",
@@ -245,17 +236,59 @@ DEPENDENCIES = [
         version = "3.1.1",
     ),
     ModuleDependency(
+        name = "websocket",
+        module = "websocket",
+        attr = "__version__",
+        version = "0.2.1",
+    ),
+    ModuleDependency(
+        name = "agithub",
+        module = "agithub",
+        attr = "STR_VERSION",
+        version = "v2.0",
+    ),
+    ModuleDependency(
+        name = "tornado",
+        module = "tornado",
+        attr = "version",
+        version = "4.3",
+    ),
+    ModuleDependency(
+        name = "requests",
+        module = "requests",
+        attr = "__version__",
+        version = "2.18.4",
+    ),
+    ModuleDependency(
+        name = "qrcode",
+        module = "qrcode",
+        attr = "",
+        version = "5.3",
+    ),
+    ModuleDependency(
+        name = "pycurl",
+        module = "curl",
+        attr = "",
+        version = "7.43.0",
+    ),
+    ModuleDependency(
+        name = "broadlink",
+        module = "broadlink",
+        attr = "",
+        version = "0.5",
+    ),
+
+    ModuleDependency(
         name = "py2exe_py2",
         module = "py2exe",
         version = "0.6.9",
     ),
     ModuleDependency(
-        name = "PyCrypto",
+        name = "pycrypto",
         module = "Crypto",
         version = "2.6.1",
         url = "https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl",
     ),
-    PyWin32Dependency(),
     ModuleDependency(
         name = "Sphinx",
         module = "sphinx",
