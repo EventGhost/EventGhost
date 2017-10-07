@@ -85,8 +85,19 @@ class SpinNumCtrl(wx.Window):
             allowNone=True,
             # **kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
-        numCtrl.SetParameters(**kwargs)  # To avoid bug in NumCtrl
-        numCtrl.SetValue(value)  # To avoid bug in NumCtrl
+
+        # Set the value and the parameters here  to avoid the bug. The setting
+        # of the value has to be done this way because if the value is less
+        # then the min value you will get an error. but also since the value is
+        # defaulted to 0 and set here if the min value gets set to less then
+        # the default value an error occurs. a catch-22 so this is the means to
+        # handle that problem
+        try:
+            numCtrl.SetParameters(**kwargs)
+            numCtrl.SetValue(value)
+        except ValueError:
+            numCtrl.SetValue(value)
+            numCtrl.SetParameters(**kwargs)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
