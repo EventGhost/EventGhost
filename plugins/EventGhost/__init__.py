@@ -595,11 +595,47 @@ class StopProcessing(eg.ActionBase):
         eg.event.skipEvent = True
 
 
+TRIGGER_EVENT_DESC = '''<md>
+Triggers an event with an optional delay.
+
+# Help
+----------
+
+* ***Event String***  
+The event suffix. If the string that is used is "SomeEvent" then the
+event would appear as "Main.SomeEvent"  
+  
+* ***Wait Time***  
+The amount of time to wait before triggering the event. this has a
+resolution of hundredths of a second.  
+  
+* ***Add to Queue***  
+If the wait time is set to 0.00 this option will appear. Adding the
+event to the queue means that the event will get triggered after the
+event that caused this action has processed all of it's macros and also
+after processing any events that have come in while the event that
+triggered this action was running.  
+  
+  If unchecked the event will get triggered right away Not being added
+to the queue and not waiting until the event that started this action
+has finished processing.  
+  
+* ***Restore eg.event***  
+If add to queue has not been checked this option will appear. This
+relates more to the scripting portions of EventGhost. What this done is
+each and every time an event gets triggered there are 2 variables that
+get set into place. Those 2 variables are eg.event and eg.eventString.
+When you trigger an event while the current event is running those 2
+variables will get changed to the new event. Upon completion of the new
+event if you would like to change those variables back to the event that
+ran this action then check this box.  
+
+'''
+
+
 class TriggerEvent(eg.ActionBase):
     name = "Trigger Event"
-    description = (
-        "Triggers an event with an optional delay."
-    )
+    description = TRIGGER_EVENT_DESC
     iconFile = "icons/Plugin"
 
     class text:
@@ -608,20 +644,75 @@ class TriggerEvent(eg.ActionBase):
         text1 = "Event string to fire:"
         text2 = "Delay the firing of the event:"
         text3 = "seconds. (0 = fire immediately)"
+        text4 = "Add event to event queue:"
+        text5 = "Return eg.event to original event:"
 
-    def __call__(self, eventString, waitTime=0):
+    def __call__(
+        self,
+        eventString,
+        waitTime=0,
+        queueEvent=True,
+        restoreEvent=False
+    ):
         eventString = eg.ParseString(eventString)
         if not waitTime:
-            eg.TriggerEvent(eventString)
+            if queueEvent:
+                eg.TriggerEvent(eventString)
+            else:
+                event = eg.EventGhostEvent(suffix=eventString)
+                if restoreEvent:
+                    old_event_string = eg.eventString
+                    old_event = eg.event
+                    event.Execute()
+                    eg.event = old_event
+                    eg.eventString = old_event_string
+                else:
+                    event.Execute()
         else:
             eg.scheduler.AddShortTask(waitTime, eg.TriggerEvent, eventString)
 
-    def Configure(self, eventString="", waitTime=0):
+    def Configure(
+        self,
+        eventString="",
+        waitTime=0,
+        queueEvent=False,
+        restoreEvent=False
+    ):
         panel = eg.ConfigPanel()
         text = self.text
 
         eventStringCtrl = panel.TextCtrl(eventString, size=(250, -1))
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
+        queueEventCtrl = wx.CheckBox(panel, -1, '')
+        restoreEventCtrl = wx.CheckBox(panel, -1, '')
+
+        queueEventCtrl.SetValue(queueEvent)
+        restoreEventCtrl.SetValue(restoreEvent)
+        queueEventText = panel.StaticText(text.text4)
+        restoreEventText = panel.StaticText(text.text5)
+
+        def on_spin(evt):
+            def check_spin():
+                value = bool(waitTimeCtrl.GetValue())
+                queueEventText.Show(not value)
+                queueEventCtrl.Show(not value)
+                restoreEventText.Show(
+                    not value or (not value and not queueEventCtrl.GetValue())
+                )
+                restoreEventCtrl.Show(
+                    not value or (not value and not queueEventCtrl.GetValue())
+                )
+            wx.CallLater(20, check_spin).Start()
+            evt.Skip()
+
+        waitTimeCtrl.Bind(wx.EVT_SPIN, on_spin)
+
+        def on_check(evt):
+            restoreEventText.Show(not queueEventCtrl.GetValue())
+            restoreEventCtrl.Show(not queueEventCtrl.GetValue())
+            evt.Skip()
+
+        queueEventCtrl.Bind(wx.EVT_CHECKBOX, on_check)
 
         sizer1 = eg.HBoxSizer(
             (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL, 5),
@@ -632,18 +723,71 @@ class TriggerEvent(eg.ActionBase):
             (waitTimeCtrl, 0, wx.ALL, 5),
             (panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-        panel.sizer.AddMany(((sizer1, 0, wx.EXPAND), (sizer2, 0, wx.EXPAND)))
+
+        sizer3 = eg.HBoxSizer(
+            (
+                queueEventText,
+                0,
+                wx.ALIGN_CENTER_VERTICAL | wx.RESERVE_SPACE_EVEN_IF_HIDDEN,
+                5
+            ),
+            (queueEventCtrl, 0, wx.LEFT | wx.RESERVE_SPACE_EVEN_IF_HIDDEN, 5),
+        )
+
+        sizer4 = eg.HBoxSizer(
+            (
+                restoreEventText,
+                0,
+                wx.ALIGN_CENTER_VERTICAL | wx.RESERVE_SPACE_EVEN_IF_HIDDEN,
+                5
+            ),
+            (restoreEventCtrl, 0, wx.LEFT | wx.RESERVE_SPACE_EVEN_IF_HIDDEN, 5),
+        )
+        panel.sizer.AddMany(
+            (
+                (sizer1, 0, wx.EXPAND),
+                (sizer2, 0, wx.EXPAND),
+                (sizer3, 0, wx.EXPAND),
+                (sizer4, 0, wx.EXPAND)
+            )
+        )
+        queueEventText.Show(not waitTime)
+        queueEventCtrl.Show(not waitTime)
+
+        restoreEventText.Show(not waitTime and not queueEvent)
+        restoreEventCtrl.Show(not waitTime and not queueEvent)
+
         while panel.Affirmed():
             panel.SetResult(
                 eventStringCtrl.GetValue(),
                 waitTimeCtrl.GetValue(),
+                queueEventCtrl.IsShown() and queueEventCtrl.GetValue(),
+                restoreEventCtrl.IsShown() and restoreEventCtrl.GetValue()
             )
 
-    def GetLabel(self, eventString="", waitTime=0):
+    def GetLabel(
+        self,
+        eventString="",
+        waitTime=0,
+        queueEvent=False,
+        restoreEvent=False
+    ):
         if waitTime:
             return self.text.labelWithTime % (eventString, waitTime)
         else:
-            return self.text.labelWithoutTime % eventString
+            label = self.text.labelWithoutTime % eventString
+            if queueEvent:
+                return label
+            else:
+                label += ' right now'
+                if restoreEvent:
+                    return label + ' and restoring eg.event'
+                return label
+
+
+
+
+
 
 
 class Wait(eg.ActionBase):
