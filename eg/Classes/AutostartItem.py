@@ -23,9 +23,14 @@ from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_AFTER
 from datetime import datetime
 
 
-class Time(datetime):
+class Time(object):
+    _datetime = None
+
     def __init__(self):
-        super(Time, self).__init__(1, 1, 1)
+        self._datetime = datetime.now()
+
+    def __getattr__(self, item):
+        return getattr(self._datetime, item)
 
     def __str__(self):
         t_fmt = '%A, %B %d{}, %Y @ %H:%M:%S %p'
@@ -39,7 +44,6 @@ class Time(datetime):
 
     def __repr__(self):
         return self.__str__()
-
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
@@ -95,7 +99,7 @@ class AutostartItem(MacroItem):
             suffix='Startup',
             payload=Time()
         )
-        eg.actionThread.Func(event.Execute)()
+        event.Execute()
         MacroItem.Execute(self)
 
     @eg.LogIt
