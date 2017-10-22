@@ -810,7 +810,7 @@ class TriggerEvent(eg.ActionBase):
                 restoreEventCtrl.Enable(
                     not value or (not value and not queueEventCtrl.GetValue())
                 )
-            wx.CallLater(20, check_spin).Start()
+            wx.CallLater(20, check_spin)
             evt.Skip()
 
         def on_check(evt):
@@ -840,7 +840,7 @@ class TriggerEvent(eg.ActionBase):
             return lbl
 
         waitTimeCtrl.Bind(wx.EVT_SPIN, on_spin)
-        waitTimeCtrl.Bind(wx.EVT_CHAR, on_spin)
+        waitTimeCtrl.Bind(wx.EVT_CHAR_HOOK, on_spin)
         queueEventCtrl.Bind(wx.EVT_CHECKBOX, on_check)
 
         eg.EqualizeWidths((
