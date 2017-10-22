@@ -38,7 +38,7 @@ class Time(object):
             t_fmt = t_fmt.format('th')
         else:
             t_fmt = t_fmt.format(
-                ["st", "nd", "rd"][t.tm_mday % 10 - 1]
+                ["st", "nd", "rd"][self.day % 10 - 1]
             )
         return self.strftime(t_fmt)
 
