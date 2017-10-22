@@ -688,81 +688,58 @@ class TriggerEvent(eg.ActionBase):
 
         queueEventCtrl.SetValue(queueEvent)
         restoreEventCtrl.SetValue(restoreEvent)
-        queueEventText = panel.StaticText(text.text4)
-        restoreEventText = panel.StaticText(text.text5)
+        queueEventCtrl.Enable(not waitTime)
+        restoreEventCtrl.Enable(not waitTime and not queueEvent)
 
         def on_spin(evt):
             def check_spin():
                 value = bool(waitTimeCtrl.GetValue())
-                queueEventText.Show(not value)
-                queueEventCtrl.Show(not value)
-                restoreEventText.Show(
-                    not value or (not value and not queueEventCtrl.GetValue())
-                )
-                restoreEventCtrl.Show(
+                queueEventCtrl.Enable(not value)
+                restoreEventCtrl.Enable(
                     not value or (not value and not queueEventCtrl.GetValue())
                 )
             wx.CallLater(20, check_spin).Start()
             evt.Skip()
 
-        waitTimeCtrl.Bind(wx.EVT_SPIN, on_spin)
-
         def on_check(evt):
-            restoreEventText.Show(not queueEventCtrl.GetValue())
-            restoreEventCtrl.Show(not queueEventCtrl.GetValue())
+            restoreEventCtrl.Enable(not queueEventCtrl.GetValue())
             evt.Skip()
 
+        def HBoxSizer(lbl, ctrl, suf=None, prop=0):
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            style = wx.EXPAND | wx.ALL | wx.ALIGN_BOTTOM
+            lbl = panel.StaticText(lbl)
+            lbl_sizer = wx.BoxSizer(wx.VERTICAL)
+            lbl_sizer.AddStretchSpacer(prop=1)
+            lbl_sizer.Add(lbl)
+            sizer.Add(lbl_sizer, 0, style, 5)
+            sizer.Add(ctrl, prop, style, 5)
+            if suf is not None:
+                suf = panel.StaticText(suf)
+                suf_sizer = wx.BoxSizer(wx.VERTICAL)
+                suf_sizer.AddStretchSpacer(prop=1)
+                suf_sizer.Add(suf)
+                sizer.Add(suf_sizer, 0, style, 5)
+            panel.sizer.Add(sizer, 0, wx.EXPAND)
+            return lbl
+
+        waitTimeCtrl.Bind(wx.EVT_SPIN, on_spin)
+        waitTimeCtrl.Bind(wx.EVT_CHAR, on_spin)
         queueEventCtrl.Bind(wx.EVT_CHECKBOX, on_check)
 
-        sizer1 = eg.HBoxSizer(
-            (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL, 5),
-            (eventStringCtrl, 0, wx.LEFT, 5),
-        )
-        sizer2 = eg.HBoxSizer(
-            (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
-            (waitTimeCtrl, 0, wx.ALL, 5),
-            (panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL),
-        )
-
-        sizer3 = eg.HBoxSizer(
-            (
-                queueEventText,
-                0,
-                wx.ALIGN_CENTER_VERTICAL | wx.RESERVE_SPACE_EVEN_IF_HIDDEN,
-                5
-            ),
-            (queueEventCtrl, 0, wx.LEFT | wx.RESERVE_SPACE_EVEN_IF_HIDDEN, 5),
-        )
-
-        sizer4 = eg.HBoxSizer(
-            (
-                restoreEventText,
-                0,
-                wx.ALIGN_CENTER_VERTICAL | wx.RESERVE_SPACE_EVEN_IF_HIDDEN,
-                5
-            ),
-            (restoreEventCtrl, 0, wx.LEFT | wx.RESERVE_SPACE_EVEN_IF_HIDDEN, 5),
-        )
-        panel.sizer.AddMany(
-            (
-                (sizer1, 0, wx.EXPAND),
-                (sizer2, 0, wx.EXPAND),
-                (sizer3, 0, wx.EXPAND),
-                (sizer4, 0, wx.EXPAND)
-            )
-        )
-        queueEventText.Show(not waitTime)
-        queueEventCtrl.Show(not waitTime)
-
-        restoreEventText.Show(not waitTime and not queueEvent)
-        restoreEventCtrl.Show(not waitTime and not queueEvent)
+        eg.EqualizeWidths((
+            HBoxSizer(text.text1, eventStringCtrl, prop=1),
+            HBoxSizer(text.text2, waitTimeCtrl, suf=text.text3),
+            HBoxSizer(text.text4, queueEventCtrl),
+            HBoxSizer(text.text5, restoreEventCtrl)
+        ))
 
         while panel.Affirmed():
             panel.SetResult(
                 eventStringCtrl.GetValue(),
                 waitTimeCtrl.GetValue(),
-                queueEventCtrl.IsShown() and queueEventCtrl.GetValue(),
-                restoreEventCtrl.IsShown() and restoreEventCtrl.GetValue()
+                queueEventCtrl.IsEnabled() and queueEventCtrl.GetValue(),
+                restoreEventCtrl.IsEnabled() and restoreEventCtrl.GetValue()
             )
 
     def GetLabel(
@@ -783,11 +760,6 @@ class TriggerEvent(eg.ActionBase):
                 if restoreEvent:
                     return label + ' and restoring eg.event'
                 return label
-
-
-
-
-
 
 
 class Wait(eg.ActionBase):
