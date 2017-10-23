@@ -26,4 +26,4 @@ agithub==2.1
 # jinja2 >= 2.9 has an async module which py2exe_py2 has
 # problems with (build of eg will fail)
 jinja2==2.8.1 # pyup: >=2.8.1,<2.9
-sphinx==1.6.4
+sphinx==1.6.5
