@@ -95,7 +95,7 @@ class Config(Section):
                 if eg.debugLevel:
                     raise
         else:
-            eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
+            sys.stderr.write('File "%s" does not exist.\n' % configFilePath)
 
     def Save(self):
         self.version = eg.Version.string

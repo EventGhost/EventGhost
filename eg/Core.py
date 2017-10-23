@@ -341,6 +341,9 @@ eg.app = eg.App()
 import Icons  # NOQA
 eg.Icons = Icons
 
+eg.config = eg.Config()
+eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
+
 eg.log = eg.Log()
 eg.Print = eg.log.Print
 eg.PrintError = eg.log.PrintError
@@ -349,8 +352,6 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
-eg.config = eg.Config()
-eg.debugLevel = int(eg.config.logDebug) or eg.debugLevel
 
 def TracebackHook(tType, tValue, traceback):
     eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
