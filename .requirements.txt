@@ -1,0 +1,29 @@
+# Stackless Python 2.7.9   # http://www.stackless.com/binaries/python-2.7.12150-stackless.msi
+# Inno Setup 5.5.9         # http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe
+# HTML Help Workshop 1.32  # https://www.microsoft.com/download/details.aspx?id=21138
+# GIT 2.8.0                # https://git-scm.com/download/win
+# wxPython==3.0.2.0        # http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe
+
+pip==9.0.1
+setuptools==36.6.0
+
+# pywin32==221  # Is not available on PyPi for Python 2.7
+svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6
+comtypes>=1.1.3, <=1.1.3-2 # pyup: >=1.1.3, <=1.1.3-2  # Do it this way to avoid a warning about version mismatching
+py2exe_py2==0.6.9
+commonmark==0.7.4
+pillow==4.3.0
+pycrypto==2.6.1
+paramiko==2.3.1
+requests==2.18.4
+pycurl==7.43.0
+websocket==0.2.1
+tornado==4.5.2
+qrcode==5.3
+agithub==2.1
+
+# sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
+# jinja2 >= 2.9 has an async module which py2exe_py2 has
+# problems with (build of eg will fail)
+jinja2==2.8.1 # pyup: >=2.8.1,<2.9
+sphinx==1.6.5
