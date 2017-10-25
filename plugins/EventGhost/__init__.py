@@ -746,7 +746,7 @@ class TriggerEvent(eg.ActionBase):
             if value == parsed_value:
                 try:
                     value = eval(value)
-                except SyntaxError:
+                except (SyntaxError, NameError):
                     pass
             else:
                 value = parsed_value
@@ -785,12 +785,15 @@ class TriggerEvent(eg.ActionBase):
         self,
         eventString="",
         waitTime=0,
-        payload="",
+        payload=None,
         queueEvent=False,
         restoreEvent=False
     ):
         panel = eg.ConfigPanel()
         text = self.text
+
+        if payload is None:
+            payload = ''
 
         eventStringCtrl = panel.TextCtrl(eventString)
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
