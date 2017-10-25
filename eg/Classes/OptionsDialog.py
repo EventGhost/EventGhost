@@ -63,6 +63,7 @@ class OptionsDialog(eg.TaskletDialog):
         text = Text
         config = eg.config
         self.useFixedFont = config.useFixedFont
+        task = eg.RegisterTask()
 
         eg.TaskletDialog.__init__(
             self,
@@ -84,11 +85,15 @@ class OptionsDialog(eg.TaskletDialog):
 
         # page 1 controls
         startWithWindowsCtrl = page1.CheckBox(
-            exists(join((eg.folderPath.Startup or ""), eg.APP_NAME + ".lnk")),
+            task.IsEnabled(),
             text.StartWithWindows
         )
-        if eg.folderPath.Startup is None:
-            startWithWindowsCtrl.Enable(False)
+
+        def on_start(evt):
+            task.Enable(startWithWindowsCtrl.GetValue())
+            evt.Skip()
+
+        startWithWindowsCtrl.Bind(wx.EVT_CHECKBOX, on_start)
 
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
@@ -222,8 +227,6 @@ class OptionsDialog(eg.TaskletDialog):
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()
-
-        eg.Utils.UpdateStartupShortcut(startWithWindowsCtrl.GetValue())
 
         if config.showTrayIcon:
             eg.taskBarIcon.Show()
