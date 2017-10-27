@@ -117,6 +117,8 @@ if args.isMain:
                 for name in files:
                     if name.lower().endswith((".pyc", ".pyo")):
                         os.remove(join(root, name))
+            from Classes import RegisterTask
+            RegisterTask.Delete()
             sys.exit(0)
         elif arg in ('-m', '-multiload'):
             args.allowMultiLoad = True
