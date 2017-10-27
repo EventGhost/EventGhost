@@ -63,7 +63,6 @@ class OptionsDialog(eg.TaskletDialog):
         text = Text
         config = eg.config
         self.useFixedFont = config.useFixedFont
-        task = eg.RegisterTask()
 
         eg.TaskletDialog.__init__(
             self,
@@ -84,16 +83,18 @@ class OptionsDialog(eg.TaskletDialog):
         notebook.AddPage(page1, text.Tab1)
 
         # page 1 controls
+
+        if eg.WindowsVersion >= 'Vista':
+            startWithWindows = eg.RegisterTask.IsEnabled()
+        else:
+            startWithWindows = exists(
+                join((eg.folderPath.Startup or ""), eg.APP_NAME + ".lnk")
+            )
+
         startWithWindowsCtrl = page1.CheckBox(
-            task.IsEnabled(),
+            startWithWindows,
             text.StartWithWindows
         )
-
-        def on_start(evt):
-            task.Enable(startWithWindowsCtrl.GetValue())
-            evt.Skip()
-
-        startWithWindowsCtrl.Bind(wx.EVT_CHECKBOX, on_start)
 
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         checkPreReleaseCtrl = page1.CheckBox(config.checkPreRelease, text.CheckPreRelease)
@@ -226,6 +227,15 @@ class OptionsDialog(eg.TaskletDialog):
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()
+
+            if startWithWindows != startWithWindowsCtrl.GetValue():
+                if eg.WindowsVersion >= 'Vista':
+                    eg.RegisterTask.Enable(startWithWindowsCtrl.GetValue())
+                else:
+                    eg.Utils.UpdateStartupShortcut(
+                        startWithWindowsCtrl.GetValue()
+                    )
+
             self.SetResult()
 
         if config.showTrayIcon:
