@@ -164,12 +164,19 @@ begin
 end;
 
 [Icons]
-Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
-Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Tasks: startupicon
+
+; with the original green arrow
+Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Tasks: arrow
+Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Tasks: arrow and desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Parameters: "-h -e OnInitAfterBoot"; Tasks: arrow and startupicon
+
+; with the little ghost
+Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Tasks: ghost
+Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Tasks: ghost and desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Parameters: "-h -e OnInitAfterBoot"; Tasks: ghost and startupicon
 
 [Languages]
 Name: English; MessagesFile: "compiler:Default.isl"
@@ -219,6 +226,9 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 [Tasks]
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
 Name: "startupicon"; Description: {cm:AutoStartProgram,{#SetupSetting('AppName')}}; GroupDescription: {cm:AutoStartProgramGroupDescription}
+
+Name: "arrow"; Description: "Green Arrow"; GroupDescription: "Application icon:"; Flags: exclusive
+Name: "ghost"; Description: "Ghost"; GroupDescription: "Application icon:"; Flags: exclusive unchecked
 
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"
