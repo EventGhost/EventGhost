@@ -595,55 +595,295 @@ class StopProcessing(eg.ActionBase):
         eg.event.skipEvent = True
 
 
+DESCRIPTION = """<md>Triggers an event with options.  
+
+* ***Event String***
+  ______
+  Events are separated by "."'s, the purpose for this is to group them
+together. As an example if you wanted to group events together by a
+device type this can be done by using the following example.
+
+        Remote.StopButton  
+
+  So you would be able to group all of the various buttons to a remote.
+Plugins use this same grouping mechanism for generating events. You also
+have the ability to go one step further and group a group.
+
+        Remote.Volume.Up  
+        Remote.Volume.Down  
+        Remote.Volume.Mute
+
+  The purpose for this is when you add an event to an action you can
+target specific groups by using the * so if you wanted to target all of
+the events that take place for Remote.Volume you would add an event to
+the macro like this.  
+
+        Remote.Volume.*  
+
+  This will run that macro for any event that begins with Remote.Volume.
+
+  All events have to have at the very least a group and an item. So if
+you do not specify a group and only an item the group of Main will be
+added automatically. So if you specify an event of VolumeUp the actual
+event that will be triggered will be.
+
+        Main.VolumeUp
+
+  You also have the ability to set the event string using a python 
+expression (see below).
+<br><br>
+* ***Wait Time***
+  ______
+
+  The amount of time to wait before triggering the event. this has a
+resolution of hundredths of a second.
+<br><br>
+* ***Event Payload***
+  ______
+
+  When an event occurs you are able to attach a data packet to the
+event. This data packet can be any kind of a python object.
+
+  Most common ones are:
+  * integers 3
+  * floats 0.00
+  * lists []
+  * tuples ()
+  * dictionaries {}
+  * unicode strings u''
+  * and strings ""
+
+  When there is an attached payload you will see the payload in the log.
+  
+  You also have the ability just like the Event String to attach a
+python expression (see below).
+<br><br>
+* ***Add to Queue***
+  ______
+  If the wait time is set to 0.00 this option will appear. Adding the
+event to the queue means that the event will get triggered after the
+event that caused this action has processed all of it's macros and also
+after processing any events that have come in while the event that
+triggered this action was running.
+
+  If unchecked the event will get triggered right away Not being added 
+to the queue and not waiting until the event that started this action 
+has finished processing.
+<br><br>
+* ***Restore eg.event***
+  ______
+  If add to queue has not been checked this option will appear. This
+relates more to the scripting portions of EventGhost. What this done is
+each and every time an event gets triggered there are 2 variables that
+get set into place. Those 2 variables are eg.event and eg.eventString.
+When you trigger an event while the current event is running those 2
+variables will get changed to the new event. Upon completion of the new
+event if you would like to change those variables back to the event that
+ran this action then check this box.
+<br><br>
+* ***Using a Python Expression***
+  ______
+  You can use a python expression in several ways. The expression 
+**MUST** be wrapped in curly braces {}. This is the identifier that
+tells EventGhost that it needs to do some work.
+
+  You can pass global variables which are stored in eg.globals by
+wrapping the variable name in the curly braces.
+
+        {eg.globals.some_variable}
+
+  If you want to transfer the results of another action you can do this
+as well.
+
+        {eg.plugins.SomePlugin.SomeAction()}
+  
+  ***Or maybe you want to do something a little more complex.***
+  
+  A different value passed based on if a global is True or False.
+
+        {"TV.On" if eg.globals.tv_power else "TV.Off"}
+
+  Or checking a global for a specific value and passing True or False.
+
+        {eg.plugins.SomePlugin.SomeAction() == 100}
+
+  When using a python expression in a payload the curly braces are the
+same thing that is used in a dictionary but our crafty programmers have
+accounted for this so don't worry.
+
+  These expressions get run when the TriggerAction gets run. So if you
+have a programmed wait time (see below) the data may be different at the
+start of the wait time then at the end.
+  
+"""
 class TriggerEvent(eg.ActionBase):
+    __doc__ = DESCRIPTION
     name = "Trigger Event"
-    description = (
-        "Triggers an event with an optional delay."
-    )
+    description = DESCRIPTION
     iconFile = "icons/Plugin"
 
     class text:
-        labelWithTime = 'Trigger event "%s" after %.2f seconds'
-        labelWithoutTime = 'Trigger event "%s"'
         text1 = "Event string to fire:"
         text2 = "Delay the firing of the event:"
         text3 = "seconds. (0 = fire immediately)"
+        text4 = "Add event to event queue:"
+        text5 = "Return eg.event to original event:"
+        text6 = "Event Payload:"
 
-    def __call__(self, eventString, waitTime=0):
-        eventString = eg.ParseString(eventString)
+    def __call__(
+        self,
+        eventString,
+        waitTime=0,
+        payload=None,
+        queueEvent=True,
+        restoreEvent=False
+    ):
+
+        def parse(value):
+            if value is None:
+                return None
+            parsed_value = eg.ParseString(value)
+            if value == parsed_value:
+                try:
+                    value = eval(value)
+                except (SyntaxError, NameError):
+                    pass
+            else:
+                value = parsed_value
+            return value
+
+        eventString = parse(eventString)
+        payload = parse(payload)
+
+        split_event = eventString.split('.', 1)
+        if len(split_event) == 1:
+            split_event.insert(0, 'Main')
+
+        kwargs = dict(
+            prefix=split_event[0],
+            suffix=split_event[1],
+            payload=payload
+        )
+
         if not waitTime:
-            eg.TriggerEvent(eventString)
+            if queueEvent:
+                eg.TriggerEvent(**kwargs)
+            else:
+                event = eg.EventGhostEvent(**kwargs)
+                if restoreEvent:
+                    old_event_string = eg.eventString
+                    old_event = eg.event
+                    event.Execute()
+                    eg.event = old_event
+                    eg.eventString = old_event_string
+                else:
+                    event.Execute()
         else:
-            eg.scheduler.AddShortTask(waitTime, eg.TriggerEvent, eventString)
+            eg.scheduler.AddShortTask(waitTime, eg.TriggerEvent, **kwargs)
 
-    def Configure(self, eventString="", waitTime=0):
+    def Configure(
+        self,
+        eventString="",
+        waitTime=0,
+        payload=None,
+        queueEvent=False,
+        restoreEvent=False
+    ):
         panel = eg.ConfigPanel()
         text = self.text
 
-        eventStringCtrl = panel.TextCtrl(eventString, size=(250, -1))
-        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
+        if payload is None:
+            payload = ''
 
-        sizer1 = eg.HBoxSizer(
-            (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL, 5),
-            (eventStringCtrl, 0, wx.LEFT, 5),
-        )
-        sizer2 = eg.HBoxSizer(
-            (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
-            (waitTimeCtrl, 0, wx.ALL, 5),
-            (panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL),
-        )
-        panel.sizer.AddMany(((sizer1, 0, wx.EXPAND), (sizer2, 0, wx.EXPAND)))
+        eventStringCtrl = panel.TextCtrl(eventString)
+        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
+        payloadCtrl = panel.TextCtrl(payload)
+        queueEventCtrl = wx.CheckBox(panel, -1, '')
+        restoreEventCtrl = wx.CheckBox(panel, -1, '')
+
+        queueEventCtrl.SetValue(queueEvent)
+        restoreEventCtrl.SetValue(restoreEvent)
+        queueEventCtrl.Enable(not waitTime)
+        restoreEventCtrl.Enable(not waitTime and not queueEvent)
+
+        def on_spin(evt):
+            def check_spin():
+                value = bool(waitTimeCtrl.GetValue())
+                queueEventCtrl.Enable(not value)
+                restoreEventCtrl.Enable(
+                    not value or (not value and not queueEventCtrl.GetValue())
+                )
+            wx.CallLater(20, check_spin)
+            evt.Skip()
+
+        def on_check(evt):
+            restoreEventCtrl.Enable(not queueEventCtrl.GetValue())
+            evt.Skip()
+
+        def HBoxSizer(lbl, ctrl, suf=None, prop=0):
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            style = wx.EXPAND | wx.ALL | wx.ALIGN_BOTTOM
+
+            lbl = panel.StaticText(lbl)
+            lbl_sizer = wx.BoxSizer(wx.VERTICAL)
+            lbl_sizer.AddStretchSpacer(prop=1)
+            lbl_sizer.Add(lbl)
+
+            sizer.Add(lbl_sizer, 0, style, 5)
+            sizer.Add(ctrl, prop, style, 5)
+
+            if suf is not None:
+                suf = panel.StaticText(suf)
+                suf_sizer = wx.BoxSizer(wx.VERTICAL)
+                suf_sizer.AddStretchSpacer(prop=1)
+                suf_sizer.Add(suf)
+                sizer.Add(suf_sizer, 0, style, 5)
+            panel.sizer.Add(sizer, 0, wx.EXPAND)
+
+            return lbl
+
+        waitTimeCtrl.Bind(wx.EVT_SPIN, on_spin)
+        waitTimeCtrl.Bind(wx.EVT_CHAR_HOOK, on_spin)
+        queueEventCtrl.Bind(wx.EVT_CHECKBOX, on_check)
+
+        eg.EqualizeWidths((
+            HBoxSizer(text.text1, eventStringCtrl, prop=1),
+            HBoxSizer(text.text6, payloadCtrl, prop=1),
+            HBoxSizer(text.text2, waitTimeCtrl, suf=text.text3),
+            HBoxSizer(text.text4, queueEventCtrl),
+            HBoxSizer(text.text5, restoreEventCtrl)
+        ))
+
         while panel.Affirmed():
             panel.SetResult(
                 eventStringCtrl.GetValue(),
                 waitTimeCtrl.GetValue(),
+                payloadCtrl.GetValue() if payloadCtrl.GetValue() else None,
+                queueEventCtrl.IsEnabled() and queueEventCtrl.GetValue(),
+                restoreEventCtrl.IsEnabled() and restoreEventCtrl.GetValue()
             )
 
-    def GetLabel(self, eventString="", waitTime=0):
+    def GetLabel(
+        self,
+        eventString="",
+        waitTime=0,
+        payload=None,
+        queueEvent=False,
+        restoreEvent=False
+    ):
+
+        label = (
+            '%s: Event: %s, Payload: %s, Wait: ' %
+            (self.name, eventString, payload)
+        )
+
         if waitTime:
-            return self.text.labelWithTime % (eventString, waitTime)
+            label += '%.2f seconds' % waitTime
+        elif queueEvent:
+            label += 'Queued'
         else:
-            return self.text.labelWithoutTime % eventString
+            label += 'Immediate, Restore eg.event: %s' % restoreEvent
+        return label
 
 
 class Wait(eg.ActionBase):
