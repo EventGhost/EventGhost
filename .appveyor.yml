@@ -122,13 +122,13 @@ install:
         Copy-Item -Path ".\SCRIPTS\*" -Destination $PythonScripts -recurse
         cd $Env:APPVEYOR_BUILD_FOLDER
         "    Done."
+      }
 
-        if ($verbose) {
-          " "
-          "   Installed Python Packages:"
-          pip list --format=columns
-          " "
-        }
+      if ($verbose) {
+        " "
+        "--- Installed Python Packages:"
+        pip list --format=columns
+        " "
       }
 
       " "

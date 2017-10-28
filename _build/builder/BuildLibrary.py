@@ -82,7 +82,7 @@ class BuildLibrary(builder.Task):
             windows=[Target(buildSetup)],
             verbose=buildSetup.args.verbose,
             zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
-            options = dict(
+            options=dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
@@ -100,8 +100,8 @@ class BuildLibrary(builder.Task):
                         "websocket",
                     ],
                     excludes=buildSetup.excludeModules,
-                    dll_excludes = DLL_EXCLUDES,
-                    dist_dir = EncodePath(buildSetup.sourceDir),
+                    dll_excludes=DLL_EXCLUDES,
+                    dist_dir=EncodePath(buildSetup.sourceDir),
                     custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
                     ),

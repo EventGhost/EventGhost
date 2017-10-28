@@ -24,14 +24,13 @@ import tempfile
 import threading
 from os.path import abspath, dirname, exists, join
 
-# Local imports
-import builder
-from builder import VirtualEnv
-from builder.Logging import LogToFile
-from builder.Utils import (
-    GetGitHubConfig, GetVersion, Is64bitInterpreter, IsCIBuild
+from .Logging import LogToFile
+from .Utils import (
+    GetGitHubConfig,
+    GetVersion,
+    Is64bitInterpreter,
+    IsCIBuild
 )
-
 
 logger = logging.getLogger()
 
@@ -61,9 +60,6 @@ class Task(object):
 
 class Builder(object):
     def __init__(self):
-        if not VirtualEnv.Running() and VirtualEnv.Exists():
-            VirtualEnv.Activate()
-
         global buildSetup
         Task.buildSetup = self
         buildSetup = self
@@ -103,9 +99,9 @@ class Builder(object):
             self.args.release or
             self.args.sync
         )
-        if os.environ.get(
+        if "[VERBOSE]" in os.environ.get(
                 "APPVEYOR_REPO_COMMIT_MESSAGE", ""
-        ).upper().startswith("VERBOSE:"):
+        ).upper():
             self.args.verbose = True
 
         os.chdir(self.buildDir)
@@ -114,10 +110,6 @@ class Builder(object):
             os.mkdir(self.outputDir)
 
         LogToFile(join(self.outputDir, "Build.log"), self.args.verbose)
-
-        from CheckDependencies import CheckDependencies
-        if not CheckDependencies(self):
-            sys.exit(1)
 
         try:
             self.gitConfig = GetGitHubConfig()
