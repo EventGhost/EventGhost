@@ -19,6 +19,7 @@
 import os
 import sys
 from os.path import exists
+from cStringIO import StringIO
 from types import ClassType, InstanceType
 
 # Local imports
@@ -99,9 +100,10 @@ class Config(Section):
 
     def Save(self):
         self.version = eg.Version.string
-        configFile = open(self._configFilePath, 'w+')
-        RecursivePySave(self, configFile.write)
-        configFile.close()
+        config_data = StringIO()
+        RecursivePySave(self, config_data.write)
+        with open(self._configFilePath, 'w+') as config_file:
+            config_file.write(config_data.getvalue())
 
 
 def MakeSectionMetaClass(dummyName, dummyBases, dct):
