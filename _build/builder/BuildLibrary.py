@@ -28,6 +28,7 @@ from builder.Utils import EncodePath
 DLL_EXCLUDES = [
     "DINPUT8.dll",
     "w9xpopen.exe",
+    "msvcp90.dll",
 ]
 
 RT_MANIFEST = 24
