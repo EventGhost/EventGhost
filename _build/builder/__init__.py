@@ -24,8 +24,9 @@ import tempfile
 import threading
 from os.path import abspath, dirname, exists, join
 
-from .Logging import LogToFile
-from .Utils import (
+import builder
+from builder.Logging import LogToFile
+from builder.Utils import (
     GetGitHubConfig,
     GetVersion,
     Is64bitInterpreter,

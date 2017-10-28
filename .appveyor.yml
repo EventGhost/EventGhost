@@ -45,8 +45,8 @@ install:
   # Inno Setup 5.5.9
   # - cinst innosetup
 
-  - cinst pycharm
-  
+  # - cinst pycharm
+
   #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - ps: |
       # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
@@ -140,20 +140,9 @@ install:
       "    Done."
 
       " "
-      "--- Inno Setup 5.5.9"
-      $InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
-      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
-      "    Installing..."
-      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
-      "    Done."
-      " "
-
-      " "
       "=============== start the EventGhost build ==============="
       " "
-      "  verbose:" + $verbose
-      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       If ($Env:APPVEYOR_REPO_TAG.ToUpper() -eq "TRUE" -and
         $Env:APPVEYOR_REPO_TAG_NAME.ToUpper().startswith("DEPLOY"))
       {
