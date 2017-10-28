@@ -45,6 +45,8 @@ install:
   # Inno Setup 5.5.9
   # - cinst innosetup
 
+  - cinst pycharm
+  
   #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - ps: |
       # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
@@ -150,7 +152,8 @@ install:
       " "
       "=============== start the EventGhost build ==============="
       " "
-      # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      "  verbose:" + $verbose
+      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       If ($Env:APPVEYOR_REPO_TAG.ToUpper() -eq "TRUE" -and
         $Env:APPVEYOR_REPO_TAG_NAME.ToUpper().startswith("DEPLOY"))
       {
