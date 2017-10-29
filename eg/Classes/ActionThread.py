@@ -112,8 +112,8 @@ class ActionThread(eg.ThreadWorker):
             payload['IsDomainAdmin'] = User.IsDomainAdmin()
 
         event = eg.EventGhostEvent(
-            prefix='EventGhost',
-            suffix='LoggedInUser.' + User.Name(),
+            prefix='Windows',
+            suffix='User.' + User.Name(),
             payload=payload
         )
         event.Execute()
