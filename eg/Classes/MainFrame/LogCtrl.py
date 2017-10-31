@@ -77,8 +77,8 @@ class LogCtrl(wx.ListCtrl):
 
         self.attr1, self.attr2 = _create_colour_attributes(sysTextColour)
         self.attr3, self.attr4 = _create_colour_attributes((255, 0, 0))
-        self.attr5, self.attr6 = _create_colour_attributes((255, 153, 0))
-        self.attr7, self.attr8 = _create_colour_attributes((217, 234, 23))
+        self.attr5, self.attr6 = _create_colour_attributes((89, 131, 165))
+        self.attr7, self.attr8 = _create_colour_attributes((206, 151, 22))
 
         self.InsertColumn(0, "")
 
