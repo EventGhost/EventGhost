@@ -43,26 +43,34 @@ WARNING_ICON = eg.Icons.WARNING_ICON
 
 
 def _build_notice(icon, args):
-    if icon == DEBUG_ICON:
-        strs = ['DEBUG:']
-
-    elif icon == WARNING_ICON:
-        strs = ['WARNING:']
-    else:
-        strs = []
-
-    strs += [
-        strftime("%H:%M:%S:"),
+    strs = [
         str(eg.Tasklet.GetCurrentId()),
         str(currentThread().getName()) + ":"
     ]
 
-    msg = ' '.join(strs + list(str(arg) for arg in args)) + "\n"
+    for arg in args:
+        arg = str(arg).strip()
+        if icon == WARNING_ICON:
+            arg = arg.replace('Traceback', 'Warning')
+        strs += [arg]
+
+    msg = ' '.join(strs)
+    if icon == DEBUG_ICON:
+        msg = 'DEBUG: ' + msg.replace('\n', '\nDEBUG: ')
+
+    elif icon == WARNING_ICON:
+        msg = 'WARNING: ' + msg.replace('\n', '\nWARNING: ')
+
+    std_msg = (
+        strftime("%H:%M:%S: ") +
+        msg.replace('\n', '\n' + strftime("%H:%M:%S: "))
+    )
+    msg += "\n"
 
     try:
-        oldStdErr.write(msg)
+        oldStdErr.write(std_msg)
     except:
-        oldStdErr.write(msg.decode("mbcs"))
+        oldStdErr.write(std_msg.decode("mbcs"))
 
     return msg
 
@@ -190,7 +198,10 @@ class Log(object):
         """
         if eg.debugLevel:
             msg = _build_notice(WARNING_ICON, args)
+            indent = eg.indent
+            eg.indent = 0
             self.Write(msg, WARNING_ICON)
+            eg.indent = indent
 
     def PrintError(self, *args, **kwargs):
         """
