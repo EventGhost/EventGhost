@@ -38,6 +38,34 @@ oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
 INFO_ICON = eg.Icons.INFO_ICON
 ERROR_ICON = eg.Icons.ERROR_ICON
 NOTICE_ICON = eg.Icons.NOTICE_ICON
+DEBUG_ICON = eg.Icons.DEBUG_ICON
+WARNING_ICON = eg.Icons.WARNING_ICON
+
+
+def _build_notice(icon, args):
+    if icon == DEBUG_ICON:
+        strs = ['DEBUG:']
+
+    elif icon == WARNING_ICON:
+        strs = ['WARNING:']
+    else:
+        strs = []
+
+    strs += [
+        strftime("%H:%M:%S:"),
+        str(eg.Tasklet.GetCurrentId()),
+        str(currentThread().getName()) + ":"
+    ]
+
+    msg = ' '.join(strs + list(str(arg) for arg in args)) + "\n"
+
+    try:
+        oldStdErr.write(msg)
+    except:
+        oldStdErr.write(msg.decode("mbcs"))
+
+    return msg
+
 
 class DummyLogCtrl(object):
     def WriteLine(self, line, icon, wRef, when, indent):
@@ -153,14 +181,16 @@ class Log(object):
         Logs a message if eg.debugLevel is set.
         """
         if eg.debugLevel:
-            threadName = str(currentThread().getName())
-            taskletName = str(eg.Tasklet.GetCurrentId())
-            strs = [strftime("%H:%M:%S:")]
-            strs.append(taskletName + " " + threadName + ":")
+            msg = _build_notice(DEBUG_ICON, args)
+            self.Write(msg, DEBUG_ICON)
 
-            for arg in args:
-                strs.append(str(arg))
-            sys.stderr.write(" ".join(strs) + "\n")
+    def PrintWarningNotice(self, *args):
+        """
+        Logs a message if eg.debugLevel is set.
+        """
+        if eg.debugLevel:
+            msg = _build_notice(WARNING_ICON, args)
+            self.Write(msg, WARNING_ICON)
 
     def PrintError(self, *args, **kwargs):
         """
