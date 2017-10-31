@@ -258,10 +258,23 @@ def EnsureVisible(window):
     # set the new position and size
     window.SetRect((left, top, right - left, bottom - top))
 
-def EqualizeWidths(ctrls):
-    maxWidth = max((ctrl.GetBestSize()[0] for ctrl in ctrls))
-    for ctrl in ctrls:
-        ctrl.SetMinSize((maxWidth, -1))
+def EqualizeWidths(*args):
+
+    def iter_ctrls(ctrls):
+        maxWidth = -99
+        for ctrl in ctrls:
+            if isinstance(ctrl, (list, tuple)):
+                iter_ctrls(ctrl)
+                continue
+            else:
+                maxWidth = max((ctrl.GetBestSize()[0], maxWidth))
+
+        if maxWidth != -99:
+            for ctrl in ctrls:
+                if not isinstance(ctrl, (list, tuple)):
+                    ctrl.SetMinSize((maxWidth, -1))
+
+    iter_ctrls(args)
 
 def ExecFile(filename, globals=None, locals=None):
     """
