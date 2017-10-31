@@ -347,6 +347,7 @@ eg.PrintError = eg.log.PrintError
 eg.PrintNotice = eg.log.PrintNotice
 eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
+eg.PrintWarningNotice = eg.log.PrintWarningNotice
 eg.PrintStack = eg.log.PrintStack
 
 eg.config = eg.Config()
