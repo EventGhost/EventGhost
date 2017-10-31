@@ -236,7 +236,9 @@ def PilToBitmap(pil):
 # setup some commonly used icons
 INFO_ICON = PathIcon(join(IMAGES_PATH, "info.png"))
 ERROR_ICON = PathIcon(join(IMAGES_PATH, "error.png"))
+DEBUG_ICON = PathIcon(join(IMAGES_PATH, "debug.png"))
 NOTICE_ICON = PathIcon(join(IMAGES_PATH, "notice.png"))
+WARNING_ICON = PathIcon(join(IMAGES_PATH, "warning.png"))
 FOLDER_ICON = PathIcon(join(IMAGES_PATH, "folder.png"))
 DISABLED_ICON = PathIcon(join(IMAGES_PATH, "disabled.png"))
 PLUGIN_ICON = PathIcon(join(IMAGES_PATH, "plugin.png"))
