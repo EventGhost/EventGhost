@@ -30,17 +30,14 @@ DEBUG_ICON = eg.Icons.DEBUG_ICON
 WARNING_ICON = eg.Icons.WARNING_ICON
 
 
-def _create_colour_attributes(colour):
-    sysColour = eg.colour.windowBackground
-    oddColour = eg.colour.GetOddLogColour()
-
+def _create_colour_attributes(foreground, background):
     attr1 = wx.ListItemAttr()
-    attr1.BackgroundColour = oddColour
-    attr1.TextColour = colour
+    attr1.BackgroundColour = eg.colour.GetOddLogColour(background)
+    attr1.TextColour = foreground
 
     attr2 = wx.ListItemAttr()
-    attr2.BackgroundColour = sysColour
-    attr2.TextColour = colour
+    attr2.BackgroundColour = background
+    attr2.TextColour = foreground
 
     return attr1, attr2
 
@@ -73,12 +70,22 @@ class LogCtrl(wx.ListCtrl):
 
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
-        sysTextColour = eg.colour.windowText
-
-        self.attr1, self.attr2 = _create_colour_attributes(sysTextColour)
-        self.attr3, self.attr4 = _create_colour_attributes((255, 0, 0))
-        self.attr5, self.attr6 = _create_colour_attributes((89, 131, 165))
-        self.attr7, self.attr8 = _create_colour_attributes((206, 151, 22))
+        self.logColours = _create_colour_attributes(
+            eg.colour.windowText,
+            eg.colour.windowBackground
+        )
+        self.errorColours = _create_colour_attributes(
+            eg.colour.errorText,
+            eg.colour.errorBackground
+        )
+        self.debugColours = _create_colour_attributes(
+            eg.colour.debugText,
+            eg.colour.debugBackground
+        )
+        self.warningColours = _create_colour_attributes(
+            eg.colour.warningText,
+            eg.colour.waningBackground
+        )
 
         self.InsertColumn(0, "")
 
@@ -219,15 +226,15 @@ class LogCtrl(wx.ListCtrl):
                     node.Select()
 
     def OnGetItemAttr(self, item):
-        icons = {
-            ERROR_ICON: [self.attr3, self.attr4],
-            DEBUG_ICON: [self.attr5, self.attr6],
-            WARNING_ICON: [self.attr7, self.attr8],
+        colours = {
+            ERROR_ICON: self.errorColours,
+            DEBUG_ICON: self.debugColours,
+            WARNING_ICON: self.warningColours,
         }
 
-        return icons.get(
+        return colours.get(
             self.data[item][1],
-            [self.attr1, self.attr2]
+            self.logColours
         )[item % 2]
 
     def OnGetItemImage(self, item):
