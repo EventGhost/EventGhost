@@ -65,6 +65,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         sizer.SetFlexibleDirection(wx.HORIZONTAL)
         rowFlagsGet = self.rowFlags.get
         colFlagsGet = self.colFlags.get
+        text_ctrls = []
         for rowNum, (row, kwargs) in enumerate(grid):
             if kwargs.get("growable", False):
                 sizer.AddGrowableRow(rowNum)
@@ -78,8 +79,21 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
                 flags |= (wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT)
                 sizer.Add(ctrl, (rowNum, colNum), (1, 1), flags)
 
+                if (
+                    not colNum % 2
+                    and isinstance(ctrl, wx.StaticText)
+                    and len(row) - 1 > colNum
+                ):
+                    text_ctrls += [[]] * (colNum - len(text_ctrls) + 1)
+                    text_ctrls[colNum] += [ctrl]
+
             if colNum < columns - 1:
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
+
+            for ctrls in text_ctrls:
+                if ctrls:
+                    eg.EqualizeWidths(tuple(ctrls))
+
         self.sizer.Add(sizer, 1, wx.EXPAND)
 
     def AddLabel(self, label):
