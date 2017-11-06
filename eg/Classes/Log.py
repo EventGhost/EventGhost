@@ -64,7 +64,7 @@ def _build_notice(icon, args):
     std_msg = (
         strftime("%H:%M:%S: ") +
         msg.replace('\n', '\n' + strftime("%H:%M:%S: "))
-    )
+    ) + '\n'
     msg += "\n"
 
     try:
