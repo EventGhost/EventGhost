@@ -28,6 +28,14 @@ THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
 
 
+class MinValueError(ValueError):
+    pass
+
+
+class MaxValueError(ValueError):
+    pass
+
+
 class SpinNumCtrl(wx.Window):
     """
     A wx.Control that shows a fixed width floating point value and spin
@@ -36,8 +44,6 @@ class SpinNumCtrl(wx.Window):
     _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,
-        "allowNegative": False,
-        "min": 0,
         "limited": True,
         "groupChar": THOUSANDS_SEP,
         "decimalChar": DECIMAL_POINT,
@@ -55,23 +61,36 @@ class SpinNumCtrl(wx.Window):
         name="eg.SpinNumCtrl",
         **kwargs
     ):
-        if "increment" in kwargs:
-            self.increment = kwargs.pop("increment")
-        else:
-            self.increment = 1
+
+        self.increment = kwargs.pop("increment", 1)
+        min_val = kwargs.pop('min', 0)
+        max_val = kwargs.pop('max', None)
+        allow_negative = kwargs.pop("allowNegative", False)
 
         tmp = self._defaultArgs.copy()
         tmp.update(kwargs)
         kwargs = tmp
-        min_val = kwargs.pop('min', None)
-        max_val = kwargs.pop('max', None)
+
         if min_val < 0:
-            kwargs["allowNegative"] = True
-        if not max_val:
+            allow_negative = True
+        if max_val is None:
             max_val = (
                 (10 ** kwargs["integerWidth"]) -
                 (10 ** -kwargs["fractionWidth"])
             )
+
+        value_error = 'The set value {0} is {1} then the {2} of {3}'
+
+        if value < min_val:
+            raise MinValueError(
+                value_error.format(value, 'lower', 'minimum', min_val)
+            )
+
+        if value > max_val:
+            raise MaxValueError(
+                value_error.format(value, 'higher', 'maximum', max_val)
+            )
+
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -84,10 +103,11 @@ class SpinNumCtrl(wx.Window):
             validator,
             name,
             allowNone=True,
+            min=min_val,
+            max=max_val,
+            allowNegative=allow_negative,
             **kwargs
         )
-        numCtrl.SetMin(min_val)
-        numCtrl.SetMax(max_val)
 
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
@@ -95,7 +115,7 @@ class SpinNumCtrl(wx.Window):
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
         )
-        numCtrl.SetLimited(True)
+
         height = numCtrl.GetSize()[1]
         spinbutton = wx.SpinButton(
             self,
