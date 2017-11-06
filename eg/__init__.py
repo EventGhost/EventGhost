@@ -63,7 +63,14 @@ class DynamicModule(object):
         """
         def __setattr__(self, name, value):
             if name not in self.__dict__:
-                raise AttributeError("Assignment to new attribute %s" % name)
+                try:
+                    raise AttributeError(
+                        "Assignment to new attribute %s" % name
+                    )
+                except AttributeError:
+                    import traceback
+                    eg.PrintWarningNotice(traceback.format_exc())
+
             object.__setattr__(self, name, value)
         self.__class__.__setattr__ = __setattr__
 

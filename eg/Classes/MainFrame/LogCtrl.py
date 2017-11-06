@@ -26,6 +26,21 @@ import eg
 
 EVENT_ICON = eg.EventItem.icon
 ERROR_ICON = eg.Icons.ERROR_ICON
+DEBUG_ICON = eg.Icons.DEBUG_ICON
+WARNING_ICON = eg.Icons.WARNING_ICON
+
+
+def _create_colour_attributes(foreground, background):
+    attr1 = wx.ListItemAttr()
+    attr1.BackgroundColour = eg.colour.GetOddLogColour(background)
+    attr1.TextColour = foreground
+
+    attr2 = wx.ListItemAttr()
+    attr2.BackgroundColour = background
+    attr2.TextColour = foreground
+
+    return attr1, attr2
+
 
 class LogCtrl(wx.ListCtrl):
     """
@@ -55,25 +70,22 @@ class LogCtrl(wx.ListCtrl):
 
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
-        sysColour = eg.colour.windowBackground
-        sysTextColour = eg.colour.windowText
-        oddColour = eg.colour.GetOddLogColour()
-
-        self.attr1 = wx.ListItemAttr()
-        self.attr1.BackgroundColour = oddColour
-        self.attr1.TextColour = sysTextColour
-
-        self.attr2 = wx.ListItemAttr()
-        self.attr2.BackgroundColour = sysColour
-        self.attr2.TextColour = sysTextColour
-
-        self.attr3 = wx.ListItemAttr()
-        self.attr3.BackgroundColour = oddColour
-        self.attr3.TextColour = (255, 0, 0)
-
-        self.attr4 = wx.ListItemAttr()
-        self.attr4.BackgroundColour = sysColour
-        self.attr4.TextColour = (255, 0, 0)
+        self.logColours = _create_colour_attributes(
+            eg.colour.windowText,
+            eg.colour.windowBackground
+        )
+        self.errorColours = _create_colour_attributes(
+            eg.colour.errorText,
+            eg.colour.errorBackground
+        )
+        self.debugColours = _create_colour_attributes(
+            eg.colour.debugText,
+            eg.colour.debugBackground
+        )
+        self.warningColours = _create_colour_attributes(
+            eg.colour.warningText,
+            eg.colour.waningBackground
+        )
 
         self.InsertColumn(0, "")
 
@@ -214,16 +226,16 @@ class LogCtrl(wx.ListCtrl):
                     node.Select()
 
     def OnGetItemAttr(self, item):
-        if item % 2 == 0:
-            if self.data[item][1] != ERROR_ICON:
-                return self.attr1
-            else:
-                return self.attr3
-        else:
-            if self.data[item][1] != ERROR_ICON:
-                return self.attr2
-            else:
-                return self.attr4
+        colours = {
+            ERROR_ICON: self.errorColours,
+            DEBUG_ICON: self.debugColours,
+            WARNING_ICON: self.warningColours,
+        }
+
+        return colours.get(
+            self.data[item][1],
+            self.logColours
+        )[item % 2]
 
     def OnGetItemImage(self, item):
         return self.data[item][1].index

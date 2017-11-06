@@ -38,6 +38,42 @@ oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
 INFO_ICON = eg.Icons.INFO_ICON
 ERROR_ICON = eg.Icons.ERROR_ICON
 NOTICE_ICON = eg.Icons.NOTICE_ICON
+DEBUG_ICON = eg.Icons.DEBUG_ICON
+WARNING_ICON = eg.Icons.WARNING_ICON
+
+
+def _build_notice(icon, args):
+    strs = [
+        str(eg.Tasklet.GetCurrentId()),
+        str(currentThread().getName()) + ":"
+    ]
+
+    for arg in args:
+        arg = str(arg).strip()
+        if icon == WARNING_ICON:
+            arg = arg.replace('Traceback', 'Warning')
+        strs += [arg]
+
+    msg = ' '.join(strs)
+    if icon == DEBUG_ICON:
+        msg = 'DEBUG: ' + msg.replace('\n', '\nDEBUG: ')
+
+    elif icon == WARNING_ICON:
+        msg = 'WARNING: ' + msg.replace('\n', '\nWARNING: ')
+
+    std_msg = (
+        strftime("%H:%M:%S: ") +
+        msg.replace('\n', '\n' + strftime("%H:%M:%S: "))
+    ) + '\n'
+    msg += "\n"
+
+    try:
+        oldStdErr.write(std_msg)
+    except:
+        oldStdErr.write(std_msg.decode("mbcs"))
+
+    return msg
+
 
 class DummyLogCtrl(object):
     def WriteLine(self, line, icon, wRef, when, indent):
@@ -153,14 +189,19 @@ class Log(object):
         Logs a message if eg.debugLevel is set.
         """
         if eg.debugLevel:
-            threadName = str(currentThread().getName())
-            taskletName = str(eg.Tasklet.GetCurrentId())
-            strs = [strftime("%H:%M:%S:")]
-            strs.append(taskletName + " " + threadName + ":")
+            msg = _build_notice(DEBUG_ICON, args)
+            self.Write(msg, DEBUG_ICON)
 
-            for arg in args:
-                strs.append(str(arg))
-            sys.stderr.write(" ".join(strs) + "\n")
+    def PrintWarningNotice(self, *args):
+        """
+        Logs a message if eg.debugLevel is set.
+        """
+        if eg.debugLevel:
+            msg = _build_notice(WARNING_ICON, args)
+            indent = eg.indent
+            eg.indent = 0
+            self.Write(msg, WARNING_ICON)
+            eg.indent = indent
 
     def PrintError(self, *args, **kwargs):
         """
