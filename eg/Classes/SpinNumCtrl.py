@@ -75,22 +75,15 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
-        if min_val is None and max_val is not None and max_val < 0:
+        if (
+            (min_val is None and max_val is not None and max_val < 0)
+            or (min_val is not None and min_val < 0)
+            or (min_val is None and max_val is None and
+                     value is not None and value < 0)
+        ):
             allow_negative = True
-        if min_val is None:
-            if value < 0:
-                min_val = value
-            # else:
-            #     min_val = 0
-        if min_val < 0:
-            allow_negative = True
-        if max_val is None:
-            max_val = (
-                (10 ** kwargs["integerWidth"]) -
-                (10 ** -kwargs["fractionWidth"])
-            )
 
-        if min_val > max_val:
+        if min_val is not None and max_val is not None and min_val > max_val:
             raise MinMaxValueError(
                 'The maximum value {} is below the minimum value {}.'.format(
                     max_val, min_val
@@ -106,11 +99,11 @@ class SpinNumCtrl(wx.Window):
                 value = 0.0
         else:
             value_error = 'The set value {0} is {1} then the {2} of {3}'
-            if value < min_val:
+            if min_val is not None and value < min_val:
                 raise MinValueError(
                     value_error.format(value, 'lower', 'minimum', min_val)
                 )
-            if value > max_val:
+            if max_val is not None and value > max_val:
                 raise MaxValueError(
                     value_error.format(value, 'higher', 'maximum', max_val)
                 )
@@ -202,6 +195,8 @@ class SpinNumCtrl(wx.Window):
             value = maxValue
         if minValue is not None and value < minValue:
             value = minValue
+        if value < 0 and not self.numCtrl.IsNegativeAllowed():
+            value = 0
         res = self.numCtrl.SetValue(value)
         wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value=value))
         return res
