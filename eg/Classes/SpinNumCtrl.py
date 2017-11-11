@@ -36,6 +36,10 @@ class MaxValueError(ValueError):
     pass
 
 
+class MinMaxValueError(ValueError):
+    pass
+
+
 class SpinNumCtrl(wx.Window):
     """
     A wx.Control that shows a fixed width floating point value and spin
@@ -53,7 +57,7 @@ class SpinNumCtrl(wx.Window):
         self,
         parent,
         id=-1,
-        value=0.0,
+        value=None,
         pos=wx.DefaultPosition,
         size=wx.DefaultSize,
         style=wx.TE_RIGHT,
@@ -63,7 +67,7 @@ class SpinNumCtrl(wx.Window):
     ):
 
         self.increment = kwargs.pop("increment", 1)
-        min_val = kwargs.pop('min', 0)
+        min_val = kwargs.pop('min', None)
         max_val = kwargs.pop('max', None)
         allow_negative = kwargs.pop("allowNegative", False)
 
@@ -71,6 +75,13 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
+        if min_val is None and max_val is not None and max_val < 0:
+            allow_negative = True
+        if min_val is None:
+            if value < 0:
+                min_val = value
+            # else:
+            #     min_val = 0
         if min_val < 0:
             allow_negative = True
         if max_val is None:
@@ -79,18 +90,30 @@ class SpinNumCtrl(wx.Window):
                 (10 ** -kwargs["fractionWidth"])
             )
 
-        value_error = 'The set value {0} is {1} then the {2} of {3}'
-
-        if value < min_val:
-            raise MinValueError(
-                value_error.format(value, 'lower', 'minimum', min_val)
+        if min_val > max_val:
+            raise MinMaxValueError(
+                'The maximum value {} is below the minimum value {}.'.format(
+                    max_val, min_val
+                )
             )
 
-        if value > max_val:
-            raise MaxValueError(
-                value_error.format(value, 'higher', 'maximum', max_val)
-            )
-
+        if value is None:
+            if min_val is not None:
+                value = min_val
+            elif max_val is not None and max_val < 0:
+                value = max_val
+            else:
+                value = 0.0
+        else:
+            value_error = 'The set value {0} is {1} then the {2} of {3}'
+            if value < min_val:
+                raise MinValueError(
+                    value_error.format(value, 'lower', 'minimum', min_val)
+                )
+            if value > max_val:
+                raise MaxValueError(
+                    value_error.format(value, 'higher', 'maximum', max_val)
+                )
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -103,13 +126,18 @@ class SpinNumCtrl(wx.Window):
             validator,
             name,
             allowNone=True,
-            min=min_val,
-            max=max_val,
             allowNegative=allow_negative,
             **kwargs
         )
-
         self.numCtrl = numCtrl
+
+        # set the min and max value after instantiated numCtrl to avoid the
+        # following possible errors:
+        #   masked.NumCtrl(value=5, min=5) == ValueError: value 0 is below minimum value of control
+        #   masked.NumCtrl(value=-15, max=-25) == ValueError: value 0 exceeds value of control
+        numCtrl.SetMin(min_val)
+        numCtrl.SetMax(max_val)
+
         numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
