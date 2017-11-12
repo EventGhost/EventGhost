@@ -28,16 +28,31 @@ THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
 
 
-class MinValueError(ValueError):
-    pass
+class SpinNumError(ValueError):
+    _msg = ''
+
+    def __init__(self, *args):
+        if args:
+            self._msg = self._msg.format(*args)
+
+    def __str__(self):
+        return self._msg
 
 
-class MaxValueError(ValueError):
-    pass
+class MinValueError(SpinNumError):
+    _msg = 'The set value {0} is lower then the minimum of {1}'
 
 
-class MinMaxValueError(ValueError):
-    pass
+class MaxValueError(SpinNumError):
+    _msg = 'The set value {0} is higher then the maximum of {1}'
+
+
+class MinMaxValueError(SpinNumError):
+    _msg = 'The minimum value {0} is higher the the max value {0}.'
+
+
+class NegativeValueError(SpinNumError):
+    _msg = 'The minimum value needs to be set when using negative values.'
 
 
 class SpinNumCtrl(wx.Window):
@@ -57,7 +72,7 @@ class SpinNumCtrl(wx.Window):
         self,
         parent,
         id=-1,
-        value=None,
+        value=0.0,
         pos=wx.DefaultPosition,
         size=wx.DefaultSize,
         style=wx.TE_RIGHT,
@@ -75,38 +90,38 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
-        if (
-            (min_val is None and max_val is not None and max_val < 0)
-            or (min_val is not None and min_val < 0)
-            or (min_val is None and max_val is None and
-                     value is not None and value < 0)
-        ):
-            allow_negative = True
+        if max_val is None and min_val is None:
+            if value < 0:
+                raise NegitiveValueError
 
-        if min_val is not None and max_val is not None and min_val > max_val:
-            raise MinMaxValueError(
-                'The maximum value {} is below the minimum value {}.'.format(
-                    max_val, min_val
-                )
+        elif min_val is None and max_val is not None:
+            if value > max_val:
+                raise MaxValueError(value, max_val)
+            if max_value < 0:
+                allow_negative = True
+
+        elif max_val is None and min_val is not None:
+            if value < min_val:
+                raise MinValueError(value, min_val)
+            if min_val < 0:
+                allow_negative = True
+
+        else:
+            if min_val > max_val:
+                raise MinMaxValueError(min_val, max_val)
+            if value < min_val:
+                raise MinValueError(value, min_val)
+            if value > max_val:
+                raise MaxValueError(value, max_val)
+            if min_val < 0:
+                allow_negative = True
+
+        if max_val is None:
+            max_val = (
+                (10 ** kwargs["integerWidth"]) -
+                (10 ** -kwargs["fractionWidth"])
             )
 
-        if value is None:
-            if min_val is not None:
-                value = min_val
-            elif max_val is not None and max_val < 0:
-                value = max_val
-            else:
-                value = 0.0
-        else:
-            value_error = 'The set value {0} is {1} then the {2} of {3}'
-            if min_val is not None and value < min_val:
-                raise MinValueError(
-                    value_error.format(value, 'lower', 'minimum', min_val)
-                )
-            if max_val is not None and value > max_val:
-                raise MaxValueError(
-                    value_error.format(value, 'higher', 'maximum', max_val)
-                )
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -120,16 +135,11 @@ class SpinNumCtrl(wx.Window):
             name,
             allowNone=True,
             allowNegative=allow_negative,
+            min=min_val,
+            max=max_val,
             **kwargs
         )
         self.numCtrl = numCtrl
-
-        # set the min and max value after instantiated numCtrl to avoid the
-        # following possible errors:
-        #   masked.NumCtrl(value=5, min=5) == ValueError: value 0 is below minimum value of control
-        #   masked.NumCtrl(value=-15, max=-25) == ValueError: value 0 exceeds value of control
-        numCtrl.SetMin(min_val)
-        numCtrl.SetMax(max_val)
 
         numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
