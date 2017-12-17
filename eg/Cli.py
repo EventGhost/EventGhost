@@ -121,8 +121,11 @@ if args.isMain:
         elif arg in ('-m', '-multiload'):
             args.allowMultiLoad = True
         elif arg in ('-e', '-event'):
-            args.startupEvent = tuple(argvIter)
-
+            eventstring = argvIter.next()
+            payloads = list(argvIter)
+            if len(payloads) == 0:
+                payloads = None
+            args.startupEvent = (eventstring, payloads)
         elif arg in ('-f', '-file'):
             args.startupFile = abspath(argvIter.next())
         elif arg in ('-p', '-plugin'):
