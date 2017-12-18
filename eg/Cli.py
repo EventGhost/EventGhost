@@ -98,6 +98,20 @@ def send_message(msg, *msg_args):
 if args.isMain:
     for arg in argvIter:
         arg = arg.lower()
+
+        if arg in ('-e', '-event'):
+            eventstring = argvIter.next()
+            payloads = list()
+            for payload in argvIter:
+                if payload.startswith('-'):
+                    arg = payload
+                    break
+                payloads.append(payload)
+
+            if len(payloads) == 0:
+                payloads = None
+            args.startupEvent = (eventstring, payloads)
+
         if arg.startswith('-debug'):
             args.debugLevel = 1
             if len(arg) > 6:
@@ -120,12 +134,6 @@ if args.isMain:
             sys.exit(0)
         elif arg in ('-m', '-multiload'):
             args.allowMultiLoad = True
-        elif arg in ('-e', '-event'):
-            eventstring = argvIter.next()
-            payloads = list(argvIter)
-            if len(payloads) == 0:
-                payloads = None
-            args.startupEvent = (eventstring, payloads)
         elif arg in ('-f', '-file'):
             args.startupFile = abspath(argvIter.next())
         elif arg in ('-p', '-plugin'):
@@ -144,7 +152,6 @@ if args.isMain:
                 args.pluginFile = path
             elif ext in (".egtree", ".xml"):
                 args.startupFile = path
-
     if (
         not args.allowMultiLoad and
         not args.translate and
