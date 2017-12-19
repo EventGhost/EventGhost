@@ -22,6 +22,9 @@ import win32file
 import threading
 import wx
 
+NMPWAIT_USE_DEFAULT_WAIT = 0x00000000
+ERROR_FILE_NOT_FOUND = 0x2
+
 
 def process_data(in_data):
     out_data = ''
@@ -31,52 +34,69 @@ def process_data(in_data):
     return out_data
 
 
+def _is_eg_running():
+    try:
+        win32pipe.WaitNamedPipe(
+            r'\\.\pipe\eventghost',
+            NMPWAIT_USE_DEFAULT_WAIT
+        )
+        return True
+
+    except win32pipe.error as err:
+        if err[0] == ERROR_FILE_NOT_FOUND:
+            return False
+        raise NamedPipeConnectionError(err)
+
+
+is_eg_running = _is_eg_running()
+
+
 class Server:
     """
     Receiving thread class for the eventghost named pipe.
 
-    When EventGhost gets run a named pipe gets created by the name of 
-    "\\.\pipe\eventghost". The pipe is created so that everyone has full 
-    control. This allows for an instance of EventGhost to be running as 
+    When EventGhost gets run a named pipe gets created by the name of
+    "\\.\pipe\eventghost". The pipe is created so that everyone has full
+    control. This allows for an instance of EventGhost to be running as
     Administrator and be able to send commands into EventGhost as a user.
 
-    EventGhost command line arguments have been changed to use 
-    this pipe and has opened up the ability to be able to do things like hide 
-    the current running instance from the command line. It has also 
+    EventGhost command line arguments have been changed to use
+    this pipe and has opened up the ability to be able to do things like hide
+    the current running instance from the command line. It has also
     significantly increased the speed in which the operations are carried out.
 
-    This has been added in a way that will allow for another application that 
-    is running on the same computer as EventGhost to be able to make 
+    This has been added in a way that will allow for another application that
+    is running on the same computer as EventGhost to be able to make
     EventGhost perform various tasks. The API is as follows.
 
-    all data written to the pipe has be done as a string. this is a message 
+    all data written to the pipe has be done as a string. this is a message
     only pipe and you are not able to send any byte data through it. It is also
-    one way communications. the running instance of EventGhost will never 
+    one way communications. the running instance of EventGhost will never
     write anything to the pipe. the structure of the message is
 
     function/class/method name, *args or **kwargs
 
-    you are only able to make a call to an existing function/class/method you 
-    are not able to set a attributes value directly. you will have to create a 
-    function and then you can have data passed to that function via the named 
+    you are only able to make a call to an existing function/class/method you
+    are not able to set a attributes value directly. you will have to create a
+    function and then you can have data passed to that function via the named
     pipe and have the function then set the attributes value.
 
-    the args either have to be a list or a tuple empty if there are no 
+    the args either have to be a list or a tuple empty if there are no
     parameters to be sent.
 
-    kwargs can either be formatted as 
+    kwargs can either be formatted as
     dict(keyword1=None, keyword2=None)
     or
     {'keyword1': None, 'keyword2': None}
 
     any public class/method/function can be accessed by use of this pipe.
 
-    when a command is received it passes the command to the main thread to be 
-    evaluated for correctness and to be run. The reason this is done is 2 fold 
-    It is so that the named pipe can be created once again as fast as possible 
-    without having to wait for the command to finish executing. But also if a 
-    command is used that deals with the GUI aspects of EG a lot of the wx 
-    components need to be ran from the main thread. 
+    when a command is received it passes the command to the main thread to be
+    evaluated for correctness and to be run. The reason this is done is 2 fold
+    It is so that the named pipe can be created once again as fast as possible
+    without having to wait for the command to finish executing. But also if a
+    command is used that deals with the GUI aspects of EG a lot of the wx
+    components need to be ran from the main thread.
 
     """
 
@@ -129,7 +149,7 @@ class Server:
                 255,
                 4096,
                 4096,
-                50,
+                5,
                 security_attributes
             )
             win32pipe.ConnectNamedPipe(pipe, None)
@@ -287,5 +307,5 @@ class NamedPipeConnectionError(NamedPipeException):
     def __getitem__(self, item):
         if item in self.__dict__:
             return self.__dict__[item]
-        
+
         return self.msg[item]

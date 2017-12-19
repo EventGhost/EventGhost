@@ -148,27 +148,22 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        try:
-            if send_message('eg.namedPipe.ping') == 'pong':
-                if args.restart:
-                    restart()
-                else:
-                    if args.startupFile is not None:
-                        send_message('eg.document.Open', args.startupFile)
-                    if args.startupEvent is not None:
-                        send_message('eg.TriggerEvent', *args.startupEvent)
-                    if args.pluginFile:
-                        send_message(
-                            'eg.PluginInstall.Import',
-                            args.pluginFile
-                        )
-                    if args.hideOnStartup:
-                        send_message('eg.document.HideFrame')
-                    sys.exit(0)
+        if NamedPipe.is_eg_running:
+            if args.restart:
+                restart()
             else:
-                sys.exit(1)
-        except NamedPipe.NamedPipeConnectionError:
-            pass
+                if args.startupFile is not None:
+                    send_message('eg.document.Open', args.startupFile)
+                if args.startupEvent is not None:
+                    send_message('eg.TriggerEvent', *args.startupEvent)
+                if args.pluginFile:
+                    send_message(
+                        'eg.PluginInstall.Import',
+                        args.pluginFile
+                    )
+                if args.hideOnStartup:
+                    send_message('eg.document.HideFrame')
+                sys.exit(0)
 
         appMutex = ctypes.windll.kernel32.CreateMutexA(
             None,
