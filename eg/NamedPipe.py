@@ -200,6 +200,7 @@ class ProcessCommand(object):
         self._queue = []
         self._running_id = 0
         self._thread.start()
+        self._queue_event = threading.Event()
 
     def add(self, pipe_id, data, res, event):
         """
@@ -219,6 +220,7 @@ class ProcessCommand(object):
         :rtype: None
         """
         self._queue += [(pipe_id, data, res, event)]
+        self._queue_event.set()
 
     def run(self):
         """
@@ -230,11 +232,13 @@ class ProcessCommand(object):
         import eg
 
         while True:
-            for pipe_id, data, res, event in self._queue:
+            self._queue_event.wait()
+            self._queue_event.clear()
+            while self._queue:
+                pipe_id, data, res, event = self._queue.pop(0)
                 if pipe_id != self._running_id:
+                    self._queue += [(pipe_id, data, res, event)]
                     continue
-
-                self._queue.remove((pipe_id, data, res, event))
 
                 command = process_data(data)
                 try:
