@@ -29,6 +29,8 @@ class _NumCtrl(_num_ctrl):
         self._hold_value = value
         self.SetParameters = self._set_parameters
         super(_NumCtrl, self).__init__(self, parent, id, value, *args, **kwargs)
+        del self._set_parameters
+        del self._hold_value
 
     def _set_parameters(self, **kwargs):
         self.SetValue(self._hold_value)
