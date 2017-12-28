@@ -81,6 +81,7 @@ class TaskBarIcon(wx.TaskBarIcon):
     def OnCmdShow(self, dummyEvent=None):
         if eg.mainFrame is not None:
             eg.mainFrame.Iconize(False)
+            eg.mainFrame.Raise()
         else:
             eg.document.ShowFrame()
 
