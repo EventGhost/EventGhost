@@ -28,6 +28,7 @@ from builder.Utils import EncodePath
 DLL_EXCLUDES = [
     "DINPUT8.dll",
     "w9xpopen.exe",
+    "msvcp90.dll",
 ]
 
 RT_MANIFEST = 24
@@ -80,16 +81,28 @@ class BuildLibrary(builder.Task):
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
-            verbose=0,
+            verbose=buildSetup.args.verbose,
             zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
-            options = dict(
+            options=dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "Imports"],
+                    includes=[
+                        "agithub",
+                        "agithub.GitHub",
+                        "encodings",
+                        "encodings.*",
+                        "Imports",
+                        "pycurl",
+                        "qrcode",
+                        "requests",
+                        "tornado",
+                        "tornado.*",
+                        "websocket",
+                    ],
                     excludes=buildSetup.excludeModules,
-                    dll_excludes = DLL_EXCLUDES,
-                    dist_dir = EncodePath(buildSetup.sourceDir),
+                    dll_excludes=DLL_EXCLUDES,
+                    dist_dir=EncodePath(buildSetup.sourceDir),
                     custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
                     ),
