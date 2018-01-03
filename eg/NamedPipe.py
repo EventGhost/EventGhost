@@ -21,12 +21,63 @@ import win32pipe
 import win32file
 import threading
 import wx
+import traceback
+import random
 
+
+PIPE_ACCESS_OUTBOUND = 0x00000002
+PIPE_ACCESS_DUPLEX = 0x00000003
+PIPE_ACCESS_INBOUND = 0x00000001
+
+PIPE_WAIT = 0x00000000
+PIPE_NOWAIT = 0x00000001
+
+PIPE_READMODE_BYTE = 0x00000000
+PIPE_READMODE_MESSAGE = 0x00000002
+PIPE_TYPE_BYTE = 0x00000000
+PIPE_TYPE_MESSAGE = 0x00000004
+
+PIPE_CLIENT_END = 0x00000000
+PIPE_SERVER_END = 0x00000001
+
+FILE_FLAG_OVERLAPPED = 0x40000000
+FILE_ATTRIBUTE_NORMAL = 0x00000080
+FILE_SHARE_READ = 0x00000001
+FILE_SHARE_WRITE = 0x00000002
+
+PIPE_UNLIMITED_INSTANCES = 0xFF
+
+NMPWAIT_WAIT_FOREVER = 0xFFFFFFFF
+NMPWAIT_NOWAIT = 0x00000001
 NMPWAIT_USE_DEFAULT_WAIT = 0x00000000
+
+GENERIC_READ = 0x80000000
+GENERIC_WRITE = 0x40000000
+GENERIC_EXECUTE = 0x20000000
+GENERIC_ALL = 0x10000000
+
+FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000
+
+ERROR_PIPE_CONNECTED = 0x217
+ERROR_PIPE_LISTENING = 0x218
+ERROR_BROKEN_PIPE = 0x6D
+ERROR_PIPE_LOCAL = 0xE5
+ERROR_BAD_PIPE = 0xE6
+ERROR_PIPE_BUSY = 0xE7
+ERROR_NO_DATA = 0xE8
+ERROR_PIPE_NOT_CONNECTED = 0xE9
 ERROR_FILE_NOT_FOUND = 0x2
 
 
 def process_data(in_data):
+    """
+    Strips 0x0 bytes from incoming data.
+
+    :param in_data: data received from the named pipe
+    :type in_data: str
+    :return: Corrected data from the named pipe
+    :rtype: str
+    """
     out_data = ''
     for char in in_data:
         if ord(char) != 0:
@@ -49,6 +100,260 @@ def _is_eg_running():
 
 
 is_eg_running = _is_eg_running()
+
+class Pipe(object):
+    """
+    Thread class for handling additional pipe connections.
+    """
+
+    def __init__(self, parent, pipe_id, security_attributes):
+        """
+
+        :param parent: Server class
+        :type parent: instance
+        :param pipe_id: ID assigned to this pipe instance.
+        :type pipe_id: int
+        :param security_attributes: Windows SACL and DACL data for creating the
+            pipe.
+        :type security_attributes: win32security.SECURITY_ATTRIBUTES instance
+        """
+        self._parent = parent
+        self._pipe_id = pipe_id
+        self.is_waiting = True
+        self._thread = threading.Thread(
+            name='EventGhost.Pipe.{0}.Thread'.format(pipe_id),
+            target=self.run,
+            args=(security_attributes,)
+        )
+        self._thread.daemon = True
+        self._thread.start()
+
+    def run(self, security_attributes):
+        """
+        Handles the creation of the pipe.
+
+
+        Windows SACL and DACL data for creating the
+            pipe.
+        :type security_attributes: win32security.SECURITY_ATTRIBUTES instance
+        :return: None
+        :rtype: None
+        """
+        import eg
+
+        eg.PrintDebugNotice(
+            'Named Pipe: Creating pipe {0}'.format(self._pipe_id)
+        )
+
+        pipe = win32pipe.CreateNamedPipe(
+            r'\\.\pipe\eventghost',
+            PIPE_ACCESS_DUPLEX,
+            PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE,
+            PIPE_UNLIMITED_INSTANCES,
+            4096,
+            4096,
+            5,
+            security_attributes
+        )
+
+        win32pipe.ConnectNamedPipe(pipe, None)
+        data = win32file.ReadFile(pipe, 4096)
+        self.is_waiting = False
+
+        if not self._parent.running_pipes[-1].is_waiting == self:
+            self._parent.running_pipes += [
+                Pipe(
+                    self._parent,
+                    self._parent.get_pipe_id(),
+                    security_attributes
+                )
+            ]
+
+        eg.PrintDebugNotice('Pipe {0}: Data received'.format(self._pipe_id))
+
+        if data[0] == 0:
+            event = threading.Event()
+            res = ['']
+
+            self._parent.process_command.add(
+                self._pipe_id,
+                data[1],
+                res,
+                event
+            )
+
+            while not event.isSet():
+                pass
+
+            win32file.WriteFile(pipe, str(repr(res[0])))
+            win32pipe.DisconnectNamedPipe(pipe)
+            win32file.CloseHandle(pipe)
+        else:
+            try:
+                raise NamedPipeDataError(
+                    'Pipe {0}: Unknown Error: {1}'.format(
+                        self._pipe_id,
+                        str(data)
+                    )
+                )
+            except NamedPipeDataError:
+                traceback.print_exc()
+        self._parent.running_pipes.remove(self)
+
+
+class ProcessCommand(object):
+    """
+    Incoming pipe command processor.
+    """
+
+    def __init__(self):
+        self._thread = threading.Thread(target=self.run)
+        self._thread.daemon = True
+        self._queue = []
+        self._running_id = 0
+        self._thread.start()
+        self._queue_event = threading.Event()
+
+    def add(self, pipe_id, data, res, event):
+        """
+        Adds new data to the queue to be processed.
+
+        :param pipe_id: ID of the pipe instance sending in the data to be
+            processed.
+        :type pipe_id: int
+        :param data: Data to be processed.
+        :type data: str
+        :param res: Container to hold any return data.
+        :type res: list
+        :param event: vent that gets set when processing has finished. This
+            lets the pipe instance know when to send return data back.
+        :type event: threading.Event instance
+        :return: None
+        :rtype: None
+        """
+        self._queue += [(pipe_id, data, res, event)]
+        self._queue_event.set()
+
+    def run(self):
+        """
+        Processes the queued data.
+
+        :return: None
+        :rtype: None
+        """
+        import eg
+
+        while True:
+            self._queue_event.wait()
+            self._queue_event.clear()
+            while self._queue:
+                pipe_id, data, res, event = self._queue.pop(0)
+                if pipe_id != self._running_id:
+                    self._queue += [(pipe_id, data, res, event)]
+                    continue
+
+                command = process_data(data)
+                try:
+                    command, data = command.split(',', 1)
+                except ValueError:
+                    data = '()'
+
+                eg.PrintDebugNotice(
+                    'Pipe {0}: Command: {1}, Parameters: {2}'.format(
+                        pipe_id,
+                        command,
+                        data
+                    )
+                )
+
+                command = command.strip()
+                data = data.strip()
+
+                try:
+                    if '=' in command:
+                        raise NamedPipeCommandError(
+                            'Pipe {0}: Command not allowed: {1}'.format(
+                                pipe_id,
+                                command
+                            )
+                        )
+
+                    if not data.startswith('dict') and '=' in data:
+                        raise NamedPipeDataError(
+                            'Pipe {0}: Data not allowed: {1}'.format(
+                                pipe_id,
+                                data
+                            )
+                        )
+
+                    if (
+                        data[0] not in ('(', '[', '{') and
+                        not data.startswith('dict')
+                    ):
+                        raise NamedPipeDataError(
+                            'Pipe {0}: Data not allowed: {1}'.format(
+                                pipe_id,
+                                data
+                            )
+                        )
+
+                    try:
+                        command = eval(command.split('(', 1)[0])
+                    except SyntaxError:
+                        raise NamedPipeDataError(
+                            'Pipe {0}: Command malformed: {1}'.format(
+                                pipe_id,
+                                command
+                            )
+                        )
+                    else:
+                        if isinstance(command, (str, unicode)):
+                            raise NamedPipeCommandError(
+                                'Pipe {0}: Command does not exist: {1}'.format(
+                                    pipe_id,
+                                    command
+                                )
+                            )
+                    try:
+                        data = eval(data)
+                    except SyntaxError:
+                        raise NamedPipeDataError(
+                            'Pipe {0}: Data malformed: {1}'.format(
+                                pipe_id,
+                                data
+                            )
+                        )
+
+                    if not isinstance(data, (dict, list, tuple)):
+                        raise NamedPipeDataError(
+                            'Pipe {0}: Data malformed: {1}'.format(
+                                pipe_id,
+                                str(data)
+                            )
+                        )
+
+                except NamedPipeException:
+                    traceback.print_exc()
+                    event.set()
+                else:
+                    def run():
+                        if isinstance(data, dict):
+                            res[0] = command(**data)
+                        elif isinstance(data, (tuple, list)):
+                            res[0] = command(*data)
+
+                        eg.PrintDebugNotice(
+                            'Pipe {0}: Return data: {1}'.format(
+                                pipe_id,
+                                str(res[0])
+                            )
+                        )
+
+                        event.set()
+
+                    wx.CallAfter(run)
+                    event.wait()
+                self._running_id = pipe_id + 1
 
 
 class Server:
@@ -102,11 +407,18 @@ class Server:
 
     def __init__(self):
         self._thread = None
+        self.running_pipes = []
+        self._id_lock = threading.Lock()
+        self._pipe_id = -1
+        self.is_waiting = True
+        self.process_command = None
 
     def start(self):
         if self._thread is None:
+            self.process_command = ProcessCommand()
+
             self._thread = threading.Thread(
-                name='EventGhost.Pipe.Thread',
+                name='EventGhost.Pipe.0.Thread',
                 target=self.run
             )
             self._thread.daemon = True
@@ -115,16 +427,39 @@ class Server:
     def ping(self):
         return 'pong'
 
+    def get_pipe_id(self):
+        self._id_lock.acquire()
+        self._pipe_id += 1
+        try:
+            return self._pipe_id
+        finally:
+            self._id_lock.release()
+
     def run(self):
         import eg
+
         # This is where the permissions get created for the pipe
-        eg.PrintDebugNotice('Named Pipe: Creating security descriptor')
+        eg.PrintDebugNotice('Pipe: Creating security descriptor')
         security_attributes = win32security.SECURITY_ATTRIBUTES()
         security_descriptor = win32security.SECURITY_DESCRIPTOR()
         security_descriptor.SetSecurityDescriptorDacl(1, None, 0)
         security_attributes.SECURITY_DESCRIPTOR = security_descriptor
+        eg.PrintDebugNotice('Pipe 0: Creating Pipe')
+
+        pipe = win32pipe.CreateNamedPipe(
+            r'\\.\pipe\eventghost',
+            PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+            PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE,
+            PIPE_UNLIMITED_INSTANCES,
+            4096,
+            4096,
+            5,
+            security_attributes
+        )
 
         while True:
+            self.is_waiting = True
+            pipe_id = self.get_pipe_id()
 
             # creation of the pipe. once the pipe has been made it will sit
             # and wait for data to be written to the pipe. once data has been
@@ -133,126 +468,53 @@ class Server:
             # like this the entire time EG is running. The thread that handles
             # the pipe is a daemon thread and the thread will be terminated
             # when EG closes.
-            eg.PrintDebugNotice('Named Pipe: Creating pipe')
-            pipe = win32pipe.CreateNamedPipe(
-                r'\\.\pipe\eventghost',
-                (
-                    win32pipe.PIPE_ACCESS_DUPLEX |
-                    win32file.GENERIC_READ |
-                    win32file.GENERIC_WRITE
-                ),
-                (
-                    win32pipe.PIPE_TYPE_MESSAGE |
-                    win32pipe.PIPE_WAIT |
-                    win32pipe.PIPE_READMODE_MESSAGE
-                ),
-                255,
-                4096,
-                4096,
-                5,
-                security_attributes
-            )
             win32pipe.ConnectNamedPipe(pipe, None)
+
+            self.running_pipes += [self]
+
+            if len(self.running_pipes) > 1:
+                if not self.running_pipes[-1].is_waiting:
+                    self.running_pipes += [
+                        Pipe(self, self.get_pipe_id(), security_attributes)
+                    ]
+            else:
+                self.running_pipes += [
+                    Pipe(self, self.get_pipe_id(), security_attributes)
+                ]
+
             data = win32file.ReadFile(pipe, 4096)
-            eg.PrintDebugNotice('Named Pipe: Data received')
+            self.is_waiting = False
+
+            eg.PrintDebugNotice('Pipe {0}: Data received'.format(pipe_id))
 
             if data[0] == 0:
                 event = threading.Event()
                 res = ['']
 
-                def run_command(d):
-
-                    command = process_data(d)
-                    try:
-                        command, d = command.split(',', 1)
-                    except ValueError:
-                        d = '()'
-
-                    eg.PrintDebugNotice(
-                        'Named Pipe: Command: %s, Parameters: %s' %
-                        (command, d)
-                    )
-
-                    command = command.strip()
-                    d = d.strip()
-
-                    if '=' in command:
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Command not allowed: ' + command
-                        )
-                        command = None
-
-                    if not d.startswith('dict') and '=' in d:
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Data not allowed: ' + d
-                        )
-                        command = None
-
-                    if (
-                                d[0] not in ('(', '[', '{') and
-                            not d.startswith('dict')
-                    ):
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Data not allowed: ' + d
-                        )
-                        command = None
-
-                    try:
-                        command = eval(command.split('(', 1)[0])
-                    except SyntaxError:
-                        eg.PrintTraceback(
-                            'Named Pipe Error: '
-                            'Command malformed: ' + command
-                        )
-                        command = None
-                    else:
-                        if isinstance(command, (str, unicode)):
-                            eg.PrintError(
-                                'Named Pipe Error: '
-                                'Command does not exist: ' + command
-                            )
-                            command = None
-                    try:
-                        d = eval(d.strip())
-                    except SyntaxError:
-                        eg.PrintError(
-                            'Named Pipe Error: '
-                            'Data malformed: ' + d
-                        )
-                        command = None
-
-                    if command is not None:
-                        if isinstance(d, dict):
-                            res[0] = command(**d)
-                        elif isinstance(d, (tuple, list)):
-                            res[0] = command(*d)
-                        else:
-                            eg.PrintError(
-                                'Named Pipe Error: '
-                                'Data malformed: ' + str(d)
-                            )
-                    event.set()
-
-                wx.CallAfter(run_command, data[1])
+                self.process_command.add(
+                    pipe_id,
+                    data[1],
+                    res,
+                    event
+                )
 
                 while not event.isSet():
                     pass
-
-                eg.PrintDebugNotice(
-                    'Named Pipe: return data: ' + str(res[0])
-                )
 
                 win32file.WriteFile(pipe, str(repr(res[0])))
                 win32pipe.DisconnectNamedPipe(pipe)
 
             else:
-                eg.PrintError(
-                    'Named Pipe Data Error: '
-                    'Unknown Error: ' + str(data)
-                )
+                try:
+                    raise NamedPipeDataError(
+                        'Pipe {0}: Unknown Error: {1}'.format(
+                            pipe_id,
+                            str(data)
+                        )
+                    )
+                except NamedPipeDataError:
+                    traceback.print_exc()
+            self.running_pipes.remove(self)
 
 
 def send_message(msg):
@@ -273,7 +535,6 @@ def send_message(msg):
         if data[0] == 0:
             data = process_data(data[1])
             if data != '':
-
                 try:
                     return eval(data)
                 except SyntaxError:
@@ -284,7 +545,9 @@ def send_message(msg):
             raise NamedPipeDataError('Error in data received: ' + str(data))
 
     except win32pipe.error as err:
-        if err[0] == 231:
+        if err[0] == ERROR_PIPE_BUSY:
+            event = threading.Event()
+            event.wait(float(random.randrange(1, 100)) / 2000.0)
             return send_message(msg)
 
         raise NamedPipeConnectionError(err)
@@ -299,6 +562,10 @@ class NamedPipeException(Exception):
 
 
 class NamedPipeDataError(NamedPipeException):
+    pass
+
+
+class NamedPipeCommandError(NamedPipeException):
     pass
 
 
