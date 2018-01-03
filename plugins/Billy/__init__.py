@@ -5,7 +5,7 @@ version="0.3.5"
 # Plugins/Billy/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2018 EventGhost Project <http://eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free

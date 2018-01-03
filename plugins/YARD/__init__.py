@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2018 EventGhost Project <http://eventghost.net/>
 #                       André Weber <WeberAndre@gmx.de>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
