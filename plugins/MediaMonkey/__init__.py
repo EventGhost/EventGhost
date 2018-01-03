@@ -5,7 +5,7 @@
 # Copyright (C)  2009-2011 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.org/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
