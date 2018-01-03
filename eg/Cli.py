@@ -152,7 +152,6 @@ if args.isMain:
                 args.pluginFile = path
             elif ext in (".egtree", ".xml"):
                 args.startupFile = path
-
     if (
         not args.allowMultiLoad and
         not args.translate and

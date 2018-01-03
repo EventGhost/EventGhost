@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+# changelog
+# 18-12-2017: 23:07 -7:00   K
+# Adds multiple pipe connection support.
+
+
 import win32security
 import win32pipe
 import win32file
@@ -69,6 +74,7 @@ ERROR_PIPE_NOT_CONNECTED = 0xE9
 ERROR_FILE_NOT_FOUND = 0x2
 
 
+
 def process_data(in_data):
     """
     Strips 0x0 bytes from incoming data.
@@ -100,6 +106,7 @@ def _is_eg_running():
 
 
 is_eg_running = _is_eg_running()
+
 
 class Pipe(object):
     """
@@ -153,6 +160,7 @@ class Pipe(object):
             4096,
             4096,
             5,
+
             security_attributes
         )
 
@@ -358,7 +366,7 @@ class ProcessCommand(object):
 
 class Server:
     """
-    Receiving thread class for the eventghost named pipe.
+    Receiving thread class for the "\\.\pipe\eventghost" named pipe.
 
     When EventGhost gets run a named pipe gets created by the name of
     "\\.\pipe\eventghost". The pipe is created so that everyone has full
@@ -436,6 +444,7 @@ class Server:
             self._id_lock.release()
 
     def run(self):
+
         import eg
 
         # This is where the permissions get created for the pipe
@@ -468,6 +477,7 @@ class Server:
             # like this the entire time EG is running. The thread that handles
             # the pipe is a daemon thread and the thread will be terminated
             # when EG closes.
+            
             win32pipe.ConnectNamedPipe(pipe, None)
 
             self.running_pipes += [self]
