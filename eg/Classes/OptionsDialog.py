@@ -48,6 +48,8 @@ class Text(eg.TranslatableStrings):
     StartWithWindows = 'Autostart EventGhost for user "%s"' % os.environ["USERNAME"]
     UseAutoloadFile = "Autoload file"
     UseFixedFont = 'Use fixed-size font in the "Log" pane'
+    AllowShutdown = 'Do not stop a system shutdown/restart'
+    SaveOnShutdown = 'Save unsaved data on shutdown/restart'
 
 
 class OptionsDialog(eg.TaskletDialog):
@@ -140,6 +142,23 @@ class OptionsDialog(eg.TaskletDialog):
             text.UseFixedFont
         )
 
+        allowShutdownCtrl = page1.CheckBox(
+            config.allowShutdown,
+            text.AllowShutdown
+        )
+
+        saveOnShutdownCtrl = page1.CheckBox(
+            config.saveOnShutdown,
+            text.SaveOnShutdown
+        )
+
+        saveOnShutdownCtrl.Enable(config.allowShutdown)
+
+        def OnAllowShutdown(evt):
+            saveOnShutdownCtrl.Enable(evt.IsChecked())
+
+        allowShutdownCtrl.Bind(wx.EVT_CHECKBOX, OnAllowShutdown)
+
         def OnFixedFontBox(evt):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
@@ -181,6 +200,8 @@ class OptionsDialog(eg.TaskletDialog):
                 (refreshEnvCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
+                (allowShutdownCtrl, 0, flags),
+                (saveOnShutdownCtrl, 0, flags)
             )
         )
 
@@ -219,6 +240,8 @@ class OptionsDialog(eg.TaskletDialog):
             config.refreshEnv = refreshEnvCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
+            config.allowShutdown = allowShutdownCtrl.GetValue()
+            config.saveOnShutdown = saveOnShutdownCtrl.GetValue()
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()

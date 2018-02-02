@@ -69,6 +69,8 @@ class Config(Section):
     refreshEnv = False
     showTrayIcon = True
     useFixedFont = False
+    saveOnShutdown = False
+    allowShutdown = False
 
     class plugins:  #pylint: disable-msg=C0103
         pass
