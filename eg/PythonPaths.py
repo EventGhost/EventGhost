@@ -41,6 +41,12 @@ sitePackagesDir = os.path.join(
 sys.path.insert(0, mainDir.encode('mbcs'))
 sys.path.insert(1, sitePackagesDir.encode('mbcs'))
 
+os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
+    sitePackagesDir,
+    'requests',
+    'cacert.pem'
+)
+
 try:
     if "PYTHONPATH" in os.environ:
         for path in os.environ.get("PYTHONPATH").split(os.pathsep):
