@@ -28,6 +28,33 @@ THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
 DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
 
 
+class SpinNumError(ValueError):
+    _msg = ''
+
+    def __init__(self, *args):
+        if args:
+            self._msg = self._msg.format(*args)
+
+    def __str__(self):
+        return self._msg
+
+
+class MinValueError(SpinNumError):
+    _msg = 'The set value {0} is lower then the minimum of {1}'
+
+
+class MaxValueError(SpinNumError):
+    _msg = 'The set value {0} is higher then the maximum of {1}'
+
+
+class MinMaxValueError(SpinNumError):
+    _msg = 'The minimum value {0} is higher the the max value {0}.'
+
+
+class NegativeValueError(SpinNumError):
+    _msg = 'The minimum value needs to be set when using negative values.'
+
+
 class SpinNumCtrl(wx.Window):
     """
     A wx.Control that shows a fixed width floating point value and spin
@@ -36,8 +63,6 @@ class SpinNumCtrl(wx.Window):
     _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,
-        "allowNegative": False,
-        "min": 0,
         "limited": True,
         "groupChar": THOUSANDS_SEP,
         "decimalChar": DECIMAL_POINT,
@@ -55,24 +80,48 @@ class SpinNumCtrl(wx.Window):
         name="eg.SpinNumCtrl",
         **kwargs
     ):
-        if "increment" in kwargs:
-            self.increment = kwargs.pop("increment")
-        else:
-            self.increment = 1
+
+        self.increment = kwargs.pop("increment", 1)
+        min_val = kwargs.pop('min', None)
+        max_val = kwargs.pop('max', None)
+        allow_negative = kwargs.pop("allowNegative", False)
 
         tmp = self._defaultArgs.copy()
         tmp.update(kwargs)
         kwargs = tmp
 
-        min_val = kwargs.pop('min', None)
-        max_val = kwargs.pop('max', None)
-        if min_val and min_val < 0:
-            kwargs["allowNegative"] = True
-        if not max_val:
+        if max_val is None and min_val is None:
+            if value < 0:
+                raise NegativeValueError
+
+        elif min_val is None and max_val is not None:
+            if value > max_val:
+                raise MaxValueError(value, max_val)
+            if max_val < 0:
+                allow_negative = True
+
+        elif max_val is None and min_val is not None:
+            if value < min_val:
+                raise MinValueError(value, min_val)
+            if min_val < 0:
+                allow_negative = True
+
+        else:
+            if min_val > max_val:
+                raise MinMaxValueError(min_val, max_val)
+            if value < min_val:
+                raise MinValueError(value, min_val)
+            if value > max_val:
+                raise MaxValueError(value, max_val)
+            if min_val < 0:
+                allow_negative = True
+
+        if max_val is None:
             max_val = (
                 (10 ** kwargs["integerWidth"]) -
                 (10 ** -kwargs["fractionWidth"])
             )
+
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -85,19 +134,19 @@ class SpinNumCtrl(wx.Window):
             validator,
             name,
             allowNone=True,
+            allowNegative=allow_negative,
+            min=min_val,
+            max=max_val,
             **kwargs
         )
-        # To avoid bug in masked.NumCtrl set the min and max values after the instantiation of the widget
-        numCtrl.SetMin(min_val)
-        numCtrl.SetMax(max_val)
-        
         self.numCtrl = numCtrl
+
         numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
         )
-        numCtrl.SetLimited(True)
+
         height = numCtrl.GetSize()[1]
         spinbutton = wx.SpinButton(
             self,
@@ -156,6 +205,8 @@ class SpinNumCtrl(wx.Window):
             value = maxValue
         if minValue is not None and value < minValue:
             value = minValue
+        if value < 0 and not self.numCtrl.IsNegativeAllowed():
+            value = 0
         res = self.numCtrl.SetValue(value)
         wx.PostEvent(self, eg.ValueChangedEvent(self.GetId(), value=value))
         return res
