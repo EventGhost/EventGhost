@@ -196,7 +196,7 @@ notifications:
     
     {{#jobs}}
     {{#artifacts}}
-    [{{name}}]({{url}})
+    [{{name}}]({{permalink}})
     
     {{/artifacts}}
     {{/jobs}}
