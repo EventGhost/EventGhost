@@ -50,7 +50,7 @@ class LogCtrl(wx.ListCtrl):
         self.maxlength = 2000
         self.removeOnMax = 200
         self.indent = ""
-        self.OnGetItemText = self.OnGetItemTextWithTime
+        self.OnGetItemText = self.OnGetItemTextWithDT
         wx.ListCtrl.__init__(
             self,
             parent,
@@ -118,7 +118,9 @@ class LogCtrl(wx.ListCtrl):
         accel = wx.AcceleratorTable(accel_entries)
         self.SetAcceleratorTable(accel)
 
+        self.logDates = True
         self.logTimes = True
+        self._datetime_fmt = " %x  %X   "
         self.__inSelection = False
         self.isOdd = False
         self.data = collections.deque()
@@ -247,11 +249,10 @@ class LogCtrl(wx.ListCtrl):
         line, _, _, _, indent = self.data[item]
         return " " + indent * self.indent + line
 
-    def OnGetItemTextWithTime(self, item, dummyColumn):
+    def OnGetItemTextWithDT(self, item, dummyColumn):
         line, _, _, when, indent = self.data[item]
         return (
-            #strftime(" %X   ", localtime(when))
-            strftime(" %H:%M:%S   ", localtime(when)) +
+            strftime(self._datetime_fmt, localtime(when)) +
             indent * self.indent +
             line
         )
@@ -315,10 +316,24 @@ class LogCtrl(wx.ListCtrl):
             self.indent = ""
         self.Refresh()
 
+    def SetDateLogging(self, flag):
+        self.logDates = flag
+        self.SetDTLogging()
+
     def SetTimeLogging(self, flag):
         self.logTimes = flag
-        if flag:
-            self.OnGetItemText = self.OnGetItemTextWithTime
+        self.SetDTLogging()
+
+    def SetDTLogging(self):
+        if self.logDates and self.logTimes:
+            self._datetime_fmt = " %x  %X   "
+        elif self.logDates:
+            self._datetime_fmt = " %x   "
+        elif self.logTimes:
+            self._datetime_fmt = " %X   "
+
+        if self.logDates or self.logTimes:
+            self.OnGetItemText = self.OnGetItemTextWithDT
         else:
             self.OnGetItemText = self.OnGetItemTextNormal
         self.Refresh()

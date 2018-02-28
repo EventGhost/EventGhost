@@ -64,6 +64,7 @@ class Config(eg.PersistentData):
     position = (50, 50)
     size = (700, 450)
     showToolbar = True
+    logDate = False
     logTime = False
     indentLog = True
     expandOnEvents = False
@@ -236,6 +237,8 @@ class MainFrame(wx.Frame):
     def CreateLogCtrl(self):
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
+        if not Config.logDate:
+            logCtrl.SetDateLogging(False)
         if not Config.logTime:
             logCtrl.SetTimeLogging(False)
         logCtrl.SetIndent(Config.indentLog)
@@ -325,6 +328,7 @@ class MainFrame(wx.Frame):
         Append("LogDebug", kind=wx.ITEM_CHECK).Check(eg.config.logDebug)
         menu.AppendSeparator()
         Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
+        Append("LogDate", kind=wx.ITEM_CHECK).Check(Config.logDate)
         Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         menu.AppendSeparator()
         Append("ClearLog")
@@ -925,6 +929,11 @@ class MainFrame(wx.Frame):
         flag = self.menuBar.IsChecked(ID["LogTime"])
         Config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
+
+    def OnCmdLogDate(self):
+        flag = self.menuBar.IsChecked(ID["LogDate"])
+        Config.logDate = flag
+        self.logCtrl.SetDateLogging(flag)
 
     def OnCmdIndentLog(self):
         shouldIndent = self.menuBar.IsChecked(ID["IndentLog"])
