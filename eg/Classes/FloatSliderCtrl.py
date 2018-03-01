@@ -315,6 +315,7 @@ class SliderHandler(object):
         self.valueLabel = False
         self.selStart = None
         self.selEnd = None
+        self.int_ctrl = None
 
         self.Horizontal = False
         self.Top = False
@@ -362,8 +363,12 @@ class SliderHandler(object):
 
     def SetValue(self, value):
         self.Reset()
-        remainder = (value % self.Increment) - self.Increment
-        value -= remainder
+
+        if value < self.minValue:
+            value += self.Increment
+        elif value > self.maxValue:
+            value -= self.Increment
+
         self.value = value
 
     def SetSize(self, size):
@@ -377,16 +382,19 @@ class SliderHandler(object):
         if self.floatFormat is not None:
             del(self.cache['FloatFormat'])
 
-        incT = '%f' % self.Increment
-        maxT = '%f' % self.MaxValue
-        minT = '%f' % self.MinValue
-        incDec = len(incT.rstrip('0').split('.')[1])
-        maxDec = len(maxT.rstrip('0').split('.')[1])
-        minDec = len(minT.rstrip('0').split('.')[1])
-        decPos = max([incDec, maxDec, minDec])
-        if not decPos:
-            decPos = 1
-        return '%.' + str(decPos) + 'f'
+        if self.int_ctrl:
+            return '%d'
+        else:
+            incT = '%f' % self.Increment
+            maxT = '%f' % self.MaxValue
+            minT = '%f' % self.MinValue
+            incDec = len(incT.rstrip('0').split('.')[1])
+            maxDec = len(maxT.rstrip('0').split('.')[1])
+            minDec = len(minT.rstrip('0').split('.')[1])
+            decPos = max([incDec, maxDec, minDec])
+            if not decPos:
+                decPos = 1
+            return '%.' + str(decPos) + 'f'
 
     def GetFloatFormat(self):
         return self.SetFloatFormat()
@@ -555,6 +563,7 @@ class SliderHandler(object):
 
     def SetThumb(self, mousePos):
         minW, minH = self.MinSize
+        value = self.Value
 
         if self.Inverse:
             minVal, maxVal = self.MaxValue, self.MinValue
@@ -578,22 +587,30 @@ class SliderHandler(object):
             ((pos - minR) * (maxVal - minVal)) / (self.SliderLength - minR)
         ) + minVal
 
-        if minVal > newValue:
-            newValue = minVal
+        if newValue > value:
+            while value < newValue:
+                value += self.Increment
+            newValue = value
 
-        elif maxVal < newValue:
-            newValue = maxVal
+        elif newValue < value:
+            while value > newValue:
+                value -= self.Increment
+            newValue = value
 
-        self.SetValue(newValue)
-        try:
-            del(self.cache['ValueSize'])
-        except KeyError:
-            pass
-        try:
-            del(self.cache['ValueText'])
-        except KeyError:
-            pass
-        return True
+        else:
+            newValue = None
+
+        if newValue is not None and maxVal >= newValue >= minVal:
+            self.SetValue(newValue)
+            try:
+                del (self.cache['ValueSize'])
+            except KeyError:
+                pass
+            try:
+                del (self.cache['ValueText'])
+            except KeyError:
+                pass
+            return True
 
     def GetValuePosition(self):
         width, height = self.Size
@@ -818,7 +835,14 @@ class FloatSliderCtrl(wx.PyPanel):
 
         # check to see if the increment was set and if not to set a generic one
         if increment is None:
-            increment = float(100 / (float(maxValue) - float(minValue)))
+            increment = 100 / (maxValue - minValue)
+
+        self._int_ctrl = (
+            isinstance(value, int) and
+            isinstance(minValue, int) and
+            isinstance(maxValue, int) and
+            isinstance(increment, int)
+        )
 
         # checking the styles to set the proper characteristics of the slider
         if style | wx.SL_HORIZONTAL == style:
@@ -931,6 +955,7 @@ class FloatSliderCtrl(wx.PyPanel):
                 self.activeThumb = GetBitmap(RIGHT_THUMB_ACTIVE)
 
         sh = self.SliderHandler = SliderHandler()
+        sh.int_ctrl = self._int_ctrl
         sh.Top = top
         sh.Left = left
         sh.Horizontal = horizontal
@@ -1041,6 +1066,8 @@ class FloatSliderCtrl(wx.PyPanel):
 # ----------------- EVENTS
 
     def _OnKillFocus(self, evt):
+
+        print 'Focus Killed'
         if self.HasCapture():
             self.ReleaseMouse()
         self.keyboardFocus = False
@@ -1049,73 +1076,51 @@ class FloatSliderCtrl(wx.PyPanel):
         evt.Skip()
 
     def _OnChar(self, evt):
-        if self.keyboardFocus:
+        if self.HasFocus():
             keyCode = evt.GetKeyCode()
             sh = self.SliderHandler
             value = self.GetValue()
 
-            if keyCode in DIRECTION_CODES:
+            if keyCode in (wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT) and sh.Horizontal:
                 increment = sh.Increment
-                if (
-                    (sh.Horizontal and keyCode in DIRECTION_CODES[4:-2]) or
-                    (not sh.Horizontal and keyCode in DIRECTION_CODES[2:-4])
-                ):
-                    increment = -increment
+                self._LineUp()
+            elif keyCode in (wx.WXK_UP, wx.WXK_NUMPAD_UP) and not sh.Horizontal:
+                print 'Key Up'
+                increment = -sh.Increment
+                self._LineDown()
+            elif keyCode in (wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT) and sh.Horizontal:
+                print 'Key Left'
+                increment = -sh.Increment
+                self._LineDown()
+            elif keyCode in (wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN) and not sh.Horizontal:
+                increment = sh.Increment
+                self._LineUp()
 
-                if (
-                    sh.Horizontal and keyCode in
-                    DIRECTION_CODES[-2:] + DIRECTION_CODES[2:-4]
-                ):
-                    keyCode = None
-                    increment = 0
-                elif (
-                    not sh.Horizontal and keyCode in
-                    DIRECTION_CODES[:2] + DIRECTION_CODES[4:-2]
-                ):
-                    keyCode = None
-                    increment = 0
-
-                if keyCode in DIRECTION_CODES[:4]:
-                    self._LineUp()
-                else:
-                    self._LineDown()
-
-                value += increment
-
-            elif keyCode in PAGE_CODES:
+            elif keyCode in (wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP):
                 increment = (sh.MaxValue - sh.MinValue) / sh.PageSize
+                self._PageUp()
+            elif keyCode in (wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN):
+                increment = -((sh.MaxValue - sh.MinValue) / sh.PageSize)
+                self._PageDown()
+            else:
+                increment = 0
 
-                if (
-                    (sh.Horizontal and keyCode in PAGE_CODES[2:]) or
-                    (not sh.Horizontal and keyCode in PAGE_CODES[:2])
-                ):
-                    increment = -increment
+            value += increment
 
-                if keyCode in PAGE_CODES[2:]:
-                    self._PageDown()
-                else:
-                    self._PageUp()
-
-                value += increment
-                if value + increment > sh.MaxValue:
-                    value = sh.MaxValue
-                elif value + increment < sh.MinValue:
-                    value = sh.MinValue
-
-            elif keyCode in NUMBER_CODES:
+            if keyCode in NUMBER_CODES:
                 value = (
                     self.GetMin() +
                     (self.GetMax() * ((float(NUMBER_CODES[keyCode])) * 0.1))
                 )
 
-            if value >= self.GetMax():
-                value = self.GetMax()
+            if value >= sh.MaxValue:
                 self._Top()
-            elif value <= self.GetMin():
-                value = self.GetMin()
+            elif value <= sh.MinValue:
                 self._Bottom()
 
-            self.SetValue(value)
+            if value != self.GetValue():
+                wx.CallAfter(self.SetValue, value)
+
         evt.Skip()
 
     def _OnMouseDown(self, evt):
@@ -1265,9 +1270,12 @@ class FloatSliderCtrl(wx.PyPanel):
         return w, h
 
     def DoGetClientSize(self, *args, **kwargs):
+
+        print 'getting client size'
         return self.DoGetBestSize()
 
     def DoGetBestSize(self, *args, **kwargs):
+        print 'getting best size'
         sh = self.SliderHandler
 
         minW, minH = sh.MinSize
@@ -1301,7 +1309,7 @@ class FloatSliderCtrl(wx.PyPanel):
             h = 36 + sliderLength
             if minMaxLabel:
                 h += maxH * 2
-
+        print (w, h)
         return wx.Size(w, h)
 
 # ----------------- PAINT
@@ -1467,7 +1475,11 @@ class FloatSliderCtrl(wx.PyPanel):
         :param value: float() int() or a str() of a float.
         :return: None
         """
-        self.SliderHandler.SetValue(float(value))
+
+        if self._int_ctrl:
+            self.SliderHandler.SetValue(int(value))
+        else:
+            self.SliderHandler.SetValue(float(value))
         self.Refresh()
 
     def GetMin(self):
@@ -1484,7 +1496,11 @@ class FloatSliderCtrl(wx.PyPanel):
         :param minValue: float() int() or a str() of a float.
         :return: None
         """
-        self.SliderHandler.SetMinValue(float(minValue))
+
+        if self._int_ctrl:
+            self.SliderHandler.SetMinValue(int(minValue))
+        else:
+            self.SliderHandler.SetMinValue(float(minValue))
         self._ReDraw()
 
     def GetMax(self):
@@ -1501,7 +1517,11 @@ class FloatSliderCtrl(wx.PyPanel):
         :param maxValue: float() int() or a str() of a float.
         :return: None
         """
-        self.SliderHandler.SetMaxValue(float(maxValue))
+
+        if self._int_ctrl:
+            self.SliderHandler.SetMaxValue(int(maxValue))
+        else:
+            self.SliderHandler.SetMaxValue(float(maxValue))
         self._ReDraw()
 
     def SetRange(self, minValue, maxValue):
@@ -1512,8 +1532,13 @@ class FloatSliderCtrl(wx.PyPanel):
         :param maxValue: float() int() or a str() of a float.
         :return: None
         """
-        self.SliderHandler.SetMinValue(float(minValue))
-        self.SliderHandler.SetMaxValue(float(maxValue))
+
+        if self._int_ctrl:
+            self.SliderHandler.SetMinValue(int(minValue))
+            self.SliderHandler.SetMaxValue(int(maxValue))
+        else:
+            self.SliderHandler.SetMinValue(float(minValue))
+            self.SliderHandler.SetMaxValue(float(maxValue))
         self._ReDraw()
 
     def GetIncrement(self):
@@ -1530,7 +1555,11 @@ class FloatSliderCtrl(wx.PyPanel):
         :param increment: float() int() or a str() of a float.
         :return: None
         """
-        self.SliderHandler.SetIncrement(float(increment))
+
+        if self._int_ctrl:
+            self.SliderHandler.SetIncrement(int(increment))
+        else:
+            self.SliderHandler.SetIncrement(float(increment))
         self._ReDraw()
 
     def SetPageSize(self, pageSize):
@@ -1562,7 +1591,10 @@ class FloatSliderCtrl(wx.PyPanel):
         :param max: float() int() or a str() of a float of the end point.
         :return: None
         """
-        self.SliderHandler.SetSelection(float(min), float(max))
+        if self._int_ctrl:
+            self.SliderHandler.SetSelection(int(min), int(max))
+        else:
+            self.SliderHandler.SetSelection(float(min), float(max))
 
     def GetFontColour(self):
         return self.fontColour
@@ -1581,53 +1613,79 @@ class FloatSliderCtrl(wx.PyPanel):
 
 # ------------------------- END SLIDER CODE  ---------------------
 
-# ----------- Uncomment below to run tests without EG present--------------
-# This will create 4 slider controls one for each of the 4 direction types.
-#
-# STYLES = [
-#     wx.SL_HORIZONTAL | wx.SL_TOP,
-#     wx.SL_HORIZONTAL | wx.SL_BOTTOM,
-#     wx.SL_VERTICAL | wx.SL_LEFT,
-#     wx.SL_VERTICAL | wx.SL_RIGHT
-# ]
-#
-# import sys
-#
-# mod = sys.modules[__name__]
-#
-# app = wx.App()
-#
-#
-# position = (0, 0)
-#
-# for i, style in enumerate(STYLES):
-#     style |= wx.SL_AUTOTICKS | wx.SL_LABELS
-#     name = 'Slider' + str(i)
-#     frame = wx.Frame(
-#         None,
-#         pos=position,
-#         title=name
-#     )
-#     position = (position[0] + 200, position[1] + 200)
-#
-#     if style | wx.SL_HORIZONTAL == style:
-#         size = (400, 150)
-#     else:
-#         size = (150, 400)
-#
-#     sizer = wx.BoxSizer(wx.HORIZONTAL)
-#     slider = FloatSliderCtrl(
-#         frame,
-#         -1,
-#         value=50.0,
-#         minValue=10.4,
-#         maxValue=78.8,
-#         increment=0.2,
-#         style=style,
-#         # size=size
-#     )
-#     sizer.Add(slider, 1, wx.EXPAND | wx.ALL, 10)
-#     frame.SetSizerAndFit(sizer)
-#     setattr(mod, name, frame)
-#     frame.Show()
-# app.MainLoop()
+
+if __name__ == '__main__':
+    STYLES = [
+        wx.SL_HORIZONTAL | wx.SL_TOP,
+        wx.SL_VERTICAL | wx.SL_LEFT,
+        wx.SL_VERTICAL | wx.SL_RIGHT,
+        wx.SL_HORIZONTAL | wx.SL_BOTTOM
+    ]
+
+    STYLE_NAMES = [
+        'wx.SL_HORIZONTAL | wx.SL_TOP',
+        'wx.SL_VERTICAL | wx.SL_LEFT',
+        'wx.SL_VERTICAL | wx.SL_RIGHT',
+        'wx.SL_HORIZONTAL | wx.SL_BOTTOM'
+    ]
+    app = wx.App()
+
+    frame = wx.Frame(
+        None,
+        size=(550, 600)
+    )
+
+    main_sizer = wx.BoxSizer(wx.VERTICAL)
+    top_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    bottom_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    from random import randrange
+
+    for i, style in enumerate(STYLES):
+        style |= wx.SL_AUTOTICKS | wx.SL_LABELS
+
+        st = wx.StaticText(frame, -1, STYLE_NAMES[i])
+
+        minVal = float(randrange(3, 75))
+        maxVal = float(randrange(100, 165))
+
+        slider = FloatSliderCtrl(
+            frame,
+            -1,
+            value=float(randrange(minVal, maxVal)),
+            minValue=minVal,
+            maxValue=maxVal,
+            increment=float(randrange(1, 9) / 10.0),
+            style=style,
+            # size=size
+        )
+
+        if i in (0, 3):
+            sizer = wx.BoxSizer(wx.VERTICAL)
+
+        else:
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lbl_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_sizer.AddStretchSpacer(1)
+        lbl_sizer.Add(st, 0, wx.EXPAND | wx.ALL, 10)
+        lbl_sizer.AddStretchSpacer(1)
+        label_sizer.Add(lbl_sizer)
+        label_sizer.Add(sizer, 1, wx.EXPAND)
+
+        sizer.AddStretchSpacer(0)
+        sizer.Add(slider, 0, wx.ALL, 10)
+        sizer.AddStretchSpacer(0)
+
+        if i <= 1:
+            top_sizer.Add(label_sizer, 0, wx.EXPAND)
+        else:
+            bottom_sizer.Add(label_sizer, 0, wx.EXPAND)
+
+    main_sizer.Add(top_sizer)
+    main_sizer.Add(bottom_sizer)
+    frame.SetSizer(main_sizer)
+    frame.Show()
+    app.MainLoop()
