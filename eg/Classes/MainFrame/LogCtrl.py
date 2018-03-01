@@ -120,7 +120,7 @@ class LogCtrl(wx.ListCtrl):
 
         self.logDates = True
         self.logTimes = True
-        self._datetime_fmt = " %x  %X   "
+        self._datetime_fmt = " {0}  %X   ".format(eg.config.datestamp)
         self.__inSelection = False
         self.isOdd = False
         self.data = collections.deque()
@@ -326,9 +326,9 @@ class LogCtrl(wx.ListCtrl):
 
     def SetDTLogging(self):
         if self.logDates and self.logTimes:
-            self._datetime_fmt = " %x  %X   "
+            self._datetime_fmt = " {0}  %X   ".format(eg.config.datestamp)
         elif self.logDates:
-            self._datetime_fmt = " %x   "
+            self._datetime_fmt = " {0}   ".format(eg.config.datestamp)
         elif self.logTimes:
             self._datetime_fmt = " %X   "
 
