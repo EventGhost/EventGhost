@@ -32,8 +32,13 @@ class _NumCtrl(_num_ctrl):
         del self._hold_value
 
     def _set_parameters(self, **kwargs):
-        self.SetValue(self._hold_value)
-        _num_ctrl.SetParameters(self, **kwargs)
+        try:
+            self.SetValue(self._hold_value)
+            _num_ctrl.SetParameters(self, **kwargs)
+        except:
+            _num_ctrl.SetParameters(self, **kwargs)
+            self.SetValue(self._hold_value)
+
         self.SetParameters = _num_ctrl.SetParameters
 
 
