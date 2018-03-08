@@ -153,6 +153,8 @@ install:
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
       " "
+      # Enable Remotedesktop and pause the build execution
+      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
       "=============== EventGhost build finished ==============="
       " "
