@@ -149,6 +149,16 @@ install:
         .\EventGhost.exe -install
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
+
+      # update the appveyor build version to be the same as the EventGhost version
+      $start = $env:SetupExe.IndexOf("_")
+      $length = $env:SetupExe.LastIndexOf("_") - $start
+      $build_version = $env:SetupExe.Substring($start + 1, $length - 1)
+      Update-AppveyorBuild -Version "$build_version"
+
+      # Make sure the appveyor cache is only saved if our build was successfull
+      If (-Not (Test-Path(".\EventGhost.exe"))) {$env:APPVEYOR_CACHE_SKIP_SAVE = "true"}
+
       " "
 
       "=============== EventGhost build finished ==============="
