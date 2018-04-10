@@ -578,7 +578,7 @@ def send_message(msg):
             raise NamedPipeDataError('Error in data received: ' + str(data))
 
     except win32pipe.error as err:
-        if err[0] == ERROR_PIPE_BUSY:
+        if err[0] in (ERROR_PIPE_BUSY, ERROR_PIPE_CONNECTED):
             event = threading.Event()
             event.wait(float(random.randrange(1, 100)) / 2000.0)
             return send_message(msg)
