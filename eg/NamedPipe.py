@@ -74,6 +74,31 @@ ERROR_PIPE_NOT_CONNECTED = 0xE9
 ERROR_FILE_NOT_FOUND = 0x2
 
 
+class NamedPipeException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return str(self.msg)
+
+
+class NamedPipeDataError(NamedPipeException):
+    pass
+
+
+class NamedPipeCommandError(NamedPipeException):
+    pass
+
+
+class NamedPipeConnectionError(NamedPipeException):
+
+    def __getitem__(self, item):
+        if item in self.__dict__:
+            return self.__dict__[item]
+
+        return self.msg[item]
+
+
 def process_data(in_data):
     """
     Strips 0x0 bytes from incoming data.
@@ -559,28 +584,3 @@ def send_message(msg):
             return send_message(msg)
 
         raise NamedPipeConnectionError(err)
-
-
-class NamedPipeException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return str(self.msg)
-
-
-class NamedPipeDataError(NamedPipeException):
-    pass
-
-
-class NamedPipeCommandError(NamedPipeException):
-    pass
-
-
-class NamedPipeConnectionError(NamedPipeException):
-
-    def __getitem__(self, item):
-        if item in self.__dict__:
-            return self.__dict__[item]
-
-        return self.msg[item]
