@@ -284,7 +284,7 @@ class ProcessCommand(object):
                             )
                         )
 
-                    if not data.startswith('dict') and '=' in data:
+                    if not data.startswith('dict') and '=' in data and command != "eg.TriggerEvent":
                         raise NamedPipeDataError(
                             'Pipe {0}: Data not allowed: {1}'.format(
                                 pipe_id,
