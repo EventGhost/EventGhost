@@ -87,6 +87,21 @@ def restart():
         )
         sys.exit(1)
 
+    import time
+    count = 0
+    while NamedPipe.is_eg_running():
+        time.sleep(0.2)
+        count += 1
+        if count >= 100:
+            ctypes.windll.user32.MessageBoxA(
+                0,
+                'EventGhost cannot restart.             \n\n'
+                'Unknown Error.                         \n',
+                "EventGhost Restart Error",
+                0 | 40000
+            )
+            sys.exit(1)
+
     return True
 
 
@@ -158,7 +173,7 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        if NamedPipe.is_eg_running:
+        if NamedPipe.is_eg_running():
             if args.restart:
                 restart()
             else:
@@ -173,10 +188,19 @@ if args.isMain:
                     )
                 if args.hideOnStartup:
                     send_message('eg.document.HideFrame')
+
+                if (
+                    args.startupFile is None and
+                    args.startupEvent is None and
+                    args.pluginFile is None and
+                    args.hideOnStartup is False
+                ):
+                    send_message('eg.document.ShowFrame')
                 sys.exit(0)
 
-        appMutex = ctypes.windll.kernel32.CreateMutexA(
-            None,
-            0,
-            "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-        )
+        else:
+            appMutex = ctypes.windll.kernel32.CreateMutexA(
+                None,
+                0,
+                "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+            )

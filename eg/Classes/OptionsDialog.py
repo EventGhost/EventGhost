@@ -45,6 +45,8 @@ class Text(eg.TranslatableStrings):
     propResize = "Resize window proportionally"
     refreshEnv = 'Refresh environment before executing "Run" actions'
     showTrayIcon = "Display EventGhost icon in system tray"
+    maxPipes1 = 'Allow'
+    maxPipes2 = "named pipe connections"
     StartWithWindows = 'Autostart EventGhost for user "%s"' % os.environ["USERNAME"]
     UseAutoloadFile = "Autoload file"
     UseFixedFont = 'Use fixed-size font in the "Log" pane'
@@ -140,6 +142,34 @@ class OptionsDialog(eg.TaskletDialog):
             text.UseFixedFont
         )
 
+        maxPipesLabel1 = page1.StaticText(text.maxPipes1)
+        maxPipesLabel2 = page1.StaticText(text.maxPipes2)
+        maxPipesSpinCtrl = page1.SpinIntCtrl(
+            config.maxPipes,
+            min=1
+        )
+
+        maxPipesSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        maxPipesSizer.Add(
+            maxPipesLabel1,
+            0,
+            wx.EXPAND | wx.TOP,
+            3
+        )
+        maxPipesSizer.Add(
+            maxPipesSpinCtrl,
+            0,
+            wx.EXPAND | wx.RIGHT | wx.LEFT,
+            5
+        )
+        maxPipesSizer.Add(
+            maxPipesLabel2,
+            0,
+            wx.EXPAND | wx.TOP,
+            3
+        )
+
         def OnFixedFontBox(evt):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
@@ -181,6 +211,7 @@ class OptionsDialog(eg.TaskletDialog):
                 (refreshEnvCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
+                (maxPipesSizer, 0, flags)
             )
         )
 
@@ -220,6 +251,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.propResize = propResizeCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.language = languageList[languageChoice.GetSelection()]
+            config.maxPipes = maxPipesSpinCtrl.GetValue()
             config.Save()
             self.SetResult()
 

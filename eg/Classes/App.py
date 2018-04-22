@@ -105,6 +105,7 @@ class App(wx.App):
         while self.Pending():
             self.Dispatch()
 
+        eg.namedPipe.stop()
         # try to wait till all utility threads have ended
         startTime = time.clock()
         waitTime = 0

@@ -51,6 +51,7 @@ class Config(Section):
     language = GetClosestLanguage()
     autoloadFilePath = False
     checkUpdate = True
+    maxPipes = 3
     checkPreRelease = False
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
     confirmDelete = True
