@@ -216,12 +216,12 @@ class DllDependency(DependencyBase):
         if len(files):
             for file in files:
                 if GetFileVersion(file) != wantedVersion:
-                    raise WrongVersion
+                    raise WrongVersion(self.name)
                 else:
                     dest = join(self.buildSetup.sourceDir, basename(file))
                     copy2(file, dest)
         else:
-            raise MissingDependency
+            raise MissingDependency(self.name)
 
 
 class GitDependency(DependencyBase):
@@ -232,7 +232,7 @@ class GitDependency(DependencyBase):
 
     def Check(self):
         if not (os.system('"%s" --version >NUL 2>NUL' % GetGitPath()) == 0):
-            raise MissingDependency
+            raise MissingDependency(self.name)
 
     def Download(self):
         import platform
@@ -261,7 +261,7 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
     def Check(self):
         if not GetHtmlHelpCompilerPath():
-            raise MissingDependency
+            raise MissingDependency(self.name)
 
     def Download(self):
         install(
@@ -280,7 +280,7 @@ class InnoSetupDependency(DependencyBase):
 
     def Check(self):
         if not GetInnoCompilerPath():
-            raise MissingDependency
+            raise MissingDependency(self.name)
 
     def Download(self):
         install(
@@ -314,7 +314,7 @@ class ModuleDependency(DependencyBase):
                 warnings.simplefilter("ignore")
                 module = __import__(self.module)
         except ImportError:
-            raise MissingDependency
+            raise MissingDependency(self.name)
         if self.attr and hasattr(module, self.attr):
             version = getattr(module, self.attr)
         elif hasattr(module, "__version__"):
@@ -357,7 +357,7 @@ class ModuleDependency(DependencyBase):
         if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
+            raise WrongVersion(self.name)
 
     def Download(self):
         pip_install(self.name, self.module, self.package, self.version)
@@ -406,14 +406,14 @@ class PyWin32Dependency(ModuleDependency):
                         'Please reinstall pywin32 using "pip install pywin32"'
                     )
             else:
-                raise MissingDependency
+                raise MissingDependency(self.name)
 
         try:
             version = open(versionFilePath, "rt").readline().strip()
         except IOError:
-            raise MissingDependency
+            raise MissingDependency(self.name)
         if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
+            raise WrongVersion(self.name)
 
 
 class StacklessDependency(DependencyBase):
@@ -425,9 +425,9 @@ class StacklessDependency(DependencyBase):
         try:
             import stackless  # NOQA
         except:
-            raise MissingDependency
+            raise MissingDependency(self.name)
         if CompareVersion("%d.%d.%d" % sys.version_info[:3], self.version) < 0:
-            raise WrongVersion
+            raise WrongVersion(self.name)
 
 
 class SphinxDependency(ModuleDependency):
