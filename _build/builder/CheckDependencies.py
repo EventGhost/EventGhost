@@ -309,13 +309,6 @@ class VCRedistDependency(DllDependency):
 
 class ModuleDependency(DependencyBase):
     def Check(self):
-        for mod_name in sys.modules.keys():
-            if mod_name.startswith(self.module):
-                try:
-                    del sys.modules[mod_name]
-                except KeyError:
-                    pass
-        
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -364,7 +357,22 @@ class ModuleDependency(DependencyBase):
         if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
-            raise WrongVersion(self.name)
+            for mod_name in sys.modules.keys():
+                if mod_name.startswith('pkg_resources'):
+                    try:
+                        del sys.modules[mod_name]
+                    except KeyError:
+                        pass
+
+            import pkg_resources
+
+            try:
+                version = pkg_resources.get_distribution(self.module).version
+            except:
+                version = 'unknown'
+
+            if CompareVersion(version, self.version) < 0:
+                raise WrongVersion(self.name)
 
     def Download(self):
         pip_install(self.name, self.module, self.package, self.version)
