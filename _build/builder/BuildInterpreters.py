@@ -30,9 +30,11 @@ from os.path import exists, join
 # Local imports
 import builder
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import py2exe  # NOQA
+
+# with warnings.catch_warnings():
+#     warnings.simplefilter("ignore")
+#     import py2exe  # NOQA
+
 
 PYVERSION = "%d%d" % sys.version_info[:2]
 PY_BASE_NAME = "py%s" % PYVERSION

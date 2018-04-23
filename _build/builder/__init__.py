@@ -96,6 +96,9 @@ class Builder(object):
         sys.path.append(join(self.libraryDir, "site-packages"))
 
         self.args = self.ParseArgs()
+
+        self.download_dependencies = self.args.install
+
         self.showGui = not (
             self.args.build or
             self.args.check or
@@ -105,8 +108,11 @@ class Builder(object):
         )
         if os.environ.get(
                 "APPVEYOR_REPO_COMMIT_MESSAGE", ""
-        ).upper().startswith("VERBOSE:"):
+        ).upper().startswith("VERBOSE:") or self.showGui:
             self.args.verbose = True
+
+        # if self.args.verbose:
+        #     os.environ['DISTUTILS_DEBUG'] = '1'
 
         os.chdir(self.buildDir)
 
@@ -114,10 +120,6 @@ class Builder(object):
             os.mkdir(self.outputDir)
 
         LogToFile(join(self.outputDir, "Build.log"), self.args.verbose)
-
-        from CheckDependencies import CheckDependencies
-        if not CheckDependencies(self):
-            sys.exit(1)
 
         try:
             self.gitConfig = GetGitHubConfig()
@@ -161,6 +163,11 @@ class Builder(object):
             "-b", "--build",
             action="store_true",
             help="build imports, lib%s, and interpreters" % self.pyVersionStr,
+        )
+        parser.add_argument(
+            "-i", "--install",
+            action="store_true",
+            help="download dependencies",
         )
         parser.add_argument(
             "-c", "--check",
@@ -216,12 +223,15 @@ class Builder(object):
         self.tasks = [task(self) for task in TASKS]
         from Config import Config
         self.config = Config(self, join(self.outputDir, "Build.ini"))
-        for task in self.tasks:
-            task.Setup()
-        (self.appVersion, self.appVersionInfo) = GetVersion(self)
+
+        from CheckDependencies import CheckDependencies
+
         if self.showGui:
             import Gui
             Gui.Main(self)
         else:
+            if not CheckDependencies(self):
+                sys.exit(1)
+
             thread = threading.Thread(target=builder.Tasks.Main, args=[self])
             thread.start()

@@ -19,8 +19,7 @@
 import errno
 import os
 import time
-from docutils.core import publish_parts
-from jinja2 import Environment, FileSystemLoader
+
 from os.path import abspath, join
 
 # Local imports
@@ -36,6 +35,8 @@ class BuildWebsite(builder.Task):
             self.activated = bool(self.buildSetup.args.sync)
 
     def DoTask(self):
+        from jinja2 import Environment, FileSystemLoader
+
         buildSetup = self.buildSetup
         menuTabs = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
         env = Environment(
@@ -131,4 +132,5 @@ def GetSetupFiles(srcDir):
     return list(reversed(sorted(files, cmp=Cmp)))
 
 def rst2html(rst):
+    from docutils.core import publish_parts
     return publish_parts(rst, writer_name="html")["fragment"]

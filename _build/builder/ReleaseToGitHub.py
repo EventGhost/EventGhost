@@ -18,8 +18,7 @@
 
 import base64
 import sys
-import wx
-from agithub.GitHub import GitHub
+
 from os import environ
 from os.path import join
 
@@ -49,6 +48,9 @@ class ReleaseToGitHub(builder.Task):
             )
 
     def DoTask(self):
+        import wx
+        from agithub.GitHub import GitHub
+
         buildSetup = self.buildSetup
         appVer = "v" + buildSetup.appVersion
         gitConfig = buildSetup.gitConfig

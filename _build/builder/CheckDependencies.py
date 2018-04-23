@@ -18,15 +18,17 @@
 
 import glob
 import os
-import pip
 import platform
 import re
 import sys
 import warnings
 from os.path import basename, exists, expandvars, join
-from pip._vendor import requests
 from shutil import copy2
 from string import digits
+
+import os
+import tempfile
+from subprocess import Popen, PIPE
 
 # Local imports
 from builder import VirtualEnv
@@ -37,23 +39,49 @@ from builder.Utils import (
     WrapText,
 )
 
+temp_dir = tempfile.gettempdir()
+
+
 # Exceptions
 class MissingChocolatey(Exception):
     pass
+
+
 class MissingDependency(Exception):
     pass
+
+
 class MissingInstallMethod(Exception):
     pass
+
+
 class MissingPip(Exception):
     pass
+
+
 class MissingPowerShell(Exception):
     pass
+
+
 class WrongVersion(Exception):
     pass
 
+
+class VersionLocationError(Exception):
+    pass
+
+
+class ModuleZipFileError(Exception):
+    pass
+
+
+class PyWin32EggError(Exception):
+    pass
+
+
 class DependencyBase(object):
-    #name = None
-    #version = None
+    # name = None
+    # version = None
     attr = None
     exact = False
     module = None
@@ -65,6 +93,99 @@ class DependencyBase(object):
 
     def Check(self):
         raise NotImplementedError
+
+    def Download(self):
+        raise NotImplementedError
+
+
+def install(url, file_name, options):
+    from pip._vendor import requests
+
+    response = requests.get(url)
+    temp_file = os.path.join(temp_dir, file_name)
+
+    with open(temp_file, 'wb') as f:
+        f.write(response.content)
+
+    if 'MsiExec' in options:
+        proc = Popen(options % temp_file, stdout=PIPE, stderr=PIPE)
+    else:
+        proc = Popen(temp_file + options, stdout=PIPE, stderr=PIPE)
+
+    stderr, stdout = proc.communicate()
+
+    print stderr
+    print stdout
+
+    os.remove(temp_file)
+
+
+def pip_install(name, mod, pkg, version=None):
+    try:
+        __import__(mod)
+        print 'upgrading %s....' % name
+        upgrade = '--upgrade'
+    except ImportError:
+        print 'installing %s....' % name
+        upgrade = ''
+
+    if version:
+        if '%s' in pkg:
+            pkg %= version
+        else:
+            pkg += '==' + version
+
+        proc = Popen(
+            sys.executable +
+            ' -m pip install %s %s' % (upgrade, pkg)
+        )
+    else:
+        proc = Popen(
+            sys.executable +
+            ' -m pip install %s %s' % (upgrade, pkg)
+        )
+
+    proc.communicate()
+
+    for key in sys.modules.keys()[:]:
+        if key.startswith(mod):
+            try:
+                del sys.modules[key]
+            except KeyError:
+                pass
+    import site
+    reload(site)
+
+
+def easy_install(name, mod, pkg, version=None):
+    print 'installing %s....' % name
+
+    if version:
+        proc = Popen(
+            sys.executable +
+            ' -m easy_install --always-unzip %s==%s' % (pkg, version)
+        )
+    else:
+        proc = Popen(
+            sys.executable +
+            ' -m easy_install --always-unzip %s' % pkg
+        )
+
+
+    proc.communicate()
+    for key in sys.modules.keys()[:]:
+        if key.startswith(mod):
+            try:
+                del sys.modules[key]
+            except KeyError:
+                pass
+
+    import pkg_resources
+    try:
+        pkg_resources.require(mod)
+    except pkg_resources.DistributionNotFound:
+        import site
+        reload(site)
 
 
 class DllDependency(DependencyBase):
@@ -113,12 +234,26 @@ class GitDependency(DependencyBase):
         if not (os.system('"%s" --version >NUL 2>NUL' % GetGitPath()) == 0):
             raise MissingDependency
 
+    def Download(self):
+        import platform
+        url = (
+            'https://github.com/git-for-windows/git/releases/'
+            'download/v2.16.2.windows.1/Git-2.16.2-{0}-bit.exe'
+        ).format('64' if platform.machine().endswith('64') else '32')
+        install(
+            url,
+            'Git-2.16.2-{0}-bit.exe',
+            (
+                '/SP /VERYSILENT /SUPPRESSMSGBOXES '
+                '/NORESTART /RESTARTAPPLICATIONS /NOICONS'
+            )
+        )
+
 
 class HtmlHelpWorkshopDependency(DependencyBase):
     name = "HTML Help Workshop"
     version = "1.32"
     package = "html-help-workshop"
-    #url = "https://www.microsoft.com/download/details.aspx?id=21138"
     url = (
         "https://download.microsoft.com/download"
         "/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe"
@@ -127,6 +262,13 @@ class HtmlHelpWorkshopDependency(DependencyBase):
     def Check(self):
         if not GetHtmlHelpCompilerPath():
             raise MissingDependency
+
+    def Download(self):
+        install(
+            'http://go.microsoft.com/fwlink/p/?linkid=14188',
+            'htmlhelp.exe',
+            ' /q'
+        )
 
 
 class InnoSetupDependency(DependencyBase):
@@ -139,6 +281,56 @@ class InnoSetupDependency(DependencyBase):
     def Check(self):
         if not GetInnoCompilerPath():
             raise MissingDependency
+
+    def Download(self):
+        install(
+            'http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe',
+            'innosetup-5.5.9-unicode.exe',
+            ' /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART '
+            '/RESTARTAPPLICATIONS /NOICONS'
+        )
+
+
+class SubVersionDependency(DependencyBase):
+    name = "Subversion"
+    version = ""
+    package = "svn"
+
+    def Check(self):
+        if self.buildSetup.download_dependencies:
+            proc = Popen('svn', stdout=PIPE, stderr=PIPE)
+            stderr, stdout = proc.communicate()
+            if 'svn help' not in stdout:
+                raise MissingDependency
+
+    def Download(self):
+        svn_path = os.path.join(temp_dir, 'svn')
+
+        install(
+            'https://sourceforge.net/projects/win32svn/files'
+            '/1.8.17/Setup-Subversion-1.8.17.msi/download',
+            'Setup-Subversion-1.8.17.msi',
+            'MsiExec /I %s /quiet /passive /qn '
+            '/norestart TARGETDIR=' + svn_path
+        )
+
+        os.environ['PATH'] += ';' + svn_path
+
+
+class VCRedistDependency(DllDependency):
+    name = "Microsoft Visual C++ Redistributable"
+    package = "vcredist2008"
+    url = "https://www.microsoft.com/download/details.aspx?id=29"
+
+    def Download(self):
+        install(
+            (
+                'https://download.microsoft.com/download/1/1/1'
+                '/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe'
+            ),
+            'vcredist_x86.exe',
+            ' /quiet /passive /qn /norestart'
+        )
 
 
 class ModuleDependency(DependencyBase):
@@ -158,30 +350,90 @@ class ModuleDependency(DependencyBase):
         elif hasattr(module, "version"):
             version = module.version
         else:
-            result = [
-                p.version
-                for p in pip.get_installed_distributions()
-                if str(p).startswith(self.name + " ")
-            ]
-            if result:
-                version = result[0]
+            for key in sys.modules.keys()[:]:
+                if key.startswith('pip'):
+                    try:
+                        del sys.modules[key]
+                    except KeyError:
+                        pass
+
+            import pip
+
+            for p in pip.get_installed_distributions():
+                if p.project_name in (
+                    self.name,
+                    self.name.lower(),
+                    self.module
+                ):
+                    version = p.version
+                    break
             else:
-                raise Exception("Can't get version information")
+                raise VersionLocationError(
+                    "Can't get version information for "
+                    "the package {0} ".format(self.name)
+                )
+
+        if 'egg' in module.__file__:
+            if os.path.isfile(os.path.dirname(module.__file__)):
+                raise ModuleZipFileError(
+                    'Please reinstall {0} using the command "easy_install'
+                    ' --always-unzip {0}"'.format(self.mod)
+                )
+
         if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
             raise WrongVersion
 
+    def Download(self):
+        pip_install(self.name, self.module, self.package, self.version)
 
-class PyWin32Dependency(DependencyBase):
+
+class WXPythonDependency(ModuleDependency):
+    name = "wxPython"
+    module = "wx"
+    version = "3.0.2.0"
+    package = 'wxPython'
+    url = (
+        'http://downloads.sourceforge.net/wxpython/'
+        'wxPython3.0-win32-3.0.2.0-py27.exe'
+    )
+
+    def Download(self):
+        install(
+            (
+                'http://downloads.sourceforge.net/wxpython/'
+                'wxPython3.0-win32-3.0.2.0-py27.exe'
+            ),
+            'wxPython3.0-win32-3.0.2.0-py27.exe',
+            ' /VERYSILENT /SUPPRESSMSGBOXES'
+        )
+
+
+class PyWin32Dependency(ModuleDependency):
     name = "pywin32"
-    version = "220"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
+    module = "pywin32"
+    version = "223"
+    package = "pywin32"
 
     def Check(self):
-        versionFilePath = join(
-            sys.prefix, "lib/site-packages/pywin32.version.txt"
-        )
+        site_packages_path = join(sys.prefix, "lib/site-packages/")
+        site_packages = os.listdir(site_packages_path)
+
+        if 'pywin32.version.txt' in site_packages:
+            versionFilePath = join(
+                site_packages_path,
+                'pywin32.version.txt'
+            )
+        else:
+            for item in site_packages:
+                if item.startswith('pywin32') and item.endswith('egg'):
+                    raise PyWin32EggError(
+                        'Please reinstall pywin32 using "pip install pywin32"'
+                    )
+            else:
+                raise MissingDependency
+
         try:
             version = open(versionFilePath, "rt").readline().strip()
         except IOError:
@@ -204,81 +456,159 @@ class StacklessDependency(DependencyBase):
             raise WrongVersion
 
 
+class SphinxDependency(ModuleDependency):
+    name = "Sphinx"
+    module = "sphinx"
+    package = 'sphinx'
+    version = "1.7.2"
+
+    def Download(self):
+        pip_install(self.name, self.module, self.package, self.version)
+
+        import jinja2
+
+        jinja_path = os.path.dirname(jinja2.__file__)
+
+        for path, dirs, files in os.walk(jinja_path):
+            head, tail = os.path.split(path)
+            parent_mod = []
+            while tail != 'jinja2':
+                parent_mod += [tail]
+                head, tail = os.path.split(head)
+
+            parent_mod = '.'.join(
+                sorted(parent_mod + ['jinja2'], reverse=True)
+            )
+
+            for mod_name in files:
+                if mod_name.endswith('.py'):
+                    try:
+                        __import__(parent_mod + '.' + mod_name[:-3])
+                    except SyntaxError:
+                        os.remove(os.path.join(path, mod_name))
+                    except:
+                        pass
+
+        for key in sys.modules.keys()[:]:
+            if key.startswith('jinja2'):
+                try:
+                    del sys.modules[key]
+                except KeyError:
+                    pass
+
+
+class PIPDependency(ModuleDependency):
+    name = 'PIP'
+    module = 'pip'
+    package = 'pip'
+    version = '9.0.3'
+
+    def Download(self):
+        try:
+            import pip
+            if pip.__version__ != self.version:
+                pip_install(self.name, self.module, self.package, self.version)
+        except ImportError:
+            easy_install(self.name, self.module, self.package, self.version)
+
+
 DEPENDENCIES = [
-    ModuleDependency(
-        name = "CommonMark",
-        module = "CommonMark",
-        version = "0.7.0",
-    ),
-    ModuleDependency(
-        name = "comtypes",
-        module = "comtypes",
-        version = "1.1.2",
-    ),
-    ModuleDependency(
-        name = "ctypeslib",
-        module = "ctypeslib",
-        version = "0.5.6",
-        url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
-    ),
-    ModuleDependency(
-        name = "future",
-        module = "future",
-        version = "0.15.2",
-    ),
-    #GitDependency(),
+    StacklessDependency(),
+    PIPDependency(),
+    SubVersionDependency(),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
-    DllDependency(
-        name="Microsoft Visual C++ Redistributable",
-        package="vcredist2008",
-        #url = "https://www.microsoft.com/download/details.aspx?id=29",
-        url = (
-            "https://download.microsoft.com/download"
-            "/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
-        ),
-    ),
+    VCRedistDependency(),
     ModuleDependency(
-        name = "Pillow",
-        module = "PIL",
-        attr = "PILLOW_VERSION",
-        version = "3.1.1",
+        name='Setuptools',
+        module='setuptools',
+        package='setuptools',
+        version='39.0.1'
     ),
-    ModuleDependency(
-        name = "py2exe_py2",
-        module = "py2exe",
-        version = "0.6.9",
-    ),
-    ModuleDependency(
-        name = "PyCrypto",
-        module = "Crypto",
-        version = "2.6.1",
-        url = "https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl",
-    ),
+    SphinxDependency(),
     PyWin32Dependency(),
     ModuleDependency(
-        name = "Sphinx",
-        module = "sphinx",
-        version = "1.3.5",
+        name="CommonMark",
+        module="CommonMark",
+        package='CommonMark',
+        version="0.7.5",
     ),
-    StacklessDependency(),
     ModuleDependency(
-        name = "wxPython",
-        module = "wx",
-        version = "3.0.2.0",
-        url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
+        name="comtypes",
+        module="comtypes",
+        package='comtypes',
+        version="1.1.4",
     ),
+    ModuleDependency(
+        name="ctypeslib2",
+        module="ctypeslib",
+        package="ctypeslib2",
+        version="2.2.1",
+    ),
+    ModuleDependency(
+        name="future",
+        module="future",
+        package='future',
+        version="0.16.0",
+    ),
+    #GitDependency(),
+    ModuleDependency(
+        name="Pillow",
+        module="PIL",
+        attr="PILLOW_VERSION",
+        package='Pillow',
+        version="5.1.0",
+    ),
+    ModuleDependency(
+        name="py2exe_py2",
+        module="py2exe",
+        package='py2exe_py2',
+        version="0.6.9",
+    ),
+    ModuleDependency(
+        name="PyCrypto",
+        module="Crypto",
+        package='pycrypto',
+        version="2.6.1",
+        url=(
+            "https://eventghost.github.io/dist/dependencies/"
+            "pycrypto-2.6.1-cp27-none-win32.whl"
+        ),
+    ),
+    WXPythonDependency()
 ]
+
 
 def CheckDependencies(buildSetup):
     failedDeps = []
 
-    for dep in DEPENDENCIES:
-        dep.buildSetup = buildSetup
+    class DepFailedError(Exception):
+        pass
+
+    def check_dep():
         try:
             dep.Check()
-        except (WrongVersion, MissingDependency):
-            failedDeps.append(dep)
+        except (
+            MissingDependency,
+            WrongVersion,
+            VersionLocationError,
+            ModuleZipFileError,
+            PyWin32EggError,
+        ):
+            import traceback
+            raise DepFailedError(traceback.format_exc())
+
+    for dep in DEPENDENCIES:
+        dep.buildSetup = buildSetup
+
+        try:
+            check_dep()
+        except DepFailedError:
+            if buildSetup.download_dependencies:
+                dep.Download()
+                check_dep()
+            else:
+                raise
 
     if failedDeps and buildSetup.args.make_env and not os.environ.get("_REST"):
         if not IsAdmin():

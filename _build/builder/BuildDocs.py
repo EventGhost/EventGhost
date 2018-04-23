@@ -20,15 +20,11 @@ import codecs
 import os
 import re
 import shutil
-import sphinx
 from os.path import join
 
 # Local imports
 import builder
 from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
-
-import eg
-from eg.Utils import GetFirstParagraph
 
 GUI_CLASSES = [
     "SpinIntCtrl",
@@ -98,6 +94,8 @@ class BuildHtmlDocs(builder.Task):
 
 
 def call_sphinx(builder, build_setup, dest_dir):
+    import sphinx
+
     WritePluginList(join(build_setup.docsDir, "pluginlist.rst"))
     Prepare(build_setup.docsDir)
     sphinx.build_main(
@@ -128,6 +126,8 @@ def call_sphinx(builder, build_setup, dest_dir):
 
 
 def BuildClsDocs(clsNames, doc_src_dir):
+    import eg
+
     res = []
     for clsName in clsNames:
         if clsName.startswith("-"):
@@ -181,6 +181,9 @@ def Prepare(doc_src_dir):
 
 
 def WritePluginList(filepath):
+    import eg
+    from eg.Utils import GetFirstParagraph
+
     kindList = [
         ("core", "Essential (always loaded)"),
         ("remote", "Remote Receiver"),

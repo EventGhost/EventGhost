@@ -100,7 +100,9 @@ class MyBuilder(builder.Builder):
         "wx.lib.pdfviewer",
         "wx.lib.pubsub"
         "wx.lib.iewin",
-        "wx.lib.iewin_old"
+        "wx.lib.iewin_old",
+        "jinja2.asyncsupport"
+        "jinja2.asyncfilters",
     ]
 
     def BuildInstaller(self):

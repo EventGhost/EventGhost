@@ -52,7 +52,7 @@ class BuildLibrary(builder.Task):
         from distutils.core import setup
         InstallPy2exePatch()
 
-        import py2exe
+        py2exe = __import__('py2exe')
         origIsSystemDLL = py2exe.build_exe.isSystemDLL
 
         def isSystemDLL(path):

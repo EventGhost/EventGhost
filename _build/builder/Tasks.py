@@ -144,10 +144,17 @@ TASKS = [
     SynchronizeWebsite,
 ]
 
+
 def Main(buildSetup):
     """
     Main task of the script.
     """
+
+    from CheckDependencies import CheckDependencies
+
+    if not CheckDependencies(buildSetup):
+        sys.exit(1)
+
     for task in buildSetup.tasks:
         if task.activated:
             logger.log(22, "--- {0}".format(task.description))
