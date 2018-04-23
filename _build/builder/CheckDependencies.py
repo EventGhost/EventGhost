@@ -291,32 +291,6 @@ class InnoSetupDependency(DependencyBase):
         )
 
 
-class SubVersionDependency(DependencyBase):
-    name = "Subversion"
-    version = ""
-    package = "svn"
-
-    def Check(self):
-        if self.buildSetup.download_dependencies:
-            proc = Popen('svn', stdout=PIPE, stderr=PIPE)
-            stderr, stdout = proc.communicate()
-            if 'svn help' not in stdout:
-                raise MissingDependency
-
-    def Download(self):
-        svn_path = os.path.join(temp_dir, 'svn')
-
-        install(
-            'https://sourceforge.net/projects/win32svn/files'
-            '/1.8.17/Setup-Subversion-1.8.17.msi/download',
-            'Setup-Subversion-1.8.17.msi',
-            'MsiExec /I %s /quiet /passive /qn '
-            '/norestart TARGETDIR=' + svn_path
-        )
-
-        os.environ['PATH'] += ';' + svn_path
-
-
 class VCRedistDependency(DllDependency):
     name = "Microsoft Visual C++ Redistributable"
     package = "vcredist2008"
@@ -515,7 +489,6 @@ class PIPDependency(ModuleDependency):
 DEPENDENCIES = [
     StacklessDependency(),
     PIPDependency(),
-    SubVersionDependency(),
     HtmlHelpWorkshopDependency(),
     InnoSetupDependency(),
     VCRedistDependency(),
