@@ -309,6 +309,13 @@ class VCRedistDependency(DllDependency):
 
 class ModuleDependency(DependencyBase):
     def Check(self):
+        for mod_name in sys.modules.keys():
+            if mod_name.startswith(self.module):
+                try:
+                    del sys.modules[mod_name]
+                except KeyError:
+                    pass
+        
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
