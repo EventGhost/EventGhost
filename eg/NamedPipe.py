@@ -17,127 +17,492 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 # changelog
-# 18-12-2017: 23:07 -7:00   K
-# Adds multiple pipe connection support.
+# 18-12-2017: 23:07 -7:00UTC   K
+#   Adds multiple pipe connection support.
+# 15-05-2017: 14:00 -7:00UTC   K
+#   Code rewrite, This is a pure python implementation
+#   without the use of pywin32. One of the main things I have done is I have
+#   created variables for each and every argument in any windows function call.
+#   These variable names are identical to the names given in the Window API.
+#   I did this so it is easier to follow the code for any possible error.
+#
+#   The code has been change in several ways. The first is it is now able to
+#   be used by plugins. If they needed to create their own named pipe server.
+#   or simple do a single transaction (send, receive).
+#
+#   The pipe has also been changed so the connection will remain active until
+#   the client sends the CLOSE command.
+#
+#   I also changed the processing of command. The new processing checks to see
+#   if the call is being made to eg.document or eg.mainFrame and if so it will
+#   run the command in the main thread. when running the command there is a
+#   timer that is set so in the event the execution of the command causes the
+#   main thread to hang the pipe will return "MainThreadHung" after 5 seconds
+#   has passed and the call has not returned. In all other cases a new thread
+#   to run the command in is spawned and the same process takes place as with
+#   the main thread except the return value in the event of a hang is
+#   "UnableToProcessCommand"
+#
+#   I have added a mechanism in the server that will cause a loop with a wait
+#   if there is already a pipe with the same name. if the pipe becomes
+#   available the loop will exit and the pipe will be created. This was mainly
+#   put into place because of the use of the cli switch -multiload.
+#
+#   The starting of the pipe was moved to DynamicModule.Main method. This was
+#   done so the starting of the pipe would be done after the core was loaded
+#   but before the core threads were started.
+#
+#   In all of the server side exception catching the connection will be
+#   severed, and a possible traceback will be printed. Clients will a PipeError
+#   (or subclass of) raised. The calling code is responsible for catching the
+#   exceptions and handling them in a manner they see fit.
+#
+#   In the exception classes i have added __getitem__ so the calling code can
+#   grab the original Windows API error. This can be used to compare to one of
+#   the Error constants listed above.
+#
+#   from eg import NamedPipe
+#
+#   try:
+#       res = NamedPipe.send_message('SomeNamedPipe', 'some message')
+#       print res
+#   except NamedPipe.PipeError as err:
+#      if err[1] == NamedPipe.ERROR_FILE_NOT_FOUND:
+#          print 'Pipe SomeNamedPipe is not available'
+#      else:
+#         raise
+#
+#   or you can do the following and for go the exception handling
+#
+#   from eg import NamedPipe
+#
+#   if NamedPipe.is_pipe_running('SomeNamedPipe'):
+#       res = NamedPipe.send_message('SomeNamedPipe', 'some message')
+#       print res
+#   else:
+#       print 'Pipe SomeNamedPipe is not available'
 
 
-import win32security
-import win32pipe
-import win32file
+import sys
+import ctypes
 import threading
-import wx
 import traceback
-import random
+import platform
+from ctypes.wintypes import (
+    HANDLE,
+    ULONG,
+    LPCSTR,
+    LPCWSTR,
+    DWORD,
+    WORD,
+    BOOL,
+    BYTE,
+    LPCVOID
+)
 
 
+def write_error(*msg):
+    msg = ' '.join(repr(item) for item in msg)
+    sys.stderr.write(msg + '\n')
+
+
+write_error('loading eg.NamedPipe module')
+__version__ = '0.1.0b'
+
+# various c types that get used when passing data to the Windows functions
+POINTER = ctypes.POINTER
+PVOID = ctypes.c_void_p
+LPVOID = ctypes.c_void_p
+LPDWORD = POINTER(DWORD)
+PULONG = POINTER(ULONG)
+LPTSTR = LPCSTR
+LPCTSTR = LPTSTR
+UCHAR = ctypes.c_ubyte
+NULL = None
+
+# checking for x86/x64 not really necessary because EG only runs in x86
+# here for completeness
+if ctypes.sizeof(ctypes.c_void_p) == 8:
+    ULONG_PTR = ctypes.c_ulonglong
+else:
+    ULONG_PTR = ctypes.c_ulong
+
+# returned values for WaitForSingleObject
+WAIT_OBJECT_0 = 0x00000000
+WAIT_ABANDONED = 0x00000080
+WAIT_TIMEOUT = 0x00000102
+WAIT_FAILED = 0xFFFFFFFF
+
+# can be passed to WaitForSingleObject
+INFINITE = 0xFFFFFFFF
+
+# bit identifiers for the pipe type, used in CreateNamedPipe
+PIPE_ACCESS_INBOUND = 0x00000001
 PIPE_ACCESS_OUTBOUND = 0x00000002
 PIPE_ACCESS_DUPLEX = 0x00000003
-PIPE_ACCESS_INBOUND = 0x00000001
 
-PIPE_WAIT = 0x00000000
-PIPE_NOWAIT = 0x00000001
+# Number of pipe instances
+PIPE_UNLIMITED_INSTANCES = 0x000000FF
 
-PIPE_READMODE_BYTE = 0x00000000
-PIPE_READMODE_MESSAGE = 0x00000002
+# pipe type used in server creation of the pipe
+# we are only using MESSAGE at the moment (here for completeness)
 PIPE_TYPE_BYTE = 0x00000000
 PIPE_TYPE_MESSAGE = 0x00000004
 
+# pipe type used in client connection to the pipe
+# we are only using MESSAGE at the moment (here for completeness)
+PIPE_READMODE_BYTE = 0x00000000
+PIPE_READMODE_MESSAGE = 0x00000002
+
+# server use. whether to wait when ConnectNamedPipe is called
+PIPE_WAIT = 0x00000000
+PIPE_NOWAIT = 0x00000001
+
+# server use, how long to wait.
+NMPWAIT_USE_DEFAULT_WAIT = 0x00000000
+NMPWAIT_NOWAIT = 0x00000001
+NMPWAIT_WAIT_FOREVER = 0xFFFFFFFF
+
+
+# server use, we are only using the NO_BUFFERING and FIRST_INSTANCE
+# the rest are here for completeness
+FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+FILE_FLAG_OVERLAPPED = 0x40000000
+FILE_FLAG_DELETE_ON_CLOSE = 0x04000000
+FILE_FLAG_OPEN_NO_RECALL = 0x00100000
+FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x00040000
+FILE_FLAG_POSIX_SEMANTICS = 0x0100000
+FILE_FLAG_WRITE_THROUGH = 0x80000000
+FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000
+FILE_FLAG_SESSION_AWARE = 0x00800000
+FILE_FLAG_RANDOM_ACCESS = 0x10000000
+FILE_FLAG_NO_BUFFERING = 0x20000000
+FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000
+
+FILE_ATTRIBUTE_NORMAL = 0x00000080
+
+# used in client OpenFile and
+OPEN_EXISTING = 0x00000003
+GENERIC_ALL = 0x10000000
+GENERIC_EXECUTE = 0x20000000
+GENERIC_WRITE = 0x40000000
+GENERIC_READ = 0x80000000
+
+# here for completeness
 PIPE_CLIENT_END = 0x00000000
 PIPE_SERVER_END = 0x00000001
 
-FILE_FLAG_OVERLAPPED = 0x40000000
-FILE_ATTRIBUTE_NORMAL = 0x00000080
 FILE_SHARE_READ = 0x00000001
 FILE_SHARE_WRITE = 0x00000002
 
-PIPE_UNLIMITED_INSTANCES = 0xFF
+# return error codes from GetLastError not all of these errors are specific to
+# named pipes but they are used.
+ERROR_INVALID_HANDLE = 0x00000006
+ERROR_PIPE_CONNECTED = 0x00000217
+ERROR_PIPE_LISTENING = 0x00000218
+ERROR_BROKEN_PIPE = 0x0000006D
+ERROR_PIPE_LOCAL = 0x000000E5
+ERROR_MORE_DATA = 0x000000EA
+ERROR_BAD_PIPE = 0x000000E6
+ERROR_PIPE_BUSY = 0x000000E7
+ERROR_NO_DATA = 0x000000E8
+ERROR_PIPE_NOT_CONNECTED = 0x000000E9
+ERROR_INVALID_NAME = 0x0000007B
+ERROR_FILE_NOT_FOUND = 0x00000002
+ERROR_ALREADY_EXISTS = 0x000000B7
+ERROR_ACCESS_DENIED = 0x00000005
+ERROR_IO_INCOMPLETE = 0x000003E4
+ERROR_IO_PENDING = 0x000003E5
+INVALID_HANDLE_VALUE = -1
 
-NMPWAIT_WAIT_FOREVER = 0xFFFFFFFF
-NMPWAIT_NOWAIT = 0x00000001
-NMPWAIT_USE_DEFAULT_WAIT = 0x00000000
-
-GENERIC_READ = 0x80000000
-GENERIC_WRITE = 0x40000000
-GENERIC_EXECUTE = 0x20000000
-GENERIC_ALL = 0x10000000
-
-FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000
-
-ERROR_PIPE_CONNECTED = 0x217
-ERROR_PIPE_LISTENING = 0x218
-ERROR_BROKEN_PIPE = 0x6D
-ERROR_PIPE_LOCAL = 0xE5
-ERROR_BAD_PIPE = 0xE6
-ERROR_PIPE_BUSY = 0xE7
-ERROR_NO_DATA = 0xE8
-ERROR_PIPE_NOT_CONNECTED = 0xE9
-ERROR_FILE_NOT_FOUND = 0x2
-
-
-class NamedPipeException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return str(self.msg)
+# identifiers passed to FormatMessage located in PipeError
+FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
 
 
-class NamedPipeDataError(NamedPipeException):
-    pass
+# kernel32 API
+kernel32 = ctypes.windll.kernel32
+# Windows security API
+advapi32 = ctypes.windll.advapi32
 
 
-class NamedPipeCommandError(NamedPipeException):
-    pass
+write_error('creating structures')
+
+# c type structure that handles the overlapped io portion of the pipe
+# not used currently here for completeness
+# -----------------------------------------------------------------------------
+# noinspection PyPep8Naming
+class _OVERLAPPED_STRUCTURE(ctypes.Structure):
+    _fields_ = [
+        ('Offset', DWORD),
+        ('OffsetHigh', DWORD)
+    ]
 
 
-class NamedPipeConnectionError(NamedPipeException):
+# noinspection PyPep8Naming
+class _OVERLAPPED_UNION(ctypes.Union):
+    _anonymous_ = ('_OVERLAPPED_STRUCTURE',)
+    _fields_ = [
+        ('_OVERLAPPED_STRUCTURE', _OVERLAPPED_STRUCTURE),
+        ('Pointer', PVOID)
+    ]
+
+
+# noinspection PyPep8Naming
+class _OVERLAPPED(ctypes.Structure):
+    _anonymous_ = ('_OVERLAPPED_UNION',)
+    _fields_ = [
+        ('Internal', ULONG_PTR),
+        ('InternalHigh', ULONG_PTR),
+        ('_OVERLAPPED_UNION', _OVERLAPPED_UNION),
+        ('hEvent', HANDLE)
+    ]
+
+
+OVERLAPPED = _OVERLAPPED
+LPOVERLAPPED = ctypes.POINTER(_OVERLAPPED)
+# -----------------------------------------------------------------------------
+
+
+# c type security structures that set the security of the pipe
+# the ACL bits are not used currently and are here for completeness
+# -----------------------------------------------------------------------------
+class _ACL(ctypes.Structure):
+    _fields_ = [
+        ('AclRevision', BYTE),
+        ('Sbz1', BYTE),
+        ('AclSize', WORD),
+        ('AceCount', WORD),
+        ('Sbz2', WORD)
+    ]
+
+
+ACL = _ACL
+PACL = ctypes.POINTER(_ACL)
+
+
+# noinspection PyPep8Naming
+class _SECURITY_DESCRIPTOR(ctypes.Structure):
+    _fields_ = [
+        ('Revision', UCHAR),
+        ('Sbz1', UCHAR),
+        ('Control', WORD),
+        ('Owner', PVOID),
+        ('Group', PVOID),
+        ('Sacl', PACL),
+        ('Dacl', PACL)
+    ]
+
+
+SECURITY_DESCRIPTOR = _SECURITY_DESCRIPTOR
+PSECURITY_DESCRIPTOR = ctypes.POINTER(_SECURITY_DESCRIPTOR)
+
+
+# noinspection PyPep8Naming
+class _SECURITY_ATTRIBUTES(ctypes.Structure):
+    _fields_ = [
+        ('nLength', DWORD),
+        ('lpSecurityDescriptor', PSECURITY_DESCRIPTOR),
+        ('bInheritHandle', BOOL)
+    ]
+
+
+SECURITY_ATTRIBUTES = _SECURITY_ATTRIBUTES
+PSECURITY_ATTRIBUTES = ctypes.POINTER(_SECURITY_ATTRIBUTES)
+LPSECURITY_ATTRIBUTES = ctypes.POINTER(_SECURITY_ATTRIBUTES)
+
+SetSecurityDescriptorDacl = advapi32.SetSecurityDescriptorDacl
+# -----------------------------------------------------------------------------
+
+# defining of the kernel32 functions used and they return types.
+# I have found there is no real need to set the argument types and this is a
+# waste of time and code.
+# -----------------------------------------------------------------------------
+
+GetLastError = kernel32.GetLastError
+GetLastError.restype = DWORD
+
+GetNamedPipeClientProcessId = kernel32.GetNamedPipeClientProcessId
+GetNamedPipeClientProcessId.restype = BOOL
+
+GetNamedPipeClientSessionId = kernel32.GetNamedPipeClientSessionId
+GetNamedPipeClientSessionId.restype = BOOL
+
+GetNamedPipeServerProcessId = kernel32.GetNamedPipeServerProcessId
+GetNamedPipeServerProcessId.restype = BOOL
+
+GetNamedPipeServerSessionId = kernel32.GetNamedPipeServerSessionId
+GetNamedPipeServerSessionId.restype = BOOL
+
+DisconnectNamedPipe = kernel32.DisconnectNamedPipe
+DisconnectNamedPipe.restype = BOOL
+
+ResetEvent = kernel32.ResetEvent
+ResetEvent.restype = BOOL
+
+FlushFileBuffers = kernel32.FlushFileBuffers
+FlushFileBuffers.restype = BOOL
+
+WaitForSingleObject = kernel32.WaitForSingleObject
+WaitForSingleObject.restype = DWORD
+
+WaitNamedPipe = kernel32.WaitNamedPipeW
+WaitNamedPipe.restype = BOOL
+
+SetNamedPipeHandleState = kernel32.SetNamedPipeHandleState
+SetNamedPipeHandleState.restype = BOOL
+
+FormatMessage = kernel32.FormatMessageW
+FormatMessage.restype = DWORD
+
+CloseHandle = kernel32.CloseHandle
+CloseHandle.restype = BOOL
+
+CreateEvent = kernel32.CreateEventW
+CreateEvent.restype = HANDLE
+
+CreateFile = kernel32.CreateFileA
+CreateFile.restype = HANDLE
+
+CreateNamedPipe = kernel32.CreateNamedPipeW
+CreateNamedPipe.restype = HANDLE
+
+ConnectNamedPipe = kernel32.ConnectNamedPipe
+ConnectNamedPipe.restype = BOOL
+
+WriteFile = kernel32.WriteFile
+WriteFile.restype = BOOL
+
+ReadFile = kernel32.ReadFile
+ReadFile.restype = BOOL
+
+GetOverlappedResult = kernel32.GetOverlappedResult
+GetOverlappedResult.restype = BOOL
+# -----------------------------------------------------------------------------
+
+
+# exception classes
+# -----------------------------------------------------------------------------
+
+class PipeError(Exception):
+
+    def __init__(self, msg, pipe_handle=None):
+        if isinstance(msg, int):
+            err = msg
+            msg = format_error(err)
+        else:
+            err = None
+
+        self._msg = [msg, err, pipe_handle]
 
     def __getitem__(self, item):
-        if item in self.__dict__:
-            return self.__dict__[item]
+        return self._msg[item]
 
-        return self.msg[item]
-
-
-def process_data(in_data):
-    """
-    Strips 0x0 bytes from incoming data.
-
-    :param in_data: data received from the named pipe
-    :type in_data: str
-    :return: Corrected data from the named pipe
-    :rtype: str
-    """
-    out_data = ''
-    for char in in_data:
-        if ord(char) != 0:
-            out_data += char
-    return out_data
+    def __str__(self):
+        return self._msg[0]
 
 
-def _is_eg_running():
-    try:
-        win32pipe.WaitNamedPipe(
-            r'\\.\pipe\eventghost',
-            NMPWAIT_USE_DEFAULT_WAIT
-        )
+class PipeDataError(PipeError):
+    pass
+
+
+class PipeCommandError(PipeError):
+    pass
+
+
+class PipeConnectionError(PipeError):
+    pass
+
+
+# this is used in the exception classes to query windows for a nice human
+# readable error message.
+def format_error(err):
+
+    dwFlags = DWORD(FORMAT_MESSAGE_FROM_SYSTEM)
+    lpSource = NULL
+    dwMessageId = DWORD(err)
+    dwLanguageId = DWORD(0)
+    lpBuffer = ctypes.create_unicode_buffer(4096)
+    nSize = DWORD(4096)
+    Arguments = NULL
+
+    kernel32.FormatMessageW(
+        dwFlags,
+        lpSource,
+        dwMessageId,
+        dwLanguageId,
+        lpBuffer,
+        nSize,
+        Arguments
+    )
+    err_hex = '0x' + '{0:#0{1}X}'.format(err, 10)[2:]
+    return '{0} [{1}]'.format(lpBuffer.value.rstrip(), err_hex)
+
+# -----------------------------------------------------------------------------
+
+
+# Checks for the instance of a running pipe. I created this new function so
+# eg.NamedPipe can be used in plugins if needed.
+def is_pipe_running(pipe_name):
+    write_error('checking for running pipe')
+
+    lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
+    dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
+    dwPipeMode = DWORD(PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE)
+    nMaxInstances = DWORD(PIPE_UNLIMITED_INSTANCES)
+    nOutBufferSize = DWORD(4096)
+    nInBufferSize = DWORD(4096)
+    nDefaultTimeOut = DWORD(60000)
+    lpSecurityAttributes = NULL
+
+    hNamedPipe = CreateNamedPipe(
+        lpName,
+        dwOpenMode,
+        dwPipeMode,
+        nMaxInstances,
+        nOutBufferSize,
+        nInBufferSize,
+        nDefaultTimeOut,
+        lpSecurityAttributes
+    )
+    err = GetLastError()
+    CloseHandle(hNamedPipe)
+
+    if err in (ERROR_ALREADY_EXISTS, ERROR_ACCESS_DENIED):
         return True
 
-    except win32pipe.error as err:
-        if err[0] == ERROR_FILE_NOT_FOUND:
-            return False
-        raise NamedPipeConnectionError(err)
+    elif not err:
+        return False
+
+    else:
+        write_error(err)
+        raise PipeConnectionError(err)
 
 
-is_eg_running = _is_eg_running()
+# This is specific to checking is the eventghost named pipe is running
+def is_eg_running():
+    write_error('is pipe running')
+    return is_pipe_running('eventghost')
 
 
+# formats the pipe name properly, Windows 0 requires a different pipe
+# formatting
+def _create_pipe_name(name):
+    if platform.release() == '10':
+        return '\\\\.\\pipe\\LOCAL\\' + name
+    else:
+        return '\\\\.\\pipe\\' + name
+
+
+# this is a pipe instance class, it handles all of the nitty gritty for server
+# pipe connections.
 class Pipe(object):
     """
     Thread class for handling additional pipe connections.
     """
 
-    def __init__(self, parent, pipe_id, security_attributes):
+    def __init__(self, parent, pipe_name, pipe_id):
         """
 
         :param parent: Server class
@@ -148,243 +513,322 @@ class Pipe(object):
             pipe.
         :type security_attributes: win32security.SECURITY_ATTRIBUTES instance
         """
+        self._pipe = None
         self._parent = parent
         self._pipe_id = pipe_id
+        self._pipe_name = pipe_name
         self.is_waiting = True
-        self._thread = threading.Thread(
-            name='EventGhost.Pipe.{0}.Thread'.format(pipe_id),
-            target=self.run,
-            args=(security_attributes,)
-        )
-        self._thread.daemon = True
-        self._thread.start()
+        self.closed = False
+        self._event = threading.Event()
 
-    def run(self, security_attributes):
-        """
-        Handles the creation of the pipe.
-
-
-        Windows SACL and DACL data for creating the
-            pipe.
-        :type security_attributes: win32security.SECURITY_ATTRIBUTES instance
-        :return: None
-        :rtype: None
-        """
         import eg
 
         eg.PrintDebugNotice(
-            'Named Pipe: Creating pipe {0}'.format(self._pipe_id)
+            'Named Pipe: Creating pipe {0}'.format(pipe_id)
         )
 
-        pipe = win32pipe.CreateNamedPipe(
-            r'\\.\pipe\eventghost',
-            PIPE_ACCESS_DUPLEX,
-            PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE,
-            PIPE_UNLIMITED_INSTANCES,
-            4096,
-            4096,
-            5,
-            security_attributes
+        lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
+        dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
+        dwPipeMode = DWORD(PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE)
+        nMaxInstances = DWORD(PIPE_UNLIMITED_INSTANCES)
+        nOutBufferSize = DWORD(4096)
+        nInBufferSize = DWORD(4096)
+        nDefaultTimeOut = DWORD(60000)
+
+        # This is where the permissions get created for the pipe
+        lpSecurityDescriptor = PSECURITY_DESCRIPTOR()
+        lpSecurityAttributes = SECURITY_ATTRIBUTES()
+        lpSecurityAttributes.lpSecurityDescriptor = lpSecurityDescriptor
+        lpSecurityAttributes.nLength = ctypes.sizeof(lpSecurityDescriptor)
+
+        bDaclPresent = BOOL(True)
+        pDacl = NULL
+        bDaclDefaulted = BOOL(False)
+
+        SetSecurityDescriptorDacl(
+            ctypes.byref(lpSecurityDescriptor),
+            bDaclPresent,
+            pDacl,
+            bDaclDefaulted
         )
 
-        win32pipe.ConnectNamedPipe(pipe, None)
-        data = win32file.ReadFile(pipe, 4096)
-        self.is_waiting = False
+        if self._parent.running_pipes:
+            dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX)
 
-        if not self._parent.running_pipes[-1].is_waiting == self:
-            self._parent.running_pipes += [
-                Pipe(
-                    self._parent,
-                    self._parent.get_pipe_id(),
-                    security_attributes
-                )
-            ]
+        self.hNamedPipe = CreateNamedPipe(
+            lpName,
+            dwOpenMode,
+            dwPipeMode,
+            nMaxInstances,
+            nOutBufferSize,
+            nInBufferSize,
+            nDefaultTimeOut,
+            ctypes.byref(lpSecurityAttributes)
+        )
 
-        eg.PrintDebugNotice('Pipe {0}: Data received'.format(self._pipe_id))
-
-        if data[0] == 0:
-            event = threading.Event()
-            res = ['']
-
-            self._parent.process_command.add(
-                self._pipe_id,
-                data[1],
-                res,
-                event
-            )
-
-            while not event.isSet():
-                pass
-
-            win32file.WriteFile(pipe, str(repr(res[0])))
-            win32pipe.DisconnectNamedPipe(pipe)
-            win32file.CloseHandle(pipe)
-        else:
-            try:
-                raise NamedPipeDataError(
-                    'Pipe {0}: Unknown Error: {1}'.format(
-                        self._pipe_id,
-                        str(data)
-                    )
-                )
-            except NamedPipeDataError:
-                traceback.print_exc()
-        self._parent.running_pipes.remove(self)
-
-
-class ProcessCommand(object):
-    """
-    Incoming pipe command processor.
-    """
-
-    def __init__(self):
-        self._thread = threading.Thread(target=self.run)
+        self._thread = threading.Thread(
+            name='{0}.Pipe.{1}.Thread'.format(pipe_name, pipe_id),
+            target=self.run
+        )
         self._thread.daemon = True
-        self._queue = []
-        self._running_id = 0
+
+    def open(self):
         self._thread.start()
-        self._queue_event = threading.Event()
-
-    def add(self, pipe_id, data, res, event):
-        """
-        Adds new data to the queue to be processed.
-
-        :param pipe_id: ID of the pipe instance sending in the data to be
-            processed.
-        :type pipe_id: int
-        :param data: Data to be processed.
-        :type data: str
-        :param res: Container to hold any return data.
-        :type res: list
-        :param event: vent that gets set when processing has finished. This
-            lets the pipe instance know when to send return data back.
-        :type event: threading.Event instance
-        :return: None
-        :rtype: None
-        """
-        self._queue += [(pipe_id, data, res, event)]
-        self._queue_event.set()
 
     def run(self):
-        """
-        Processes the queued data.
+        lpOverlapped = NULL
+        ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
 
-        :return: None
-        :rtype: None
-        """
-        import eg
+        self.is_waiting = False
+        self._parent.check_available_pipes()
+        hFile = self.hNamedPipe
 
-        while True:
-            self._queue_event.wait()
-            self._queue_event.clear()
-            while self._queue:
-                pipe_id, data, res, event = self._queue.pop(0)
-                if pipe_id != self._running_id:
-                    self._queue += [(pipe_id, data, res, event)]
+        while not self._event.isSet():
+            result = 0
+            nNumberOfBytesToRead = DWORD(4096)
+            response = ''
+
+            while not result:
+                lpBuffer = ctypes.create_string_buffer(4096)
+                lpNumberOfBytesRead = DWORD()
+
+                result = ReadFile(
+                    hFile,
+                    lpBuffer,
+                    nNumberOfBytesToRead,
+                    ctypes.byref(lpNumberOfBytesRead),
+                    lpOverlapped
+                )
+
+                err = GetLastError()
+
+                if err == ERROR_MORE_DATA:
+                    response += lpBuffer.value
+                    result = 0
+
+                if err == ERROR_NO_DATA:
+                    result = 0
                     continue
 
-                command = process_data(data)
-                try:
-                    command, data = command.split(',', 1)
-                except ValueError:
-                    data = '()'
+                elif result:
+                    response += lpBuffer.value
 
+                elif err:
+                    result = 1
+                    response = 'CLOSE'
+
+            if response:
                 eg.PrintDebugNotice(
-                    'Pipe {0}: Command: {1}, Parameters: {2}'.format(
-                        pipe_id,
-                        command,
-                        data
+                    '>> {0} Pipe {1}: Data : {2}'.format(
+                        self._pipe_name,
+                        self._pipe_id,
+                        response
                     )
                 )
 
-                command = command.strip()
-                data = data.strip()
+                if response == 'CLOSE':
+                    self.close()
 
-                try:
-                    if '=' in command:
-                        raise NamedPipeCommandError(
-                            'Pipe {0}: Command not allowed: {1}'.format(
-                                pipe_id,
-                                command
-                            )
-                        )
-
-                    if not data.startswith('dict') and '=' in data:
-                        raise NamedPipeDataError(
-                            'Pipe {0}: Data not allowed: {1}'.format(
-                                pipe_id,
-                                data
-                            )
-                        )
-
-                    if (
-                        data[0] not in ('(', '[', '{') and
-                        not data.startswith('dict')
-                    ):
-                        raise NamedPipeDataError(
-                            'Pipe {0}: Data not allowed: {1}'.format(
-                                pipe_id,
-                                data
-                            )
-                        )
-
-                    try:
-                        command = eval(command.split('(', 1)[0])
-                    except SyntaxError:
-                        raise NamedPipeDataError(
-                            'Pipe {0}: Command malformed: {1}'.format(
-                                pipe_id,
-                                command
-                            )
-                        )
-                    else:
-                        if isinstance(command, (str, unicode)):
-                            raise NamedPipeCommandError(
-                                'Pipe {0}: Command does not exist: {1}'.format(
-                                    pipe_id,
-                                    command
-                                )
-                            )
-                    try:
-                        data = eval(data)
-                    except SyntaxError:
-                        raise NamedPipeDataError(
-                            'Pipe {0}: Data malformed: {1}'.format(
-                                pipe_id,
-                                data
-                            )
-                        )
-
-                    if not isinstance(data, (dict, list, tuple)):
-                        raise NamedPipeDataError(
-                            'Pipe {0}: Data malformed: {1}'.format(
-                                pipe_id,
-                                str(data)
-                            )
-                        )
-
-                except NamedPipeException:
-                    traceback.print_exc()
-                    event.set()
                 else:
-                    def run():
-                        if isinstance(data, dict):
-                            res[0] = command(**data)
-                        elif isinstance(data, (tuple, list)):
-                            res[0] = command(*data)
+                    result = process_command(
+                        self._pipe_id,
+                        response,
+                    )
 
-                        eg.PrintDebugNotice(
-                            'Pipe {0}: Return data: {1}'.format(
-                                pipe_id,
-                                str(res[0])
-                            )
-                        )
+                self.write(str(repr(result)))
 
-                        event.set()
+    def close(self):
+        self._event.set()
+        eg.PrintDebugNotice(
+            'Disconnecting pipe {0}: {1}'.format(
+                self._pipe_name,
+                self._pipe_id
+            )
+        )
+        try:
+            DisconnectNamedPipe(self.hNamedPipe)
+        except:
+            pass
 
-                    wx.CallAfter(run)
-                    event.wait()
-                self._running_id = pipe_id + 1
+        try:
+            eg.PrintDebugNotice(
+                'Closing pipe {0}: {1}'.format(
+                    self._pipe_name,
+                    self._pipe_id
+                )
+            )
+            CloseHandle(self.hNamedPipe)
+        except:
+            pass
+
+        self.closed = True
+        self._parent.check_available_pipes()
+
+    def write(self, msg):
+
+        result = 0
+        hFile = self.hNamedPipe
+        lpOverlapped = NULL
+
+        while not result:
+            lpBuffer = ctypes.create_string_buffer(msg)
+            nNumberOfBytesToWrite = DWORD(len(msg))
+            lpNumberOfBytesWritten = DWORD()
+
+            result = WriteFile(
+                hFile,
+                lpBuffer,
+                nNumberOfBytesToWrite,
+                ctypes.byref(lpNumberOfBytesWritten),
+                lpOverlapped
+            )
+
+            err = GetLastError()
+
+            if err == ERROR_MORE_DATA:
+                msg = msg[lpNumberOfBytesWritten.value:]
+                result = 0
+
+            elif err == ERROR_PIPE_BUSY:
+                result = 0
+
+            elif err:
+                result = 1
+                self.close()
+
+
+def process_command(pipe_id, data):
+    import eg
+
+    try:
+        command, data = data.split(',', 1)
+    except ValueError:
+        command = data
+        data = '()'
+
+    eg.PrintDebugNotice(
+        'Pipe {0}: Command: {1}, Parameters: {2}'.format(
+            pipe_id,
+            command,
+            data
+        )
+    )
+
+    command = command.strip()
+    data = data.strip()
+
+    try:
+        if '=' in command:
+            eg.PrintDebugNotice(
+                'Pipe {0}: Command Format Error: {1}'.format(
+                    pipe_id,
+                    command
+                )
+            )
+            return 'CommandFormatError'
+
+        if not data.startswith('dict') and '=' in data:
+            eg.PrintDebugNotice(
+                'Pipe {0}: Parameter Format Error: {1}'.format(
+                    pipe_id,
+                    data
+                )
+            )
+            return 'ParameterFormatError'
+
+        if (
+            data[0] not in ('(', '[', '{') and
+            not data.startswith('dict')
+        ):
+            eg.PrintDebugNotice(
+                'Pipe {0}: Parameter Format Error: {1}'.format(
+                    pipe_id,
+                    data
+                )
+            )
+            return 'ParameterFormatError'
+
+        try:
+            func = eval(command.split('(', 1)[0])
+        except SyntaxError:
+            eg.PrintDebugNotice(
+                'Pipe {0}: Command Malformed Error: {1}'.format(
+                    pipe_id,
+                    command
+                )
+            )
+            return 'CommandMalformedError'
+        except AttributeError:
+            eg.PrintDebugNotice(
+                'Pipe {0}: Command Not Found Error: {1}'.format(
+                    pipe_id,
+                    command
+                )
+            )
+            return 'CommandNotFoundError'
+        else:
+            if isinstance(func, (str, unicode)):
+                eg.PrintDebugNotice(
+                    'Pipe {0}: Command Format Error: {1}'.format(
+                        pipe_id,
+                        command
+                    )
+                )
+                return 'CommandFormatError'
+        try:
+            data = eval(data)
+        except SyntaxError:
+            eg.PrintDebugNotice(
+                'Pipe {0}: Parameter Malformed Error: {1}'.format(
+                    pipe_id,
+                    data
+                )
+            )
+            return 'ParameterMalformedError'
+
+        if not isinstance(data, (dict, list, tuple)):
+            eg.PrintDebugNotice(
+                'Pipe {0}: Parameter Format Error: {1}'.format(
+                    pipe_id,
+                    str(data)
+                )
+            )
+            return 'ParameterFormatError'
+
+    except:
+        traceback.print_exc()
+    else:
+        event = threading.Event()
+
+        def run():
+            if isinstance(data, dict):
+                res[0] = func(**data)
+            elif isinstance(data, (tuple, list)):
+                res[0] = func(*data)
+
+            eg.PrintDebugNotice(
+                'Pipe {0}: Return data: {1}'.format(
+                    pipe_id,
+                    str(res[0])
+                )
+            )
+
+            event.set()
+        if (
+            command.startswith('eg.document') or
+            command.startswith('eg.mainFrame')
+        ):
+            res = ['MainThreadHung']
+            wx.CallAfter(run)
+            event.wait(5)
+            return res[0]
+        else:
+            res = ['UnableToProcessCommand']
+            t = threading.Thread(target=run)
+            t.daemon = True
+            t.start()
+            event.wait(5)
+            return res[0]
 
 
 class Server:
@@ -436,151 +880,203 @@ class Server:
 
     """
 
-    def __init__(self):
+    def __init__(self, pipe_name='eventghost'):
+        write_error('creating server')
+        self._pipe_name = pipe_name
         self._thread = None
         self.running_pipes = []
-        self._id_lock = threading.Lock()
         self._pipe_id = -1
-        self.is_waiting = True
-        self.process_command = None
+        self._available_event = threading.Event()
 
     def start(self):
+        write_error('starting server')
         if self._thread is None:
-            self.process_command = ProcessCommand()
-
             self._thread = threading.Thread(
-                name='EventGhost.Pipe.0.Thread',
+                name='{0}.Pipe.Thread'.format(self._pipe_name),
                 target=self.run
             )
             self._thread.daemon = True
             self._thread.start()
 
-    def ping(self):
-        return 'pong'
-
     def get_pipe_id(self):
-        self._id_lock.acquire()
         self._pipe_id += 1
-        try:
-            return self._pipe_id
-        finally:
-            self._id_lock.release()
+        return self._pipe_id
+
+    def check_available_pipes(self):
+        self._available_event.set()
 
     def run(self):
+        def create_pipe():
+            pipe = Pipe(
+                self,
+                self._pipe_name,
+                self.get_pipe_id()
+            )
+            self.running_pipes += [pipe]
+            pipe.open()
 
-        import eg
-
-        # This is where the permissions get created for the pipe
-        eg.PrintDebugNotice('Pipe: Creating security descriptor')
-        security_attributes = win32security.SECURITY_ATTRIBUTES()
-        security_descriptor = win32security.SECURITY_DESCRIPTOR()
-        security_descriptor.SetSecurityDescriptorDacl(1, None, 0)
-        security_attributes.SECURITY_DESCRIPTOR = security_descriptor
-        eg.PrintDebugNotice('Pipe 0: Creating Pipe')
-
-        pipe = win32pipe.CreateNamedPipe(
-            r'\\.\pipe\eventghost',
-            PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
-            PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE,
-            PIPE_UNLIMITED_INSTANCES,
-            4096,
-            4096,
-            5,
-            security_attributes
-        )
+        while is_pipe_running(self._pipe_name):
+            self._available_event.wait(0.5)
 
         while True:
-            self.is_waiting = True
-            pipe_id = self.get_pipe_id()
+            for pipe in self.running_pipes[:]:
+                if pipe.closed:
+                    self.running_pipes.remove(pipe)
 
-            # creation of the pipe. once the pipe has been made it will sit
-            # and wait for data to be written to the pipe. once data has been
-            # written it will then read the data and close the pipe. then it
-            # will parse the data sent and execute the command. It will loop
-            # like this the entire time EG is running. The thread that handles
-            # the pipe is a daemon thread and the thread will be terminated
-            # when EG closes.
-
-            win32pipe.ConnectNamedPipe(pipe, None)
-
-            self.running_pipes += [self]
-
-            if len(self.running_pipes) > 1:
-                if not self.running_pipes[-1].is_waiting:
-                    self.running_pipes += [
-                        Pipe(self, self.get_pipe_id(), security_attributes)
-                    ]
+            if not self.running_pipes:
+                create_pipe()
             else:
-                self.running_pipes += [
-                    Pipe(self, self.get_pipe_id(), security_attributes)
-                ]
+                for pipe in self.running_pipes:
+                    if pipe.is_waiting:
+                        break
+                else:
+                    create_pipe()
 
-            data = win32file.ReadFile(pipe, 4096)
-            self.is_waiting = False
-
-            eg.PrintDebugNotice('Pipe {0}: Data received'.format(pipe_id))
-
-            if data[0] == 0:
-                event = threading.Event()
-                res = ['']
-
-                self.process_command.add(
-                    pipe_id,
-                    data[1],
-                    res,
-                    event
-                )
-
-                while not event.isSet():
-                    pass
-
-                win32file.WriteFile(pipe, str(repr(res[0])))
-                win32pipe.DisconnectNamedPipe(pipe)
-
-            else:
-                try:
-                    raise NamedPipeDataError(
-                        'Pipe {0}: Unknown Error: {1}'.format(
-                            pipe_id,
-                            str(data)
-                        )
-                    )
-                except NamedPipeDataError:
-                    traceback.print_exc()
-            self.running_pipes.remove(self)
+            self._available_event.wait()
+            self._available_event.clear()
 
 
-def send_message(msg):
-    try:
-        pipe = win32file.CreateFile(
-            r'\\.\pipe\eventghost',
-            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+def send_message(msg, pipe_name='eventghost'):
+    lpFileName = _create_pipe_name(pipe_name)
+    while True:
+        hNamedPipe = CreateFile(
+            lpFileName,
+            GENERIC_READ | GENERIC_WRITE,
             0,
-            None,
-            win32file.OPEN_EXISTING,
-            0,
-            None
+            NULL,
+            OPEN_EXISTING,
+            FILE_FLAG_NO_BUFFERING,
+            NULL
         )
-        win32file.WriteFile(pipe, msg)
-        # while not win32pipe.PeekNamedPipe(pipe, 4096):
-        #     pass
-        data = win32file.ReadFile(pipe, 4096)
-        if data[0] == 0:
-            data = process_data(data[1])
-            if data != '':
-                try:
-                    return eval(data)
-                except SyntaxError:
-                    return data
-            else:
-                return data
-        else:
-            raise NamedPipeDataError('Error in data received: ' + str(data))
 
-    except win32pipe.error as err:
-        if err[0] in (ERROR_PIPE_BUSY, ERROR_PIPE_CONNECTED):
-            event = threading.Event()
-            event.wait(float(random.randrange(1, 100)) / 2000.0)
-            return send_message(msg)
+        err = GetLastError()
+        write_error('connect', hNamedPipe, err)
 
-        raise NamedPipeConnectionError(err)
+        lpNamedPipeName = lpFileName
+        nTimeOut = DWORD(2000)
+
+        if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
+            break
+
+        elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+            CloseHandle(hNamedPipe)
+            raise PipeConnectionError(err, hNamedPipe)
+
+    lpMode = DWORD(PIPE_READMODE_MESSAGE)
+    lpMaxCollectionCount = NULL
+    lpCollectDataTimeout = NULL
+
+    result = SetNamedPipeHandleState(
+        hNamedPipe,
+        ctypes.byref(lpMode),
+        lpMaxCollectionCount,
+        lpCollectDataTimeout
+    )
+
+    if not result:
+        err = GetLastError()
+        CloseHandle(hNamedPipe)
+        raise PipeConnectionError(err, hNamedPipe)
+
+    result = 0
+    hFile = hNamedPipe
+    lpOverlapped = NULL
+
+    while not result:
+        lpBuffer = ctypes.create_string_buffer(msg)
+        nNumberOfBytesToWrite = DWORD(len(msg))
+        lpNumberOfBytesWritten = DWORD()
+
+        result = WriteFile(
+            hFile,
+            lpBuffer,
+            nNumberOfBytesToWrite,
+            ctypes.byref(lpNumberOfBytesWritten),
+            lpOverlapped
+        )
+
+        err = GetLastError()
+
+        write_error('write', msg, result, err)
+
+        if err == ERROR_MORE_DATA:
+            msg = msg[lpNumberOfBytesWritten.value:]
+            result = 0
+        elif err in (
+            ERROR_INVALID_HANDLE,
+            ERROR_BROKEN_PIPE,
+            ERROR_BAD_PIPE,
+            ERROR_PIPE_NOT_CONNECTED
+        ):
+            CloseHandle(hFile)
+            raise PipeConnectionError(err, hFile)
+
+        elif result:
+            break
+
+        elif err:
+            CloseHandle(hFile)
+            raise PipeError(err, hFile)
+
+    result = 0
+    nNumberOfBytesToRead = DWORD(4096)
+    lpOverlapped = NULL
+    response = ''
+
+    while not result:
+        lpBuffer = ctypes.create_string_buffer(4096)
+        lpNumberOfBytesRead = DWORD()
+
+        result = ReadFile(
+            hFile,
+            lpBuffer,
+            nNumberOfBytesToRead,
+            ctypes.byref(lpNumberOfBytesRead),
+            lpOverlapped
+        )
+
+        err = GetLastError()
+
+        if err == ERROR_MORE_DATA:
+            response += lpBuffer.value
+            result = 0
+
+        elif err in (
+            ERROR_INVALID_HANDLE,
+            ERROR_BROKEN_PIPE,
+            ERROR_BAD_PIPE,
+            ERROR_PIPE_NOT_CONNECTED
+        ):
+            CloseHandle(hFile)
+            raise PipeConnectionError(err, hFile)
+
+        elif result:
+            response += lpBuffer.value
+
+        elif err:
+            CloseHandle(hFile)
+            raise PipeError(err, hFile)
+
+    try:
+        return eval(response)
+    except SyntaxError:
+        return response
+    finally:
+        msg = 'CLOSE'
+        lpBuffer = ctypes.create_string_buffer(msg)
+        nNumberOfBytesToWrite = DWORD(len(msg))
+        lpNumberOfBytesWritten = NULL
+        lpOverlapped = NULL
+
+        try:
+            WriteFile(
+                hFile,
+                lpBuffer,
+                nNumberOfBytesToWrite,
+                lpNumberOfBytesWritten,
+                lpOverlapped
+            )
+        except WindowsError:
+            pass
+
+        CloseHandle(hFile)
