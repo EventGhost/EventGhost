@@ -92,12 +92,10 @@ from ctypes.wintypes import (
     HANDLE,
     ULONG,
     LPCSTR,
-    LPCWSTR,
     DWORD,
     WORD,
     BOOL,
     BYTE,
-    LPCVOID
 )
 
 __version__ = '0.1.0b'
@@ -259,6 +257,7 @@ LPOVERLAPPED = ctypes.POINTER(_OVERLAPPED)
 # c type security structures that set the security of the pipe
 # the ACL bits are not used currently and are here for completeness
 # -----------------------------------------------------------------------------
+# noinspection PyPep8Naming
 class _ACL(ctypes.Structure):
     _fields_ = [
         ('AclRevision', BYTE),
@@ -396,6 +395,8 @@ class PipeError(Exception):
 
 # this is used in the exception class to query windows for a nice human
 # readable error message.
+
+# noinspection PyPep8Naming
 def format_error(err):
 
     dwFlags = DWORD(FORMAT_MESSAGE_FROM_SYSTEM)
@@ -423,6 +424,8 @@ def format_error(err):
 
 # Checks for the instance of a running pipe. I created this new function so
 # eg.NamedPipe can be used in plugins if needed.
+
+# noinspection PyPep8Naming
 def is_pipe_running(pipe_name):
     lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
     dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
@@ -453,7 +456,6 @@ def is_pipe_running(pipe_name):
         return False
 
     else:
-        write_error(err)
         return None
 
 
@@ -461,6 +463,7 @@ def is_pipe_running(pipe_name):
 def is_eg_running():
     return is_pipe_running('eventghost')
 # -----------------------------------------------------------------------------
+
 
 # formats the pipe name properly, Windows 0 requires a different pipe
 # formatting
@@ -472,9 +475,12 @@ def _create_pipe_name(name):
         return '\\\\.\\pipe\\' + name
 # -----------------------------------------------------------------------------
 
+
 # this is a pipe instance class, it handles all of the nitty gritty for server
 # pipe connections.
 # -----------------------------------------------------------------------------
+
+# noinspection PyPep8Naming,PyBroadException
 class Pipe(object):
     """
     Thread class for handling additional pipe connections.
@@ -487,9 +493,6 @@ class Pipe(object):
         :type parent: instance
         :param pipe_id: ID assigned to this pipe instance.
         :type pipe_id: int
-        :param security_attributes: Windows SACL and DACL data for creating the
-            pipe.
-        :type security_attributes: win32security.SECURITY_ATTRIBUTES instance
         """
         self._pipe = None
         self._parent = parent
@@ -498,6 +501,9 @@ class Pipe(object):
         self.is_waiting = True
         self.closed = False
         self._event = threading.Event()
+        self._read_queue = []
+        self._read_queue_lock = threading.Lock()
+        self._read_queue_event = threading.Event()
 
         import eg
 
@@ -507,7 +513,11 @@ class Pipe(object):
 
         lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
         dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
-        dwPipeMode = DWORD(PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE)
+        dwPipeMode = DWORD(
+            PIPE_TYPE_MESSAGE |
+            PIPE_WAIT |
+            PIPE_READMODE_MESSAGE
+        )
         nMaxInstances = DWORD(PIPE_UNLIMITED_INSTANCES)
         nOutBufferSize = DWORD(4096)
         nInBufferSize = DWORD(4096)
@@ -554,6 +564,8 @@ class Pipe(object):
         self._thread.start()
 
     def run(self):
+        import eg
+
         lpOverlapped = NULL
         ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
 
@@ -608,14 +620,28 @@ class Pipe(object):
                     self.close()
 
                 else:
-                    result = process_command(
-                        self._pipe_id,
-                        response,
-                    )
+                    if self._pipe_name == 'eventghost':
+                        result = process_command(
+                            self._pipe_id,
+                            response,
+                        )
+                    else:
+                        with self._read_queue_lock:
+                            self._read_queue += [response]
+                            self._read_queue_event.set()
 
                 self.write(str(repr(result)))
 
+    def read(self):
+        self._read_queue_event.wait()
+        with self._read_queue_lock:
+            response = self._read_queue.pop(0)
+            self._read_queue_event.clear()
+            return response
+
     def close(self):
+        import eg
+
         self._event.set()
         eg.PrintDebugNotice(
             'Disconnecting pipe {0}: {1}'.format(
@@ -623,11 +649,13 @@ class Pipe(object):
                 self._pipe_id
             )
         )
+        # noinspection PyPep8
         try:
             DisconnectNamedPipe(self.hNamedPipe)
         except:
             pass
 
+        # noinspection PyPep8
         try:
             eg.PrintDebugNotice(
                 'Closing pipe {0}: {1}'.format(
@@ -675,6 +703,7 @@ class Pipe(object):
                 self.close()
 # -----------------------------------------------------------------------------
 
+
 def process_command(pipe_id, data):
     import eg
 
@@ -695,6 +724,7 @@ def process_command(pipe_id, data):
     command = command.strip()
     data = data.strip()
 
+    # noinspection PyBroadException,PyPep8
     try:
         if '=' in command:
             eg.PrintDebugNotice(
@@ -796,6 +826,8 @@ def process_command(pipe_id, data):
             command.startswith('eg.document') or
             command.startswith('eg.mainFrame')
         ):
+            import wx
+
             res = ['MainThreadHung']
             wx.CallAfter(run)
             event.wait(5)
@@ -809,6 +841,7 @@ def process_command(pipe_id, data):
             return res[0]
 
 
+# noinspection PyPep8Naming
 class Server:
     """
     Receiving thread class for the "\\.\pipe\eventghost" named pipe.
@@ -883,13 +916,13 @@ class Server:
 
     def run(self):
         def create_pipe():
-            pipe = Pipe(
+            p = Pipe(
                 self,
                 self._pipe_name,
                 self.get_pipe_id()
             )
-            self.running_pipes += [pipe]
-            pipe.open()
+            self.running_pipes += [p]
+            p.open()
 
         while is_pipe_running(self._pipe_name):
             self._available_event.wait(0.5)
@@ -912,8 +945,10 @@ class Server:
             self._available_event.clear()
 
 
+# noinspection PyPep8Naming
 def send_message(msg, pipe_name='eventghost'):
 
+    # noinspection PyProtectedMember
     def write_error(erronum):
         display_message = sys.stderr._displayMessage
         sys.stderr._displayMessage = False
