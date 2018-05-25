@@ -373,7 +373,7 @@ GetOverlappedResult.restype = BOOL
 # -----------------------------------------------------------------------------
 
 
-# exception classes
+# exception class
 # -----------------------------------------------------------------------------
 
 class PipeError(Exception):
@@ -394,19 +394,7 @@ class PipeError(Exception):
         return self._msg[0]
 
 
-class PipeDataError(PipeError):
-    pass
-
-
-class PipeCommandError(PipeError):
-    pass
-
-
-class PipeConnectionError(PipeError):
-    pass
-
-
-# this is used in the exception classes to query windows for a nice human
+# this is used in the exception class to query windows for a nice human
 # readable error message.
 def format_error(err):
 
@@ -465,25 +453,28 @@ def is_pipe_running(pipe_name):
         return False
 
     else:
-        raise PipeConnectionError(err)
+        write_error(err)
+        return None
 
 
 # This is specific to checking is the eventghost named pipe is running
 def is_eg_running():
     return is_pipe_running('eventghost')
-
+# -----------------------------------------------------------------------------
 
 # formats the pipe name properly, Windows 0 requires a different pipe
 # formatting
+# -----------------------------------------------------------------------------
 def _create_pipe_name(name):
     if platform.release() == '10':
         return '\\\\.\\pipe\\LOCAL\\' + name
     else:
         return '\\\\.\\pipe\\' + name
-
+# -----------------------------------------------------------------------------
 
 # this is a pipe instance class, it handles all of the nitty gritty for server
 # pipe connections.
+# -----------------------------------------------------------------------------
 class Pipe(object):
     """
     Thread class for handling additional pipe connections.
@@ -682,7 +673,7 @@ class Pipe(object):
             elif err:
                 result = 1
                 self.close()
-
+# -----------------------------------------------------------------------------
 
 def process_command(pipe_id, data):
     import eg
@@ -922,7 +913,20 @@ class Server:
 
 
 def send_message(msg, pipe_name='eventghost'):
+
+    def write_error(erronum):
+        display_message = sys.stderr._displayMessage
+        sys.stderr._displayMessage = False
+
+        try:
+            raise PipeError(erronum)
+        except PipeError:
+            traceback.print_exc()
+
+        sys.stderr._displayMessage = display_message
+
     lpFileName = _create_pipe_name(pipe_name)
+
     while True:
         hNamedPipe = CreateFile(
             lpFileName,
@@ -944,7 +948,8 @@ def send_message(msg, pipe_name='eventghost'):
 
         elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
             CloseHandle(hNamedPipe)
-            raise PipeConnectionError(err, hNamedPipe)
+            write_error(err)
+            return
 
     lpMode = DWORD(PIPE_READMODE_MESSAGE)
     lpMaxCollectionCount = NULL
@@ -960,7 +965,8 @@ def send_message(msg, pipe_name='eventghost'):
     if not result:
         err = GetLastError()
         CloseHandle(hNamedPipe)
-        raise PipeConnectionError(err, hNamedPipe)
+        write_error(err)
+        return
 
     result = 0
     hFile = hNamedPipe
@@ -984,6 +990,7 @@ def send_message(msg, pipe_name='eventghost'):
         if err == ERROR_MORE_DATA:
             msg = msg[lpNumberOfBytesWritten.value:]
             result = 0
+
         elif err in (
             ERROR_INVALID_HANDLE,
             ERROR_BROKEN_PIPE,
@@ -991,14 +998,16 @@ def send_message(msg, pipe_name='eventghost'):
             ERROR_PIPE_NOT_CONNECTED
         ):
             CloseHandle(hFile)
-            raise PipeConnectionError(err, hFile)
+            write_error(err)
+            return
 
         elif result:
             break
 
         elif err:
             CloseHandle(hFile)
-            raise PipeError(err, hFile)
+            write_error(err)
+            return
 
     result = 0
     nNumberOfBytesToRead = DWORD(4096)
@@ -1030,14 +1039,16 @@ def send_message(msg, pipe_name='eventghost'):
             ERROR_PIPE_NOT_CONNECTED
         ):
             CloseHandle(hFile)
-            raise PipeConnectionError(err, hFile)
+            write_error(err)
+            return
 
         elif result:
             response += lpBuffer.value
 
         elif err:
             CloseHandle(hFile)
-            raise PipeError(err, hFile)
+            write_error(err)
+            return
 
     try:
         return eval(response)
