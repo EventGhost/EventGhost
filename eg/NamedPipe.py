@@ -945,21 +945,219 @@ class Server:
             self._available_event.clear()
 
 
+# noinspection PyProtectedMember
+def write_error(erronum):
+    display_message = sys.stderr._displayMessage
+    sys.stderr._displayMessage = False
+
+    try:
+        raise PipeError(erronum)
+    except PipeError:
+        traceback.print_exc()
+
+    sys.stderr._displayMessage = display_message
+
+
+# noinspection PyPep8Naming
+class Client(object):
+
+    def __init__(self, pipe_name):
+        self._pipe_name = pipe_name
+        self._pipe_handle = None
+        self.__write_lock = threading.Lock()
+        self.__read_lock = threading.Lock()
+        self.__read_event = threading.Event()
+        self.__event = threading.Event()
+        self.__read_queue = []
+        self.__read_thread = None
+
+    def open(self):
+        if self._pipe_handle is not None:
+            raise PipeError('Client pipe is already opened')
+
+        lpFileName = _create_pipe_name(self._pipe_name)
+
+        while True:
+            hNamedPipe = CreateFile(
+                lpFileName,
+                GENERIC_READ | GENERIC_WRITE,
+                0,
+                NULL,
+                OPEN_EXISTING,
+                FILE_FLAG_NO_BUFFERING,
+                NULL
+            )
+
+            err = GetLastError()
+
+            lpNamedPipeName = lpFileName
+            nTimeOut = DWORD(2000)
+
+            if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
+                break
+
+            elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+                CloseHandle(hNamedPipe)
+                raise PipeError(err)
+
+        lpMode = DWORD(PIPE_READMODE_MESSAGE)
+        lpMaxCollectionCount = NULL
+        lpCollectDataTimeout = NULL
+
+        result = SetNamedPipeHandleState(
+            hNamedPipe,
+            ctypes.byref(lpMode),
+            lpMaxCollectionCount,
+            lpCollectDataTimeout
+        )
+
+        if not result:
+            err = GetLastError()
+            CloseHandle(hNamedPipe)
+            raise PipeError(err)
+
+        self._pipe_handle = hNamedPipe
+        self.__read_thread = threading.Thread(target=self.__read_loop)
+        self.__read_thread.daemon = True
+        self.__read_thread.start()
+
+    def write(self, msg):
+
+        with self.__write_lock:
+
+            result = 0
+            hFile = self._pipe_handle
+            lpOverlapped = NULL
+
+            while not result:
+                lpBuffer = ctypes.create_string_buffer(msg)
+                nNumberOfBytesToWrite = DWORD(len(msg))
+                lpNumberOfBytesWritten = DWORD()
+
+                result = WriteFile(
+                    hFile,
+                    lpBuffer,
+                    nNumberOfBytesToWrite,
+                    ctypes.byref(lpNumberOfBytesWritten),
+                    lpOverlapped
+                )
+
+                err = GetLastError()
+
+                if err == ERROR_MORE_DATA:
+                    msg = msg[lpNumberOfBytesWritten.value:]
+                    result = 0
+
+                elif err in (
+                    ERROR_INVALID_HANDLE,
+                    ERROR_BROKEN_PIPE,
+                    ERROR_BAD_PIPE,
+                    ERROR_PIPE_NOT_CONNECTED
+                ):
+                    CloseHandle(hFile)
+                    raise PipeError(err)
+
+                elif result:
+                    break
+
+                elif err:
+                    CloseHandle(hFile)
+                    raise PipeError(err)
+
+    def __read_loop(self):
+
+        while not self.__event.isSet():
+            result = 0
+            nNumberOfBytesToRead = DWORD(4096)
+            lpOverlapped = NULL
+            hFile = self._pipe_handle
+            response = ''
+
+            while not result:
+                lpBuffer = ctypes.create_string_buffer(4096)
+                lpNumberOfBytesRead = DWORD()
+
+                result = ReadFile(
+                    hFile,
+                    lpBuffer,
+                    nNumberOfBytesToRead,
+                    ctypes.byref(lpNumberOfBytesRead),
+                    lpOverlapped
+                )
+
+                if self.__event.isSet():
+                    return
+
+                err = GetLastError()
+
+                if err == ERROR_MORE_DATA:
+                    response += lpBuffer.value
+                    result = 0
+
+                elif err in (
+                    ERROR_INVALID_HANDLE,
+                    ERROR_BROKEN_PIPE,
+                    ERROR_BAD_PIPE,
+                    ERROR_PIPE_NOT_CONNECTED
+                ):
+                    CloseHandle(hFile)
+                    raise PipeError(err)
+
+                elif result:
+                    response += lpBuffer.value
+
+                elif err:
+                    CloseHandle(hFile)
+                    raise PipeError(err)
+
+            with self.__read_lock:
+                self.__read_queue += [response]
+                self.__read_event.set()
+
+        self.__read_thread = None
+        self.__event.clear()
+
+    def read(self):
+        self.__read_event.wait()
+        with self.__read_lock:
+            response = self.__read_queue.pop(0)
+            self.__read_event.clear()
+            return response
+
+    def close(self):
+        if self._pipe_handle is None:
+            raise PipeError('Client pipe has not been opened.')
+
+        msg = 'CLOSE'
+        lpBuffer = ctypes.create_string_buffer(msg)
+        nNumberOfBytesToWrite = DWORD(len(msg))
+        lpNumberOfBytesWritten = NULL
+        lpOverlapped = NULL
+        hFile = self._pipe_handle
+
+        self.__event.set()
+        try:
+            WriteFile(
+                hFile,
+                lpBuffer,
+                nNumberOfBytesToWrite,
+                lpNumberOfBytesWritten,
+                lpOverlapped
+            )
+        except WindowsError:
+            pass
+
+        CloseHandle(hFile)
+        try:
+            self.__read_thread.join(3)
+        except:
+            pass
+
+        self._pipe_handle = None
+
+
 # noinspection PyPep8Naming
 def send_message(msg, pipe_name='eventghost'):
-
-    # noinspection PyProtectedMember
-    def write_error(erronum):
-        display_message = sys.stderr._displayMessage
-        sys.stderr._displayMessage = False
-
-        try:
-            raise PipeError(erronum)
-        except PipeError:
-            traceback.print_exc()
-
-        sys.stderr._displayMessage = display_message
-
     lpFileName = _create_pipe_name(pipe_name)
 
     while True:
