@@ -100,13 +100,6 @@ from ctypes.wintypes import (
     LPCVOID
 )
 
-
-def write_error(*msg):
-    msg = ' '.join(repr(item) for item in msg)
-    sys.stderr.write(msg + '\n')
-
-
-write_error('loading eg.NamedPipe module')
 __version__ = '0.1.0b'
 
 # various c types that get used when passing data to the Windows functions
@@ -226,8 +219,6 @@ kernel32 = ctypes.windll.kernel32
 # Windows security API
 advapi32 = ctypes.windll.advapi32
 
-
-write_error('creating structures')
 
 # c type structure that handles the overlapped io portion of the pipe
 # not used currently here for completeness
@@ -445,8 +436,6 @@ def format_error(err):
 # Checks for the instance of a running pipe. I created this new function so
 # eg.NamedPipe can be used in plugins if needed.
 def is_pipe_running(pipe_name):
-    write_error('checking for running pipe')
-
     lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
     dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
     dwPipeMode = DWORD(PIPE_TYPE_MESSAGE | PIPE_WAIT | PIPE_READMODE_MESSAGE)
@@ -476,13 +465,11 @@ def is_pipe_running(pipe_name):
         return False
 
     else:
-        write_error(err)
         raise PipeConnectionError(err)
 
 
 # This is specific to checking is the eventghost named pipe is running
 def is_eg_running():
-    write_error('is pipe running')
     return is_pipe_running('eventghost')
 
 
@@ -881,7 +868,6 @@ class Server:
     """
 
     def __init__(self, pipe_name='eventghost'):
-        write_error('creating server')
         self._pipe_name = pipe_name
         self._thread = None
         self.running_pipes = []
@@ -889,7 +875,6 @@ class Server:
         self._available_event = threading.Event()
 
     def start(self):
-        write_error('starting server')
         if self._thread is None:
             self._thread = threading.Thread(
                 name='{0}.Pipe.Thread'.format(self._pipe_name),
@@ -950,7 +935,6 @@ def send_message(msg, pipe_name='eventghost'):
         )
 
         err = GetLastError()
-        write_error('connect', hNamedPipe, err)
 
         lpNamedPipeName = lpFileName
         nTimeOut = DWORD(2000)
@@ -996,8 +980,6 @@ def send_message(msg, pipe_name='eventghost'):
         )
 
         err = GetLastError()
-
-        write_error('write', msg, result, err)
 
         if err == ERROR_MORE_DATA:
             msg = msg[lpNumberOfBytesWritten.value:]
