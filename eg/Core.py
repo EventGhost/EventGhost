@@ -359,6 +359,7 @@ if eg.startupArguments.isMain and not eg.startupArguments.translate:
     eg.text = eg.Text(eg.config.language)
 else:
     eg.text = eg.Text('en_EN')
+
 eg.actionThread = eg.ActionThread()
 eg.eventThread = eg.EventThread()
 eg.pluginManager = eg.PluginManager()
@@ -385,3 +386,4 @@ eg.wit = None
 
 eg.Init = Init
 eg.Init.Init()
+
