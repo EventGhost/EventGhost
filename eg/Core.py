@@ -62,9 +62,6 @@ eg.CORE_PLUGIN_GUIDS = (
 
 eg.namedPipe = NamedPipe.Server()
 
-if eg.Cli.args.isMain:
-    eg.namedPipe.start()
-
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
 

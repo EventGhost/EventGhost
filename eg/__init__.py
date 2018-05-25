@@ -83,6 +83,7 @@ class DynamicModule(object):
             eg.PluginInstall.Import(Cli.args.pluginFile)
             return
         else:
+            eg.namedPipe.start()
             eg.Init.InitGui()
         if eg.debugLevel:
             try:
