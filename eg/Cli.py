@@ -158,7 +158,7 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        if NamedPipe.is_eg_running:
+        if NamedPipe.is_eg_running():
             if args.restart:
                 restart()
             else:
