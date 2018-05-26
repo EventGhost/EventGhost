@@ -98,6 +98,7 @@ from ctypes.wintypes import (
     BYTE,
 )
 
+
 __version__ = '0.1.0b'
 
 # various c types that get used when passing data to the Windows functions
@@ -154,7 +155,6 @@ NMPWAIT_USE_DEFAULT_WAIT = 0x00000000
 NMPWAIT_NOWAIT = 0x00000001
 NMPWAIT_WAIT_FOREVER = 0xFFFFFFFF
 
-
 # server use, we are only using the NO_BUFFERING and FIRST_INSTANCE
 # the rest are here for completeness
 FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
@@ -210,7 +210,6 @@ INVALID_HANDLE_VALUE = -1
 # identifiers passed to FormatMessage located in PipeError
 FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
 FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
-
 
 # kernel32 API
 kernel32 = ctypes.windll.kernel32
@@ -305,11 +304,11 @@ LPSECURITY_ATTRIBUTES = ctypes.POINTER(_SECURITY_ATTRIBUTES)
 SetSecurityDescriptorDacl = advapi32.SetSecurityDescriptorDacl
 # -----------------------------------------------------------------------------
 
+
 # defining of the kernel32 functions used and they return types.
 # I have found there is no real need to set the argument types and this is a
 # waste of time and code.
 # -----------------------------------------------------------------------------
-
 GetLastError = kernel32.GetLastError
 GetLastError.restype = DWORD
 
@@ -398,7 +397,6 @@ class PipeError(Exception):
 
 # noinspection PyPep8Naming
 def format_error(err):
-
     dwFlags = DWORD(FORMAT_MESSAGE_FROM_SYSTEM)
     lpSource = NULL
     dwMessageId = DWORD(err)
@@ -418,7 +416,6 @@ def format_error(err):
     )
     err_hex = '0x' + '{0:#0{1}X}'.format(err, 10)[2:]
     return '{0} [{1}]'.format(lpBuffer.value.rstrip(), err_hex)
-
 # -----------------------------------------------------------------------------
 
 
@@ -476,6 +473,33 @@ def _create_pipe_name(name):
 # -----------------------------------------------------------------------------
 
 
+log_lock = threading.Lock()
+debug_log = None
+eg = None
+
+
+def print_debug_notice(msg):
+    global debug_log
+    global eg
+
+    with log_lock:
+        if eg is None:
+            eg = __import__('eg')
+
+        if eg.debugLevel:
+            if debug_log is None:
+                debug_log = open(
+                    os.path.join(eg.configDir, 'named_pipe_log.txt'),
+                    'a'
+                )
+
+            debug_log.write(msg + '\n')
+
+        elif debug_log is not None:
+            debug_log.close()
+            debug_log = None
+
+
 # this is a pipe instance class, it handles all of the nitty gritty for server
 # pipe connections.
 # -----------------------------------------------------------------------------
@@ -488,7 +512,6 @@ class Pipe(object):
 
     def __init__(self, parent, pipe_name, pipe_id):
         """
-
         :param parent: Server class
         :type parent: instance
         :param pipe_id: ID assigned to this pipe instance.
@@ -505,9 +528,7 @@ class Pipe(object):
         self._read_queue_lock = threading.Lock()
         self._read_queue_event = threading.Event()
 
-        import eg
-
-        eg.PrintDebugNotice(
+        print_debug_notice(
             'Named Pipe: Creating pipe {0}'.format(pipe_id)
         )
 
@@ -564,8 +585,6 @@ class Pipe(object):
         self._thread.start()
 
     def run(self):
-        import eg
-
         lpOverlapped = NULL
         ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
 
@@ -591,7 +610,6 @@ class Pipe(object):
                 )
 
                 err = GetLastError()
-
                 if err == ERROR_MORE_DATA:
                     response += lpBuffer.value
                     result = 0
@@ -608,7 +626,7 @@ class Pipe(object):
                     response = 'CLOSE'
 
             if response:
-                eg.PrintDebugNotice(
+                print_debug_notice(
                     '>> {0} Pipe {1}: Data : {2}'.format(
                         self._pipe_name,
                         self._pipe_id,
@@ -618,7 +636,6 @@ class Pipe(object):
 
                 if response == 'CLOSE':
                     self.close()
-
                 else:
                     if self._pipe_name == 'eventghost':
                         result = process_command(
@@ -640,10 +657,8 @@ class Pipe(object):
             return response
 
     def close(self):
-        import eg
-
         self._event.set()
-        eg.PrintDebugNotice(
+        print_debug_notice(
             'Disconnecting pipe {0}: {1}'.format(
                 self._pipe_name,
                 self._pipe_id
@@ -657,7 +672,7 @@ class Pipe(object):
 
         # noinspection PyPep8
         try:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Closing pipe {0}: {1}'.format(
                     self._pipe_name,
                     self._pipe_id
@@ -671,7 +686,6 @@ class Pipe(object):
         self._parent.check_available_pipes()
 
     def write(self, msg):
-
         result = 0
         hFile = self.hNamedPipe
         lpOverlapped = NULL
@@ -694,10 +708,8 @@ class Pipe(object):
             if err == ERROR_MORE_DATA:
                 msg = msg[lpNumberOfBytesWritten.value:]
                 result = 0
-
             elif err == ERROR_PIPE_BUSY:
                 result = 0
-
             elif err:
                 result = 1
                 self.close()
@@ -705,15 +717,13 @@ class Pipe(object):
 
 
 def process_command(pipe_id, data):
-    import eg
-
     try:
         command, data = data.split(',', 1)
     except ValueError:
         command = data
         data = '()'
 
-    eg.PrintDebugNotice(
+    print_debug_notice(
         'Pipe {0}: Command: {1}, Parameters: {2}'.format(
             pipe_id,
             command,
@@ -727,7 +737,7 @@ def process_command(pipe_id, data):
     # noinspection PyBroadException,PyPep8
     try:
         if '=' in command:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Command Format Error: {1}'.format(
                     pipe_id,
                     command
@@ -736,7 +746,7 @@ def process_command(pipe_id, data):
             return 'CommandFormatError'
 
         if not data.startswith('dict') and '=' in data:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Parameter Format Error: {1}'.format(
                     pipe_id,
                     data
@@ -748,7 +758,7 @@ def process_command(pipe_id, data):
             data[0] not in ('(', '[', '{') and
             not data.startswith('dict')
         ):
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Parameter Format Error: {1}'.format(
                     pipe_id,
                     data
@@ -759,7 +769,7 @@ def process_command(pipe_id, data):
         try:
             func = eval(command.split('(', 1)[0])
         except SyntaxError:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Command Malformed Error: {1}'.format(
                     pipe_id,
                     command
@@ -767,7 +777,7 @@ def process_command(pipe_id, data):
             )
             return 'CommandMalformedError'
         except AttributeError:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Command Not Found Error: {1}'.format(
                     pipe_id,
                     command
@@ -776,7 +786,7 @@ def process_command(pipe_id, data):
             return 'CommandNotFoundError'
         else:
             if isinstance(func, (str, unicode)):
-                eg.PrintDebugNotice(
+                print_debug_notice(
                     'Pipe {0}: Command Format Error: {1}'.format(
                         pipe_id,
                         command
@@ -786,7 +796,7 @@ def process_command(pipe_id, data):
         try:
             data = eval(data)
         except SyntaxError:
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Parameter Malformed Error: {1}'.format(
                     pipe_id,
                     data
@@ -795,14 +805,13 @@ def process_command(pipe_id, data):
             return 'ParameterMalformedError'
 
         if not isinstance(data, (dict, list, tuple)):
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Parameter Format Error: {1}'.format(
                     pipe_id,
                     str(data)
                 )
             )
             return 'ParameterFormatError'
-
     except:
         traceback.print_exc()
     else:
@@ -814,7 +823,7 @@ def process_command(pipe_id, data):
             elif isinstance(data, (tuple, list)):
                 res[0] = func(*data)
 
-            eg.PrintDebugNotice(
+            print_debug_notice(
                 'Pipe {0}: Return data: {1}'.format(
                     pipe_id,
                     str(res[0])
@@ -822,6 +831,7 @@ def process_command(pipe_id, data):
             )
 
             event.set()
+
         if (
             command.startswith('eg.document') or
             command.startswith('eg.mainFrame')
@@ -831,6 +841,7 @@ def process_command(pipe_id, data):
             res = ['MainThreadHung']
             wx.CallAfter(run)
             event.wait(5)
+
             return res[0]
         else:
             res = ['UnableToProcessCommand']
@@ -838,6 +849,7 @@ def process_command(pipe_id, data):
             t.daemon = True
             t.start()
             event.wait(5)
+
             return res[0]
 
 
@@ -995,7 +1007,6 @@ class Client(object):
 
             if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
                 break
-
             elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
                 CloseHandle(hNamedPipe)
                 raise PipeError(err)
@@ -1024,7 +1035,6 @@ class Client(object):
     def write(self, msg):
 
         with self.__write_lock:
-
             result = 0
             hFile = self._pipe_handle
             lpOverlapped = NULL
@@ -1047,7 +1057,6 @@ class Client(object):
                 if err == ERROR_MORE_DATA:
                     msg = msg[lpNumberOfBytesWritten.value:]
                     result = 0
-
                 elif err in (
                     ERROR_INVALID_HANDLE,
                     ERROR_BROKEN_PIPE,
@@ -1056,16 +1065,13 @@ class Client(object):
                 ):
                     CloseHandle(hFile)
                     raise PipeError(err)
-
                 elif result:
                     break
-
                 elif err:
                     CloseHandle(hFile)
                     raise PipeError(err)
 
     def __read_loop(self):
-
         while not self.__event.isSet():
             result = 0
             nNumberOfBytesToRead = DWORD(4096)
@@ -1093,7 +1099,6 @@ class Client(object):
                 if err == ERROR_MORE_DATA:
                     response += lpBuffer.value
                     result = 0
-
                 elif err in (
                     ERROR_INVALID_HANDLE,
                     ERROR_BROKEN_PIPE,
@@ -1102,10 +1107,8 @@ class Client(object):
                 ):
                     CloseHandle(hFile)
                     raise PipeError(err)
-
                 elif result:
                     response += lpBuffer.value
-
                 elif err:
                     CloseHandle(hFile)
                     raise PipeError(err)
@@ -1178,7 +1181,6 @@ def send_message(msg, pipe_name='eventghost'):
 
         if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
             break
-
         elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
             CloseHandle(hNamedPipe)
             write_error(err)
@@ -1223,7 +1225,6 @@ def send_message(msg, pipe_name='eventghost'):
         if err == ERROR_MORE_DATA:
             msg = msg[lpNumberOfBytesWritten.value:]
             result = 0
-
         elif err in (
             ERROR_INVALID_HANDLE,
             ERROR_BROKEN_PIPE,
@@ -1233,10 +1234,8 @@ def send_message(msg, pipe_name='eventghost'):
             CloseHandle(hFile)
             write_error(err)
             return
-
         elif result:
             break
-
         elif err:
             CloseHandle(hFile)
             write_error(err)
@@ -1264,7 +1263,6 @@ def send_message(msg, pipe_name='eventghost'):
         if err == ERROR_MORE_DATA:
             response += lpBuffer.value
             result = 0
-
         elif err in (
             ERROR_INVALID_HANDLE,
             ERROR_BROKEN_PIPE,
@@ -1274,10 +1272,8 @@ def send_message(msg, pipe_name='eventghost'):
             CloseHandle(hFile)
             write_error(err)
             return
-
         elif result:
             response += lpBuffer.value
-
         elif err:
             CloseHandle(hFile)
             write_error(err)
