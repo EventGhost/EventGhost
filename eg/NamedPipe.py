@@ -84,6 +84,7 @@
 
 
 import sys
+import os
 import ctypes
 import threading
 import traceback
@@ -351,7 +352,7 @@ CloseHandle.restype = BOOL
 CreateEvent = kernel32.CreateEventW
 CreateEvent.restype = HANDLE
 
-CreateFile = kernel32.CreateFileA
+CreateFile = kernel32.CreateFileW
 CreateFile.restype = HANDLE
 
 CreateNamedPipe = kernel32.CreateNamedPipeW
@@ -529,10 +530,11 @@ class Pipe(object):
         self._read_queue_event = threading.Event()
 
         print_debug_notice(
-            'Named Pipe: Creating pipe {0}'.format(pipe_id)
+            'Named Pipe: Creating pipe {0}'.format(self._pipe_id)
         )
 
-        lpName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
+        lpName = ctypes.create_unicode_buffer(
+            _create_pipe_name(self._pipe_name))
         dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
         dwPipeMode = DWORD(
             PIPE_TYPE_MESSAGE |
@@ -574,19 +576,20 @@ class Pipe(object):
             nDefaultTimeOut,
             ctypes.byref(lpSecurityAttributes)
         )
+        self._thread = None
 
+    def open(self):
         self._thread = threading.Thread(
-            name='{0}.Pipe.{1}.Thread'.format(pipe_name, pipe_id),
+            name='{0}.Pipe.{1}.Thread'.format(self._pipe_name, self._pipe_id),
             target=self.run
         )
         self._thread.daemon = True
-
-    def open(self):
         self._thread.start()
 
     def run(self):
         lpOverlapped = NULL
-        ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
+        if self.is_waiting:
+            ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
 
         self.is_waiting = False
         self._parent.check_available_pipes()
@@ -657,7 +660,7 @@ class Pipe(object):
             return response
 
     def close(self):
-        self._event.set()
+
         print_debug_notice(
             'Disconnecting pipe {0}: {1}'.format(
                 self._pipe_name,
@@ -670,20 +673,40 @@ class Pipe(object):
         except:
             pass
 
-        # noinspection PyPep8
-        try:
-            print_debug_notice(
-                'Closing pipe {0}: {1}'.format(
-                    self._pipe_name,
-                    self._pipe_id
-                )
-            )
-            CloseHandle(self.hNamedPipe)
-        except:
-            pass
+        self._read_queue = []
+        self._read_queue_event.clear()
+        restart_event = threading.Event()
 
-        self.closed = True
+        def do():
+            lpOverlapped = NULL
+            ConnectNamedPipe(self.hNamedPipe, lpOverlapped)
+            restart_event.set()
+
+        t = threading.Thread(target=do)
+        t.daemon = True
+        t.start()
+
+        restart_event.wait(5)
+
+        if not restart_event.isSet():
+            self._event.set()
+            # noinspection PyPep8
+            try:
+                print_debug_notice(
+                    'Closing pipe {0}: {1}'.format(
+                        self._pipe_name,
+                        self._pipe_id
+                    )
+                )
+                CloseHandle(self.hNamedPipe)
+            except:
+                pass
+
+            self.closed = True
+
         self._parent.check_available_pipes()
+
+
 
     def write(self, msg):
         result = 0
@@ -959,15 +982,17 @@ class Server:
 
 # noinspection PyProtectedMember
 def write_error(erronum):
-    display_message = sys.stderr._displayMessage
-    sys.stderr._displayMessage = False
 
-    try:
-        raise PipeError(erronum)
-    except PipeError:
-        traceback.print_exc()
+    if '-q' in sys.argv:
+        set_quiet = False
+    else:
+        sys.argv += ['-q']
+        set_quiet = True
 
-    sys.stderr._displayMessage = display_message
+    sys.stderr.write(format_error(erronum) + '\n')
+
+    if set_quiet:
+        sys.argv = sys.argv[:-1]
 
 
 # noinspection PyPep8Naming
@@ -1003,13 +1028,14 @@ class Client(object):
             err = GetLastError()
 
             lpNamedPipeName = lpFileName
-            nTimeOut = DWORD(2000)
+            nTimeOut = DWORD(20000)
 
             if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
                 break
-            elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
-                CloseHandle(hNamedPipe)
-                raise PipeError(err)
+            elif err == ERROR_PIPE_BUSY:
+                if not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+                    CloseHandle(hNamedPipe)
+                    raise PipeError(err)
 
         lpMode = DWORD(PIPE_READMODE_MESSAGE)
         lpMaxCollectionCount = NULL
@@ -1067,6 +1093,8 @@ class Client(object):
                     raise PipeError(err)
                 elif result:
                     break
+                elif err == ERROR_PIPE_BUSY:
+                    continue
                 elif err:
                     CloseHandle(hFile)
                     raise PipeError(err)
@@ -1161,7 +1189,7 @@ class Client(object):
 
 # noinspection PyPep8Naming
 def send_message(msg, pipe_name='eventghost'):
-    lpFileName = _create_pipe_name(pipe_name)
+    lpFileName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
 
     while True:
         hNamedPipe = CreateFile(
@@ -1177,11 +1205,20 @@ def send_message(msg, pipe_name='eventghost'):
         err = GetLastError()
 
         lpNamedPipeName = lpFileName
-        nTimeOut = DWORD(2000)
+        nTimeOut = DWORD(20000)
 
         if hNamedPipe != INVALID_HANDLE_VALUE and err != ERROR_PIPE_BUSY:
             break
-        elif not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+        elif err == ERROR_PIPE_BUSY:
+            if not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+                err = GetLastError()
+                CloseHandle(hNamedPipe)
+                write_error(err)
+                return
+        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+            CloseHandle(hNamedPipe)
+            return send_message(msg, pipe_name)
+        else:
             CloseHandle(hNamedPipe)
             write_error(err)
             return
@@ -1190,18 +1227,27 @@ def send_message(msg, pipe_name='eventghost'):
     lpMaxCollectionCount = NULL
     lpCollectDataTimeout = NULL
 
-    result = SetNamedPipeHandleState(
-        hNamedPipe,
-        ctypes.byref(lpMode),
-        lpMaxCollectionCount,
-        lpCollectDataTimeout
-    )
+    while True:
 
-    if not result:
-        err = GetLastError()
-        CloseHandle(hNamedPipe)
-        write_error(err)
-        return
+        result = SetNamedPipeHandleState(
+            hNamedPipe,
+            ctypes.byref(lpMode),
+            lpMaxCollectionCount,
+            lpCollectDataTimeout
+        )
+
+        if not result:
+            err = GetLastError()
+            if err == ERROR_PIPE_BUSY:
+                continue
+
+            CloseHandle(hNamedPipe)
+            if err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA, ERROR_PIPE_BUSY):
+                return send_message(msg, pipe_name)
+            write_error(err)
+            return
+        else:
+            break
 
     result = 0
     hFile = hNamedPipe
@@ -1227,7 +1273,6 @@ def send_message(msg, pipe_name='eventghost'):
             result = 0
         elif err in (
             ERROR_INVALID_HANDLE,
-            ERROR_BROKEN_PIPE,
             ERROR_BAD_PIPE,
             ERROR_PIPE_NOT_CONNECTED
         ):
@@ -1236,6 +1281,11 @@ def send_message(msg, pipe_name='eventghost'):
             return
         elif result:
             break
+        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+            CloseHandle(hFile)
+            return send_message(msg, pipe_name)
+        elif err == ERROR_PIPE_BUSY:
+            continue
         elif err:
             CloseHandle(hFile)
             write_error(err)
@@ -1265,7 +1315,6 @@ def send_message(msg, pipe_name='eventghost'):
             result = 0
         elif err in (
             ERROR_INVALID_HANDLE,
-            ERROR_BROKEN_PIPE,
             ERROR_BAD_PIPE,
             ERROR_PIPE_NOT_CONNECTED
         ):
@@ -1274,6 +1323,11 @@ def send_message(msg, pipe_name='eventghost'):
             return
         elif result:
             response += lpBuffer.value
+        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+            CloseHandle(hNamedPipe)
+            return send_message(msg, pipe_name)
+        elif err == ERROR_PIPE_BUSY:
+            continue
         elif err:
             CloseHandle(hFile)
             write_error(err)
