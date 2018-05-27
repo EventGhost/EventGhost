@@ -533,8 +533,8 @@ class Pipe(object):
             'Named Pipe: Creating pipe {0}'.format(self._pipe_id)
         )
 
-        lpName = ctypes.create_unicode_buffer(
-            _create_pipe_name(self._pipe_name))
+        formatted_pipe_name = _create_pipe_name(self._pipe_name)
+        lpName = ctypes.create_unicode_buffer(formatted_pipe_name)
         dwOpenMode = DWORD(PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE)
         dwPipeMode = DWORD(
             PIPE_TYPE_MESSAGE |
@@ -667,7 +667,7 @@ class Pipe(object):
                 self._pipe_id
             )
         )
-        # noinspection PyPep8
+        # noinspection PyBroadException,PyPep8
         try:
             DisconnectNamedPipe(self.hNamedPipe)
         except:
@@ -690,7 +690,7 @@ class Pipe(object):
 
         if not restart_event.isSet():
             self._event.set()
-            # noinspection PyPep8
+            # noinspection PyBroadException,PyPep8
             try:
                 print_debug_notice(
                     'Closing pipe {0}: {1}'.format(
@@ -705,8 +705,6 @@ class Pipe(object):
             self.closed = True
 
         self._parent.check_available_pipes()
-
-
 
     def write(self, msg):
         result = 0
@@ -980,7 +978,6 @@ class Server:
             self._available_event.clear()
 
 
-# noinspection PyProtectedMember
 def write_error(erronum):
 
     if '-q' in sys.argv:
@@ -1001,7 +998,7 @@ class Client(object):
     def __init__(self, pipe_name):
         self._pipe_name = pipe_name
         self._pipe_handle = None
-        self.__write_lock = threading.Lock()
+        self.__write_lock = threading.RLock()
         self.__read_lock = threading.Lock()
         self.__read_event = threading.Event()
         self.__event = threading.Event()
@@ -1012,7 +1009,8 @@ class Client(object):
         if self._pipe_handle is not None:
             raise PipeError('Client pipe is already opened')
 
-        lpFileName = _create_pipe_name(self._pipe_name)
+        formatted_pipe_name = _create_pipe_name(pipe_name)
+        lpFileName = ctypes.create_unicode_buffer(formatted_pipe_name)
 
         while True:
             hNamedPipe = CreateFile(
@@ -1034,24 +1032,41 @@ class Client(object):
                 break
             elif err == ERROR_PIPE_BUSY:
                 if not WaitNamedPipe(lpNamedPipeName, nTimeOut):
+                    err = GetLastError()
                     CloseHandle(hNamedPipe)
                     raise PipeError(err)
+            elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+                CloseHandle(hNamedPipe)
+                self.open()
+                return
+            else:
+                CloseHandle(hNamedPipe)
+                raise PipeError(err)
 
         lpMode = DWORD(PIPE_READMODE_MESSAGE)
         lpMaxCollectionCount = NULL
         lpCollectDataTimeout = NULL
 
-        result = SetNamedPipeHandleState(
-            hNamedPipe,
-            ctypes.byref(lpMode),
-            lpMaxCollectionCount,
-            lpCollectDataTimeout
-        )
+        while True:
+            result = SetNamedPipeHandleState(
+                hNamedPipe,
+                ctypes.byref(lpMode),
+                lpMaxCollectionCount,
+                lpCollectDataTimeout
+            )
 
-        if not result:
-            err = GetLastError()
-            CloseHandle(hNamedPipe)
-            raise PipeError(err)
+            if not result:
+                err = GetLastError()
+                if err == ERROR_PIPE_BUSY:
+                    continue
+
+                CloseHandle(hNamedPipe)
+                if err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA, ERROR_PIPE_BUSY):
+                    self.open()
+                    return
+                raise PipeError(err)
+            else:
+                break
 
         self._pipe_handle = hNamedPipe
         self.__read_thread = threading.Thread(target=self.__read_loop)
@@ -1059,7 +1074,6 @@ class Client(object):
         self.__read_thread.start()
 
     def write(self, msg):
-
         with self.__write_lock:
             result = 0
             hFile = self._pipe_handle
@@ -1085,7 +1099,6 @@ class Client(object):
                     result = 0
                 elif err in (
                     ERROR_INVALID_HANDLE,
-                    ERROR_BROKEN_PIPE,
                     ERROR_BAD_PIPE,
                     ERROR_PIPE_NOT_CONNECTED
                 ):
@@ -1093,6 +1106,11 @@ class Client(object):
                     raise PipeError(err)
                 elif result:
                     break
+                elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+                    CloseHandle(hFile)
+                    self.open()
+                    self.write(msg)
+                    return
                 elif err == ERROR_PIPE_BUSY:
                     continue
                 elif err:
@@ -1101,10 +1119,10 @@ class Client(object):
 
     def __read_loop(self):
         while not self.__event.isSet():
+            hFile = self._pipe_handle
             result = 0
             nNumberOfBytesToRead = DWORD(4096)
             lpOverlapped = NULL
-            hFile = self._pipe_handle
             response = ''
 
             while not result:
@@ -1129,7 +1147,6 @@ class Client(object):
                     result = 0
                 elif err in (
                     ERROR_INVALID_HANDLE,
-                    ERROR_BROKEN_PIPE,
                     ERROR_BAD_PIPE,
                     ERROR_PIPE_NOT_CONNECTED
                 ):
@@ -1137,6 +1154,13 @@ class Client(object):
                     raise PipeError(err)
                 elif result:
                     response += lpBuffer.value
+                elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+                    CloseHandle(hNamedPipe)
+                    if self.__event.isSet():
+                        self.open()
+                        continue
+                elif err == ERROR_PIPE_BUSY:
+                    continue
                 elif err:
                     CloseHandle(hFile)
                     raise PipeError(err)
@@ -1179,6 +1203,8 @@ class Client(object):
             pass
 
         CloseHandle(hFile)
+
+        # noinspection PyBroadException,PyPep8
         try:
             self.__read_thread.join(3)
         except:
@@ -1189,7 +1215,8 @@ class Client(object):
 
 # noinspection PyPep8Naming
 def send_message(msg, pipe_name='eventghost'):
-    lpFileName = ctypes.create_unicode_buffer(_create_pipe_name(pipe_name))
+    formatted_pipe_name = _create_pipe_name(pipe_name)
+    lpFileName = ctypes.create_unicode_buffer(formatted_pipe_name)
 
     while True:
         hNamedPipe = CreateFile(
