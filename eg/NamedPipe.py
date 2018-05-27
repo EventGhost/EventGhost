@@ -1213,6 +1213,94 @@ class Client(object):
         self._pipe_handle = None
 
 
+def _read(hFile):
+    result = 0
+    nNumberOfBytesToRead = DWORD(4096)
+    lpOverlapped = NULL
+    response = ''
+
+    while not result:
+        lpBuffer = ctypes.create_string_buffer(4096)
+        lpNumberOfBytesRead = DWORD()
+
+        result = ReadFile(
+            hFile,
+            lpBuffer,
+            nNumberOfBytesToRead,
+            ctypes.byref(lpNumberOfBytesRead),
+            lpOverlapped
+        )
+
+        err = GetLastError()
+
+        if err == ERROR_MORE_DATA:
+            response += lpBuffer.value
+            result = 0
+        elif err in (
+            ERROR_INVALID_HANDLE,
+            ERROR_BAD_PIPE,
+            ERROR_PIPE_NOT_CONNECTED
+        ):
+            CloseHandle(hFile)
+            write_error(err)
+            return
+        elif result:
+            response += lpBuffer.value
+        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+            CloseHandle(hNamedPipe)
+            return False
+        elif err == ERROR_PIPE_BUSY:
+            continue
+        elif err:
+            CloseHandle(hFile)
+            write_error(err)
+            return
+    return response
+
+
+def _write(hFile, msg):
+    result = 0
+    lpOverlapped = NULL
+
+    while not result:
+        lpBuffer = ctypes.create_string_buffer(msg)
+        nNumberOfBytesToWrite = DWORD(len(msg))
+        lpNumberOfBytesWritten = DWORD()
+
+        result = WriteFile(
+            hFile,
+            lpBuffer,
+            nNumberOfBytesToWrite,
+            ctypes.byref(lpNumberOfBytesWritten),
+            lpOverlapped
+        )
+
+        err = GetLastError()
+
+        if err == ERROR_MORE_DATA:
+            msg = msg[lpNumberOfBytesWritten.value:]
+            result = 0
+        elif err in (
+            ERROR_INVALID_HANDLE,
+            ERROR_BAD_PIPE,
+            ERROR_PIPE_NOT_CONNECTED
+        ):
+            CloseHandle(hFile)
+            write_error(err)
+            return
+        elif err == ERROR_PIPE_BUSY:
+            continue
+        elif result:
+            return True
+        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
+            CloseHandle(hFile)
+            return False
+        elif err:
+            CloseHandle(hFile)
+            write_error(err)
+            return
+
+
 # noinspection PyPep8Naming
 def send_message(msg, pipe_name='eventghost'):
     formatted_pipe_name = _create_pipe_name(pipe_name)
@@ -1255,7 +1343,6 @@ def send_message(msg, pipe_name='eventghost'):
     lpCollectDataTimeout = NULL
 
     while True:
-
         result = SetNamedPipeHandleState(
             hNamedPipe,
             ctypes.byref(lpMode),
@@ -1276,110 +1363,26 @@ def send_message(msg, pipe_name='eventghost'):
         else:
             break
 
-    result = 0
-    hFile = hNamedPipe
-    lpOverlapped = NULL
+    result = _write(hNamedPipe, msg)
+    if result is None:
+        return
+    elif result is False:
+        return send_message(msg, pipe_name)
 
-    while not result:
-        lpBuffer = ctypes.create_string_buffer(msg)
-        nNumberOfBytesToWrite = DWORD(len(msg))
-        lpNumberOfBytesWritten = DWORD()
-
-        result = WriteFile(
-            hFile,
-            lpBuffer,
-            nNumberOfBytesToWrite,
-            ctypes.byref(lpNumberOfBytesWritten),
-            lpOverlapped
-        )
-
-        err = GetLastError()
-
-        if err == ERROR_MORE_DATA:
-            msg = msg[lpNumberOfBytesWritten.value:]
-            result = 0
-        elif err in (
-            ERROR_INVALID_HANDLE,
-            ERROR_BAD_PIPE,
-            ERROR_PIPE_NOT_CONNECTED
-        ):
-            CloseHandle(hFile)
-            write_error(err)
-            return
-        elif result:
-            break
-        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
-            CloseHandle(hFile)
-            return send_message(msg, pipe_name)
-        elif err == ERROR_PIPE_BUSY:
-            continue
-        elif err:
-            CloseHandle(hFile)
-            write_error(err)
-            return
-
-    result = 0
-    nNumberOfBytesToRead = DWORD(4096)
-    lpOverlapped = NULL
-    response = ''
-
-    while not result:
-        lpBuffer = ctypes.create_string_buffer(4096)
-        lpNumberOfBytesRead = DWORD()
-
-        result = ReadFile(
-            hFile,
-            lpBuffer,
-            nNumberOfBytesToRead,
-            ctypes.byref(lpNumberOfBytesRead),
-            lpOverlapped
-        )
-
-        err = GetLastError()
-
-        if err == ERROR_MORE_DATA:
-            response += lpBuffer.value
-            result = 0
-        elif err in (
-            ERROR_INVALID_HANDLE,
-            ERROR_BAD_PIPE,
-            ERROR_PIPE_NOT_CONNECTED
-        ):
-            CloseHandle(hFile)
-            write_error(err)
-            return
-        elif result:
-            response += lpBuffer.value
-        elif err in (ERROR_BROKEN_PIPE, ERROR_NO_DATA):
-            CloseHandle(hNamedPipe)
-            return send_message(msg, pipe_name)
-        elif err == ERROR_PIPE_BUSY:
-            continue
-        elif err:
-            CloseHandle(hFile)
-            write_error(err)
-            return
+    result = _read(hNamedPipe)
+    if result is None:
+        return
+    elif result is False:
+        return send_message(msg, pipe_name)
 
     try:
-        return eval(response)
+        return eval(result)
     except SyntaxError:
-        return response
+        return result
     finally:
-        msg = 'CLOSE'
-        lpBuffer = ctypes.create_string_buffer(msg)
-        nNumberOfBytesToWrite = DWORD(len(msg))
-        lpNumberOfBytesWritten = NULL
-        lpOverlapped = NULL
-
         try:
-            WriteFile(
-                hFile,
-                lpBuffer,
-                nNumberOfBytesToWrite,
-                lpNumberOfBytesWritten,
-                lpOverlapped
-            )
+            _write(hNamedPipe, 'CLOSE')
         except WindowsError:
             pass
 
-        CloseHandle(hFile)
+        CloseHandle(hNamedPipe)
