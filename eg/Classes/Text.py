@@ -134,6 +134,11 @@ class Default:
 
             ViewMenu = "&View"
             HideShowToolbar = "&Toolbar"
+            ExpandCollapseMenu = "Expand/Collapse"
+            Expand = "Expand"
+            Collapse = "Collapse"
+            ExpandChilds = "Expand all children"
+            CollapseChilds = "Collapse all children"
             ExpandAll = "&Expand All"
             CollapseAll = "&Collapse All"
             ExpandOnEvents = "Select on E&xecution"
