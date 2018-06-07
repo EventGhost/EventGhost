@@ -435,8 +435,20 @@ class SendKeysParser:
         Uses PostMessage and SetKeyboardState to emulate the the virtual
         keycode. Can send to a specified window handle.
         """
+
         keyboardStateBuffer = self.keyboardStateBuffer
-        for block in keyData:
+        for i, block in enumerate(keyData):
+
+            def wait():
+                if len(block) > 1:
+                    self.WaitForInputProcessed()
+                else:
+                    try:
+                        if len(keyData[i + 1]) > 1:
+                            self.WaitForInputProcessed()
+                    except IndexError:
+                        pass
+
             if mode == 1 or mode == 2:
                 for virtualKey in block:
                     keyCode = virtualKey & 0xFF
@@ -460,7 +472,9 @@ class SendKeysParser:
 
                     SetKeyboardState(byref(keyboardStateBuffer))
                     PostMessage(hwnd, mesg, keyCode, lparam)
-                    self.WaitForInputProcessed()
+
+            if mode == 2:
+                wait()
 
             if mode == 0 or mode == 2:
                 for virtualKey in reversed(block):
@@ -487,7 +501,9 @@ class SendKeysParser:
 
                     SetKeyboardState(byref(keyboardStateBuffer))
                     PostMessage(hwnd, mesg, keyCode, lparam)
-                    self.WaitForInputProcessed()
+            wait()
+
+        self.WaitForInputProcessed()
 
     def WaitForInputProcessed(self):
         if self.procHandle:
