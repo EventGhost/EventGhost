@@ -340,10 +340,17 @@ class SendKeysParser:
         if keyData:
             needGetFocus = False
             sendToFront = False
+            
             if hwnd is None:
                 sendToFront = True
                 hwnd = GetForegroundWindow()
                 needGetFocus = True
+            else:
+                focus_hwnd = GetFocus()
+                if focus_hwnd == hwnd:
+                    hwnd = GetForegroundWindow()
+                    sendToFront = True
+                    needGetFocus = True
 
             dwProcessId = DWORD()
             threadID = GetWindowThreadProcessId(hwnd, byref(dwProcessId))
