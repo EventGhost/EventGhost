@@ -391,23 +391,37 @@ class SendKeysParser:
         Uses the SendInput-API function to send the virtual keycode.
         Can only send to the frontmost window.
         """
-        sendInputStruct = self.sendInputStruct
-        sendInputStructPointer = pointer(sendInputStruct)
-        sendInputStructSize = sizeof(sendInputStruct)
-        keyboardStruct = sendInputStruct.ki
+
+        inputs = []
         for block in keyData:
             if mode == 1 or mode == 2:
-                keyboardStruct.dwFlags = 0
                 for virtualKey in block:
+                    sendInputStruct = INPUT()
+                    sendInputStruct.type = INPUT_KEYBOARD
+
+                    keyboardStruct = sendInputStruct.ki
+                    keyboardStruct.dwFlags = 0
                     keyboardStruct.wVk = virtualKey & 0xFF
-                    SendInput(1, sendInputStructPointer, sendInputStructSize)
-                    self.WaitForInputProcessed()
+
+                    inputs += [sendInputStruct]
             if mode == 0 or mode == 2:
-                keyboardStruct.dwFlags = KEYEVENTF_KEYUP
                 for virtualKey in reversed(block):
+                    sendInputStruct = INPUT()
+                    sendInputStruct.type = INPUT_KEYBOARD
+
+                    keyboardStruct = sendInputStruct.ki
+                    keyboardStruct.dwFlags = KEYEVENTF_KEYUP
                     keyboardStruct.wVk = virtualKey & 0xFF
-                    SendInput(1, sendInputStructPointer, sendInputStructSize)
-                    self.WaitForInputProcessed()
+
+                    inputs += [sendInputStruct]
+
+        nInputs = len(inputs)
+        LPINPUT = INPUT * nInputs
+        pInputs = LPINPUT(*inputs)
+        cbSize = sizeof(INPUT)
+
+        SendInput(nInputs, pInputs, cbSize)
+        self.WaitForInputProcessed()
 
     def SendRawCodes2(self, keyData, hwnd, mode):
         """
