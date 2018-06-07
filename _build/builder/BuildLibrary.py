@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import __builtin__
 import os
 import sys
 from glob import glob
@@ -24,6 +25,28 @@ from os.path import basename, exists, join
 # Local imports
 import builder
 from builder.Utils import EncodePath
+
+
+orig_compile = __builtin__.compile
+
+
+def my_compile(source, filename, *args):
+    try:
+        result = orig_compile(source, filename, *args)
+    except SyntaxError:
+        if 'import asyncio' in source or 'from asyncio' in source:
+            ver = sys.version_info
+            if ver[0] < 3 or ver[1] < 5:
+                return orig_compile('', filename, *args)
+            else:
+                raise
+        else:
+            raise
+
+    return result
+
+
+__builtin__.compile = my_compile
 
 DLL_EXCLUDES = [
     "DINPUT8.dll",
