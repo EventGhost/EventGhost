@@ -90,7 +90,7 @@ install:
         pip install -q -U "setuptools==34.3.0"
         "    Done."
         PipInstall "wheel 0.29.0" "wheel==0.29.0"
-        PipInstall "sphinx 1.5.6" "sphinx==1.7.5"
+        PipInstall "sphinx 1.7.5" "sphinx==1.7.5"
         PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
         PipInstall "pillow 3.4.2" "pillow==3.4.2"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
