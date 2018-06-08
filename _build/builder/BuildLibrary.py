@@ -32,18 +32,15 @@ orig_compile = __builtin__.compile
 
 def my_compile(source, filename, *args):
     try:
-        result = orig_compile(source, filename, *args)
+        return orig_compile(source, filename, *args)
     except SyntaxError:
-        if 'import asyncio' in source or 'from asyncio' in source:
-            ver = sys.version_info
-            if ver[0] < 3 or ver[1] < 5:
-                return orig_compile('', filename, *args)
-            else:
-                raise
-        else:
-            raise
+        ver = sys.version_info
 
-    return result
+        if ver[0] > 2 and ver[1] > 4:
+            raise
+        if 'import asyncio' in source or 'from asyncio' in source:
+            return orig_compile('', filename, *args)
+        raise
 
 
 __builtin__.compile = my_compile
