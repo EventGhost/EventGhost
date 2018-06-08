@@ -27,23 +27,24 @@ import builder
 from builder.Utils import EncodePath
 
 
-orig_compile = __builtin__.compile
+_compile = __builtin__.compile
 
 
-def my_compile(source, filename, *args):
+# noinspection PyShadowingBuiltins
+def compile(source, filename, *args):
     try:
-        return orig_compile(source, filename, *args)
+        return _compile(source, filename, *args)
     except SyntaxError:
         ver = sys.version_info
 
         if ver[0] > 2 and ver[1] > 4:
             raise
         if 'import asyncio' in source or 'from asyncio' in source:
-            return orig_compile('', filename, *args)
+            return _compile('', filename, *args)
         raise
 
 
-__builtin__.compile = my_compile
+__builtin__.compile = compile
 
 DLL_EXCLUDES = [
     "DINPUT8.dll",

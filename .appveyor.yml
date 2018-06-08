@@ -90,11 +90,7 @@ install:
         pip install -q -U "setuptools==34.3.0"
         "    Done."
         PipInstall "wheel 0.29.0" "wheel==0.29.0"
-        # sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
-        # jinja2 >= 2.9 has an async module which py2exe has
-        # problems with (build of eg will fail)
-        PipInstall "jinja2 2.8.1" "jinja2==2.8.1"
-        PipInstall "sphinx 1.5.6" "sphinx==1.5.6"
+        PipInstall "sphinx 1.5.6" "sphinx=1.7.5"
         PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
         PipInstall "pillow 3.4.2" "pillow==3.4.2"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
