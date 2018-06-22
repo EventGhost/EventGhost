@@ -82,6 +82,7 @@ class EventGhostEvent(object):
 
     """
     skipEvent = False
+    icon = eg.Icons.EVENT_ICON
 
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
         self.string = prefix + "." + suffix
