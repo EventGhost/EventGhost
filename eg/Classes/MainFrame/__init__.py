@@ -64,6 +64,7 @@ class Config(eg.PersistentData):
     position = (50, 50)
     size = (700, 450)
     showToolbar = True
+    logDate = False
     logTime = False
     indentLog = True
     expandOnEvents = False
@@ -236,6 +237,8 @@ class MainFrame(wx.Frame):
     def CreateLogCtrl(self):
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
+        if not Config.logDate:
+            logCtrl.SetDateLogging(False)
         if not Config.logTime:
             logCtrl.SetTimeLogging(False)
         logCtrl.SetIndent(Config.indentLog)
@@ -314,8 +317,12 @@ class MainFrame(wx.Frame):
         menuBar.Append(menu, text.ViewMenu)
         Append("HideShowToolbar", kind=wx.ITEM_CHECK).Check(Config.showToolbar)
         menu.AppendSeparator()
-        Append("ExpandAll")
-        Append("CollapseAll")
+        Append("Expand", image=GetInternalBitmap("expand"))
+        Append("Collapse", image=GetInternalBitmap("collapse"))
+        Append("ExpandChilds", image=GetInternalBitmap("expand_children"))
+        Append("CollapseChilds", image=GetInternalBitmap("collapse_children"))
+        Append("ExpandAll", image=GetInternalBitmap("expand_all"))
+        Append("CollapseAll", image=GetInternalBitmap("collapse_all"))
         menu.AppendSeparator()
         item = Append("ExpandOnEvents", kind=wx.ITEM_CHECK)
         item.Check(Config.expandOnEvents)
@@ -325,6 +332,7 @@ class MainFrame(wx.Frame):
         Append("LogDebug", kind=wx.ITEM_CHECK).Check(eg.config.logDebug)
         menu.AppendSeparator()
         Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
+        Append("LogDate", kind=wx.ITEM_CHECK).Check(Config.logDate)
         Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         menu.AppendSeparator()
         Append("ClearLog")
@@ -402,6 +410,13 @@ class MainFrame(wx.Frame):
             GetInternalBitmap("Execute"),
             getattr(text, "Execute")
         )
+        toolBar.AddSeparator()
+        Append("Expand", GetInternalBitmap("expand"))
+        Append("Collapse", GetInternalBitmap("collapse"))
+        Append("ExpandChilds", GetInternalBitmap("expand_children"))
+        Append("CollapseChilds", GetInternalBitmap("collapse_children"))
+        Append("ExpandAll", GetInternalBitmap("expand_all"))
+        Append("CollapseAll", GetInternalBitmap("collapse_all"))
 
         toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
@@ -442,6 +457,15 @@ class MainFrame(wx.Frame):
             menu.AppendItem(item)
             return item
 
+        Append("Expand", image=GetInternalBitmap("expand"))
+        Append("Collapse", image=GetInternalBitmap("collapse"))
+        Append("ExpandChilds", image=GetInternalBitmap("expand_children"))
+        Append("CollapseChilds", image=GetInternalBitmap("collapse_children"))
+        Append("ExpandAll", image=GetInternalBitmap("expand_all"))
+        Append("CollapseAll", image=GetInternalBitmap("collapse_all"))
+        subm = menu
+        menu = wx.Menu()
+
         Append("Undo")
         Append("Redo")
         menu.AppendSeparator()
@@ -450,6 +474,8 @@ class MainFrame(wx.Frame):
         Append("Python")
         Append("Paste")
         Append("Delete")
+        menu.AppendSeparator()
+        menu.AppendMenu(wx.ID_ANY, text=text.ExpandCollapseMenu, submenu=subm)
         menu.AppendSeparator()
         Append("AddPlugin", image=ADD_PLUGIN_ICON)
         Append("AddFolder", image=ADD_FOLDER_ICON)
@@ -897,6 +923,18 @@ class MainFrame(wx.Frame):
         self.Layout()
         self.SendSizeEvent()
 
+    def OnCmdExpand(self):
+        self.treeCtrl.Expand(self.treeCtrl.GetSelection())
+
+    def OnCmdCollapse(self):
+        self.treeCtrl.Collapse(self.treeCtrl.GetSelection())
+
+    def OnCmdExpandChilds(self):
+        self.treeCtrl.ExpandAllChildren(self.treeCtrl.GetSelection())
+
+    def OnCmdCollapseChilds(self):
+        self.treeCtrl.CollapseAllChildren(self.treeCtrl.GetSelection())
+
     def OnCmdExpandAll(self):
         self.treeCtrl.ExpandAll()
 
@@ -925,6 +963,11 @@ class MainFrame(wx.Frame):
         flag = self.menuBar.IsChecked(ID["LogTime"])
         Config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
+
+    def OnCmdLogDate(self):
+        flag = self.menuBar.IsChecked(ID["LogDate"])
+        Config.logDate = flag
+        self.logCtrl.SetDateLogging(flag)
 
     def OnCmdIndentLog(self):
         shouldIndent = self.menuBar.IsChecked(ID["IndentLog"])
