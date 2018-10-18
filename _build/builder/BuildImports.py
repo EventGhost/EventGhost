@@ -29,7 +29,7 @@ import warnings
 from os.path import join
 
 # Local imports
-import builder
+import Builder
 
 MODULES_TO_IGNORE = [
     "__phello__.foo",
@@ -70,7 +70,7 @@ HEADER = """\
 
 warnings.simplefilter('error', DeprecationWarning)
 
-class BuildImports(builder.Task):
+class BuildImports(Builder.Task):
     description = "Build Imports.py"
 
     def Setup(self):
@@ -129,17 +129,6 @@ class BuildImports(builder.Task):
                 outfile.write("import %s\n" % module)
         outfile.write("\n")
         outfile.close()
-
-
-class DummyStdOut:  #IGNORE:W0232 class has no __init__ method
-    """
-    Just a dummy stdout implementation, that suppresses all output.
-    """
-    def write(self, dummyData):  #IGNORE:C0103
-        """
-        A do-nothing write.
-        """
-        pass
 
 
 def FindModulesInPath(path, prefix="", includeDeprecated=False):
@@ -276,12 +265,11 @@ def TestImport(moduleName, includeDeprecated=False):
     Test if the given module can be imported without error.
     """
     #print "Testing", moduleName
-    oldStdOut = sys.stdout
-    oldStdErr = sys.stderr
-    sys.stdout = DummyStdOut()
     try:
-        __import__(moduleName)
-        return (True, "", "")
+        with sys.stdout:
+            __import__(moduleName)
+            return (True, "", "")
+
     except DeprecationWarning, exc:
         return includeDeprecated, "DeprecationWarning", str(exc)
     except ImportError, exc:
@@ -290,6 +278,4 @@ def TestImport(moduleName, includeDeprecated=False):
         return False, "SyntaxError", str(exc)
     except Exception, exc:
         return False, "Exception", str(exc)
-    finally:
-        sys.stdout = oldStdOut
-        sys.stderr = oldStdErr
+

@@ -30,8 +30,8 @@ from os.path import (
 )
 
 # Local imports
-import builder
-from builder.subprocess2 import Popen
+import Builder
+from subprocess2 import Popen
 
 # Exceptions
 class BuildError(Exception):
@@ -134,6 +134,7 @@ def GetGitHubConfig():
         return gitcfg
 
     from agithub.GitHub import GitHub
+
     # read .gitconfig
     cfg = expanduser('~\.gitconfig')
     with open(cfg, "rt") as f:
@@ -148,7 +149,6 @@ def GetGitHubConfig():
             continue
         key, val = cfg[i].strip().split('=')
         gitcfg.update({key.strip(): val.strip()})
-
     # no entry for 'token' and/or 'user' found in .gitconfig
     if "token" not in gitcfg or "user" not in gitcfg:
         raise KeyError
@@ -160,12 +160,12 @@ def GetGitHubConfig():
         local_branch = ""
     else:
         local_branch = result.split()[1].split("...")[0]
-
     # try to get some defaults for repo and branch
     gh = GitHub(token=gitcfg["token"])
     gitcfg["all_repos"] = {}
     gitcfg.update({"repo": "", "branch": ""})
     page = 1
+
     while page > 0:
         rc, data = gh.user.repos.get(page=page)
         page = NextPage(gh)
@@ -402,7 +402,7 @@ def StartProcess(*args):
     startupInfo.wShowWindow = subprocess.SW_HIDE
     process = Popen(
         args,
-        cwd=EncodePath(join(builder.buildSetup.buildDir)),
+        cwd=EncodePath(join(Builder.buildSetup.buildDir)),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         startupinfo=startupInfo,

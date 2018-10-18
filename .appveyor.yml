@@ -3,18 +3,125 @@
 # To draft a release on GitHub with AppVeyor, create a tag on master.
 
 
+# *****************************************************************************
+# *                                                                           *
+# *                              READ ME!!!                                   *
+# *                                                                           *
+# *****************************************************************************
+#
+#
+# =============================== PROBLEMS ====================================
+#
+# python <3 - C-Python or Stackless you can only have a single copy
+#             of that version of python installed on a machine. The issue with
+#             the installer is that it does not launch the uninstaller for the
+#             version that is already installed. It simply iterates the
+#             installation folder and deletes the files for the currently
+#             installed version. It does this without ever telling you that it
+#             is and it does not do a CRC check against the installed files
+#             before removing them. So if you have any modified core python
+#             files be warned.. It does not care. It will delete them without
+#             notice.
+#
+#             The big problem with this process is that it does not remove
+#             any entries in the registry for the old installation. and it
+#             adds entries for the new installation below them. This causes
+#             any installers that do a search for python installations to
+#             always select the wrong one. Now under normal situations an
+#             installer would iterate the list of possible installations and
+#             verify if it is there or not.. But because Python 2.7 is only
+#             supposed to have a single installed copy why would the author
+#             do this?? They wouldn't. they would rely on there being only a
+#             single installation listed in the registry.
+#
+# py2xe_py2 - does not have a pypi dist available for python 2.7 x64
+#             so for sake of keeping the code symmetrical both the x86 and x64
+#             use the executable that gets downloaded.
+#             the installer for py2exe_py2 does not detect installed python
+#             version properly because of the bug mentioned above.
+#
+#
+# x86 - x64 - The second portion of the multiple Python 2.7 installations
+#             dilemma. we need to install an x86 and an x64 variant at the
+#             same time. I know there is a way to have the appveyor build run
+#             2 times. I have not investigated this fully as of yet.
+#
+#
+# ========================== SOLUTIONS / HACKS ================================
+#
+# py2xe_py2 - this is a fix for the above issue.
+#             since the executable was created using distutils we can use
+#             easy_install to install the library. There is a single glitch
+#             with it There is some kind of a warning/error that gets printed
+#             out. Tho it does not affect the installation it does produce the
+#             undesirable red in the powershell log.
+#
+# x86 - x64 - How we get around this is we relocate the python installations
+#             after installing everything needed. we also move the python dll
+#             file from SysWOW or System to the installations folder.
+#             we do not want an entry in the registry pointing to a current
+#             python installation that we intend to use. When we install the
+#             second variant if the first is found it will be deleted. So we
+#             have to play a little bit of hide and seek with the python
+#             installations. That is why you will see all of the moving and
+#             copying of files.
+#
+#
+# =============================== CHANGES =====================================
+#
+# *REMOVED*
+# ctypeslib - This is a non functioning package due to
+#             components that are required by the library and are no longer
+#             available. The only thing this module was ever used for was the
+#             creation of eg.WinApi.Dynamic module.
+#             Microsoft has not changed any of the API for any of the
+#             constants/functions located in this file since their creation in
+#             Windows XP. I do not forsee them making any changes because of
+#             how long this API has been in place. So the need for ctypeslib
+#             (even if it did function) is no longer needed.
+# *REMOVED*
+# pycrypto  - this library is no longer being maintained. has been replaced
+#
+# *ADDED*
+# pycryptodome - pycrypto replacement. most of the same API. It is a maintained
+#                fork of pycrypto
+#
+# *MOVED*
+# build process - I moved the building of EG out of the install section of
+#                 appveyor. I did this because of the incorrect build
+#                 completion notifications. There is a build_script section
+#                 that can be used in replacement of build. this section
+#                 does not do a VS solution scan and it also properly reports
+#                 the status of the build. the install section is not monitored
+#                 for application status codes properly. and the use of
+#                 fast_finish i believe only works on the build/build_script
+#                 sections
+#
+#
+# *****************************************************************************
+# *****************************************************************************
+
+image:
+  - Visual Studio 2015
+
 version: '{build}-{branch}'
 
-
-#init:
-#  # Enable Remotedesktop and pause the build execution
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
-
 environment:
-  PYTHON: 'C:\Stackless27'
-  PYTHONPATH: 'C:\Stackless27;C:\Stackless27\Scripts;C:\Stackless27\DLLs;C:\Stackless27\Lib;C:\Stackless27\Lib\site-packages;'
+  DEBUG: 0
+  # DISTUTILS_DEBUG: 1
+  # APPVEYOR_RDP_PASSWORD: HGtoDr16GH~
+  matrix:
 
+    - BUILDARCH: 64
+    - BUILDARCH: 86
+
+init:
+  # Enable Remotedesktop and pause the build execution
+  - ps: |
+      if ($Env:DEBUG -eq "1") {
+          $blockRdp = $true
+          iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
 
 matrix:
   fast_finish: true
@@ -22,7 +129,7 @@ matrix:
 
 cache:
   # Invalidate cache if .appveyor.yml has changed
-  - C:\Stackless27 -> .appveyor.yml
+  - C:\Stackless27_x$(BUILDARCH) -> .appveyor.yml, .appveyor_install.ps1, .appveyor_build.ps1, .appveyor_runapp.psm1
   # Manually clear cache:
   # from agithub.AppVeyor import AppVeyor
   # ci = AppVeyor(<your appveyor API token>)
@@ -32,153 +139,35 @@ cache:
 
 install:
   # HTML Help Workshop 1.32
-  # - cinst html-help-workshop
+  - cinst html-help-workshop
 
   # Microsoft Visual C++ Redistributable 2008 (version min: 9.0.21022.8)
   # - cinst vcredist2008
 
-  #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  - ps: |
-      $Env:PATH = $Env:PATH -replace "Python27", "Stackless27"
-      $PythonFolder = $Env:PYTHON
-      $PythonScripts = $PythonFolder + "\Scripts"
-      $SitePackages = $PythonFolder + "\lib\site-packages"
-      $SysWOW = $Env:SYSTEMROOT + "\SysWOW64"
-      $PythonWindowsDLL = $SysWOW + "\python27.dll"
-      $PythonDLL = $PythonFolder + "\python27.dll"
-      $InstallersFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
-
-      Remove-Item $PythonWindowsDLL
-      New-Item $InstallersFolder -type directory | Out-Null
-      " "
-      "=============== prepare EventGhost build environment ==============="
-      If (-not (Test-Path $PythonFolder))
-      {
-        Function PipInstall ($msg, $mod)
-        {
-          " "
-          "--- " + $msg
-          "    Installing..."
-          pip install -q $mod
-          "    Done."
-        }
-        " "
-        "--- Stackless 2.7.12150 x86"
-        $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
-        $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
-        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
-        Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
-        "    Installing..."
-        Start-Process MsiExec.exe -Arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
-        "    Done."
-        " "
-        "--- wxPython 3.0.2.0"
-        $WXInstaller = $InstallersFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
-        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
-        Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
-        "    Installing..."
-        Start-Process $WXInstaller -Arg "/VERYSILENT /SUPPRESSMSGBOXES" -NoNewWindow -Wait
-        "    Done."
-        " "
-        "--- pip 9.0.1"
-        "    Updating..."
-        python -m pip install -q -U "pip==9.0.1"
-        "    Done."
-        " "
-        "--- setuptools 34.3.0"
-        "    Updating..."
-        pip install -q -U "setuptools==34.3.0"
-        "    Done."
-        PipInstall "wheel 0.29.0" "wheel==0.29.0"
-        # sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
-        # jinja2 >= 2.9 has an async module which py2exe has
-        # problems with (build of eg will fail)
-        PipInstall "jinja2 2.8.1" "jinja2==2.8.1"
-        PipInstall "sphinx 1.5.6" "sphinx==1.5.6"
-        PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
-        PipInstall "pillow 3.4.2" "pillow==3.4.2"
-        PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
-        PipInstall "pycrypto 2.6.1" "pycrypto==2.6.1"
-        PipInstall "comtypes 1.1.3" "https://github.com/enthought/comtypes/archive/1.1.3.zip"
-        PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
-        PipInstall "paramiko 2.2.1" "paramiko==2.2.1"
-        PipInstall "pywin32 223" pywin32==223
-      }
-      " "
-      "--- pywin32 post install"
-      $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
-      Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
-      "    Done."
-      #" "
-      #"--- Inno Setup 5.5.9"
-      #$InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
-      #$InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-      #Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
-      #"    Installing..."
-      #Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
-      #"    Done."
-      " "
-      " "
-      "=============== start the EventGhost build ==============="
-      " "
-      If ($Env:APPVEYOR_REPO_TAG.tolower() -eq "true" -and
-        $Env:APPVEYOR_REPO_TAG_NAME.tolower().startswith("deploy"))
-      {
-        # to do a release, create a tag in the form "Deploy_VERSION"
-        # VERSION must be a valid version string (without leading 'v')
-        # this tag will be deleted and a new release "vVERSION" created.
-        git checkout -q master
-        $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
-        $url = if($Env:SFTP_URL){' --docs --url "' + $env:SFTP_URL + '"'} else {''}
-        python "_build\Build.py" --build --package --release --version $release $url
-      } Else {
-        # WIP
-        python "_build\Build.py" --build --package
-        .\EventGhost.exe -install
-      }
-      $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
-
-      # update the appveyor build version to be the same as the EventGhost version
-      $start = $env:SetupExe.IndexOf("_")
-      $length = $env:SetupExe.LastIndexOf("_") - $start
-      $build_version = $env:SetupExe.Substring($start + 1, $length - 1)
-      Update-AppveyorBuild -Version "$build_version"
-
-      # Make sure the appveyor cache is only saved if our build was successfull
-      If (-Not (Test-Path(".\EventGhost.exe"))) {$env:APPVEYOR_CACHE_SKIP_SAVE = "true"}
-
-      " "
-
-      "=============== EventGhost build finished ==============="
-      " "
-      " "
+  - ps: . .\.appveyor_install.ps1
 
 
-build:
-  off
-  # If we don't turn build off, we get an error from appveyor telling us,
-  # we should decide, which project or solution file to use, because the
-  # folder contains more than one project or solution file.
-  # We don't really "build" (with a compiler), but Appveyor finds the
-  # solution files in the extension sub-directories and complains.
 
+build_script:
+  - ps: . .\.appveyor_build.ps1
 
 #after_test:
 #  - cmd:  echo "=============== EventGhost build finished ==============="
 #  # - cmd: START /WAIT %setup-exe% /VERYSILENT /SUPPRESSMSGBOXES /NOCLOSEAPPLICATIONS
 
-
 artifacts:
-  - path: _build\output\$(SetupExe)
-    name: $(SetupExe)
-  - path: _build\output\Build.log
-    name: Build.log
   - path: _build\output\CHANGELOG.md
     name: CHANGELOG.md
   - path: _build\output\CHANGELOG_THIS_RELEASE.md
     name: CHANGELOG_THIS_RELEASE.md
   - path: _build\output\CHANGELOG_THIS_RELEASE.bb
     name: CHANGELOG_THIS_RELEASE.bb
+  - path: _build\output\$(SetupExe)
+    name: $(SetupExe)
+  - path: _build\output\Build_x$(BUILDARCH).log
+    name: Build_x$(BUILDARCH).log
+  - path: _build\output\ModuleOutput_x$(BUILDARCH).zip
+    name: ModuleOutput_x$(BUILDARCH).zip
 
 
 notifications:
@@ -222,11 +211,13 @@ notifications:
   on_build_status_changed: true
 
 
-
-#on_finish:
-#  # Enable Remotedesktop and pause the build execution
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
+on_finish:
+  # pause the build execution
+  - ps: |
+      if ($Env:DEBUG -eq "1") {
+          $blockRdp = $true
+          iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
 
 # notifications:
 #   - provider: GitHubPullRequest

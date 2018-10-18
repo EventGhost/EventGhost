@@ -24,10 +24,10 @@ from shutil import copy2
 from time import localtime, strftime
 
 # Local imports
-import builder
-from builder.Utils import BuildError, EscapeMarkdown, NextPage
+import Builder
+from Utils import BuildError, EscapeMarkdown, NextPage
 
-class BuildChangelog(builder.Task):
+class BuildChangelog(Builder.Task):
     """
     Populate CHANGELOG.md with the latest changes from GitHub.
     """

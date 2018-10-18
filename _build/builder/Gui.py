@@ -21,8 +21,7 @@ import threading
 import wx
 
 # Local imports
-import builder
-from builder.Utils import GetVersion, ParseVersion
+from Utils import GetVersion, ParseVersion
 
 
 class MainDialog(wx.Dialog):
@@ -158,7 +157,9 @@ class MainDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def DoMain(self):
-        builder.Tasks.Main(self.buildSetup)
+        import Tasks
+
+        Tasks.Main(self.buildSetup)
         wx.CallAfter(self.OnExit)
 
     def OnCancel(self, event):

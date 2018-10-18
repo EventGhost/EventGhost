@@ -24,8 +24,8 @@ from os import environ
 from os.path import join
 
 # Local imports
-import builder
-from builder.Utils import BuildError, IsCIBuild, NextPage
+import Builder
+from Utils import BuildError, IsCIBuild, NextPage
 
 if sys.version_info[0:2] > (3, 0):
     import http.client
@@ -36,7 +36,7 @@ else:
     import urllib as urllib
     urllib.parse = urllib
 
-class ReleaseToGitHub(builder.Task):
+class ReleaseToGitHub(Builder.Task):
     description = "Release to GitHub"
 
     def Setup(self):

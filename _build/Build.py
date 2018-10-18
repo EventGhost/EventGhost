@@ -20,15 +20,30 @@
 This script creates the EventGhost setup installer.
 """
 
-from os.path import dirname, exists, join
+import builder # NOQA
+from builder import msvc
+from builder.Utils import CaseInsensitiveList, ListDir # NOQA
 
-# Local imports
-import builder
-from builder.Utils import CaseInsensitiveList, ListDir
+import os
+import sys
+from os.path import dirname, exists, join # NOQA
 
-SKIP_IF_UNCHANGED = CaseInsensitiveList(
-    r"plugins\Task\TaskHook.dll",
-)
+environment = msvc.Environment(strict_compiler_version=True)
+print environment
+
+for variable, setting in environment:
+    os.environ[variable] = setting
+
+
+os.environ['PATH'] += ';' + environment.msvc_dll_path
+
+
+# environment.lock()
+#
+# SKIP_IF_UNCHANGED = CaseInsensitiveList(
+#     r"plugins\Task\TaskHook.dll",
+# )
+
 
 class MyBuilder(builder.Builder):
     name = "EventGhost"
@@ -59,7 +74,7 @@ class MyBuilder(builder.Builder):
         "_tkinter",
         "cffi",  # bundled for no reason
         "comtypes.gen",
-        #"ctypes.macholib",  # seems to be for Apple
+        # "ctypes.macholib",  # seems to be for Apple
         "curses",
         "distutils.command.bdist_packager",
         "distutils.mwerkscompiler",
@@ -114,9 +129,28 @@ class MyBuilder(builder.Builder):
             inno.AddFile(
                 join(self.sourceDir, filename),
                 dirname(filename),
-                ignoreversion=(filename not in SKIP_IF_UNCHANGED),
                 prefix=prefix
             )
+
+        from builder import EventGhostBuildExtension
+
+        def extension_inno(ext):
+            src = join(
+                ext.destination_path,
+                ext.name
+            )
+
+            src_dir = os.path.abspath(
+                os.path.join(os.path.dirname(sys.argv[1]), '..')
+            )
+            dst = ext.destination_path.replace(src_dir, '')
+            inno.AddFile(src, dst)
+
+        extension_inno(EventGhostBuildExtension.RawInputHook)
+        extension_inno(EventGhostBuildExtension.WinUsbWrapper)
+        extension_inno(EventGhostBuildExtension.MceIr)
+        extension_inno(EventGhostBuildExtension.TaskHook)
+
         if exists(join(self.outputDir, "CHANGELOG.md")):
             inno.AddFile(join(self.outputDir, "CHANGELOG.md"))
         else:
@@ -158,6 +192,7 @@ class MyBuilder(builder.Builder):
             elif f.endswith("core-plugin"):
                 coreplugins.append(f.replace("core-plugin", ""))
                 files.remove(f)
+
 
         installFiles = []
         for f in files:

@@ -223,15 +223,18 @@ class SystemInfoPanel(HtmlPanel):
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory = GetRam()[0]
+
         pythonVersion = "%d.%d.%d %s %d" % tuple(sys.version_info)
         if is_stackless:
             pythonVersion = "Stackless Python " + pythonVersion
+
+        import platform
         self.sysInfos = [
             "Software",
-            ("Program Version", eg.Version.string),
+            ("Program Version", eg.Version.string + ' - ' + platform.architecture()[0]),
             ("Build Time", buildTime),
-            ("Python Version", pythonVersion),
-            ("wxPython Version", wx.VERSION_STRING),
+            ("Python Version", pythonVersion + ' - ' + platform.architecture()[0]),
+            ("wxPython Version", wx.VERSION_STRING + ' - ' + platform.architecture()[0]),
             "\nSystem",
             ("Operating System", GetWindowsVersionString()),
             ("CPU", GetCpuName()),

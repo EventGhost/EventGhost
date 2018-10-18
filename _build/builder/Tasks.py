@@ -19,16 +19,17 @@
 import logging
 import time
 from os.path import join
+import os
 from shutil import copy2
 
 # Local imports
-import builder
-
+from Builder import Task
+import Utils
 
 logger = logging.getLogger()
 
 
-class BuildInstaller(builder.Task):
+class BuildInstaller(Task):
     description = "Build Setup.exe"
 
     def Setup(self):
@@ -39,7 +40,7 @@ class BuildInstaller(builder.Task):
         self.buildSetup.BuildInstaller()
 
 
-class BuildVersionFile(builder.Task):
+class BuildVersionFile(Task):
     """
     Write version information to eg/Classes/VersionInfo.py
     """
@@ -65,7 +66,7 @@ class BuildVersionFile(builder.Task):
         outfile.close()
 
 
-class ReleaseToWeb(builder.Task):
+class ReleaseToWeb(Task):
     description = "Release to web"
     options = {"url": ""}
 
@@ -77,18 +78,18 @@ class ReleaseToWeb(builder.Task):
             self.activated = bool(self.buildSetup.args.release)
 
     def DoTask(self):
-        import builder.Upload
+        import Upload
         buildSetup = self.buildSetup
         filename = (
             buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
         )
         src = join(buildSetup.outputDir, filename)
         dst = join(buildSetup.websiteDir, "downloads", filename)
-        builder.Upload.Upload(src, self.options["url"])
+        Upload.Upload(src, self.options["url"])
         copy2(src, dst)
 
 
-class SynchronizeWebsite(builder.Task):
+class SynchronizeWebsite(Task):
     description = "Synchronize website"
 
     def Setup(self):
@@ -117,15 +118,15 @@ class SynchronizeWebsite(builder.Task):
         syncer.Close()
 
 
-from builder.CheckSourceCode import CheckSourceCode  # NOQA
-from builder.BuildStaticImports import BuildStaticImports  # NOQA
-from builder.BuildImports import BuildImports  # NOQA
-from builder.BuildInterpreters import BuildInterpreters  # NOQA
-from builder.BuildLibrary import BuildLibrary  # NOQA
-from builder.BuildDocs import BuildChmDocs, BuildHtmlDocs  # NOQA
-from builder.ReleaseToGitHub import ReleaseToGitHub  # NOQA
-from builder.BuildWebsite import BuildWebsite  # NOQA
-from builder.BuildChangelog import BuildChangelog  # NOQA
+from CheckSourceCode import CheckSourceCode  # NOQA
+from BuildStaticImports import BuildStaticImports  # NOQA
+from BuildImports import BuildImports  # NOQA
+from BuildInterpreters import BuildInterpreters  # NOQA
+from BuildLibrary import BuildLibrary  # NOQA
+from BuildDocs import BuildChmDocs, BuildHtmlDocs  # NOQA
+from ReleaseToGitHub import ReleaseToGitHub  # NOQA
+from BuildWebsite import BuildWebsite  # NOQA
+from BuildChangelog import BuildChangelog  # NOQA
 
 TASKS = [
     BuildVersionFile,
@@ -144,13 +145,11 @@ TASKS = [
     SynchronizeWebsite,
 ]
 
+
 def Main(buildSetup):
     """
     Main task of the script.
     """
     for task in buildSetup.tasks:
-        if task.activated:
-            logger.log(22, "--- {0}".format(task.description))
-            task.DoTask()
-            logger.log(22, "")
+        task.DoTask()
     logger.log(22, "--- All done!")

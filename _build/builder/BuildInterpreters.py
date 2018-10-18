@@ -28,7 +28,7 @@ from distutils.core import setup
 from os.path import exists, join
 
 # Local imports
-import builder
+import Builder
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -38,7 +38,7 @@ PYVERSION = "%d%d" % sys.version_info[:2]
 PY_BASE_NAME = "py%s" % PYVERSION
 PYW_BASE_NAME = "pyw%s" % PYVERSION
 
-class BuildInterpreters(builder.Task):
+class BuildInterpreters(Builder.Task):
     description = "Build interpreters (py.exe, pyw.exe)"
 
     def Setup(self):
@@ -56,8 +56,10 @@ class BuildInterpreters(builder.Task):
         manifest = file(
             join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read()
+
+        manifest = manifest.format(app_name=buildSetup.name)
         setup(
-            script_args = ["py2exe"],
+            script_args=["py2exe"],
             options=dict(
                 build=dict(build_base=join(tmpDir, "build")),
                 py2exe=dict(compressed=0, dist_dir=join(tmpDir, "dist"))
@@ -69,14 +71,14 @@ class BuildInterpreters(builder.Task):
                 dict(
                     script=join(buildSetup.dataDir, "py.py"),
                     dest_base=PYW_BASE_NAME,
-                    other_resources = [(24, 1, manifest)],
+                    other_resources=[(24, 1, manifest)],
                 )
             ],
             console=[
                 dict(
                     script=join(buildSetup.dataDir, "py.py"),
                     dest_base=PY_BASE_NAME,
-                    other_resources = [(24, 1, manifest)],
+                    other_resources=[(24, 1, manifest)],
                 )
             ],
             verbose=0,

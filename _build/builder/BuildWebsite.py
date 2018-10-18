@@ -24,9 +24,9 @@ from jinja2 import Environment, FileSystemLoader
 from os.path import abspath, join
 
 # Local imports
-import builder
+import Builder
 
-class BuildWebsite(builder.Task):
+class BuildWebsite(Builder.Task):
     description = "Build website"
 
     def Setup(self):

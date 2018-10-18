@@ -20,7 +20,7 @@ import os
 from os.path import join, splitext
 
 # Local imports
-import builder
+import Builder
 
 PLUGINS = [
     "EventGhost",
@@ -80,7 +80,7 @@ HEADER = """# -*- coding: utf-8 -*-
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 """
 
-class CheckSourceCode(builder.Task):
+class CheckSourceCode(Builder.Task):
     description = "Check source code"
 
     def Setup(self):

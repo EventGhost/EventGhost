@@ -41,6 +41,8 @@ from ctypes.wintypes import (
 )
 import time
 
+from eg.WinApi.Dynamic import ULONG_PTR
+
 
 HCONV = c_void_p
 HDDEDATA = c_void_p
@@ -48,7 +50,6 @@ HSZ = c_void_p
 LPBYTE = c_char_p
 LPDWORD = POINTER(DWORD)
 LPSTR = c_char_p
-ULONG_PTR = c_ulong
 
 # See windows/ddeml.h for declaration of struct CONVCONTEXT
 PCONVCONTEXT = c_void_p
