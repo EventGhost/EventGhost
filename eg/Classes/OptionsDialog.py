@@ -19,6 +19,7 @@
 import os
 import wx
 from os.path import exists, join
+from time import localtime, strftime
 from wx.combo import BitmapComboBox
 
 # Local imports
@@ -36,6 +37,15 @@ class Text(eg.TranslatableStrings):
         "Language changes only take effect after restarting the application."
         "\n\n"
         "Do you want to restart EventGhost now?"
+    )
+    Datestamp = "Datestamp format for log:"
+    DatestampHelp = (
+        "For imformation on format codes read Python's strftime "
+        "documentation:\n"
+        "http://docs.python.org/2/library/datetime.html#strftime-and-strptime-"
+        "behavior\n"
+        "\nHere you can find examples:\n"
+        "http://strftime.org/\n"
     )
     HideOnClose = "Keep running in background when window closed"
     HideOnStartup = "Hide on startup"
@@ -144,6 +154,33 @@ class OptionsDialog(eg.TaskletDialog):
             self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
+        datestampCtrl = page1.TextCtrl(config.datestamp)
+        datestampCtrl.SetToolTipString(text.DatestampHelp)
+        datestampLabel = page1.StaticText(text.Datestamp)
+        datestampLabel.SetToolTipString(text.DatestampHelp)
+        datestampSzr = wx.BoxSizer(wx.HORIZONTAL)
+        datestampSzr.AddMany((
+            (datestampLabel, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5),
+            (datestampCtrl, 1, wx.EXPAND)
+        ))
+
+        def OnDatestampKillFocus(_):
+            dt_fmt = datestampCtrl.GetValue()
+            try:
+                strftime(dt_fmt, localtime())
+            except ValueError:
+                wx.MessageBox("Invalid format string!", "Error")
+                datestampCtrl.SetBackgroundColour("pink")
+                datestampCtrl.Refresh()
+                wx.CallAfter(datestampCtrl.SetFocus)
+            else:
+                datestampCtrl.SetBackgroundColour(
+                    wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+                )
+                datestampCtrl.Refresh()
+
+        datestampCtrl.Bind(wx.EVT_KILL_FOCUS, OnDatestampKillFocus)
+
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
             filename = os.path.join(eg.imagesDir, "flags", "%s.png" % code)
@@ -181,6 +218,7 @@ class OptionsDialog(eg.TaskletDialog):
                 (refreshEnvCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
+                (datestampSzr, 0, flags),
             )
         )
 
@@ -219,6 +257,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.refreshEnv = refreshEnvCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
+            config.datestamp = datestampCtrl.GetValue()
             config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()
@@ -232,6 +271,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         if eg.mainFrame:
             eg.mainFrame.SetWindowStyleFlag()
+            eg.mainFrame.logCtrl.SetDTLogging()
 
         if config.language != oldLanguage:
             wx.CallAfter(self.ShowLanguageWarning)

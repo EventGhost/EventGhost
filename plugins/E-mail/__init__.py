@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version = "0.1.8"
+version = "0.1.9"
 
 # This file is part of EventGhost.
 # Copyright (C) 2008-2013 Pako <lubos.ruckl@quick.cz>
@@ -22,6 +22,9 @@ version = "0.1.8"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.1.9 (2018-02-03) by topix
+#     - some changes for EG0.5 because wxPython 3.0 handles some sizer
+#       related things differently.
 # 0.1.8 by Pako 2013-03-25 08:42 UTC+1
 #     - added wx.ComboBox for event suffix (action "Start observation")
 #===============================================================================
@@ -1755,10 +1758,10 @@ class groupsDialog(wx.MiniFrame):
         topMiddleSizer2.Add(btnDEL2,0,wx.TOP,5)
         topMiddleSizer2.Add(btnApp2,0,wx.TOP,5)
         mainSizer = wx.GridBagSizer(0, 0)
-        mainSizer.AddGrowableCol(1)
         mainSizer.Add(leftSizer,(0,0),flag = wx.ALIGN_LEFT)
         mainSizer.Add(rightSizer,(0,2),flag = wx.ALIGN_RIGHT)
         sizer.Add(mainSizer,0,wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND,20)
+        mainSizer.AddGrowableCol(1)
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(text.ok)
@@ -2087,8 +2090,6 @@ class observViewerDialog(wx.MiniFrame):
         )
 
         centralSizer = wx.GridBagSizer(10, 10)
-        centralSizer.AddGrowableRow(0)
-        centralSizer.AddGrowableCol(3)
         observListCtrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
         for i, colLabel in enumerate(text.colLabels):
             observListCtrl.InsertColumn(
@@ -2113,6 +2114,8 @@ class observViewerDialog(wx.MiniFrame):
         centralSizer.Add(abortAllButton,(1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
         centralSizer.Add(refreshButton,(1,2), flag = wx.ALIGN_LEFT)
         centralSizer.Add(closeButton,(1,4), flag = wx.ALIGN_RIGHT)
+        centralSizer.AddGrowableRow(0)
+        centralSizer.AddGrowableCol(3)
 
         def FillListCtrl (event=None):
             observListCtrl.DeleteAllItems()
@@ -2939,7 +2942,7 @@ class StartObservation(eg.ActionClass):
         deleteCtrl = wx.CheckBox(panel, label = text.delete)
         deleteCtrl.SetValue(self.stp[14])
         deleteCtrl.SetToolTipString(text.tip1)
-        filterSizer = wx.FlexGridSizer(4,3,0,0)
+        filterSizer = wx.FlexGridSizer(rows=6, cols=3)
         for n in range(6):
             fieldCtrl_1 = wx.Choice(panel,id=100+n,choices=self.plugin.text.field_1)
             fieldCtrl_1.Bind(wx.EVT_CHOICE,onFilter)
@@ -2996,12 +2999,12 @@ class StartObservation(eg.ActionClass):
         foregroundColourButton = wx.ColourPickerCtrl(panel)
         foregroundColourButton.SetColour(self.stp[10])
         colourSizer = wx.GridBagSizer(3,3)
-        colourSizer.AddGrowableCol(2)
         colourSizer.Add(labelBck,(0,0),wx.DefaultSpan,wx.TOP,4)
         colourSizer.Add(backgroundColourButton,(0,1))
         colourSizer.Add(labelFore,(0,3),wx.DefaultSpan,wx.TOP,4)
         colourSizer.Add(foregroundColourButton,(0,4))
         bottomSizer.Add(colourSizer,(3,1),(1,3),wx.TOP|wx.EXPAND,12)
+        colourSizer.AddGrowableCol(2)
         panel.sizer.Add(bottomSizer,0,wx.EXPAND|wx.TOP,12)
         panel.sizer.Layout()
         self.flag2=False
@@ -3623,7 +3626,7 @@ class E_mail(eg.PluginClass):
 
         panel.validation = validation
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        topLeftSizer = wx.FlexGridSizer(5,2,2,8)
+        topLeftSizer = wx.FlexGridSizer(rows=5, cols=2, vgap=2, hgap=8)
         leftSizer.Add(topLeftSizer,0,wx.EXPAND)
         topMiddleSizer=wx.BoxSizer(wx.VERTICAL)
         previewLbl=wx.StaticText(panel, -1, text.accountsList)

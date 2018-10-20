@@ -71,6 +71,32 @@ ERROR_BAD_PIPE = 0xE6
 ERROR_PIPE_BUSY = 0xE7
 ERROR_NO_DATA = 0xE8
 ERROR_PIPE_NOT_CONNECTED = 0xE9
+ERROR_FILE_NOT_FOUND = 0x2
+
+
+class NamedPipeException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return str(self.msg)
+
+
+class NamedPipeDataError(NamedPipeException):
+    pass
+
+
+class NamedPipeCommandError(NamedPipeException):
+    pass
+
+
+class NamedPipeConnectionError(NamedPipeException):
+
+    def __getitem__(self, item):
+        if item in self.__dict__:
+            return self.__dict__[item]
+
+        return self.msg[item]
 
 
 def process_data(in_data):
@@ -87,6 +113,23 @@ def process_data(in_data):
         if ord(char) != 0:
             out_data += char
     return out_data
+
+
+def _is_eg_running():
+    try:
+        win32pipe.WaitNamedPipe(
+            r'\\.\pipe\eventghost',
+            NMPWAIT_USE_DEFAULT_WAIT
+        )
+        return True
+
+    except win32pipe.error as err:
+        if err[0] == ERROR_FILE_NOT_FOUND:
+            return False
+        raise NamedPipeConnectionError(err)
+
+
+is_eg_running = _is_eg_running()
 
 
 class Pipe(object):
@@ -140,7 +183,7 @@ class Pipe(object):
             PIPE_UNLIMITED_INSTANCES,
             4096,
             4096,
-            50,
+            5,
             security_attributes
         )
 
@@ -426,6 +469,7 @@ class Server:
     def run(self):
 
         import eg
+
         # This is where the permissions get created for the pipe
         eg.PrintDebugNotice('Pipe: Creating security descriptor')
         security_attributes = win32security.SECURITY_ATTRIBUTES()
@@ -441,7 +485,7 @@ class Server:
             PIPE_UNLIMITED_INSTANCES,
             4096,
             4096,
-            50,
+            5,
             security_attributes
         )
 
@@ -534,34 +578,9 @@ def send_message(msg):
             raise NamedPipeDataError('Error in data received: ' + str(data))
 
     except win32pipe.error as err:
-        if err[0] == ERROR_PIPE_BUSY:
+        if err[0] in (ERROR_PIPE_BUSY, ERROR_PIPE_CONNECTED):
             event = threading.Event()
             event.wait(float(random.randrange(1, 100)) / 2000.0)
             return send_message(msg)
 
         raise NamedPipeConnectionError(err)
-
-
-class NamedPipeException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return str(self.msg)
-
-
-class NamedPipeDataError(NamedPipeException):
-    pass
-
-
-class NamedPipeCommandError(NamedPipeException):
-    pass
-
-
-class NamedPipeConnectionError(NamedPipeException):
-
-    def __getitem__(self, item):
-        if item in self.__dict__:
-            return self.__dict__[item]
-
-        return self.msg[item]

@@ -134,6 +134,11 @@ class Default:
 
             ViewMenu = "&View"
             HideShowToolbar = "&Toolbar"
+            ExpandCollapseMenu = "Expand/Collapse"
+            Expand = "Expand"
+            Collapse = "Collapse"
+            ExpandChilds = "Expand all children"
+            CollapseChilds = "Collapse all children"
             ExpandAll = "&Expand All"
             CollapseAll = "&Collapse All"
             ExpandOnEvents = "Select on E&xecution"
@@ -141,6 +146,7 @@ class Default:
             LogActions = "Log &Actions"
             LogDebug = "Log &Debug Info"
             IndentLog = "&Indent Log"
+            LogDate = "Datestam&p Log"
             LogTime = "Time&stamp Log"
             ClearLog = "Clear &Log"
 

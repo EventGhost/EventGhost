@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
@@ -157,7 +158,7 @@ class BuildChangelog(builder.Task):
                 print "\n{0}:\n".format(title)
                 for pr in items:
                     changes['md'].append(
-                        "* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
+                        u"* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
                             EscapeMarkdown(pr["title"]),
                             pr["number"],
                             pr["html_url"],
@@ -166,8 +167,8 @@ class BuildChangelog(builder.Task):
                         )
                     )
                     changes['bb'].append(
-                        "[*] {0} [url={1}]{2}[/url] "
-                        "([url={3}]{4}[/url])\n".format(
+                        u"[*] {0} [url={1}]{2}[/url] "
+                        u"([url={3}]{4}[/url])\n".format(
                             pr["title"],
                             pr["html_url"],
                             pr["number"],
@@ -175,7 +176,7 @@ class BuildChangelog(builder.Task):
                             EscapeMarkdown(pr["user"]["login"])
                         )
                     )
-                    print "* {0} #{1} ({2})".format(
+                    print u"* {0} #{1} ({2})".format(
                         pr["title"],
                         pr["number"],
                         pr["user"]["login"],
@@ -190,13 +191,13 @@ class BuildChangelog(builder.Task):
 
         # write a changelog file in bbcode for the news section in forum
         changes['bb'].append(
-            "\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
-            "releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
-            "[/url][/size]\n".format(buildSetup.appVersion)
+            u"\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
+            u"releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
+            u"[/url][/size]\n".format(buildSetup.appVersion)
         )
         try:
             fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.bb")
-            out = open(fn, "w")
+            out = codecs.open(fn, "w", "utf8")
             out.writelines(changes['bb'])
             out.close()
         except:
@@ -205,7 +206,7 @@ class BuildChangelog(builder.Task):
         # write a file with current changes in markdown for release description
         try:
             fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.md")
-            out = open(fn, "w")
+            out = codecs.open(fn, "w", "utf8")
             out.writelines(changes['md'][1:])
             out.close()
         except:
@@ -214,7 +215,7 @@ class BuildChangelog(builder.Task):
         # and now the full changelog file (in markdown format)
         # read the existing changelog...
         try:
-            infile = open(changelog_path, "r")
+            infile = codecs.open(changelog_path, "r", "utf8")
         except IOError:
             old_changes = ''
         else:
@@ -223,7 +224,7 @@ class BuildChangelog(builder.Task):
 
         # ... and put the new changelog on top
         try:
-            outfile = open(changelog_path, "w+")
+            outfile = codecs.open(changelog_path, "w+", "utf8")
         except IOError:
             import sys
             import wx

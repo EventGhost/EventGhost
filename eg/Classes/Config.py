@@ -54,6 +54,7 @@ class Config(Section):
     checkPreRelease = False
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
     confirmDelete = True
+    datestamp = "%x"
     defaultThreadStartTimeout = 5.00
     hideOnClose = False
     hideOnStartup = False

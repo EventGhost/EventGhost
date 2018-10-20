@@ -51,7 +51,11 @@ class PluginInstanceInfo(PluginModuleInfo):
         if self.isStarted:
             self.Stop()
         if not self.initFailed:
-            self.instance.__close__()
+            try:
+                self.instance.__close__()
+            except:
+                import traceback
+                eg.PrintDebugNotice(traceback.format_exc())
 
     def CreateInstance(self, args, evalName, treeItem):
         self.args = args

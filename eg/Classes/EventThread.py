@@ -147,6 +147,6 @@ class EventThread(ThreadWorker):
         executed.wait(5.0)
         if not executed.isSet():
             eg.PrintWarningNotice(
-                "timeout TriggerEventWait\n" + traceback.format_stack()
+                "timeout TriggerEventWait\n", traceback.format_stack()
             )
         return event

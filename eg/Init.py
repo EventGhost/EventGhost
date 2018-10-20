@@ -77,12 +77,10 @@ def ImportAll():
 def Init():
     import WinApi.pywin32_patches # NOQA
     import WinApi.wx_patches # NOQA
-    import WinApi.GenPaths # NOQA
+    import WinApi.GenPaths  # NOQA
 
 
 def InitGui():
-    #import eg.WinApi.COMServer
-
     import __builtin__
     __builtin__.raw_input = RawInput
     __builtin__.input = Input

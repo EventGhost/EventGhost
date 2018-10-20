@@ -47,7 +47,6 @@ install:
       $PythonWindowsDLL = $SysWOW + "\python27.dll"
       $PythonDLL = $PythonFolder + "\python27.dll"
       $InstallersFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
-      #$wget = "c:\wget64\wget64.exe"
 
       Remove-Item $PythonWindowsDLL
       New-Item $InstallersFolder -type directory | Out-Null
@@ -90,7 +89,6 @@ install:
         "    Updating..."
         pip install -q -U "setuptools==34.3.0"
         "    Done."
-        " "
         PipInstall "wheel 0.29.0" "wheel==0.29.0"
         # sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
         # jinja2 >= 2.9 has an async module which py2exe has
@@ -104,34 +102,21 @@ install:
         PipInstall "comtypes 1.1.3" "https://github.com/enthought/comtypes/archive/1.1.3.zip"
         PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
         PipInstall "paramiko 2.2.1" "paramiko==2.2.1"
-        #pip list --format=columns
-        " "
-        "--- pywin32 220 -----------"
-        $PyWinInstaller = $InstallersFolder + "pywin32-220.win32-py2.7.exe"
-        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
-        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
-        "    Installing..."
-        cd $InstallersFolder
-        7z x -bd -y "pywin32-220.win32-py2.7.exe" -opywin32 | Out-Null
-        cd pywin32
-        Copy-Item -Path ".\PLATLIB\*" -Destination $SitePackages -recurse
-        Copy-Item -Path ".\SCRIPTS\*" -Destination $PythonScripts -recurse
-        cd $Env:APPVEYOR_BUILD_FOLDER
-        "    Done."
+        PipInstall "pywin32 223" pywin32==223
       }
       " "
       "--- pywin32 post install"
       $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
       Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
       "    Done."
-      " "
-      "--- Inno Setup 5.5.9"
-      $InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
-      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
-      "    Installing..."
-      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
-      "    Done."
+      #" "
+      #"--- Inno Setup 5.5.9"
+      #$InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
+      #$InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
+      #Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
+      #"    Installing..."
+      #Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
+      #"    Done."
       " "
       " "
       "=============== start the EventGhost build ==============="
@@ -152,6 +137,16 @@ install:
         .\EventGhost.exe -install
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
+
+      # update the appveyor build version to be the same as the EventGhost version
+      $start = $env:SetupExe.IndexOf("_")
+      $length = $env:SetupExe.LastIndexOf("_") - $start
+      $build_version = $env:SetupExe.Substring($start + 1, $length - 1)
+      Update-AppveyorBuild -Version "$build_version"
+
+      # Make sure the appveyor cache is only saved if our build was successfull
+      If (-Not (Test-Path(".\EventGhost.exe"))) {$env:APPVEYOR_CACHE_SKIP_SAVE = "true"}
+
       " "
 
       "=============== EventGhost build finished ==============="
@@ -189,23 +184,45 @@ artifacts:
 notifications:
 - provider: GitHubPullRequest
   template: >-
-    [Build {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}})
-
+    [{{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}})
 
     Artifacts:
-    
+
     {{#jobs}}
     {{#artifacts}}
-    [{{name}}]({{url}})
-    
+    [{{name}}]({{permalink}})
+
     {{/artifacts}}
     {{/jobs}}
 
   on_build_success: true
   on_build_failure: true
   on_build_status_changed: false
-  
-  
+
+- provider: Slack
+  incoming_webhook:
+    secure: DXo21MuJufndeGjaRDMxLgLo5yEaPf9uYg1YqrHPlfjsXUAzxRR2yGhCKcUwfLTT3gO192GKwkNAc52Y6TnxuKsNAgI+K5mBW40+6I9FOmU=
+
+  template: >-
+    <{{buildUrl}}|{{projectName}} {{buildVersion}} {{status}}>
+
+    Commit <{{commitUrl}}|{{commitId}}> by {{commitAuthor}} on {{commitDate}}:
+
+    Commit message: _{{commitMessage}}_
+
+
+    Artifacts:
+
+    {{#jobs}}{{#artifacts}}<{{permalink}}|{{name}}>
+
+    {{/artifacts}}{{/jobs}}
+
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: true
+
+
+
 #on_finish:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

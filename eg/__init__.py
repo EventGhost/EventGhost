@@ -224,5 +224,6 @@ if "pylint" in sys.modules:
     from Core import *  # NOQA
 
 import Core  # NOQA
+
 if eg.debugLevel:
     eg.RaiseAssignments()
