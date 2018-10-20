@@ -76,9 +76,9 @@ def ImportAll():
 
 def Init():
     import WinApi.pywin32_patches # NOQA
+    import WinApi.wx_patches # NOQA
+    import WinApi.GenPaths # NOQA
 
-    if eg.startupArguments.isMain or eg.startupArguments.install:
-        import WinApi.COMServer  # NOQA
 
 def InitGui():
     #import eg.WinApi.COMServer
