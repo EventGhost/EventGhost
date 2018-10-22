@@ -33,6 +33,7 @@ def DeInit():
     eg.scheduler.Stop()
     eg.actionThread.Stop()
     eg.eventThread.Stop()
+    eg.socketSever.Stop()
 
     eg.PrintDebugNotice("shutting down")
     eg.config.Save()
@@ -131,6 +132,9 @@ def InitGui():
         windll.kernel32.RegisterApplicationRestart(args, 8)
 
     eg.Print(eg.text.MainFrame.Logger.welcomeText)
+
+    import CryptoSocket
+    eg.socketSever = CryptoSocket.Start()
 
 def InitPathsAndBuiltins():
     import cFunctions

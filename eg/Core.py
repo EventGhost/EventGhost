@@ -45,8 +45,6 @@ from os.path import exists, join
 # Local imports
 import eg
 import Init
-import NamedPipe
-
 
 eg.useTreeItemGUID = False
 
@@ -58,12 +56,6 @@ eg.CORE_PLUGIN_GUIDS = (
     "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",  # "Window"
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
-
-
-eg.namedPipe = NamedPipe.Server()
-
-if eg.Cli.args.isMain:
-    eg.namedPipe.start()
 
 eg.ID_TEST = wx.NewId()
 eg.mainDir = eg.Cli.mainDir
@@ -385,6 +377,7 @@ eg.taskBarIcon = eg.TaskBarIcon(
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 eg.wit = None
+eg.socketSever = None
 
 eg.Init = Init
 eg.Init.Init()

@@ -24,10 +24,11 @@ import ctypes
 import locale
 import os
 import sys
+import threading
 from os.path import abspath, dirname, join
 
 import PythonPaths
-import NamedPipe
+import CryptoSocket
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -56,7 +57,7 @@ class args:
 
 
 def restart():
-    if send_message('eg.document.IsDirty'):
+    if send_message('eg.document.IsDirty') is True:
         answer = ctypes.windll.user32.MessageBoxA(
             0,
             'EventGhost cannot restart.             \n\n'
@@ -77,7 +78,7 @@ def restart():
             if answer == wx.ID_CANCEL:
                 sys.exit(0)
 
-    if not send_message('eg.app.Exit'):
+    if send_message('eg.app.Exit') in (None, False):
         ctypes.windll.user32.MessageBoxA(
             0,
             'EventGhost cannot restart.             \n\n'
@@ -91,9 +92,15 @@ def restart():
 
 
 def send_message(msg, *msg_args):
-    return NamedPipe.send_message(
+    res = CryptoSocket.send_message(
         '%s, %s' % (msg, str(msg_args))
     )
+
+    try:
+        return eval(res)
+    except:
+        return res
+
 
 if args.isMain:
     for arg in argvIter:
@@ -158,7 +165,21 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        if NamedPipe.is_eg_running:
+        is_eg_running = CryptoSocket.is_eg_running()
+        retry_count = 0
+        retry_event = threading.Event()
+
+        while is_eg_running is None:
+            retry_count += 1
+            if retry_count == 5:
+                sys.stderr._displayMessage = False
+                sys.stderr.write('New Instance: check failure\n')
+                sys.exit(2348)
+
+            retry_event.wait(retry_count / 10.0)
+            is_eg_running = CryptoSocket.is_eg_running()
+
+        if is_eg_running is True:
             if args.restart:
                 restart()
             else:

@@ -103,6 +103,7 @@ install:
         PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
         PipInstall "paramiko 2.2.1" "paramiko==2.2.1"
         PipInstall "pywin32 223" pywin32==223
+        PipInstall "Cython 0.29" "Cython==0.29"
       }
       " "
       "--- pywin32 post install"

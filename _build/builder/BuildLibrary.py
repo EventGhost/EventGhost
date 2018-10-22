@@ -69,6 +69,56 @@ class BuildLibrary(builder.Task):
                 if not os.path.isdir(path):
                     os.remove(path)
 
+        socket_src = join(
+            buildSetup.buildDir,
+            'extensions',
+            'CryptoSocket.pyd',
+            'CryptoSocket.pyx'
+        )
+        socket_dst = join(
+            buildSetup.tmpDir,
+            "imports"
+        )
+        socket_build = join(
+            buildSetup.tempDir,
+            'CryptoSocket'
+
+        )
+        os.mkdir(socket_dst)
+        os.mkdir(socket_build)
+        sys.path.insert(0, socket_dst)
+
+        socket_build_file = os.path.join(socket_build, 'CryptoSocket.pyx')
+
+        with open(socket_src, 'r') as f:
+            socket_code = f.read()
+
+        from uuid import uuid4
+        import hashlib
+
+        key = hashlib.sha256(str(uuid4()).replace('-', '').encode()).digest()
+
+        socket_code = socket_code.replace("GENERATED KEY", key)
+
+        with open(socket_build_file, 'w') as f:
+            f.write(socket_code)
+
+        from Cython.Build import cythonize
+
+        setup(
+            script_args=['build_ext'],
+            options=dict(
+                build_ext=dict(
+                    build_lib=socket_dst,
+                    build_temp=socket_build
+                )
+            ),
+            ext_modules=[cythonize(socket_build_file)]
+        )
+
+        import shutil
+        shutil.rmtree(socket_build)
+
         wip_version = None
         if buildSetup.appVersion.startswith("WIP-"):
             # this is to avoid a py2exe warning when building a WIP version
@@ -86,7 +136,7 @@ class BuildLibrary(builder.Task):
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "Imports"],
+                    includes=["encodings", "encodings.*", "Imports", "CryptoSocket"],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = DLL_EXCLUDES,
                     dist_dir = EncodePath(buildSetup.sourceDir),
