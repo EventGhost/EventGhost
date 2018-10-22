@@ -391,12 +391,9 @@ class Server(threading.Thread):
         for t in self.threads:
             t.Send(message)
 
-    @classmethod
-    def Start(cls):
+    def Start(self):
         global eg
-
         eg = __import__('eg')
-        self = cls.__new__(cls)
         self.start()
         return self
 
@@ -412,4 +409,6 @@ class Server(threading.Thread):
             self.join(2.0)
 
 
-Start = Server.Start
+def Start():
+    server = Server()
+    return server.Start()

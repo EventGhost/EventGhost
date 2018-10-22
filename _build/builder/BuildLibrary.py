@@ -80,7 +80,7 @@ class BuildLibrary(builder.Task):
             "imports"
         )
         socket_build = join(
-            buildSetup.tempDir,
+            buildSetup.tmpDir,
             'CryptoSocket'
 
         )
@@ -98,7 +98,7 @@ class BuildLibrary(builder.Task):
 
         key = hashlib.sha256(str(uuid4()).replace('-', '').encode()).digest()
 
-        socket_code = socket_code.replace("GENERATED KEY", key)
+        socket_code = socket_code.replace("'GENERATED KEY'", repr(key))
 
         with open(socket_build_file, 'w') as f:
             f.write(socket_code)
@@ -113,7 +113,7 @@ class BuildLibrary(builder.Task):
                     build_temp=socket_build
                 )
             ),
-            ext_modules=[cythonize(socket_build_file)]
+            ext_modules=cythonize(socket_build_file)
         )
 
         import shutil

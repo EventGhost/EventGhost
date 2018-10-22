@@ -37,7 +37,7 @@ if 'EG_BUILD_STARTED' not in os.environ:
         os.environ['EG_BUILD_STARTED'] = '1'
         os.environ['PATH'] = new_dll_path + ';' + os.environ['PATH']
 
-        command = '"{0} "{1}" {2}'.format(
+        command = '"{0}" "{1}" {2}'.format(
             sys.executable,
             sys.argv[0],
             ' '.join(sys.argv[1:])
