@@ -223,5 +223,4 @@ class Builder(object):
             import Gui
             Gui.Main(self)
         else:
-            thread = threading.Thread(target=builder.Tasks.Main, args=[self])
-            thread.start()
+            builder.Tasks.Main(self)
