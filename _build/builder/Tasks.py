@@ -117,6 +117,71 @@ class SynchronizeWebsite(builder.Task):
         syncer.Close()
 
 
+class BuildCryptoSocket(builder.Task):
+    description = "Build Encrypted Socket"
+
+    def Setup(self):
+        self.activated = self.buildSetup.tasks[6].activated
+
+    def DoTask(self):
+        buildSetup = self.buildSetup
+        import os
+        import sys
+
+        socket_src = join(
+            buildSetup.buildDir,
+            'extensions',
+            'CryptoSocket.pyd',
+            'CryptoSocket.pyx'
+        )
+        socket_dst = join(
+            buildSetup.tmpDir,
+            "imports"
+        )
+        socket_build = join(
+            buildSetup.tmpDir,
+            'CryptoSocket'
+
+        )
+        os.mkdir(socket_dst)
+        os.mkdir(socket_build)
+        sys.path.insert(0, socket_dst)
+
+        socket_build_file = os.path.join(socket_build, 'CryptoSocket.pyx')
+
+        with open(socket_src, 'r') as f:
+            socket_code = f.read()
+
+        from uuid import uuid4
+        import hashlib
+
+        key = hashlib.sha256(str(uuid4()).replace('-', '').encode()).digest()
+
+        socket_code = socket_code.replace("'GENERATED KEY'", repr(key))
+
+        with open(socket_build_file, 'w') as f:
+            f.write(socket_code)
+
+        from distutils.core import setup
+        from Cython.Build import cythonize
+
+        setup(
+            script_args=['build_ext'],
+            options=dict(
+                build_ext=dict(
+                    build_lib=socket_dst,
+                    build_temp=socket_build
+                )
+            ),
+            ext_modules=cythonize(socket_build_file)
+        )
+
+        import shutil
+
+        shutil.rmtree(socket_build)
+
+
+
 from builder.CheckSourceCode import CheckSourceCode  # NOQA
 from builder.BuildStaticImports import BuildStaticImports  # NOQA
 from builder.BuildImports import BuildImports  # NOQA
@@ -133,6 +198,7 @@ TASKS = [
     BuildStaticImports,
     BuildImports,
     BuildInterpreters,
+    BuildCryptoSocket,
     BuildLibrary,
     BuildChangelog,
     BuildChmDocs,
