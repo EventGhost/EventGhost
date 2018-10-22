@@ -41,10 +41,17 @@ class TreeLink(object):
             pass
 
     def __repr__(self):
-        return "XmlIdLink(%d)" % self.xmlId
+        if eg.useTreeItemGUID:
+            return repr(self.target.guid)
+        else:
+            return "XmlIdLink(%d)" % self.xmlId
 
     @classmethod
     def CreateFromArgument(cls, owner, xmlId):
+        if not isinstance(xmlId, int):
+            eg.useTreeItemGUID = True
+            return xmlId
+
         self = TreeLink(owner)
         cls.linkList.append((self, xmlId))
         return self

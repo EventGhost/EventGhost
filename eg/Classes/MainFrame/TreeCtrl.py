@@ -379,6 +379,32 @@ class TreeCtrl(wx.TreeCtrl):
         self.insertionMark = None
 
     @eg.AssertInMainThread
+    def CollapseAllChildren(self, item_id):
+        """
+        Collapses all children of the selected item.
+        """
+        if not item_id.IsOk():
+            return
+        if not self.ItemHasChildren(item_id):
+            return
+
+        def collaps(item):
+            child, cookie = self.GetFirstChild(item)
+            while child.IsOk():
+                if self.ItemHasChildren(child):
+                    collaps(child)
+                if self.IsExpanded(child):
+                    self.Collapse(child)
+                child, cookie = self.GetNextChild(item, cookie)
+        self.Freeze()
+        try:
+            collaps(item_id)
+        finally:
+            if not self.IsVisible(item_id):
+                self.EnsureVisible(item_id)
+            self.Thaw()
+
+    @eg.AssertInMainThread
     def CollapseAll(self):
         """
         Collapses all items in the tree.
@@ -392,7 +418,8 @@ class TreeCtrl(wx.TreeCtrl):
         self.visibleNodes = mainNodes
         self.expandedNodes.clear()
         self.expandedNodes.add(self.root)
-        self.EnsureVisible(self.GetSelection())
+        if not self.IsVisible(self.GetSelection()):
+            self.EnsureVisible(self.GetSelection())
         self.Thaw()
 
     @eg.AssertInMainThread
@@ -462,26 +489,40 @@ class TreeCtrl(wx.TreeCtrl):
         self.EditLabel(self.visibleNodes[node])
 
     @eg.AssertInMainThread
-    def ExpandAll(self):
+    def ExpandAllChildren(self, item_id):
         """
         Expands all items in the tree.
         """
+        if not item_id.IsOk():
+            return
         self.Freeze()
 
-        def Exp(item):
+        def _expand(item):
             child, cookie = self.GetFirstChild(item)
             while child.IsOk():
                 if not self.IsExpanded(child):
                     self.Expand(child)
-                Exp(child)
+                _expand(child)
                 child, cookie = self.GetNextChild(child, cookie)
 
+        if not self.IsExpanded(item_id):
+            self.Expand(item_id)
+
         try:
-            item = self.GetRootItem()
-            Exp(item)
+            _expand(item_id)
         finally:
-            self.EnsureVisible(self.GetSelection())
+            if not self.IsVisible(item_id):
+                self.EnsureVisible(item_id)
             self.Thaw()
+
+    @eg.AssertInMainThread
+    def ExpandAll(self):
+        """
+        Expands all items in the tree.
+        """
+        self.ExpandAllChildren(self.GetRootItem())
+        if not self.IsVisible(self.GetSelection()):
+            self.EnsureVisible(self.GetSelection())
 
     @eg.AssertInMainThread
     def GetEditCmdState(self):

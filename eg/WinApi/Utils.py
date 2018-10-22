@@ -26,7 +26,7 @@ from win32com.client import GetObject
 # Local imports
 import eg
 import Dynamic
-from eg.cFunctions import GetProcessName, GetWindowChildsList
+from cFunctions import GetProcessName, GetWindowChildsList
 from Dynamic import (
     # ctypes stuff
     byref, sizeof, WinError, _kernel32,

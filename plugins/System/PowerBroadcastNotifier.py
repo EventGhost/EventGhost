@@ -63,7 +63,7 @@ AWY_EXITING = 0x0
 AWY_ENTERING = 0x1
 
 
-if eg.WindowsVersion() >= 8:
+if eg.WindowsVersion >= '8':
     GUID_CONSOLE_DISPLAY_STATE = GUID(
         '{6fe69556-704a-47a0-8f24-c28d936fda47}'
     )
@@ -152,7 +152,7 @@ else:
 
 
     def Unregister(cls):
-        windll.user32.UnregisterDeviceNotification(cls)
+        windll.user32.UnregisterPowerSettingNotification(cls)
 
 
 def CreatePowerClass(lParam, cls):
@@ -198,7 +198,7 @@ class PowerBroadcastNotifier:
         self.savingNotify = None
         self.schemeNotify = None
 
-        if eg.WindowsVersion() >= 'Vista':
+        if eg.WindowsVersion >= 'Vista':
             wx.CallAfter(self.RegisterMessages)
 
         eg.messageReceiver.AddHandler(
@@ -215,7 +215,7 @@ class PowerBroadcastNotifier:
         self.schemeNotify = Register(GUID_POWERSCHEME_PERSONALITY)
 
     def Close(self):
-        if eg.WindowsVersion() >= 'Vista':
+        if eg.WindowsVersion >= 'Vista':
             Unregister(self.monitorNotify)
             Unregister(self.awayNotify)
             Unregister(self.sourceNotify)
@@ -242,7 +242,10 @@ class PowerBroadcastNotifier:
         ]
 
         while msg is None and msgCls:
-            msg = CreatePowerClass(lParam, msgCls.pop(0))
+            try:
+                msg = CreatePowerClass(lParam, msgCls.pop(0))
+            except ValueError:
+                continue
 
         if msg is not None:
             eg.eventThread.TriggerEventWait(

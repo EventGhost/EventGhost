@@ -188,6 +188,18 @@ class Builder(object):
             help="build and synchronize website",
         )
         parser.add_argument(
+            "-d", "--docs",
+            action="store_true",
+            help="build and synchronize usr and dev docs",
+        )
+        parser.add_argument(
+            "-u", "--url",
+            dest="websiteUrl",
+            default='',
+            type=str,
+            help="sftp url for doc synchronizing",
+        )
+        parser.add_argument(
             "-vv", "--verbose",
             action="store_true",
             help="give a more verbose output",

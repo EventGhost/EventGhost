@@ -183,12 +183,13 @@ def GetUncPathOf(filePath):
         print "GetUncPathOf Error:", err, FormatError(err)
     return filePath
 
-if eg.debugLevel:
-    def Msg(msg):
-        print msg
-else:
-    def Msg(dummyMsg):
+
+def Msg(msg):
+    try:
+        eg.PrintDebugNotice(str(msg))
+    except:
         pass
+
 
 def RunAs(filePath, asAdministrator, *args):
     sei = SHELLEXECUTEINFO()

@@ -94,6 +94,7 @@ eg.RegisterPlugin(
 )
 
 ACV = wx.ALIGN_CENTER_VERTICAL
+MOUSEEVENTF_MOVE = 0x0001
 
 oldGetDeviceId = SoundMixer.GetDeviceId
 def GetDeviceId_(*args, **kwargs):
@@ -116,14 +117,16 @@ MONITOR_STATES = dict(
     ON=-1
 )
 
-
 def MonitorState(state):
-    win32gui.SendMessage(
-        win32con.HWND_BROADCAST,
-        win32con.WM_SYSCOMMAND,
-        SC_MONITORPOWER,
-        MONITOR_STATES[state]
-    )
+    if state == 'ON':
+        ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, 0)
+    else:
+        win32gui.SendMessage(
+            win32con.HWND_BROADCAST,
+            win32con.WM_SYSCOMMAND,
+            SC_MONITORPOWER,
+            MONITOR_STATES[state]
+        )
 
 
 class Text:
@@ -234,7 +237,7 @@ class System(eg.PluginBase):
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
         # start the session change notifications (only on Win XP and above)
-        if eg.WindowsVersion.IsXP():
+        if eg.WindowsVersion >= 'XP':
             from SessionChangeNotifier import SessionChangeNotifier
             self.sessionChangeNotifier = SessionChangeNotifier(self)
 
@@ -243,92 +246,10 @@ class System(eg.PluginBase):
         eg.Bind("System.SessionUnlock", self.StartHookCode)
 
         # Use VistaVolume.dll from stridger for sound volume control on Vista
-        if eg.WindowsVersion.IsVista():
+        if eg.WindowsVersion >= 'Vista':
             import VistaVolEvents as vistaVolumeDll
             vistaVolumeDll.RegisterVolumeHandler(self.VolumeEvent)
             vistaVolumeDll.RegisterMuteHandler(self.MuteEvent)
-
-            def MuteOn2(self, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                try:
-                    vistaVolumeDll.SetMute(1, deviceId)
-                except:
-                    return False
-                    #pass
-                return True
-
-            def MuteOff2(self, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                try:
-                    vistaVolumeDll.SetMute(0, deviceId)
-                except:
-                    return True
-                    #pass
-                return False
-
-            def ToggleMute2(self, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                newvalue = None  # NOQA
-                try:
-                    newValue = not vistaVolumeDll.GetMute(deviceId)
-                    vistaVolumeDll.SetMute(newValue, deviceId)
-                    eg.Utils.time.sleep(0.1)  # workaround
-                    newValue = vistaVolumeDll.GetMute(deviceId)  # workaround
-                except:
-                    pass
-                return newValue
-
-            def GetMute2(self, deviceId=0):
-                try:
-                    #deviceId = SoundMixer.GetDeviceId(deviceId, True).encode(eg.systemEncoding)
-                    deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                    newvalue = None
-                    try:
-                        newvalue = vistaVolumeDll.GetMute(deviceId)
-                    except:
-                        pass
-                    return newvalue
-                except:
-                    eg.PrintTraceback()
-
-            def SetMasterVolume2(self, value=200, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-                newvalue = None
-                try:
-                    if value >= 0 and value <= 100:
-                        vistaVolumeDll.SetMasterVolume(value / 100.0, deviceId)
-                    eg.Utils.time.sleep(0.1)  # workaround
-                    newvalue = vistaVolumeDll.GetMasterVolume(deviceId) * 100.0
-                except:
-                    pass
-                return newvalue
-
-            def ChangeMasterVolumeBy2(self, value, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-                newvalue = None
-                try:
-                    old = vistaVolumeDll.GetMasterVolume(deviceId) * 100
-                    if old + value <= 0:
-                        vistaVolumeDll.SetMasterVolume(0, deviceId)
-                    elif old + value >= 100:
-                        vistaVolumeDll.SetMasterVolume(1.0, deviceId)
-                    else:
-                        vistaVolumeDll.SetMasterVolume((old + value) / 100.0, deviceId)
-                    eg.Utils.time.sleep(0.1)  # workaround
-                    newvalue = vistaVolumeDll.GetMasterVolume(deviceId) * 100.0
-                except:
-                    pass
-                return newvalue
-
-            actions = self.info.actions
-            actions["MuteOn"].__call__ = MuteOn2
-            actions["MuteOff"].__call__ = MuteOff2
-            actions["ToggleMute"].__call__ = ToggleMute2
-            actions["GetMute"].__call__ = GetMute2
-            actions["SetMasterVolume"].__call__ = SetMasterVolume2
-            actions["ChangeMasterVolumeBy"].__call__ = ChangeMasterVolumeBy2
 
     @eg.LogItWithReturn
     def __stop__(self):
@@ -1943,10 +1864,8 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         text2 = "percent."
 
     def __call__(self, value, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-        SoundMixer.ChangeMasterVolumeBy(value, deviceId)
-        return SoundMixer.GetMasterVolume(deviceId)
+        return SoundMixer.ChangeMasterVolumeBy(value, deviceId)
 
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
@@ -1954,7 +1873,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        #if eg.WindowsVersion.IsVista():
+        #if eg.WindowsVersion >= 'Vista':
         #    deviceCtrl.SetValue(0)
         #    deviceCtrl.Enable(False)
 
@@ -2004,7 +1923,7 @@ class GetMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.WindowsVersion.IsVista():
+        """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2022,7 +1941,6 @@ class MuteOff(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(False, deviceId)
         return False
 
@@ -2032,7 +1950,7 @@ class MuteOff(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.WindowsVersion.IsVista():
+        """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2050,7 +1968,6 @@ class MuteOn(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(True, deviceId)
         return True
 
@@ -2060,7 +1977,7 @@ class MuteOn(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.WindowsVersion.IsVista():
+        """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)
@@ -2146,10 +2063,8 @@ class SetMasterVolume(eg.ActionBase):
         text2 = "percent."
 
     def __call__(self, value, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value, (int, float)) else float(eg.ParseString(value))
-        SoundMixer.SetMasterVolume(value, deviceId)
-        return SoundMixer.GetMasterVolume(deviceId)
+        return SoundMixer.SetMasterVolume(value, deviceId)
 
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
@@ -2158,7 +2073,7 @@ class SetMasterVolume(eg.ActionBase):
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
 #        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
-        """if eg.WindowsVersion.IsVista():
+        """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
@@ -2209,7 +2124,6 @@ class ToggleMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.ToggleMute(deviceId)
 
     def Configure(self, deviceId=0):
@@ -2218,7 +2132,7 @@ class ToggleMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        """if eg.WindowsVersion.IsVista():
+        """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         #panel.AddLine("Device:", deviceCtrl)

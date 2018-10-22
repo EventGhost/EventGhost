@@ -21,7 +21,8 @@ matrix:
 
 
 cache:
-  - '%PYTHON%'
+  # Invalidate cache if .appveyor.yml has changed
+  - C:\Stackless27 -> .appveyor.yml
   # Manually clear cache:
   # from agithub.AppVeyor import AppVeyor
   # ci = AppVeyor(<your appveyor API token>)
@@ -46,7 +47,6 @@ install:
       $PythonWindowsDLL = $SysWOW + "\python27.dll"
       $PythonDLL = $PythonFolder + "\python27.dll"
       $InstallersFolder = $Env:APPVEYOR_BUILD_FOLDER + "\_build\installers\"
-      #$wget = "c:\wget64\wget64.exe"
 
       Remove-Item $PythonWindowsDLL
       New-Item $InstallersFolder -type directory | Out-Null
@@ -89,53 +89,64 @@ install:
         "    Updating..."
         pip install -q -U "setuptools==34.3.0"
         "    Done."
-        " "
         PipInstall "wheel 0.29.0" "wheel==0.29.0"
         # sphinx >= 1.4.9 installs jinja2 >= 2.3 as dependency,
         # jinja2 >= 2.9 has an async module which py2exe has
         # problems with (build of eg will fail)
         PipInstall "jinja2 2.8.1" "jinja2==2.8.1"
-        PipInstall "sphinx 1.4.8" "sphinx==1.4.8"
+        PipInstall "sphinx 1.5.6" "sphinx==1.5.6"
         PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
         PipInstall "pillow 3.4.2" "pillow==3.4.2"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
         PipInstall "pycrypto 2.6.1" "pycrypto==2.6.1"
         PipInstall "comtypes 1.1.3" "https://github.com/enthought/comtypes/archive/1.1.3.zip"
         PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
-        #pip list --format=columns
-        " "
-        "--- pywin32 220 -----------"
-        $PyWinInstaller = $InstallersFolder + "pywin32-220.win32-py2.7.exe"
-        $PyWinURL = "https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download"
-        Start-FileDownload $PyWinURL -Timeout 60000 -FileName $PyWinInstaller
-        "    Installing..."
-        cd $InstallersFolder
-        7z x -bd -y "pywin32-220.win32-py2.7.exe" -opywin32 | Out-Null
-        cd pywin32
-        Copy-Item -Path ".\PLATLIB\*" -Destination $SitePackages -recurse
-        Copy-Item -Path ".\SCRIPTS\*" -Destination $PythonScripts -recurse
-        cd $Env:APPVEYOR_BUILD_FOLDER
-        "    Done."
+        PipInstall "paramiko 2.2.1" "paramiko==2.2.1"
+        PipInstall "pywin32 223" pywin32==223
       }
       " "
       "--- pywin32 post install"
       $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
       Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
       "    Done."
-      " "
-      "--- Inno Setup 5.5.9"
-      $InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
-      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
-      "    Installing..."
-      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
-      "    Done."
+      #" "
+      #"--- Inno Setup 5.5.9"
+      #$InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
+      #$InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
+      #Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
+      #"    Installing..."
+      #Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
+      #"    Done."
       " "
       " "
       "=============== start the EventGhost build ==============="
       " "
-      python "_build\Build.py" --build --package
+      If ($Env:APPVEYOR_REPO_TAG.tolower() -eq "true" -and
+        $Env:APPVEYOR_REPO_TAG_NAME.tolower().startswith("deploy"))
+      {
+        # to do a release, create a tag in the form "Deploy_VERSION"
+        # VERSION must be a valid version string (without leading 'v')
+        # this tag will be deleted and a new release "vVERSION" created.
+        git checkout -q master
+        $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
+        $url = if($Env:SFTP_URL){' --docs --url "' + $env:SFTP_URL + '"'} else {''}
+        python "_build\Build.py" --build --package --release --version $release $url
+      } Else {
+        # WIP
+        python "_build\Build.py" --build --package
+        .\EventGhost.exe -install
+      }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
+
+      # update the appveyor build version to be the same as the EventGhost version
+      $start = $env:SetupExe.IndexOf("_")
+      $length = $env:SetupExe.LastIndexOf("_") - $start
+      $build_version = $env:SetupExe.Substring($start + 1, $length - 1)
+      Update-AppveyorBuild -Version "$build_version"
+
+      # Make sure the appveyor cache is only saved if our build was successfull
+      If (-Not (Test-Path(".\EventGhost.exe"))) {$env:APPVEYOR_CACHE_SKIP_SAVE = "true"}
+
       " "
 
       "=============== EventGhost build finished ==============="
@@ -159,33 +170,64 @@ build:
 
 artifacts:
   - path: _build\output\$(SetupExe)
+    name: $(SetupExe)
   - path: _build\output\Build.log
-  - path: _build\output\CHANGELOG_THIS_RELEASE.bb
+    name: Build.log
+  - path: _build\output\CHANGELOG.md
+    name: CHANGELOG.md
   - path: _build\output\CHANGELOG_THIS_RELEASE.md
+    name: CHANGELOG_THIS_RELEASE.md
+  - path: _build\output\CHANGELOG_THIS_RELEASE.bb
+    name: CHANGELOG_THIS_RELEASE.bb
 
 
-#before_deploy:
-#  - cmd: python -c "fh=open('_build\\output\\CHANGELOG.md'); txt=fh.read().replace('\n','\\n'); print txt[txt.find('**'):]" > tmp
-#  - cmd: set /P CHANGELOG=< tmp
+notifications:
+- provider: GitHubPullRequest
+  template: >-
+    [{{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}})
+
+    Artifacts:
+
+    {{#jobs}}
+    {{#artifacts}}
+    [{{name}}]({{permalink}})
+
+    {{/artifacts}}
+    {{/jobs}}
+
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: false
+
+- provider: Slack
+  incoming_webhook:
+    secure: DXo21MuJufndeGjaRDMxLgLo5yEaPf9uYg1YqrHPlfjsXUAzxRR2yGhCKcUwfLTT3gO192GKwkNAc52Y6TnxuKsNAgI+K5mBW40+6I9FOmU=
+
+  template: >-
+    <{{buildUrl}}|{{projectName}} {{buildVersion}} {{status}}>
+
+    Commit <{{commitUrl}}|{{commitId}}> by {{commitAuthor}} on {{commitDate}}:
+
+    Commit message: _{{commitMessage}}_
 
 
-deploy:
-    # Deploy to GitHub Releases
-  - provider: GitHub
-    auth_token: $(GITHUB_TOKEN)
-    draft: true
-    prerelease: true
-    artifact: _build\output\$(setup-exe)
-    force_update: true
-    # tag: EventGhost_0.5.0-beta6
-    # release: EventGhost_0.5.0-beta6
-    # description: $(CHANGELOG)
-    description: 'Put the contents of [CHANGELOG_THIS_RELEASE.md](https://ci.appveyor.com/api/buildjobs/$(APPVEYOR_JOB_ID)/artifacts/_build%2Foutput%2FCHANGELOG_THIS_RELEASE.md) here instead of this text.'
-    on:
-      #branch: master          # release from master branch only
-      appveyor_repo_tag: true # deploy on tag push only
+    Artifacts:
+
+    {{#jobs}}{{#artifacts}}<{{permalink}}|{{name}}>
+
+    {{/artifacts}}{{/jobs}}
+
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: true
+
 
 
 #on_finish:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
+# notifications:
+#   - provider: GitHubPullRequest
+#     template: "{{#passed}}:white_check_mark: [Setup.exe](https://ci.appveyor.com/api/buildjobs/$(APPVEYOR_JOB_ID)/artifacts/_build%2Foutput%2F$(setup-exe)){{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})"

@@ -79,6 +79,7 @@ class PythonScript(eg.ActionBase):
 
         def PrintTraceback(self):
             treeItem = eg.currentItem
+            wx.CallAfter(treeItem.Select)
             treeItem.PrintError("Traceback (most recent call last):")
             lines = self.sourceCode.splitlines()
             tbType, tbValue, tbTraceback = sys.exc_info()

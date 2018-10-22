@@ -4,7 +4,7 @@ engines:
     config:
       languages:
         python:
-          mass_threshold: 35
+          mass_threshold: 60
   eslint:
     enabled: true
   fixme:

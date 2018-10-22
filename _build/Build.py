@@ -96,6 +96,11 @@ class MyBuilder(builder.Builder):
         "wx.lib.vtk",
         "wx.tools.Editra",
         "wx.tools.XRCed",
+        "wx.lib.pdfwin_old",
+        "wx.lib.pdfviewer",
+        "wx.lib.pubsub"
+        "wx.lib.iewin",
+        "wx.lib.iewin_old"
     ]
 
     def BuildInstaller(self):

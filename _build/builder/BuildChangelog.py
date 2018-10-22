@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 from agithub.GitHub import GitHub
 from collections import OrderedDict
 from os.path import join
@@ -52,59 +53,65 @@ class BuildChangelog(builder.Task):
         user = buildSetup.gitConfig["user"]
         repo = buildSetup.gitConfig["repo"]
         branch = buildSetup.gitConfig["branch"]
-
         gh = GitHub(token=token)
-        rc, data = gh.repos[user][repo].git.refs.tags.get()
-        if rc != 200:
-            raise BuildError("Couldn't get tags, probably due to invalid token.")
-        to_commits = [i["object"]["sha"] for i in data]
 
-        # get commits since last release
+        # fetch all tags from github
         page = 1
-        included_prs = []
-        item = {}
+        all_tags = []
         while page > 0:
-            rc, data = gh.repos[user][repo].commits.get(
+            rc, data = gh.repos[user][repo].git.refs.tags.get(
                 sha=branch,
                 per_page=100,
                 page=page
             )
             if rc != 200:
-                raise BuildError("Couldn't get commits.")
-            for item in data:
-                if item['sha'] in to_commits:
-                    break
-                try:
-                    msg = item['commit']['message'].splitlines()[0]
-                    if msg.startswith("Merge pull request #"):
-                        included_prs.append(int(msg.split()[3][1:]))
-                except IndexError:
-                    pass
-            if item['sha'] in to_commits:
-                break
+                raise BuildError(data["message"])
+            all_tags.extend(data)
             page = NextPage(gh)
 
-        # now filter and group the pull requests
+        # get release date for tags
+        for tag in all_tags:
+            tag["pulls"] = []
+            if tag["object"]["type"] == "commit":
+                rc, data = gh.repos[user][repo].git.commits[
+                    tag["object"]["sha"]].get(sha=branch)
+                tag["release_date"] = data["committer"]["date"]
+            elif tag["object"]["type"] == "tag":
+                rc, data = gh.repos[user][repo].git.tags[
+                    tag["object"]["sha"]].get(sha=branch)
+                tag["release_date"] = data["tagger"]["date"]
+            else:
+                raise BuildError("unknown tag type")
+
+        # the search api is marked as beta,
+        # thats why we have to do the following:
+        old_accept = gh.client.default_headers["accept"]
+        gh.client.default_headers[
+            "accept"] = 'application/vnd.github.cloak-preview'
+
+        # get merge commits since last release
         page = 1
-        pulls = []
+        future_release = []
         while page > 0:
             rc, data = gh.search.issues.get(
-                q='type:pr is:merged '
-                  '-label:internal '
-                  'user:EventGhost '
-                  'repo:EventGhost',
-                sort="created",
-                order="asc",
+                sha=branch,
                 per_page=100,
-                page=page
+                page=page,
+                q=(
+                    'type:pr merged:>' + all_tags[-1]["release_date"]
+                    + ' user:' + user
+                    + ' repo:' + repo
+                    + ' -label:internal'
+                ),
             )
-            if rc != 200:
-                raise BuildError("Couldn't get additional info.")
-            elif data.get("incomplete_results") == True:
-                raise BuildError("Incomplete search result.")
-            pulls.extend(data["items"])
+            data["items"].reverse()
+            future_release.extend(data["items"])
             page = NextPage(gh)
 
+        # undo the beta api patch
+        gh.client.default_headers["accept"] = old_accept
+
+        # now filter and group the pull requests
         title_notice = "Important changes for plugin developers"
         title_enhancement = "Enhancements"
         title_bug = "Fixed bugs"
@@ -115,14 +122,9 @@ class BuildChangelog(builder.Task):
         prs[title_bug] = []
         prs[title_other] = []
 
-        for pr in pulls:
-            if not pr["number"] in included_prs:
-                continue
+        for pr in future_release:
             labels = [l["name"] for l in pr["labels"]]
-            if "internal" in labels:
-                # This pull request should not be listed in changelog
-                continue
-            elif "notice" in labels:
+            if "notice" in labels:
                 prs[title_notice].append(pr)
             elif "enhancement" in labels:
                 prs[title_enhancement].append(pr)
@@ -137,12 +139,12 @@ class BuildChangelog(builder.Task):
             user, repo, buildSetup.appVersion
         )
         changes = dict(
-            md = ["## [{0}]({1}) ({2})\n".format(
+            md=["## [{0}]({1}) ({2})\n".format(
                 buildSetup.appVersion,
                 releaseUrl,
                 buildDate
             )],
-            bb = ["[size=150][b][url={0}]{1}[/url] ({2})[/b][/size]\n".format(
+            bb=["[size=150][b][url={0}]{1}[/url] ({2})[/b][/size]\n".format(
                 releaseUrl,
                 buildSetup.appVersion,
                 buildDate
@@ -156,7 +158,7 @@ class BuildChangelog(builder.Task):
                 print "\n{0}:\n".format(title)
                 for pr in items:
                     changes['md'].append(
-                        "* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
+                        u"* {0} [\#{1}]({2}) ([{3}]({4}))\n".format(
                             EscapeMarkdown(pr["title"]),
                             pr["number"],
                             pr["html_url"],
@@ -165,8 +167,8 @@ class BuildChangelog(builder.Task):
                         )
                     )
                     changes['bb'].append(
-                        "[*] {0} [url={1}]{2}[/url] "
-                        "([url={3}]{4}[/url])\n".format(
+                        u"[*] {0} [url={1}]{2}[/url] "
+                        u"([url={3}]{4}[/url])\n".format(
                             pr["title"],
                             pr["html_url"],
                             pr["number"],
@@ -174,7 +176,7 @@ class BuildChangelog(builder.Task):
                             EscapeMarkdown(pr["user"]["login"])
                         )
                     )
-                    print "* {0} #{1} ({2})".format(
+                    print u"* {0} #{1} ({2})".format(
                         pr["title"],
                         pr["number"],
                         pr["user"]["login"],
@@ -187,32 +189,33 @@ class BuildChangelog(builder.Task):
             changes['bb'].append(text)
             print text.strip()
 
-        # write a changelog in bbcode for the news section in forum
+        # write a changelog file in bbcode for the news section in forum
         changes['bb'].append(
-            "\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
-            "releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
-            "[/url][/size]\n".format(buildSetup.appVersion)
+            u"\n\n[size=110][url=https://github.com/EventGhost/EventGhost/"
+            u"releases/download/v{0}/EventGhost_{0}_Setup.exe]Download now"
+            u"[/url][/size]\n".format(buildSetup.appVersion)
         )
         try:
             fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.bb")
-            out = open(fn, "w")
+            out = codecs.open(fn, "w", "utf8")
             out.writelines(changes['bb'])
             out.close()
         except:
             pass
 
-            # write a short changelog in markdown for release description
+        # write a file with current changes in markdown for release description
         try:
             fn = join(buildSetup.outputDir, "CHANGELOG_THIS_RELEASE.md")
-            out = open(fn, "w")
+            out = codecs.open(fn, "w", "utf8")
             out.writelines(changes['md'][1:])
             out.close()
         except:
             pass
 
+        # and now the full changelog file (in markdown format)
         # read the existing changelog...
         try:
-            infile = open(changelog_path, "r")
+            infile = codecs.open(changelog_path, "r", "utf8")
         except IOError:
             old_changes = ''
         else:
@@ -221,7 +224,7 @@ class BuildChangelog(builder.Task):
 
         # ... and put the new changelog on top
         try:
-            outfile = open(changelog_path, "w+")
+            outfile = codecs.open(changelog_path, "w+", "utf8")
         except IOError:
             import sys
             import wx

@@ -1,5 +1,8 @@
+[Messages]
+BeveledLabel=https://www.eventghost.net
+
 [Setup]
-AppCopyright=(C) 2005-2016 EventGhost Project
+AppCopyright=(C) 2005-2017 EventGhost Project
 AppId=EventGhost
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 AppName=EventGhost
@@ -18,6 +21,7 @@ InfoBeforeFile=%(dataDir)s\LICENSE.RTF
 InternalCompressLevel=ultra
 OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
 OutputDir=%(outputDir)s
+SetupIconFile=%(docsDir)s\_static\arrow.ico
 ShowLanguageDialog=auto
 SolidCompression=yes
 VersionInfoDescription=EventGhost Installer
@@ -28,6 +32,10 @@ VersionInfoVersion={#Copy('%(appVersion)s', 1, Pos('-', '%(appVersion)s') - 1)}
 #else
 VersionInfoVersion=%(appVersion)s
 #endif
+WizardImageAlphaFormat=defined
+WizardImageFile=%(docsDir)s\_static\logo.bmp
+WizardImageStretch=no
+WizardSmallImageFile=%(docsDir)s\_static\logo_small.bmp
 
 [Code]
 function GetValue(Value: String): String;
@@ -156,12 +164,19 @@ begin
 end;
 
 [Icons]
-Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
-Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Tasks: startupicon
+
+; with the original green arrow
+Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Tasks: arrow
+Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Tasks: arrow and desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 0; Parameters: "-h -e OnInitAfterBoot"; Tasks: arrow and startupicon
+
+; with the little ghost
+Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Tasks: ghost
+Name: "{commondesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Tasks: ghost and desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1; Parameters: "-h -e OnInitAfterBoot"; Tasks: ghost and startupicon
 
 [Languages]
 Name: English; MessagesFile: "compiler:Default.isl"
@@ -205,12 +220,16 @@ Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueNam
 Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1"""
 
 [Run]
+; EG -install needs to be called with admin rights to install the COM-server
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"
 Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Tasks]
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
 Name: "startupicon"; Description: {cm:AutoStartProgram,{#SetupSetting('AppName')}}; GroupDescription: {cm:AutoStartProgramGroupDescription}
+
+Name: "arrow"; Description: "Green Arrow"; GroupDescription: "Application icon:"; Flags: exclusive
+Name: "ghost"; Description: "Ghost"; GroupDescription: "Application icon:"; Flags: exclusive unchecked
 
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"

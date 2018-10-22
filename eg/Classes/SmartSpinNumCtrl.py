@@ -40,7 +40,7 @@ class SmartSpinNumCtrl(wx.Window):
         name="eg.SmartSpinNumCtrl",
         **kwargs
     ):
-        self.initValue = 0.0
+        self.initValue = value
         self.value = value
         self.parent = parent
         self.kwargs = kwargs

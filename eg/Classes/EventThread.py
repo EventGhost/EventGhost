@@ -146,7 +146,7 @@ class EventThread(ThreadWorker):
         self.AppendAction(Transfer)
         executed.wait(5.0)
         if not executed.isSet():
-            if eg.debugLevel:
-                eg.PrintDebugNotice("timeout TriggerEventWait")
-                traceback.print_stack()
+            eg.PrintWarningNotice(
+                "timeout TriggerEventWait\n", traceback.format_stack()
+            )
         return event

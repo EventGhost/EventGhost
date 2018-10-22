@@ -129,10 +129,11 @@ class SftpSync(object):
             )
 
     def Sync(self, localPath, additionalFiles=None):
-        for name in os.listdir(localPath):
+        print("Syncing: %s" % localPath)
+        for name in list((os.walk(localPath)))[0][1]:
             localDir = join(localPath, name)
-            if os.path.isdir(localDir):
-                self.SyncDirs(localDir, self.remotePath + name + "/")
+            print('checking localDir: %s' % localDir)
+            self.SyncDirs(localDir, self.remotePath + name + "/")
 
         if additionalFiles:
             for local, remote in additionalFiles:
@@ -159,12 +160,11 @@ class Directory(object):
 class LocalDirectory(Directory):
     def __init__(self, path):
         Directory.__init__(self)
-        for name in os.listdir(path):
-            fullPath = os.path.join(path, name)
-            if os.path.isdir(fullPath):
-                self.dirs[name] = LocalDirectory(fullPath)
-            else:
-                self.files[name] = os.stat(fullPath)
+        _, dirs, files = list(os.walk(path))[0]
+        for name in dirs:
+            self.dirs[name] = LocalDirectory(os.path.join(path, name))
+        for name in files:
+            self.files[name] = os.stat(os.path.join(path, name))
 
 
 class RemoteDirectory(Directory):

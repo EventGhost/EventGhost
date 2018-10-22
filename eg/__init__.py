@@ -32,6 +32,10 @@ import Cli
 from Utils import *  # NOQA
 from Classes.WindowsVersion import WindowsVersion
 
+
+APP_NAME = "EventGhost"
+
+
 class DynamicModule(object):
     def __init__(self):
         mod = sys.modules[__name__]
@@ -59,7 +63,14 @@ class DynamicModule(object):
         """
         def __setattr__(self, name, value):
             if name not in self.__dict__:
-                raise AttributeError("Assignment to new attribute %s" % name)
+                try:
+                    raise AttributeError(
+                        "Assignment to new attribute %s" % name
+                    )
+                except AttributeError:
+                    import traceback
+                    eg.PrintWarningNotice(traceback.format_exc())
+
             object.__setattr__(self, name, value)
         self.__class__.__setattr__ = __setattr__
 
@@ -86,11 +97,133 @@ eg = DynamicModule()
 
 # This is only here to make pylint happy. It is never really imported
 if "pylint" in sys.modules:
+    def RaiseAssignments():
+        pass
+
     from Init import ImportAll
     ImportAll()
+
     from StaticImports import *  # NOQA
+    import Core
+
+    useTreeItemGUID = Core.eg.useTreeItemGUID
+    CORE_PLUGIN_GUIDS = Core.eg.CORE_PLUGIN_GUIDS
+
+    import NamedPipe
+    namedPipe = NamedPipe.Server()
+    ID_TEST = Core.eg.ID_TEST
+    revision = Core.eg.revision
+    startupArguments = Cli.args
+    systemEncoding = Core.eg.systemEncoding
+    mainFrame = Core.eg.mainFrame
+    result = Core.eg.result
+    plugins = Core.eg.plugins
+    globals = Bunch()
+    globals.eg = Core.eg
+    event = Core.eg.event
+    eventTable = Core.eg.eventTable
+    eventString = Core.eg.eventString
+    notificationHandlers = Core.eg.notificationHandlers
+    programCounter = Core.eg.programCounter
+    programReturnStack = Core.eg.programReturnStack
+    indent = Core.eg.indent
+    pluginList = Core.eg.pluginList
+    mainThread = Core.eg.mainThread
+    stopExecutionFlag = Core.eg.stopExecutionFlag
+    lastFoundWindows = Core.eg.lastFoundWindows
+    currentItem = Core.eg.currentItem
+    actionGroup = Bunch()
+    actionGroup.items = []
+    GUID = GUID()
+    CommandEvent = Core._CommandEvent
+    ValueChangedEvent, EVT_VALUE_CHANGED = (
+        Core.eg.ValueChangedEvent, Core.eg.EVT_VALUE_CHANGED
+    )
+    pyCrustFrame = Core.eg.pyCrustFrame
+    dummyAsyncoreDispatcher = Core.eg.dummyAsyncoreDispatcher
+    processId = Core.eg.processId
+    messageReceiver = MainMessageReceiver()
+    app = App()
+    log = Log()
+
+
+    def Print(*args, **kwargs):
+        pass
+
+    def PrintDebugNotice(*args):
+        pass
+
+    def PrintWarningNotice(*args):
+        pass
+
+    def PrintError(*args, **kwargs):
+        pass
+
+    def PrintNotice(*args, **kwargs):
+        pass
+
+    def PrintStack(skip=0):
+        pass
+
+    def PrintTraceback(msg=None, skip=0, source=None, excInfo=None):
+        pass
+
+
+    config = Config()
+    debugLevel = config.logDebug
+    colour = Colour()
+    text = Text('en_US')
+    actionThread = ActionThread()
+    eventThread = EventThread()
+    pluginManager = PluginManager()
+    scheduler = Scheduler()
+
+
+    def TriggerEvent(
+        suffix,
+        payload=None,
+        prefix="Main",
+        source=Core.eg
+    ):
+        pass
+
+
+    def TriggerEnduringEvent(
+        suffix,
+        payload=None,
+        prefix="Main",
+        source=Core.eg
+    ):
+        pass
+
+    from WinApi.SendKeys import SendKeysParser
+    SendKeys = SendKeysParser()
+
+    PluginClass = PluginBase
+    ActionClass = ActionBase
+    taskBarIcon = TaskBarIcon(False)
+
+    def SetProcessingState(state, event):
+        pass
+
+    wit = False
+    document = Document()
+    folderPath = FolderPath()
+    mainDir = ''
+    configDir = ''
+    corePluginDir = ''
+    localPluginDir = ''
+    imagesDir = ''
+    languagesDir = ''
+    sitePackagesDir = ''
+    pluginDirs = []
+    cFunctions = None
+    CorePluginModule = None
+    UserPluginModule = None
+
     from Core import *  # NOQA
 
 import Core  # NOQA
+
 if eg.debugLevel:
     eg.RaiseAssignments()

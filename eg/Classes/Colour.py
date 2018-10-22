@@ -44,6 +44,12 @@ class Colour:
     windowBackground = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW).Get()
     treeItem = windowText
     pluginError = (255, 0, 0)
+    errorText = (0, 0, 0)
+    errorBackground = (255, 130, 130)
+    warningText = (0, 0, 0)
+    waningBackground = (255, 246, 110)
+    debugText = (0, 0, 0)
+    debugBackground = (165, 217, 255)
     activeCaption = GetWinSysColour(COLOR_ACTIVECAPTION)
     activeCaptionGradient = GetWinSysColour(COLOR_GRADIENTACTIVECAPTION)
     activeCaptionTextColour = GetWinSysColour(COLOR_CAPTIONTEXT)
@@ -51,11 +57,11 @@ class Colour:
     inactiveCaptionGradient = GetWinSysColour(COLOR_GRADIENTINACTIVECAPTION)
     inactiveCaptionTextColour = GetWinSysColour(COLOR_INACTIVECAPTIONTEXT)
 
-    def GetOddLogColour(self):
+    def GetOddLogColour(self, even_colour):
         """
         Returns the colour for odd lines in the log.
         """
-        hue, saturation, value = self.RgbToHsv(self.windowBackground)
+        hue, saturation, value = self.RgbToHsv(even_colour)
         if value > 0.5:
             value -= 0.05
         else:

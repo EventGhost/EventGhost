@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+from .. import Cli
+
 import platform
 from collections import OrderedDict
+
 
 WINDOWS_VERSIONS = OrderedDict()
 WINDOWS_VERSIONS["XP"] = [[5, 1], [5, 2]]
@@ -78,7 +81,7 @@ class WindowsVersion:
 
     In addition to the *IsXY()* methods, you can use comparison like this:
 
-    ``eg.WindowsVersion() OPERATOR "KEY"``
+    ``eg.WindowsVersion OPERATOR "KEY"``
 
     ``OPERATOR`` is one of ``<``, ``<=``, ``==``, ``!=``, ``>=``, ``>``
 
@@ -119,6 +122,7 @@ class WindowsVersion:
     +-----------+--------------------------------------+
 
     |
+
     .. The above line gives some extra space after the table in the helpfile.
        References:
            https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx
@@ -349,3 +353,6 @@ class WindowsVersion:
         :rtype: bool
         """
         return _compare('==', "10")
+
+if Cli.args.isMain:
+    WindowsVersion = WindowsVersion()

@@ -117,6 +117,7 @@ class Default:
             SaveAs = "Save &As..."
             Options = "O&ptions..."
             Restart = "&Restart"
+            RestartAsAdmin = "Restart as Administrator"
             Exit = "E&xit"
 
             EditMenu = "&Edit"
@@ -133,6 +134,11 @@ class Default:
 
             ViewMenu = "&View"
             HideShowToolbar = "&Toolbar"
+            ExpandCollapseMenu = "Expand/Collapse"
+            Expand = "Expand"
+            Collapse = "Collapse"
+            ExpandChilds = "Expand all children"
+            CollapseChilds = "Collapse all children"
             ExpandAll = "&Expand All"
             CollapseAll = "&Collapse All"
             ExpandOnEvents = "Select on E&xecution"
@@ -140,6 +146,7 @@ class Default:
             LogActions = "Log &Actions"
             LogDebug = "Log &Debug Info"
             IndentLog = "&Indent Log"
+            LogDate = "Datestam&p Log"
             LogTime = "Time&stamp Log"
             ClearLog = "Clear &Log"
 
@@ -173,7 +180,7 @@ class Default:
 
         class SaveChanges:
             mesg = (
-                "Configuration contains unsaved changed.\n\n"
+                "Configuration contains unsaved changes.\n\n"
                 "Do you want to save before continuing?"
             )
             saveButton = "&Save"

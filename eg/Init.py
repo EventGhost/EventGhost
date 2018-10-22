@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import site
 import sys
-import winreg
 import wx
 from ctypes import windll
 from time import gmtime
 from types import ModuleType
+from os import listdir, makedirs, chdir
+from os.path import join, basename, isdir, exists, splitext
 
 # Local imports
 import eg
@@ -42,23 +41,23 @@ def DeInit():
         eg.dummyAsyncoreDispatcher.close()
 
 def ImportAll():
-    from os.path import join, basename
+
 
     def Traverse(root, moduleRoot):
-        for name in os.listdir(root):
+        for name in listdir(root):
             path = join(root, name)
-            if os.path.isdir(path):
+            if isdir(path):
                 name = basename(path)
                 if name in [".svn", ".git", ".idea"]:
                     continue
-                if not os.path.exists(join(path, "__init__.py")):
+                if not exists(join(path, "__init__.py")):
                     continue
                 moduleName = moduleRoot + "." + name
                 #print moduleName
                 __import__(moduleName)
                 Traverse(path, moduleName)
                 continue
-            base, ext = os.path.splitext(name)
+            base, ext = splitext(name)
             if ext != ".py":
                 continue
             if base == "__init__":
@@ -77,13 +76,11 @@ def ImportAll():
 
 def Init():
     import WinApi.pywin32_patches # NOQA
+    import WinApi.wx_patches # NOQA
+    import WinApi.GenPaths  # NOQA
 
-    if eg.startupArguments.isMain or eg.startupArguments.install:
-        import WinApi.COMServer  # NOQA
 
 def InitGui():
-    #import eg.WinApi.COMServer
-
     import __builtin__
     __builtin__.raw_input = RawInput
     __builtin__.input = Input
@@ -110,7 +107,7 @@ def InitGui():
     startupFile = eg.startupArguments.startupFile
     if startupFile is None:
         startupFile = config.autoloadFilePath
-    if startupFile and not os.path.exists(startupFile):
+    if startupFile and not exists(startupFile):
         eg.PrintError(eg.text.Error.FileNotFound % startupFile)
         startupFile = None
 
@@ -129,56 +126,57 @@ def InitGui():
             wx.CallAfter(eg.CheckUpdate.Start)
 
     # Register restart handler for easy crash recovery.
-    if eg.WindowsVersion.IsVista():
+    if eg.WindowsVersion >= 'Vista':
         args = " ".join(eg.app.GetArguments())
         windll.kernel32.RegisterApplicationRestart(args, 8)
 
     eg.Print(eg.text.MainFrame.Logger.welcomeText)
 
 def InitPathsAndBuiltins():
-    sys.path.insert(0, eg.mainDir.encode('mbcs'))
-    sys.path.insert(1, eg.sitePackagesDir.encode('mbcs'))
-
-    try:
-        if "PYTHONPATH" in os.environ:
-            for path in os.environ.get("PYTHONPATH").split(os.pathsep):
-                site.addsitedir(path)
-
-        key = winreg.HKEY_LOCAL_MACHINE
-        version = sys.version_info[:2]
-        subkey = r"SOFTWARE\Python\PythonCore\%d.%d\InstallPath" % version
-        with winreg.OpenKey(key, subkey) as hand:
-            site.addsitedir(
-                os.path.join(
-                    winreg.QueryValue(hand, None),
-                    "Lib",
-                    "site-packages",
-                )
-            )
-    except:
-        pass
-
     import cFunctions
-    sys.modules["eg.cFunctions"] = cFunctions
-    eg.cFunctions = cFunctions
-
-    # add 'wx' to the builtin name space of every module
     import __builtin__
+
+    eg.folderPath = eg.FolderPath()
+    eg.mainDir = eg.folderPath.mainDir
+    eg.configDir = eg.folderPath.configDir
+    eg.corePluginDir = eg.folderPath.corePluginDir
+    eg.localPluginDir = eg.folderPath.localPluginDir
+    eg.imagesDir = eg.folderPath.imagesDir
+    eg.languagesDir = eg.folderPath.languagesDir
+    eg.sitePackagesDir = eg.folderPath.sitePackagesDir
+
+    if not exists(eg.configDir):
+        try:
+            makedirs(eg.configDir)
+        except:
+            pass
+
+    if not exists(eg.localPluginDir):
+        try:
+            makedirs(eg.localPluginDir)
+        except:
+            eg.localPluginDir = eg.corePluginDir
+
+    if eg.Cli.args.isMain:
+        if exists(eg.configDir):
+            chdir(eg.configDir)
+        else:
+            chdir(eg.mainDir)
+
     __builtin__.wx = wx
 
-    # we create a package 'PluginModule' and set its path to the plugin-dir
-    # so we can simply use __import__ to load a plugin file
     corePluginPackage = ModuleType("eg.CorePluginModule")
     corePluginPackage.__path__ = [eg.corePluginDir]
-    sys.modules["eg.CorePluginModule"] = corePluginPackage
-    eg.CorePluginModule = corePluginPackage
-    # we create a package 'PluginModule' and set its path to the plugin-dir
-    # so we can simply use __import__ to load a plugin file
-    if not os.path.exists(eg.localPluginDir):
-        os.makedirs(eg.localPluginDir)
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.localPluginDir]
+
+    sys.modules["eg.CorePluginModule"] = corePluginPackage
     sys.modules["eg.UserPluginModule"] = userPluginPackage
+    sys.modules['eg.cFunctions'] = cFunctions
+
+    eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
+    eg.cFunctions = cFunctions
+    eg.CorePluginModule = corePluginPackage
     eg.UserPluginModule = userPluginPackage
 
 def InitPil():

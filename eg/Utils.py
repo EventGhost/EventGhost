@@ -23,6 +23,7 @@ import threading
 import time
 import warnings
 import wx
+import traceback
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
@@ -136,11 +137,14 @@ def AssertInActionThread(func):
 
     def AssertWrapper(*args, **kwargs):
         if eg.actionThread._ThreadWorker__thread != threading.currentThread():
-            raise AssertionError(
-                "Called outside ActionThread: %s() in %s" %
-                (func.__name__, func.__module__)
-            )
-        return func(*args, **kwargs)
+            try:
+                raise AssertionError(
+                    "Called outside ActionThread: %s() in %s" %
+                    (func.__name__, func.__module__)
+                )
+            except AssertionError:
+                eg.PrintWarningNotice(traceback.format_exc())
+
         return func(*args, **kwargs)
 
     return update_wrapper(AssertWrapper, func)
@@ -151,10 +155,14 @@ def AssertInMainThread(func):
 
     def AssertWrapper(*args, **kwargs):
         if eg.mainThread != threading.currentThread():
-            raise AssertionError(
-                "Called outside MainThread: %s in %s" %
-                (func.__name__, func.__module__)
-            )
+            try:
+                raise AssertionError(
+                    "Called outside MainThread: %s in %s" %
+                    (func.__name__, func.__module__)
+                )
+            except AssertionError:
+                eg.PrintWarningNotice(traceback.format_exc())
+
         return func(*args, **kwargs)
 
     return update_wrapper(AssertWrapper, func)
@@ -394,11 +402,11 @@ def IsVista():
     """
     warnings.warn(
         "eg.Utils.IsVista() is deprecated. "
-        "Use eg.WindowsVersion.IsVista() instead",
+        "Use eg.WindowsVersion >= 'Vista' instead",
         DeprecationWarning,
         stacklevel=2
     )
-    return eg.WindowsVersion.IsVista()
+    return eg.WindowsVersion >= 'Vista'
 
 def IsXP():
     """
@@ -406,11 +414,11 @@ def IsXP():
     """
     warnings.warn(
         "eg.Utils.IsXP() is deprecated. "
-        "Use eg.WindowsVersion.IsXP() instead",
+        "Use eg.WindowsVersion >= 'XP' instead",
         DeprecationWarning,
         stacklevel=2
     )
-    return eg.WindowsVersion.IsXP()
+    return eg.WindowsVersion >= 'XP'
 
 def LogIt(func):
     """

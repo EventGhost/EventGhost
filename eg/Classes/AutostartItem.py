@@ -20,6 +20,30 @@
 import eg
 from MacroItem import MacroItem
 from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_AFTER
+from datetime import datetime
+
+
+class Time(object):
+    _datetime = None
+
+    def __init__(self):
+        self._datetime = datetime.now()
+
+    def __getattr__(self, item):
+        return getattr(self._datetime, item)
+
+    def __str__(self):
+        t_fmt = '%A, %B %d{}, %Y @ %H:%M:%S %p'
+        if 4 <= self.day <= 20 or 24 <= self.day <= 30:
+            t_fmt = t_fmt.format('th')
+        else:
+            t_fmt = t_fmt.format(
+                ["st", "nd", "rd"][self.day % 10 - 1]
+            )
+        return self.strftime(t_fmt)
+
+    def __repr__(self):
+        return self.__str__()
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
@@ -68,6 +92,15 @@ class AutostartItem(MacroItem):
     def Enable(self, flag=True):
         # never disable the Autostart item
         pass
+
+    def Execute(self):
+        event = eg.EventGhostEvent(
+            prefix='EventGhost',
+            suffix='Startup',
+            payload=Time()
+        )
+        event.Execute()
+        MacroItem.Execute(self)
 
     @eg.LogIt
     @eg.AssertInActionThread

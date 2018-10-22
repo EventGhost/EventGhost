@@ -163,25 +163,30 @@ class SoundMixerException(Exception):
     pass
 
 def ChangeMasterVolumeBy(value, deviceId=0):
-    # Obtain the volumne control object
-    deviceId = GetDeviceId(deviceId)
-    hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
-        MIXERCONTROL_CONTROLTYPE_VOLUME,
-        deviceId
-    )
 
-    # Then get the volume
-    oldVolume = GetControlValue(hmixer, mixerControl)
+    if eg.WindowsVersion >= 'Vista':
+        minimum = 0
+        maximum = 100.0
 
-    maximum = mixerControl.Bounds.lMaximum
-    minimum = mixerControl.Bounds.lMinimum
+    else:
+        hmixer, mixerControl = GetMixerControl(
+            MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
+            MIXERCONTROL_CONTROLTYPE_VOLUME,
+            deviceId
+        )
+
+        minimum = mixerControl.Bounds.lMinimum
+        maximum = mixerControl.Bounds.lMaximum
+
+    oldVolume = GetMasterVolume(deviceId)
     newVolume = int(round((maximum - minimum) * value / 100.0)) + oldVolume
+
     if newVolume < minimum:
         newVolume = minimum
     elif newVolume > maximum:
         newVolume = maximum
-    SetControlValue(hmixer, mixerControl, newVolume)
+
+    return SetMasterVolume(newVolume, deviceId)
 
 def GetControls(hmixer, mixerline):
     numCtrls = mixerline.cControls
@@ -249,10 +254,11 @@ def GetDeviceId(deviceId, strVal=False):
     if isinstance(deviceId, int):
         if strVal:
             devices = GetMixerDevices()
-            if deviceId < len(devices) - 1 and deviceId > -1:
+
+            if -1 < deviceId < len(devices) - 1:
                 return devices[deviceId]
             else:
-                #return devices[0]
+                # return devices[0]
                 raise SoundMixerException()
         else:
             return deviceId
@@ -305,20 +311,31 @@ def GetDeviceLines(deviceId=0):
                 print "            Control:", name
 
 def GetMasterVolume(deviceId=0):
-    # Obtain the volumne control object
-    deviceId = GetDeviceId(deviceId)
-    hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
-        MIXERCONTROL_CONTROLTYPE_VOLUME,
-        deviceId
-    )
+    import eg
 
-    # Then get the volume
-    value = GetControlValue(hmixer, mixerControl)
+    if eg.WindowsVersion >= 'Vista':
+        deviceId = GetDeviceId(deviceId, True)
 
-    maximum = mixerControl.Bounds.lMaximum
-    minimum = mixerControl.Bounds.lMinimum
-    value = 100.0 * (value - minimum) / (maximum - minimum)
+        import VistaVolEvents
+
+        value = VistaVolEvents.GetMasterVolume(deviceId) * 100.0
+
+    else:
+        deviceId = GetDeviceId(deviceId)
+        # Obtain the volumne control object
+        hmixer, mixerControl = GetMixerControl(
+            MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
+            MIXERCONTROL_CONTROLTYPE_VOLUME,
+            deviceId
+        )
+
+        # Then get the volume
+        value = GetControlValue(hmixer, mixerControl)
+
+        maximum = mixerControl.Bounds.lMaximum
+        minimum = mixerControl.Bounds.lMinimum
+        value = 100.0 * (value - minimum) / (maximum - minimum)
+
     return value
 
 def GetMixerControl(componentType, ctrlType, deviceId=0):
@@ -386,16 +403,26 @@ def GetMixerDevices(useList=False):
     return result if useList else dict((i - 1, result[i]) for i in range(len(result)))
 
 def GetMute(deviceId=0):
-    # Obtain the volumne control object
-    deviceId = GetDeviceId(deviceId)
-    hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
-        MIXERCONTROL_CONTROLTYPE_MUTE,
-        deviceId
-    )
+    import eg
 
-    # Then get the volume
-    return GetControlValue(hmixer, mixerControl)
+    if eg.WindowsVersion >= 'Vista':
+        deviceId = GetDeviceId(deviceId, True)
+
+        import VistaVolEvents
+
+        return VistaVolEvents.GetMute(deviceId)
+
+    else:
+        deviceId = GetDeviceId(deviceId)
+        # Obtain the volumne control object
+        hmixer, mixerControl = GetMixerControl(
+            MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
+            MIXERCONTROL_CONTROLTYPE_MUTE,
+            deviceId
+        )
+
+        # Then get the volume
+        return GetControlValue(hmixer, mixerControl)
 
 def SetControlValue(hmixer, mixerControl, value):
     """
@@ -423,37 +450,74 @@ def SetControlValue(hmixer, mixerControl, value):
         raise SoundMixerException()
 
 def SetMasterVolume(value, deviceId=0):
-    # Obtain the volumne control object
-    deviceId = GetDeviceId(deviceId)
-    hmixer, volCtrl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
-        MIXERCONTROL_CONTROLTYPE_VOLUME,
-        deviceId
-    )
+    import eg
 
-    maximum = volCtrl.Bounds.lMaximum
-    minimum = volCtrl.Bounds.lMinimum
-    newValue = int((value / 100.0) * (maximum - minimum)) + minimum
-    if newValue < minimum:
-        newValue = minimum
-    elif newValue > maximum:
-        newValue = maximum
-    SetControlValue(hmixer, volCtrl, newValue)
+    if eg.WindowsVersion >= 'Vista':
+        deviceId = GetDeviceId(deviceId, True)
+
+        import VistaVolEvents
+
+        value = float(value) / 100.0
+        if value > 1.0:
+            newValue = 1.0
+        elif value < 0.0:
+            newValue = 0.0
+        else:
+            newValue = value
+
+        VistaVolEvents.SetMasterVolume(newValue, deviceId)
+        # eg.Utils.time.sleep(0.5)
+
+    else:
+        deviceId = GetDeviceId(deviceId)
+        # Obtain the volumne control object
+        hmixer, volCtrl = GetMixerControl(
+            MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
+            MIXERCONTROL_CONTROLTYPE_VOLUME,
+            deviceId
+        )
+
+        maximum = volCtrl.Bounds.lMaximum
+        minimum = volCtrl.Bounds.lMinimum
+        newValue = int((value / 100.0) * (maximum - minimum)) + minimum
+        if newValue < minimum:
+            newValue = minimum
+        elif newValue > maximum:
+            newValue = maximum
+        SetControlValue(hmixer, volCtrl, newValue)
+
+    try:
+        return GetMasterVolume(deviceId)
+    except:
+        return newValue
+
 
 def SetMute(mute=True, deviceId=0):
-    # Obtain the volumne control object
-    deviceId = GetDeviceId(deviceId)
-    hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
-        MIXERCONTROL_CONTROLTYPE_MUTE,
-        deviceId
-    )
+    import eg
 
-    # Then set the volume
-    return SetControlValue(hmixer, mixerControl, int(mute))
+    if eg.WindowsVersion >= 'Vista':
+        deviceId = GetDeviceId(deviceId, True)
+
+        import VistaVolEvents
+
+        VistaVolEvents.SetMute(int(mute), deviceId)
+
+    else:
+        deviceId = GetDeviceId(deviceId)
+        # Obtain the volumne control object
+        deviceId = GetDeviceId(deviceId)
+        hmixer, mixerControl = GetMixerControl(
+            MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
+            MIXERCONTROL_CONTROLTYPE_MUTE,
+            deviceId
+        )
+
+        # Then set the volume
+        SetControlValue(hmixer, mixerControl, int(mute))
+
+    return GetMute(deviceId)
 
 def ToggleMute(deviceId=0):
-    deviceId = GetDeviceId(deviceId)
     flag = not GetMute(deviceId)
     SetMute(flag, deviceId)
     return flag

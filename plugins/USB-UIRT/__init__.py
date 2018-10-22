@@ -691,6 +691,7 @@ class IRLearnDialog(eg.Dialog):
     def OnClose(self, event):
         self.AbortLearnThread()
         event.Skip()
+        self.Destroy()
 
 
     def OnCancel(self, event):

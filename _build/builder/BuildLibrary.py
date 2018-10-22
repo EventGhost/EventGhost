@@ -69,6 +69,14 @@ class BuildLibrary(builder.Task):
                 if not os.path.isdir(path):
                     os.remove(path)
 
+        wip_version = None
+        if buildSetup.appVersion.startswith("WIP-"):
+            # this is to avoid a py2exe warning when building a WIP version
+            wip_version = buildSetup.appVersion
+            buildSetup.appVersion = ".".join(
+                buildSetup.appVersion.split("-")[1].split(".")
+            )
+
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
@@ -88,6 +96,9 @@ class BuildLibrary(builder.Task):
                 )
             )
         )
+
+        if wip_version:
+            buildSetup.appVersion = wip_version
 
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []
@@ -111,9 +122,13 @@ class BuildLibrary(builder.Task):
 class Target:
     def __init__(self, buildSetup):
         self.icon_resources = []
-        iconPath = join(buildSetup.dataDir, "Main.ico")
+        iconPath = join(buildSetup.docsDir, "_static", "arrow.ico")
         if exists(iconPath):
-            self.icon_resources.append((1, iconPath))
+            self.icon_resources.append((0, iconPath))
+        iconPath = join(buildSetup.docsDir, "_static", "ghost.ico")
+        if exists(iconPath):
+            self.icon_resources.append((6, iconPath))
+
         manifest = file(
             join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read() % buildSetup.__dict__
