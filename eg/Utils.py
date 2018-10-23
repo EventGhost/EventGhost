@@ -24,6 +24,7 @@ import time
 import warnings
 import wx
 import traceback
+from locale import windows_locale
 from CommonMark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
@@ -47,7 +48,7 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow",
+    "ExecFile", "GetTopLevelWindow", "GetClosestLanguage"
 ]
 
 USER_CLASSES = (type, ClassType)
@@ -301,15 +302,20 @@ def GetClosestLanguage():
     """
     langDir = join(dirname(abspath(sys.executable)), "languages")
     if exists(langDir):
-        locale = wx.Locale()
-        name = locale.GetLanguageCanonicalName(locale.GetSystemLanguage())
-        if exists(join(langDir, name + ".py")):
-            return name
-        else:
-            for f in [f for f in os.listdir(langDir) if f.endswith(".py")]:
-                if f.startswith(name[0:3]):
-                    return f[0:5]
-    return "en_EN"
+        uiLang = windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
+
+        langFiles = tuple(
+            f[:-3] for f in os.listdir(langDir)
+            if f.endswith(".py") and (
+                f.startswith(uiLang) or f.startswith(uiLang[:3])
+            )
+        )
+        if uiLang in langFiles:
+            return uiLang
+        if langFiles:
+            return langFiles[0]
+
+    return "en_US"
 
 def GetFirstParagraph(text):
     """
