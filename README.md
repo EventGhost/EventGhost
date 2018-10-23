@@ -4,11 +4,11 @@
 
 
 
-[EventGhost](http://www.eventghost.org) is an advanced, yet easy-to-use extensible automation tool for Windows. Users can create macros entirely through the GUI -- you don't have to write a single line of code if you don't want to -- and these macros are triggered by events, which can come from literally any device, program, or source with a corresponding plugin.
+[EventGhost](http://www.eventghost.net) is an advanced, yet easy-to-use extensible automation tool for Windows. Users can create macros entirely through the GUI -- you don't have to write a single line of code if you don't want to -- and these macros are triggered by events, which can come from literally any device, program, or source with a corresponding plugin.
 
 Control your HTPC with an infrared remote, move your mouse cursor with your gamepad, communicate with another instance of EventGhost over your network, send yourself an email when your website goes down, turn on your lights when the sun sets... with the right plugin, the right macro, and a little ingenuity, the sky's the limit!
 
-For more information read the [Documentation](http://www.eventghost.org/docs/) and take a look at our [Wiki](http://www.eventghost.org/mediawiki/). There's also an very active [Forum](http://www.eventghost.org/forum/).
+For more information read the [Documentation](http://www.eventghost.net/docs/) and take a look at our [Wiki](http://www.eventghost.net/mediawiki/). There's also an very active [Forum](http://www.eventghost.net/forum/).
 
 
 
