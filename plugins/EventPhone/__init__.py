@@ -20,7 +20,7 @@
 # Based on the Network Receiver plugin but had to be modifed to work for the
 # iPhone.  Thanks to BitMonster for the excellent Network Receiver Plugin.
 # EventGhost
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.net>
 
 import eg
 

@@ -5,7 +5,7 @@
 # Copyright (C) 2009 Peter
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.net>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
         "Uses the Google web service to retrieve current and forecasted weather information."
         "More Info on http://code.google.com/p/python-weather-api/"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1996",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1996",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAMAAAC7IEhfAAAAwFBMVEXm5uerz+ZocXj9"
         "sw5prO46hteMi4d5goikpKRLnPyRvtqXeTUWbt729va5ubkjeeOhyN83X4scctuevNBY"
