@@ -43,7 +43,7 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "EventGhost.org"
+            VALUE "CompanyName", "EventGhost"
             VALUE "FileDescription", "EventGhost Task Hook DLL"
             VALUE "FileVersion", "1, 0, 0, 3"
             VALUE "InternalName", "EventGhost Task Hook DLL"

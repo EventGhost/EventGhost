@@ -65,10 +65,10 @@ Not directly supported devices
 * `IgorPlug <https://web.archive.org/web/20160414132435/http://www.cesko.host.sk/girderplugin.htm>`_
 
 You can read the reason why these devices currently can't be directly supported
-in EventGhost `here <http://www.eventghost.org/forum/viewtopic.php?t=113>`_.
+in EventGhost `here <http://www.eventghost.net/forum/viewtopic.php?t=113>`_.
 But you can use them in conjunction with
 `WinLIRC <http://winlirc.sourceforge.net/>`_ and the plugin that is `discussed
-here <http://www.eventghost.org/forum/viewtopic.php?f=2&t=219>`_.
+here <http://www.eventghost.net/forum/viewtopic.php?f=2&t=219>`_.
 
 
 If your device is not listed here, feel free to ask on the
