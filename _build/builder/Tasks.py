@@ -153,11 +153,9 @@ class BuildCryptoSocket(builder.Task):
             socket_code = f.read()
 
         from uuid import uuid4
-        import hashlib
 
-        key = hashlib.sha256(str(uuid4()).replace('-', '').encode()).digest()
-
-        socket_code = socket_code.replace("'GENERATED KEY'", repr(key))
+        key = str(uuid4()).replace('-', '')
+        socket_code = socket_code.replace("GENERATED KEY", key)
 
         with open(socket_build_file, 'w') as f:
             f.write(socket_code)

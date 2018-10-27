@@ -24,6 +24,7 @@ import traceback
 import sys
 import atexit
 import base64
+import hashlib
 from Crypto import Random
 from Crypto.Cipher import AES
 
@@ -44,7 +45,9 @@ class AESCipher(object):
         raw = cls._pad(raw)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(
-            'GENERATED KEY',
+            hashlib.sha256(
+                'GENERATED KEY'.encode()
+            ).digest(),
             AES.MODE_CBC,
             iv
         )
@@ -55,7 +58,9 @@ class AESCipher(object):
         enc = base64.b64decode(enc)
         iv = enc[:AES.block_size]
         cipher = AES.new(
-            'GENERATED KEY',
+            hashlib.sha256(
+                'GENERATED KEY'.encode()
+            ).digest(),
             AES.MODE_CBC,
             iv
         )
@@ -252,43 +257,48 @@ class Client(threading.Thread):
 
     def run(self):
         eg.PrintDebugNotice('New Client')
-        self.sock.settimeout(600)
-        data = ''
-        self.sock.sendall('?\r')
+        try:
+            self.sock.settimeout(600)
+            data = ''
+            self.sock.sendall('?\r')
+        except socket.error:
+            pass
 
-        while not self.event.isSet():
-            try:
-                while '\r' not in data:
+        else:
 
-                    data += self.sock.recv(4096)
-                index = data.find('\r')
-                aes_string = data[:index]
-                data = data[index + 1:]
+            while not self.event.isSet():
+                try:
+                    while '\r' not in data:
 
-                if not self.event.isSet():
-                    try:
-                        command = AESCipher.decrypt(aes_string)
-                        eg.PrintDebugNotice(' ---> EG - ' + command)
-                    except:
-                        eg.PrintError('Unauthorized access')
-                        self.handler.unath_count += 1
-                        self.event.set()
-                    else:
+                        data += self.sock.recv(4096)
+                    index = data.find('\r')
+                    aes_string = data[:index]
+                    data = data[index + 1:]
 
-                        if command in ('testcon', 'closecon'):
+                    if not self.event.isSet():
+                        try:
+                            command = AESCipher.decrypt(aes_string)
+                            eg.PrintDebugNotice(' ---> EG - ' + command)
+                        except:
+                            eg.PrintError('Unauthorized access')
+                            self.handler.unath_count += 1
                             self.event.set()
                         else:
-                            self.Send(process_data(command))
-            except socket.timeout():
-                self.Send('closecon')
-                self.event.set()
 
-            except socket.error:
-                self.event.set()
+                            if command in ('testcon', 'closecon'):
+                                self.event.set()
+                            else:
+                                self.Send(process_data(command))
+                except socket.timeout():
+                    self.Send('closecon')
+                    self.event.set()
 
-        eg.PrintDebugNotice('Connection Closed')
+                except socket.error:
+                    self.event.set()
+
+            eg.PrintDebugNotice('Connection Closed')
+
         _close_sock(self.sock)
-
         self.sock = None
 
     def Send(self, message):
@@ -406,7 +416,10 @@ class Server(threading.Thread):
         if not self.event.isSet():
             self.event.set()
             is_eg_running()
-            self.join(2.0)
+            try:
+                self.join(2.0)
+            except:
+                pass
 
 
 def Start():
