@@ -281,7 +281,7 @@ class Client(threading.Thread):
                             eg.PrintDebugNotice(' ---> EG - ' + command)
                         except:
                             eg.PrintError('Unauthorized access')
-                            self.handler.unath_count += 1
+                            self.handler.unauth_count += 1
                             self.event.set()
                         else:
 
