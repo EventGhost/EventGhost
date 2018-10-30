@@ -133,8 +133,8 @@ def InitGui():
 
     eg.Print(eg.text.MainFrame.Logger.welcomeText)
 
-    import CryptoSocket
-    eg.socketSever = CryptoSocket.Start()
+    import LoopbackSocket
+    eg.socketSever = LoopbackSocket.Start()
 
 def InitPathsAndBuiltins():
     import cFunctions

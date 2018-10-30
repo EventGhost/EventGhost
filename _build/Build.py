@@ -20,42 +20,6 @@
 This script creates the EventGhost setup installer.
 """
 
-import os
-
-if 'EG_BUILD_STARTED' not in os.environ:
-    import sys
-
-    py_version = "Python%d%d" % sys.version_info[:2]
-    base_path = os.path.dirname(__file__)
-    new_dll_path = os.path.join(base_path, 'data', py_version)
-    new_dll = os.path.join(new_dll_path, py_version + '.dll')
-    if os.path.exists(new_dll_path) and os.path.exists(new_dll):
-        old_dll_path = os.path.dirname(sys.executable)
-        old_dll = os.path.join(old_dll_path, py_version + '.dll')
-        old_dll_back = old_dll + '.backup'
-
-        os.environ['EG_BUILD_STARTED'] = '1'
-        os.environ['PATH'] = new_dll_path + ';' + os.environ['PATH']
-
-        command = '"{0}" "{1}" {2}'.format(
-            sys.executable,
-            sys.argv[0],
-            ' '.join(sys.argv[1:])
-        )
-
-        from subprocess import Popen
-
-        if os.path.exists(old_dll):
-            os.rename(old_dll, old_dll_back)
-            p = Popen(command)
-            p.communicate()
-            os.rename(old_dll_back, old_dll)
-        else:
-            p = Popen(command)
-            p.communicate()
-
-        sys.exit(p.returncode)
-
 from os.path import dirname, exists, join
 
 # Local imports

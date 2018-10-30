@@ -581,6 +581,9 @@ class MainFrame(wx.Frame):
         else:
             wx.Frame.Iconize(self, flag)
 
+            if not flag:
+                self.Raise()
+
             for dialog in self.openDialogs:
                 dialog.Iconize(flag)
 

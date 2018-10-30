@@ -86,7 +86,7 @@ class BuildLibrary(builder.Task):
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "Imports", "CryptoSocket"],
+                    includes=["encodings", "encodings.*", "Imports"],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = DLL_EXCLUDES,
                     dist_dir = EncodePath(buildSetup.sourceDir),

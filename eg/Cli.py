@@ -28,7 +28,7 @@ import threading
 from os.path import abspath, dirname, join
 
 import PythonPaths
-import CryptoSocket
+import LoopbackSocket
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -91,10 +91,9 @@ def restart():
     return True
 
 
-def send_message(msg, *msg_args):
-    res = CryptoSocket.send_message(
-        '%s, %s' % (msg, str(msg_args))
-    )
+def send_message(msg, msg_args=()):
+
+    res = LoopbackSocket.send_message('%s, %s' % (msg, str(msg_args)))
 
     try:
         return eval(res)
@@ -117,7 +116,7 @@ if args.isMain:
 
             if len(payloads) == 0:
                 payloads = None
-            args.startupEvent = (eventstring, payloads)
+            args.startupEvent = (str(eventstring), payloads)
 
         if arg.startswith('-debug'):
             args.debugLevel = 1
@@ -165,35 +164,44 @@ if args.isMain:
         args.isMain # and
         # not args.pluginFile
     ):
-        is_eg_running = CryptoSocket.is_eg_running()
-        retry_count = 0
-        retry_event = threading.Event()
 
-        while is_eg_running is None:
-            retry_count += 1
-            if retry_count == 5:
-                sys.stderr._displayMessage = False
-                sys.stderr.write('New Instance: check failure\n')
-                sys.exit(2348)
+        no_count = 0
 
-            retry_event.wait(retry_count / 10.0)
-            is_eg_running = CryptoSocket.is_eg_running()
-
-        if is_eg_running is True:
-            if args.restart:
-                restart()
+        for command, params in (
+            ('eg.document.Open', args.startupFile),
+            ('eg.TriggerEvent', args.startupEvent),
+            ('eg.PluginInstall.Import', args.pluginFile),
+            ('eg.document.HideFrame', args.hideOnStartup)
+        ):
+            if params:
+                if isinstance(params, bool):
+                    if not send_message(command):
+                        break
+                else:
+                    if not send_message(command, params):
+                        break
             else:
-                if args.startupFile is not None:
-                    send_message('eg.document.Open', args.startupFile)
-                if args.startupEvent is not None:
-                    send_message('eg.TriggerEvent', *args.startupEvent)
-                if args.pluginFile:
-                    send_message(
-                        'eg.PluginInstall.Import',
-                        args.pluginFile
-                    )
-                if args.hideOnStartup:
-                    send_message('eg.document.HideFrame')
+                no_count += 1
+        else:
+            if no_count == 4:
+                is_eg_running = LoopbackSocket.is_eg_running()
+                retry_count = 0
+                retry_event = threading.Event()
+
+                while is_eg_running is None:
+                    retry_count += 1
+                    if retry_count == 5:
+                        sys.stderr._displayMessage = False
+                        sys.stderr.write('New Instance: check failure\n')
+                        sys.exit(2348)
+
+                    retry_event.wait(retry_count / 10.0)
+                    is_eg_running = LoopbackSocket.is_eg_running()
+
+                if is_eg_running:
+                    send_message('eg.document.ShowFrame')
+                    sys.exit(0)
+            else:
                 sys.exit(0)
 
         appMutex = ctypes.windll.kernel32.CreateMutexA(
