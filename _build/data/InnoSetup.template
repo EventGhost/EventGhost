@@ -13,25 +13,34 @@ AppUpdatesURL=http://www.eventghost.org/
 AppVerName=EventGhost %(appVersion)s
 AppVersion=%(appVersion)s
 ChangesAssociations=yes
+
 Compression=lzma/ultra
 DefaultDirName={pf}\EventGhost
 DefaultGroupName=EventGhost
 DisableReadyPage=yes
 InfoBeforeFile=%(dataDir)s\LICENSE.RTF
 InternalCompressLevel=ultra
-OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
 OutputDir=%(outputDir)s
 SetupIconFile=%(docsDir)s\_static\arrow.ico
 ShowLanguageDialog=auto
 SolidCompression=yes
 VersionInfoDescription=EventGhost Installer
+
 #if Pos('WIP-', '%(appVersion)s')
-VersionInfoVersion=0.0.0
+  VersionInfoVersion=0.0.0
 #elif Pos('-', '%(appVersion)s')
-VersionInfoVersion={#Copy('%(appVersion)s', 1, Pos('-', '%(appVersion)s') - 1)}
+  VersionInfoVersion={#Copy('%(appVersion)s', 1, Pos('-', '%(appVersion)s') - 1)}
 #else
-VersionInfoVersion=%(appVersion)s
+  VersionInfoVersion=%(appVersion)s
 #endif
+
+#if "x64" == ARCH
+  ArchitecturesInstallIn64BitMode=x64
+  OutputBaseFilename=%(appName)s_%(appVersion)s_Setup_x64
+# else
+  OutputBaseFilename=%(appName)s_%(appVersion)s_Setup_x86
+#endif
+
 WizardImageAlphaFormat=defined
 WizardImageFile=%(docsDir)s\_static\logo.bmp
 WizardImageStretch=no
@@ -61,7 +70,7 @@ begin
         Sleep(500)
       end;
       Success := RenameFile(Src, Dest)
-      Inc(i)
+      i := i + 1;
     until (i = 20) or (Success = True);
     if (i = 20) then begin
       Result := False
@@ -180,7 +189,6 @@ Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1
 
 [Languages]
 Name: English; MessagesFile: "compiler:Default.isl"
-Name: Armenian; MessagesFile: "compiler:Languages\Armenian.islu"
 Name: BrazilianPortuguese; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: Catalan; MessagesFile: "compiler:Languages\Catalan.isl"
 Name: Corsican; MessagesFile: "compiler:Languages\Corsican.isl"
@@ -195,7 +203,6 @@ Name: Hebrew; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: Hungarian; MessagesFile: "compiler:Languages\Hungarian.isl"
 Name: Italian; MessagesFile: "compiler:Languages\Italian.isl"
 Name: Japanese; MessagesFile: "compiler:Languages\Japanese.isl"
-Name: Nepali; MessagesFile: "compiler:Languages\Nepali.islu"
 Name: Norwegian; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: Polish; MessagesFile: "compiler:Languages\Polish.isl"
 Name: Portuguese; MessagesFile: "compiler:Languages\Portuguese.isl"
@@ -221,7 +228,7 @@ Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; V
 
 [Run]
 ; EG -install needs to be called with admin rights to install the COM-server
-Filename: "{app}\EventGhost.exe"; Parameters: "-install"
+;Filename: "{app}\EventGhost.exe"; Parameters: "-install"
 Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Tasks]

@@ -2,6 +2,12 @@
 /*.chm
 /*.dll
 /*.exe
+!/lib??/site-packages/
+/lib??/site-packages/WinUsbWrapper.dll
+/plugins/MceRemote/MceIr.dll
+/plugins/RawInput/RawInputHook.dll
+/plugins/Task/TaskHook.dll
+
 /_build/data/docs/pluginlist.rst
 /_build/data/docs/eg/*
 !/_build/data/docs/eg/index.rst
@@ -9,7 +15,7 @@
 /_build/output/
 /eg/StaticImports.py
 /lib??/*
-!/lib??/site-packages/
+
 
 # IDE storage
 /.*/

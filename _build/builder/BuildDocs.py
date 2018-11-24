@@ -24,8 +24,8 @@ import sphinx
 from os.path import join
 
 # Local imports
-import builder
-from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
+import Builder
+from Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
 
 import eg
 from eg.Utils import GetFirstParagraph
@@ -56,7 +56,7 @@ MAIN_CLASSES = [
 ]
 
 
-class BuildChmDocs(builder.Task):
+class BuildChmDocs(Builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
@@ -83,7 +83,7 @@ class BuildChmDocs(builder.Task):
         shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
 
 
-class BuildHtmlDocs(builder.Task):
+class BuildHtmlDocs(Builder.Task):
     description = "Build HTML docs"
 
     def Setup(self):
@@ -100,31 +100,37 @@ class BuildHtmlDocs(builder.Task):
 def call_sphinx(builder, build_setup, dest_dir):
     WritePluginList(join(build_setup.docsDir, "pluginlist.rst"))
     Prepare(build_setup.docsDir)
-    sphinx.build_main(
-        [
-            None,
-            "-D", "project=EventGhost",
-            "-D", "copyright=2005-2017 EventGhost Project",
-            # "-D", "templates_path=[]",
-            '-q',    # be quiet
-            # "-a",  # always write all output files
-            # "-E",  # Don’t use a saved environment (the structure
-                     # caching all cross-references),
-            # "-N",  # Prevent colored output.
-            # "-P",  # (Useful for debugging only.) Run the Python debugger,
-                     # pdb, if an unhandled exception occurs while building.
-            # '-v',  # verbosity, can be given up to three times
-            # '-v',
-            # write warnings and errors to file:
-            # '-w', join('output', 'sphinx_log_chm.txt'),
-            "-b", builder,
-            "-D", "version=%s" % build_setup.appVersion,
-            "-D", "release=%s" % build_setup.appVersion,
-            "-d", join(build_setup.tmpDir, ".doctree"),
-            build_setup.docsDir,
-            dest_dir,
-        ]
-    )
+    args = [
+        None,
+        "-D", "project=EventGhost",
+        "-D", "copyright=2005-2017 EventGhost Project",
+        # "-D", "templates_path=[]",
+        # '-q',    # be quiet
+        # "-a",  # always write all output files
+        # "-E",  # Don’t use a saved environment (the structure
+                 # caching all cross-references),
+        # "-N",  # Prevent colored output
+        # "-P",  # (Useful for debugging only.) Run the Python debugger,
+        # pdb, if an unhandld exception occurs while building.
+        # '-v',  # verbosity, can be given up to three times
+        # '-v',
+        # write warnings and errors to file:
+        # '-w', join('output', 'sphinx_log_chm.txt'),
+        "-b", builder,
+        "-D", "version=%s" % build_setup.appVersion,
+        "-D", "release=%s" % build_setup.appVersion,
+        "-d", join(build_setup.tmpDir, ".doctree"),
+        build_setup.docsDir,
+        dest_dir,
+    ]
+    if 'DISTUTILS_DEBUG' in os.environ:
+        args.insert(3, '-vvv')
+    elif build_setup.args.verbose:
+        args.insert(3, '-v')
+    else:
+        args.insert(3, '-q')
+
+    sphinx.build_main(args)
 
 
 def BuildClsDocs(clsNames, doc_src_dir):

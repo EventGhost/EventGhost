@@ -66,6 +66,26 @@ if __name__ == "__main__":
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
+
+
+if sizeof(c_long) == sizeof(c_void_p):
+    INT_PTR = c_int64
+    UINT_PTR = c_ulong
+    LONG_PTR = c_long
+    ULONG_PTR = c_ulong
+elif sizeof(c_longlong) == sizeof(c_void_p):
+    INT_PTR = c_int64
+    UINT_PTR = c_ulonglong
+    LONG_PTR = c_longlong
+    ULONG_PTR = c_ulonglong
+else:
+    INT_PTR = c_int64
+    UINT_PTR = c_ulong
+    LONG_PTR = c_long
+    ULONG_PTR = c_ulong
+
+
+
 INVALID_HANDLE_VALUE = -1
 HWND_TOPMOST = -1
 HWND_NOTOPMOST = -2
@@ -190,9 +210,8 @@ CreatePen.argtypes = [c_int, c_int, COLORREF]
 GetSystemMetrics = _user32.GetSystemMetrics
 GetSystemMetrics.restype = c_int
 GetSystemMetrics.argtypes = [c_int]
-LONG_PTR = c_long
 LRESULT = LONG_PTR
-ULONG_PTR = c_ulong
+
 PDWORD_PTR = POINTER(ULONG_PTR)
 SendMessageTimeoutW = _user32.SendMessageTimeoutW
 SendMessageTimeoutW.restype = LRESULT
@@ -423,7 +442,7 @@ PBYTE = POINTER(BYTE)
 GetKeyboardState = _user32.GetKeyboardState
 GetKeyboardState.restype = BOOL
 GetKeyboardState.argtypes = [PBYTE]
-UINT_PTR = c_uint
+
 TIMERPROC = FARPROC
 SetTimer = _user32.SetTimer
 SetTimer.restype = UINT_PTR

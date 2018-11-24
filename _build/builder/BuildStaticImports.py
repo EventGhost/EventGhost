@@ -21,7 +21,7 @@ from glob import glob
 from os.path import join
 
 # Local imports
-import builder
+import Builder
 
 SINGLETONS = (
     "document",
@@ -65,7 +65,7 @@ def RegisterPlugin(**dummyKwArgs):
     pass
 """
 
-class BuildStaticImports(builder.Task):
+class BuildStaticImports(Builder.Task):
     description = "Build StaticImports.py"
 
     def Setup(self):

@@ -22,8 +22,8 @@ from glob import glob
 from os.path import basename, exists, join
 
 # Local imports
-import builder
-from builder.Utils import EncodePath
+import Builder
+from Utils import EncodePath
 
 DLL_EXCLUDES = [
     "DINPUT8.dll",
@@ -32,7 +32,7 @@ DLL_EXCLUDES = [
 
 RT_MANIFEST = 24
 
-class BuildLibrary(builder.Task):
+class BuildLibrary(Builder.Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
 
     def Setup(self):
@@ -76,25 +76,60 @@ class BuildLibrary(builder.Task):
             buildSetup.appVersion = ".".join(
                 buildSetup.appVersion.split("-")[1].split(".")
             )
+        #
+        # import Includes
+        #
+        # for item in Includes.build.STD_LIB_MODULES + Includes.build.INCLUDES:
+        #     print 'module found - ', item
+
+        import EventGhostBuild
+        import EventGhostBuildExtension
+        import Includes
 
         setup(
             script_args=["py2exe"],
             windows=[Target(buildSetup)],
-            verbose=0,
+            verbose=buildSetup.args.verbose,
             zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
-            options = dict(
-                build=dict(build_base=join(buildSetup.tmpDir, "build")),
+            options=dict(
+                build=dict(
+                    build_base=join(buildSetup.tmpDir, "build")
+                ),
+                build_ext=dict(
+                    build_base=buildSetup.tmpDir,
+                    threaded_build=True,
+                    dist_dir=buildSetup.sourceDir,
+                ),
                 py2exe=dict(
                     compressed=0,
-                    includes=["encodings", "encodings.*", "Imports"],
-                    excludes=buildSetup.excludeModules,
-                    dll_excludes = DLL_EXCLUDES,
-                    dist_dir = EncodePath(buildSetup.sourceDir),
+                    packages=['wx'],
+                    includes=[
+                        'cFunctions',
+                        '_dxJoystick',
+                        'VistaVolEvents'
+                    ] + Includes.build.INCLUDES,
+                    excludes=Includes.EXCLUDES,
+                    dll_excludes=DLL_EXCLUDES,
+                    dist_dir=EncodePath(buildSetup.sourceDir),
                     custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
                     ),
                 )
-            )
+            ),
+            cmdclass=dict(
+                py2exe=EventGhostBuild.Build,
+                build_ext=EventGhostBuildExtension.BuildEXT,
+            ),
+            ext_modules=[
+                EventGhostBuildExtension.RawInputHook,
+                EventGhostBuildExtension.MceIr,
+                EventGhostBuildExtension.TaskHook,
+                EventGhostBuildExtension.cFunctions,
+                EventGhostBuildExtension.dxJoystick,
+                EventGhostBuildExtension.VistaVolEvents,
+                EventGhostBuildExtension.WinUsbWrapper
+            ]
+
         )
 
         if wip_version:
@@ -131,7 +166,10 @@ class Target:
 
         manifest = file(
             join(buildSetup.pyVersionDir, "Manifest.xml")
-        ).read() % buildSetup.__dict__
+        ).read()
+
+        manifest = manifest.format(app_name=buildSetup.name)
+
         self.other_resources = [(RT_MANIFEST, 1, manifest)]
         self.name = buildSetup.name
         self.description = buildSetup.description

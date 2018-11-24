@@ -17,7 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import ConfigParser
-from builder.Utils import IsCIBuild
+from Utils import IsCIBuild
 
 
 class Config(object):
