@@ -857,7 +857,7 @@ class Translation:
         'da_DA': u'dansk',
         'de_AT': u'Deutsch - Österreich',
         'de_CH': u'Deutsch - Schweiz',
-        'de_DE': u'Deutsches Deutschland',
+        'de_DE': u'Deutschland',
         'de_LI': u'Deutsch - Liechtenstein',
         'de_LU': u'Deutsch - Luxemburg',
         'dv_DV': u'Divehi; Dhivehi; Maldivian',
