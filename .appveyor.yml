@@ -82,7 +82,7 @@ install:
         " "
         "--- pip 9.0.1"
         "    Updating..."
-        python -m pip install -q -U "pip==9.0.1"
+        python -m pip install --no-cache-dir -q -U "pip==9.0.1"
         "    Done."
         " "
         "--- setuptools 34.3.0"
