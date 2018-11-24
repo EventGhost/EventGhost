@@ -3,7 +3,7 @@
 # plugins/BSlayer/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     description = (
         "Adds support functions to control BSPlayer."
     ),
-    url = "http://www.eventghost.org/forum/",
+    url = "http://www.eventghost.net/forum/",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZi"
         "S0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oCBhEoHQNl"

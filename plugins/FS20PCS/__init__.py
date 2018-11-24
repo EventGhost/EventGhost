@@ -20,7 +20,7 @@ eg.RegisterPlugin(
     canMultiLoad = False,
     createMacrosOnAdd = False,
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2147",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2147",
     guid = '{D76A6D18-142A-4f75-8F93-9CDA86DBC310}'
 )
 

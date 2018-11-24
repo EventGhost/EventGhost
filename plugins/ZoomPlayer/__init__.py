@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ eg.RegisterPlugin(
     version = "1.0",
     kind = "program",
     guid = "{C5E2609E-C1C4-4432-A532-EDA79A7EE41D}",
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=3498",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=3498",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (

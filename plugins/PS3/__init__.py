@@ -55,7 +55,7 @@ eg.RegisterPlugin(
     version = "4.0.4",
     kind = "remote",
     guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=640",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=640",
     description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
     canMultiLoad = True,
     help = README,

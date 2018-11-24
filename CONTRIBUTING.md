@@ -1,6 +1,6 @@
 # I need help with EventGhost
 
-Then you're in the wrong place. Support requests should be posted on [our forum](http://www.eventghost.org/forum/), either in [General Support](http://www.eventghost.org/forum/viewforum.php?f=2), or, if you need support for a specific plugin, in that plugin's thread in [Plugin Support](http://www.eventghost.org/forum/viewforum.php?f=9). Be sure to search before posting, as the most timely answer to your question will always be the one that's already there.
+Then you're in the wrong place. Support requests should be posted on [our forum](http://www.eventghost.net/forum/), either in [General Support](http://www.eventghost.net/forum/viewforum.php?f=2), or, if you need support for a specific plugin, in that plugin's thread in [Plugin Support](http://www.eventghost.net/forum/viewforum.php?f=9). Be sure to search before posting, as the most timely answer to your question will always be the one that's already there.
 
 
 # I want to report a bug
@@ -12,7 +12,7 @@ Great! Bugs are, unfortunately, a fact of software development life, but with yo
 Before continuing, be sure to:
 
 * Search [our issue tracker](https://github.com/EventGhost/EventGhost/issues?q=) to see if your bug has already been identified. If you find a match, +1s aren't helpful to us, but any further light you can shed on the issue absolutely is.
-* Try [the latest stable version](http://www.eventghost.org/downloads/) and [the latest development version](https://ci.appveyor.com/project/topic2k/eventghost/branch/master/artifacts). Your bug might already be fixed!
+* Try [the latest stable version](http://www.eventghost.net/downloads/) and [the latest development version](https://ci.appveyor.com/project/topic2k/eventghost/branch/master/artifacts). Your bug might already be fixed!
 
 ### Things to include in your bug report
 
@@ -28,11 +28,11 @@ Great! EventGhost would be nothing without our vibrant community of plugin devel
 
 ### Getting started
 
-If you're new to EventGhost plugin development, your first stop should be the "Writing Plugins" section of our user manual, `EventGhost.chm`. Still stumped? Check out the [Coding Corner](http://www.eventghost.org/forum/viewforum.php?f=10) section of [our forum](http://www.eventghost.org/forum/).
+If you're new to EventGhost plugin development, your first stop should be the "Writing Plugins" section of our user manual, `EventGhost.chm`. Still stumped? Check out the [Coding Corner](http://www.eventghost.net/forum/viewforum.php?f=10) section of [our forum](http://www.eventghost.net/forum/).
 
 ### Publishing your work
 
-Note that we no longer accept new plugins for inclusion in EventGhost. Long-term, our goal is to remove *all* non-core plugins from the distribution and make them available in-app, on-demand through an [online plugin repository](https://github.com/EventGhost/EventGhost/issues/4), where you'll one day be able to offer your plugins right alongside ours. Until then, please share your work in the [Plugin Support](http://www.eventghost.org/forum/viewforum.php?f=9) section of [our forum](http://www.eventghost.org/forum/).
+Note that we no longer accept new plugins for inclusion in EventGhost. Long-term, our goal is to remove *all* non-core plugins from the distribution and make them available in-app, on-demand through an [online plugin repository](https://github.com/EventGhost/EventGhost/issues/4), where you'll one day be able to offer your plugins right alongside ours. Until then, please share your work in the [Plugin Support](http://www.eventghost.net/forum/viewforum.php?f=9) section of [our forum](http://www.eventghost.net/forum/).
 
 
 # I want to contribute code

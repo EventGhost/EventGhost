@@ -4,7 +4,7 @@ eg.RegisterPlugin(
     version = "1.0.1093",
     kind = "external",
     guid = "{2189A326-0BAC-4D81-B69A-DCCD19060BAB}",
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=747",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=747",
     description = ('This plugin allows you to control your <a href="http://www.marantz.com">Marantz</a> \
                     SR-series receiver through it\'s serial port.\n\n\
                     <p>The plugin can send the commands directly to the serial port as well as to \
