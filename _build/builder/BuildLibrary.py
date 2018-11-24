@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import __builtin__
 import os
 import sys
 from glob import glob
@@ -24,6 +25,26 @@ from os.path import basename, exists, join
 # Local imports
 import builder
 from builder.Utils import EncodePath
+
+
+_compile = __builtin__.compile
+
+
+# noinspection PyShadowingBuiltins
+def compile(source, filename, *args):
+    try:
+        return _compile(source, filename, *args)
+    except SyntaxError:
+        ver = sys.version_info
+
+        if ver[0] > 2 and ver[1] > 4:
+            raise
+        if 'import asyncio' in source or 'from asyncio' in source:
+            return _compile('', filename, *args)
+        raise
+
+
+__builtin__.compile = compile
 
 DLL_EXCLUDES = [
     "DINPUT8.dll",
