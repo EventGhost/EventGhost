@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AES", "AES.vcxproj", "{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Debug|x64.ActiveCfg = Debug|x64
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Debug|x64.Build.0 = Debug|x64
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Debug|x86.ActiveCfg = Debug|Win32
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Debug|x86.Build.0 = Debug|Win32
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Release|x64.ActiveCfg = Release|x64
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Release|x64.Build.0 = Release|x64
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Release|x86.ActiveCfg = Release|Win32
+		{CE6E569E-D1C9-4518-A92E-7A03001E5DA2}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E93EBE1F-D7CA-4B0A-A599-EE9208E93AA9}
+	EndGlobalSection
+EndGlobal

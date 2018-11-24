@@ -109,8 +109,9 @@ if "pylint" in sys.modules:
     useTreeItemGUID = Core.eg.useTreeItemGUID
     CORE_PLUGIN_GUIDS = Core.eg.CORE_PLUGIN_GUIDS
 
-    import NamedPipe
-    namedPipe = NamedPipe.Server()
+    import LoopbackSocket
+
+    socketSever = LoopbackSocket.Start()
     ID_TEST = Core.eg.ID_TEST
     revision = Core.eg.revision
     startupArguments = Cli.args

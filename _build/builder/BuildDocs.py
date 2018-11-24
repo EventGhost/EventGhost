@@ -27,9 +27,6 @@ from os.path import join
 import builder
 from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
 
-import eg
-from eg.Utils import GetFirstParagraph
-
 GUI_CLASSES = [
     "SpinIntCtrl",
     "SpinNumCtrl",
@@ -128,6 +125,7 @@ def call_sphinx(builder, build_setup, dest_dir):
 
 
 def BuildClsDocs(clsNames, doc_src_dir):
+    import eg
     res = []
     for clsName in clsNames:
         if clsName.startswith("-"):
@@ -181,6 +179,8 @@ def Prepare(doc_src_dir):
 
 
 def WritePluginList(filepath):
+    import eg
+    from eg.Utils import GetFirstParagraph
     kindList = [
         ("core", "Essential (always loaded)"),
         ("remote", "Remote Receiver"),
