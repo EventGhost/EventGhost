@@ -197,7 +197,7 @@ notifications:
 
 - provider: Slack
   incoming_webhook:
-    secure: DXo21MuJufndeGjaRDMxLgLo5yEaPf9uYg1YqrHPlfjsXUAzxRR2yGhCKcUwfLTT3gO192GKwkNAc52Y6TnxuKsNAgI+K5mBW40+6I9FOmU=
+    secure: jvFmrrWYdHWb5+Lou7xIXMvjZTjR4/o7YwVMeMBUPH3KKYti85fsycwk0GxveESFGlyxIPfgy3HwZDtb1xhaFlQJlvInvYXUpDfBZQHe4EM=
 
   template: >-
     <{{buildUrl}}|{{projectName}} {{buildVersion}} {{status}}>
