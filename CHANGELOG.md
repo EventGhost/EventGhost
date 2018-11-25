@@ -1,3 +1,36 @@
+## [0.5.0-rc5](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc5) (2018-11-25)
+
+**Enhancements:**
+
+* Add Event before the loading of the plugins. [\#277](https://github.com/EventGhost/EventGhost/pull/277) ([kdschlosser](https://github.com/kdschlosser))
+* Trigger event Windows.User.USERNAME on EventGhost start [\#278](https://github.com/EventGhost/EventGhost/pull/278) ([kdschlosser](https://github.com/kdschlosser))
+* Additional options for EventGhost.TriggerEvent \(inspired by cobraman44\) [\#279](https://github.com/EventGhost/EventGhost/pull/279) ([kdschlosser](https://github.com/kdschlosser))
+* Appicon selection [\#283](https://github.com/EventGhost/EventGhost/pull/283) ([topic2k](https://github.com/topic2k))
+* Enhancements to the output in the loglist \(colours, icons\) [\#285](https://github.com/EventGhost/EventGhost/pull/285) ([kdschlosser](https://github.com/kdschlosser))
+* Add expand/collapse to toolbar, menu and context menu \(config tree\). [\#288](https://github.com/EventGhost/EventGhost/pull/288) ([topic2k](https://github.com/topic2k))
+* NamedPipe.py: Add simultaneous connections [\#290](https://github.com/EventGhost/EventGhost/pull/290) ([kdschlosser](https://github.com/kdschlosser))
+* Bring EG to front if it's only hidden behind other windows [\#292](https://github.com/EventGhost/EventGhost/pull/292) ([topic2k](https://github.com/topic2k))
+* add an option to show date in log \(requested by Snowbird\) [\#302](https://github.com/EventGhost/EventGhost/pull/302) ([topic2k](https://github.com/topic2k))
+* Fixes getting the default user language from the OS [\#325](https://github.com/EventGhost/EventGhost/pull/325) ([kdschlosser](https://github.com/kdschlosser))
+* \[PowerDVD\] Update to work with newer PowerDVD versions \(v12+\) [\#330](https://github.com/EventGhost/EventGhost/pull/330) ([GruberMarkus](https://github.com/GruberMarkus))
+
+**Fixed bugs:**
+
+* Use eg.APP\_NAME instead of installation folder name for configDir [\#268](https://github.com/EventGhost/EventGhost/pull/268) ([kdschlosser](https://github.com/kdschlosser))
+* On save write config data to a buffer object before replacing config file [\#284](https://github.com/EventGhost/EventGhost/pull/284) ([kdschlosser](https://github.com/kdschlosser))
+* Fix -event CLI option [\#289](https://github.com/EventGhost/EventGhost/pull/289) ([topic2k](https://github.com/topic2k))
+* \[requests\] PythonPaths.py, Fixes SSL error [\#296](https://github.com/EventGhost/EventGhost/pull/296) ([kdschlosser](https://github.com/kdschlosser))
+* fix bug in SpinNumCtrl [\#298](https://github.com/EventGhost/EventGhost/pull/298) ([topic2k](https://github.com/topic2k))
+* \[eMail\] some adaptations for EG 0.5  [\#300](https://github.com/EventGhost/EventGhost/pull/300) ([topic2k](https://github.com/topic2k))
+* Add exception catching to plugin close. [\#303](https://github.com/EventGhost/EventGhost/pull/303) ([kdschlosser](https://github.com/kdschlosser))
+* Swaps out Named Pipe for Socket [\#323](https://github.com/EventGhost/EventGhost/pull/323) ([kdschlosser](https://github.com/kdschlosser))
+
+**Other changes:**
+
+* Disable the OK button in configure dialogs on first appearance [\#267](https://github.com/EventGhost/EventGhost/pull/267) ([kdschlosser](https://github.com/kdschlosser))
+* Remove obsolete COMServer [\#317](https://github.com/EventGhost/EventGhost/pull/317) ([kdschlosser](https://github.com/kdschlosser))
+
+
 ## [0.5.0-rc4](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc4) (2017-07-16)
 
 **Enhancements:**
