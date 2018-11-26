@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.18"
+version="0.1.19"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -24,6 +24,8 @@ version="0.1.18"
 #
 # Revision history:
 # -----------------
+# 0.1.19 by topic2k 2018-11-26
+#     - fix: setting the number of days from periodically schedules didn't worked
 # 0.1.18 by topic2k 2017-05-01 11:00 UTC+2
 #     - fix eggtimer handling if two eggtimers are started in the same second
 # 0.1.17 by topic2k 2017-04-29 13:01 UTC+2
@@ -1126,7 +1128,7 @@ class schedulerDialog(wx.Dialog):
                     numCtrl = wx.FindWindowById(self.ctrls[3])
                     unitCtrl = wx.FindWindowById(self.ctrls[4])
                 if data:
-                    numCtrl.SetValue(str(data[3]))
+                    numCtrl.SetValue(data[3])
                     unitCtrl.SetSelection(data[4])
             elif flag:
                 self.Fit()
