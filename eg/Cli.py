@@ -173,11 +173,11 @@ if args.isMain:
             else:
                 no_count += 1
             if args.startupEvent:
-                send_message('eg.TriggerEvent', args.startupEvent)
+                send_message('eg.TriggerEvent', *args.startupEvent)
             else:
                 no_count += 1
             if args.pluginFile:
-                send_message('eg.PluginInstall.Import', *args.pluginFile)
+                send_message('eg.PluginInstall.Import', args.pluginFile)
             else:
                 no_count += 1
             if args.hideOnStartup:
