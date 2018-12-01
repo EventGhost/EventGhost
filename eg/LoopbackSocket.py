@@ -33,6 +33,13 @@ class SocketConnectionError(SocketException):
         return self.msg[item]
 
 
+def shutdown():
+    import wx
+    wx.CallAfter(eg.app.Exit)
+
+    return True
+
+
 def process_data(command):
     try:
         command, data = command.split(',', 1)
@@ -103,7 +110,7 @@ def send_message(message):
         if data == '?':
             sock.sendall(str(message) + '\r')
         else:
-            return False
+            return None
 
         data = ''
 
@@ -116,12 +123,15 @@ def send_message(message):
 
         sock.sendall('closecon\r')
 
-        return True
+        try:
+            return eval(response)
+        except:
+            return response
 
     except socket.timeout:
-        return False
+        return None
     except socket.error:
-        return False
+        return None
     finally:
         try:
             sock.close()
