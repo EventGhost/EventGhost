@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     kind="program",
     author="Bitmonster, GruberMarkus",
     guid="{4DBDFFA7-9E47-4782-B843-B196C74DE3EF}",
-    version="2.1",
+    version="3.0",
     createMacrosOnAdd=True,
 )
 
