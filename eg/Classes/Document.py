@@ -486,7 +486,7 @@ class Document(object):
                     self.frame = eg.mainFrame = eg.MainFrame(self)
                     self.frame.Show()
                 else:
-                    self.frame.Iconize(False)
+                    self.frame.Raise()
                 event.set()
 
             if not threading.current_thread() == eg.mainThread:

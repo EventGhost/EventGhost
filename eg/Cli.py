@@ -186,8 +186,6 @@ if args.isMain:
                 no_count += 1
 
             if no_count == 4:
-                retry_count = 0
-                retry_event = threading.Event()
                 send_message('eg.document.ShowFrame')
 
             if args.restart:
