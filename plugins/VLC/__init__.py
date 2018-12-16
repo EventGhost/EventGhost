@@ -37,8 +37,8 @@ are enabled in VLC!
 
 eg.RegisterPlugin(
     name = "VLC media player",
-    author = "MonsterMagnet",
-    version = "0.4.1486",
+    author = "MonsterMagnet, GruberMarkus",
+    version = "0.5",
         kind = "program",
     guid = "{02929D1C-7567-414C-84D1-F8D71D6FD7B3}",
     canMultiLoad = True,
@@ -84,16 +84,21 @@ def GetVlcPath():
     registry.
     """
     try:
-        return _winreg.QueryValue(
-            _winreg.HKEY_LOCAL_MACHINE,
-            "Software\\VideoLAN\\VLC"
-        )
+        return _winreg.QueryValue(_winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Classes\VLC.OPENFolder\shell\Open\command").split("\"")[1]
     except WindowsError:
-        return os.path.join(
-            eg.folderPath.ProgramFiles,
-            "VideoLAN\\VLC\\vlc.exe"
-        )
-
+        if "ProgramFiles(X86)" in os.environ:  # 64 bit Windows, indepedent from Python bitness
+            if os.path.exists(os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 64 bit VLC in default install directory
+                return os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"
+            elif os.path.exists(os.getenv("ProgramFiles(X86)") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 32 bit VLC in default install directory
+                return os.getenv("ProgramFiles(X86)") + "\\VideoLAN\\VLC\\vlc.exe"
+            else:
+                return None
+        else:  # 32 bit Windows, independent from Python bitness
+            if os.path.exists(os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 64 bit VLC in default install directory
+                return os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"
+            else:
+                return None
+            
 
 def GetChoices():
     f = codecs.open(eg.folderPath.RoamingAppData+"\\vlc\\vlcrc",'r','utf-8')
@@ -133,7 +138,7 @@ class VlcSession(asynchat.async_chat):
     def handle_connect(self):
         # connection succeeded
         self.plugin.TriggerEvent("Connected")
-        self.sendall(self.plugin.connectedevent)
+        self.socket.sendall(self.plugin.connectedevent)
 
 
     def handle_expt(self):
@@ -616,7 +621,7 @@ class VLC(eg.PluginBase):
             self.isDispatcherRunning = True
         try:
             if self.dispatcher.connected:
-                self.dispatcher.sendall(data)
+                self.dispatcher.socket.sendall(data)
             return True
         except:
             self.isDispatcherRunning = False
