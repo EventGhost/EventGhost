@@ -670,7 +670,7 @@ ACTIONS = (
         'Play',
         'Play',
         'Start playing',
-        'pause'
+        'play'
     ),
     (
         ActionPrototype,
@@ -813,14 +813,14 @@ ACTIONS = (
         'VolumeUp',
         'Volume Up',
         'Volume up',
-        'volup'
+        'volup 1'
     ),
     (
         ActionPrototype,
         'VolumeDown',
         'Volume Down',
         'Volume down',
-        'voldown'
+        'voldown 1'
     ),
     (
         MyCommand,
