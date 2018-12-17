@@ -82,22 +82,18 @@ def GetVlcPath():
     """
     Tries to get the path of VLC's executable through querying the Windows
     registry.
+    Not querying HKLM\Software\VideoLAN\VLC to avoid multiple queries
+    neccessary due to registry virtualization on 64 bit systems.
     """
     try:
-        return _winreg.QueryValue(_winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Classes\VLC.OPENFolder\shell\Open\command").split("\"")[1]
-    except WindowsError:
-        if "ProgramFiles(X86)" in os.environ:  # 64 bit Windows, indepedent from Python bitness
-            if os.path.exists(os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 64 bit VLC in default install directory
-                return os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"
-            elif os.path.exists(os.getenv("ProgramFiles(X86)") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 32 bit VLC in default install directory
-                return os.getenv("ProgramFiles(X86)") + "\\VideoLAN\\VLC\\vlc.exe"
-            else:
-                return None
-        else:  # 32 bit Windows, independent from Python bitness
-            if os.path.exists(os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"):  # check for 64 bit VLC in default install directory
-                return os.getenv("ProgramFiles") + "\\VideoLAN\\VLC\\vlc.exe"
-            else:
-                return None
+        path = _winreg.QueryValue(_winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\Classes\VLC.OPENFolder\shell\Open\command").split("\"")[1]
+    except:
+        return None
+
+    if os.path.exists(path):
+            return path
+    else:
+        return None
             
 
 def GetChoices():
