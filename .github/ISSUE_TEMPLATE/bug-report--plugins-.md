@@ -1,6 +1,6 @@
 ---
 name: Bug report (Plugins)
-about: Create a report to help us improve
+about: Use this template for bugs that belong to a plugin.
 title: "[PUT PLUGIN NAME HERE] short bug description"
 labels: bug
 assignees: ''
