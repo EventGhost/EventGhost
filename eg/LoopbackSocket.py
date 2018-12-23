@@ -33,6 +33,13 @@ class SocketConnectionError(SocketException):
         return self.msg[item]
 
 
+def shutdown():
+    import wx
+    wx.CallAfter(eg.app.Exit)
+
+    return True
+
+
 def process_data(command):
     try:
         command, data = command.split(',', 1)
@@ -47,22 +54,18 @@ def process_data(command):
         if '=' in command:
             raise SocketCommandError('Command not allowed: ' + command)
 
-        if not data.startswith('dict') and '=' in data:
-            raise SocketDataError('Data not allowed: ' + data)
-
         if (
-            data[0] not in ('(', '[', '{') and
-            not data.startswith('dict')
+            (not data.startswith('dict') and '=' in data) or
+            (data[0] not in ('(', '[', '{') and not data.startswith('dict'))
         ):
             raise SocketDataError('Data not allowed: ' + data)
 
         try:
             command = eval(command.split('(', 1)[0])
-        except (SyntaxError, NameError):
-            raise SocketDataError('Command malformed: ' + command)
-        else:
             if isinstance(command, (str, unicode)):
                 raise SocketCommandError('Command does not exist: ' + command)
+        except (SyntaxError, NameError):
+            raise SocketDataError('Command malformed: ' + command)
         try:
             data = eval(data)
         except SyntaxError:
@@ -91,10 +94,10 @@ def send_message(message):
     sock.settimeout(2.0)
     sys.stderr._displayMessage = False
     sys.stderr.write('New Instance: send message ' + repr(message) + '\n')
+    res = None
 
     try:
         sock.connect(('127.0.0.1', 38765))
-
         data = ''
         while '\r' not in data:
             data += sock.recv(4096)
@@ -102,31 +105,27 @@ def send_message(message):
         data = data[:data.find('\r')]
         if data == '?':
             sock.sendall(str(message) + '\r')
-        else:
-            return False
+            data = ''
 
-        data = ''
+            while '\r' not in data:
+                data += sock.recv(4096)
 
-        while '\r' not in data:
-            data += sock.recv(4096)
+            response = data[:data.find('\r')]
+            sys.stderr.write('New Instance: response ' + repr(response) + '\n')
+            sock.sendall('closecon\r')
 
-        response = data[:data.find('\r')]
-
-        sys.stderr.write('New Instance: response ' + repr(response) + '\n')
-
-        sock.sendall('closecon\r')
-
-        return True
+            try:
+                res = eval(response)
+            except:
+                res = response
 
     except socket.timeout:
-        return False
+        pass
     except socket.error:
-        return False
-    finally:
-        try:
-            sock.close()
-        except socket.error:
-            pass
+        pass
+
+    _close_sock(sock)
+    return res
 
 
 def _close_sock(sock):
@@ -150,27 +149,22 @@ def is_eg_running():
     try:
         sock.connect(('127.0.0.1', 38765))
         data = ''
-        try:
-            while '\r' not in data:
-                data += sock.recv(4096)
-            data = data[:data.find('\r')]
-            if data == '?':
-                sock.sendall('testcon\r')
-                return True
-            else:
-                return None
-
-        except socket.error:
-            return None
+        while '\r' not in data:
+            data += sock.recv(4096)
+        data = data[:data.find('\r')]
+        if data == '?':
+            sock.sendall('testcon\r')
+            res = True
+        else:
+            res = None
 
     except socket.timeout:
-        return None
-
+        res = None
     except socket.error:
-        return False
+        res = False
 
-    finally:
-        _close_sock(sock)
+    _close_sock(sock)
+    return res
 
 
 class Client(threading.Thread):
@@ -269,6 +263,19 @@ class Server(threading.Thread):
                 eg.PrintDebugNotice('startup failed.')
                 eg.PrintDebugNotice(traceback.format_exc())
                 return None
+
+        def restart_sock():
+            self.error_count += 1
+
+            if self.error_count > 2:
+                self.end_threads()
+                _close_sock(self.sock)
+
+                self.event.wait(self.error_count)
+
+                return start_sock()
+            return self.sock
+
         self.sock = sock = start_sock()
 
         if sock is not None:
@@ -294,18 +301,6 @@ class Server(threading.Thread):
                     eg.PrintDebugNotice(tb)
 
                     if not self.event.isSet():
-                        def restart_sock():
-                            self.error_count += 1
-
-                            if self.error_count > 2:
-                                self.end_threads()
-                                _close_sock(self.sock)
-
-                                self.event.wait(self.error_count)
-
-                                return start_sock()
-                            return self.sock
-
                         self.sock = sock = restart_sock()
                         while not self.event.isSet() and self.sock is None:
                             self.sock = sock = restart_sock()

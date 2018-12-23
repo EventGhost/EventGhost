@@ -581,9 +581,6 @@ class MainFrame(wx.Frame):
         else:
             wx.Frame.Iconize(self, flag)
 
-            if not flag:
-                self.Raise()
-
             for dialog in self.openDialogs:
                 dialog.Iconize(flag)
 
@@ -611,6 +608,14 @@ class MainFrame(wx.Frame):
             eg.app.Exit()
         else:
             self.Iconize(False)
+            self.Raise()
+
+            for dialog in self.openDialogs:
+                dialog.Iconize(False)
+                BringHwndToFront(dialog.GetHandle())
+                dialog.Raise()
+                dialog.RequestUserAttention()
+
             self.RequestUserAttention()
 
     @eg.LogIt

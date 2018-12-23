@@ -78,7 +78,7 @@ def restart():
             if answer == wx.ID_CANCEL:
                 sys.exit(0)
 
-    if send_message('eg.app.Exit') in (None, False):
+    if send_message('shutdown') in (None, False):
         ctypes.windll.user32.MessageBoxA(
             0,
             'EventGhost cannot restart.             \n\n'
@@ -91,7 +91,7 @@ def restart():
     return True
 
 
-def send_message(msg, msg_args=()):
+def send_message(msg, *msg_args):
 
     res = LoopbackSocket.send_message('%s, %s' % (msg, str(msg_args)))
 
@@ -167,40 +167,30 @@ if args.isMain:
 
         no_count = 0
 
-        for command, params in (
-            ('eg.document.Open', args.startupFile),
-            ('eg.TriggerEvent', args.startupEvent),
-            ('eg.PluginInstall.Import', args.pluginFile),
-            ('eg.document.HideFrame', args.hideOnStartup)
-        ):
-            if params:
-                if isinstance(params, bool):
-                    if not send_message(command):
-                        break
-                else:
-                    if not send_message(command, params):
-                        break
+        if LoopbackSocket.is_eg_running():
+            if args.startupFile:
+                send_message('eg.document.Open', args.startupFile)
             else:
                 no_count += 1
-        else:
+            if args.startupEvent:
+                send_message('eg.TriggerEvent', *args.startupEvent)
+            else:
+                no_count += 1
+            if args.pluginFile:
+                send_message('eg.PluginInstall.Import', args.pluginFile)
+            else:
+                no_count += 1
+            if args.hideOnStartup:
+                send_message('eg.document.HideFrame')
+            else:
+                no_count += 1
+
             if no_count == 4:
-                is_eg_running = LoopbackSocket.is_eg_running()
-                retry_count = 0
-                retry_event = threading.Event()
+                send_message('eg.document.ShowFrame')
 
-                while is_eg_running is None:
-                    retry_count += 1
-                    if retry_count == 5:
-                        sys.stderr._displayMessage = False
-                        sys.stderr.write('New Instance: check failure\n')
-                        sys.exit(2348)
+            if args.restart:
+                restart()
 
-                    retry_event.wait(retry_count / 10.0)
-                    is_eg_running = LoopbackSocket.is_eg_running()
-
-                if is_eg_running:
-                    send_message('eg.document.ShowFrame')
-                    sys.exit(0)
             else:
                 sys.exit(0)
 

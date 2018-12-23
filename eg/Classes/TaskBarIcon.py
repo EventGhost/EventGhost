@@ -22,6 +22,7 @@ from os.path import join
 
 # Local imports
 import eg
+from eg.WinApi.Utils import BringHwndToFront
 
 ID_SHOW = wx.NewId()
 ID_HIDE = wx.NewId()
@@ -72,6 +73,13 @@ class TaskBarIcon(wx.TaskBarIcon):
             eg.app.Exit(event)
         else:
             eg.mainFrame.Iconize(False)
+            eg.mainFrame.Raise()
+            for dialog in eg.mainFrame.openDialogs:
+                dialog.Iconize(False)
+                BringHwndToFront(dialog.GetHandle())
+                dialog.Raise()
+                dialog.RequestUserAttention()
+
             eg.mainFrame.RequestUserAttention()
 
     def OnCmdHide(self, dummyEvent):
