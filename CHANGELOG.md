@@ -1,3 +1,15 @@
+## [0.5.0-rc6](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc6) (2018-12-24)
+
+**Enhancements:**
+
+* \[PowerDVD\] switch from WindowMatcher to ctypes, PEP8 formatting [\#339](https://github.com/EventGhost/EventGhost/pull/339) ([GruberMarkus](https://github.com/GruberMarkus))
+
+**Fixed bugs:**
+
+* \[SchedulGhost\] fix setting the repeat intervall [\#337](https://github.com/EventGhost/EventGhost/pull/337) ([topic2k](https://github.com/topic2k))
+* Fixes restart & plugin install [\#340](https://github.com/EventGhost/EventGhost/pull/340) ([kdschlosser](https://github.com/kdschlosser))
+
+
 ## [0.5.0-rc5](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc5) (2018-11-25)
 
 **Enhancements:**
