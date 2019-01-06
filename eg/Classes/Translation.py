@@ -934,8 +934,6 @@ def get_windows_user_language():
 
     lpLocaleName = lpLocaleName.value.replace('-', '_')
 
-    eg.PrintDebugNotice()
-
     for cntry in countries:
         for lng in cntry.wx_languages:
             if lng.iso_code == lpLocaleName:
@@ -944,20 +942,13 @@ def get_windows_user_language():
                 )
                 return lng
 
-    Locale = GetUserDefaultUILanguage()
-    lpName = (WCHAR * LOCALE_NAME_MAX_LENGTH)()
-    cchName = INT(LOCALE_NAME_MAX_LENGTH)
-    dwFlags = DWORD(LOCALE_ALLOW_NEUTRAL_NAMES)
-    if not _LCIDToLocaleName(Locale, ctypes.byref(lpName), cchName, dwFlags):
-        raise ctypes.WinError()
-
-    lpName = lpName.value.replace('-', '_')
+    lcid = GetUserDefaultUILanguage()
 
     for cntry in countries:
         for lng in cntry.wx_languages:
-            if lng.iso_code == lpName:
+            if lng.lcid == lcid:
                 eg.PrintDebugNotice(
-                    'default user language (2): ' + lpName
+                    'default user language (2): ' + lng.iso_code
                 )
                 return lng
 
