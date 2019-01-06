@@ -21,15 +21,11 @@ import wx
 # Local imports
 import eg
 
+
 class Config(eg.PersistentData):
     position = None
     size = (550, 400)
     splitPosition = 210
-
-
-class Text(eg.TranslatableStrings):
-    title = "Add Action..."
-    descriptionLabel = "Description"
 
 
 class AddActionDialog(eg.TaskletDialog):
@@ -43,7 +39,7 @@ class AddActionDialog(eg.TaskletDialog):
             self,
             parent,
             -1,
-            Text.title,
+            eg.text.AddActionDialog.title,
             style=(
                 wx.DEFAULT_DIALOG_STYLE |
                 wx.RESIZE_BORDER |
@@ -79,7 +75,10 @@ class AddActionDialog(eg.TaskletDialog):
         rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(rightPanel, label=Text.descriptionLabel),
+            wx.StaticBox(
+                rightPanel,
+                label=eg.text.AddActionDialog.descriptionLabel
+            ),
             wx.VERTICAL
         )
         self.docText = eg.HtmlWindow(rightPanel)

@@ -16,14 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import codecs
 import os
 import types
 import wx
 from os.path import join
-
+from wx.combo import BitmapComboBox
+from PIL import Image
 # Local imports
 import eg
+from . import Translation
+
 
 class Config(eg.PersistentData):
     position = (50, 50)
@@ -36,6 +38,26 @@ class LanguageEditor(wx.Frame):
     def __init__(self, parent=None):
         self.translationDict = None
 
+        countries = Translation.countries
+        for cntry in countries:
+            for lng in cntry.wx_languages:
+                if lng.iso_code == Config.language:
+                    Config.language = lng
+                    break
+            else:
+                continue
+
+            break
+        else:
+            for cntry in countries:
+                for lng in cntry.wx_languages:
+                    if lng.iso_code == 'en_US':
+                        Config.language = lng
+                        break
+                else:
+                    continue
+                break
+
         if Config.language is None:
             Config.language = eg.config.language
 
@@ -47,6 +69,49 @@ class LanguageEditor(wx.Frame):
             pos = Config.position,
             size = Config.size
         )
+
+        self.plugins = []
+        self.loaded_plugins = []
+
+        eg.Init.ImportAll()
+        eg.actionThread.Start()
+
+        def LoadPlugins():
+
+            if eg.localPluginDir != eg.corePluginDir:
+                plugin_folders = (
+                    os.listdir(eg.corePluginDir) +
+                    os.listdir(eg.localPluginDir)
+                )
+            else:
+                plugin_folders = os.listdir(eg.corePluginDir)
+
+            for plugin_folder in plugin_folders:
+                if not plugin_folder.startswith("."):
+                    try:
+                        plugin = eg.pluginManager.OpenPlugin(
+                            plugin_folder,
+                            plugin_folder,
+                            ()
+                        )
+
+                        if plugin.pluginCls.__name__ in [
+                            "EventGhost",
+                            "System",
+                            "Window",
+                            "Mouse"
+                        ]:
+                            plugin.load_language_file(Config.language)
+                            self.loaded_plugins += [plugin]
+
+                        self.plugins += [plugin]
+
+                    except eg.Exceptions.PluginLoadError:
+                        import traceback
+                        traceback.print_exc()
+
+        eg.actionThread.CallWait(LoadPlugins)
+
         self.menuBar = self.CreateMenuBar()
         self.CreateStatusBar()
 
@@ -69,24 +134,13 @@ class LanguageEditor(wx.Frame):
         self.rootId = tree.AddRoot("Language Strings", 3)
         tree.SetPyData(self.rootId, ["", None, None])
 
-        eg.Init.ImportAll()
-        eg.actionThread.Start()
-
-        def LoadPlugins():
-            for plugin in os.listdir(eg.corePluginDir):
-                if not plugin.startswith("."):
-                    try:
-                        eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
-                    except eg.Exceptions.PluginLoadError:
-                        pass
-        eg.actionThread.CallWait(LoadPlugins)
-
         rightPanel = wx.Panel(splitter)
         self.disabledColour = rightPanel.GetBackgroundColour()
 
-        languageNames = eg.Translation.languageNames
-        self.langKeys = sorted(languageNames, key=languageNames.get)
-        self.langNames = [languageNames[k] for k in self.langKeys]
+        self.languages = []
+
+        for country in countries:
+            self.languages.extend(country.wx_languages)
 
         self.currentValueCtrl = wx.TextCtrl(
             rightPanel,
@@ -156,9 +210,13 @@ class LanguageEditor(wx.Frame):
             self.Bind(wx.EVT_MENU, func, id=itemId)
 
         # file menu
+
+        self.open_plugin_id = wx.NewId()
+
         menu = wx.Menu()
         menuBar.Append(menu, "&File")
         AddMenuItem("&Open...\tCtrl+O", self.OnCmdOpen, wx.ID_OPEN)
+        AddMenuItem("Open Plugin...", self.OnCmdOpenPlugin, self.open_plugin_id)
         AddMenuItem("&Save\tCtrl+S", self.OnCmdSave, wx.ID_SAVE)
         menu.AppendSeparator()
         AddMenuItem("E&xit\tAlt+F4", self.OnCmdExit, wx.ID_EXIT)
@@ -193,12 +251,14 @@ class LanguageEditor(wx.Frame):
                 newEvalPath = key
             else:
                 newEvalPath = evalPath + "." + key
+
             if type(value) in (types.ClassType, types.InstanceType):
                 newId = tree.AppendItem(treeId, ExpandKeyname(key), 2)
                 value = getattr(node, key)
                 tree.SetPyData(newId, [newEvalPath, value, None])
                 self.FillTree(newId, value, newEvalPath)
                 #tree.Expand(newId)
+
             elif type(value) in (types.TupleType, types.ListType):
                 newId = tree.AppendItem(treeId, ExpandKeyname(key), 4)
                 for i, item in enumerate(value):
@@ -228,15 +288,14 @@ class LanguageEditor(wx.Frame):
         self.isDirty = False
         self.SetTitle(
             "EventGhost Language Editor - %s [%s]" %
-            (eg.Translation.languageNames[language], language)
+            (language.label, language.iso_code)
         )
         tree = self.tree
         tree.Unbind(wx.EVT_TREE_SEL_CHANGING)
         tree.DeleteChildren(self.rootId)
-        translation = eg.Bunch()
-        languagePath = os.path.join(eg.languagesDir, "%s.py" % language)
-        if os.path.exists(languagePath):
-            eg.ExecFile(languagePath, {}, translation.__dict__)
+
+        translation = language.load()
+
         self.translationDict = translation.__dict__
         self.translationDict["__builtins__"] = {}
 
@@ -292,9 +351,16 @@ class LanguageEditor(wx.Frame):
         if self.CheckNeedsSave():
             event.Veto()
             return
+
+        for plugin in self.plugins:
+            plugin.Close()
+
         Config.position = self.GetPositionTuple()
         Config.size = self.GetSizeTuple()
         Config.splitPosition = self.tree.GetSizeTuple()[0]
+
+        language = Config.language
+        Config.language = language.iso_code
         eg.config.Save()
         eg.actionThread.Stop()
         wx.GetApp().ExitMainLoop()
@@ -354,20 +420,84 @@ class LanguageEditor(wx.Frame):
     def OnCmdOpen(self, dummyEvent):
         if self.CheckNeedsSave():
             return
-        dialog = wx.SingleChoiceDialog(
-            self,
-            'Choose a language to edit',
-            'Choose a language',
-            self.langNames,
-            wx.CHOICEDLG_STYLE
-        )
-        try:
-            x = self.langKeys.index(Config.language)
-        except ValueError:
-            x = 0
-        dialog.SetSelection(x)
+
+        dialog = wx.Dialog(self, -1, title='Choose Language')
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        language_choice = BitmapComboBox(dialog, style=wx.CB_READONLY)
+
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.Add(language_choice, 1, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(h_sizer, 0, wx.EXPAND)
+        sizer.AddStretchSpacer(1)
+
+        button_sizer = dialog.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.AddStretchSpacer(1)
+        h_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(h_sizer, 0, wx.EXPAND)
+        dialog.SetSizer(sizer)
+
+        for language in self.languages:
+            language_choice.Append(language.label, language.flag)
+
+        for i, language in enumerate(self.languages):
+            if language.iso_code == Config.language.iso_code:
+                language_choice.SetSelection(i)
+                break
+        else:
+            language_choice.SetSelection(0)
+
         if dialog.ShowModal() == wx.ID_OK:
-            self.LoadLanguage(self.langKeys[dialog.GetSelection()])
+            self.LoadLanguage(self.languages[language_choice.GetSelection()])
+
+        dialog.Destroy()
+
+    def OnCmdOpenPlugin(self, dummyEvent):
+        if self.CheckNeedsSave():
+            return
+
+        dialog = wx.Dialog(self, -1, title='Choose Plugin')
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        plugin_choice = BitmapComboBox(dialog, style=wx.CB_READONLY)
+
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.Add(plugin_choice, 1, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(h_sizer, 0, wx.EXPAND)
+        sizer.AddStretchSpacer(1)
+
+        button_sizer = dialog.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.AddStretchSpacer(1)
+        h_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(h_sizer, 0, wx.EXPAND)
+        dialog.SetSizer(sizer)
+
+        for plugin in self.plugins:
+            if plugin in self.loaded_plugins:
+                continue
+
+            img = plugin.icon.pil.resize((24, 24), Image.ANTIALIAS)
+            bmp = eg.Icons.PilToBitmap(img)
+
+            plugin_choice.Append(
+                    plugin.pluginName,
+                    bmp
+                )
+
+        plugin_choice.SetSelection(0)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            plugin_name = plugin_choice.GetStringSelection()
+
+            for plugin in self.plugins:
+                if plugin.pluginName == plugin_name:
+                    self.loaded_plugins += [plugin]
+                    plugin.load_language_file(Config.language)
+                    self.LoadLanguage(Config.language)
+                    break
+
         dialog.Destroy()
 
     def OnCmdPaste(self, dummyEvent):
@@ -379,58 +509,28 @@ class LanguageEditor(wx.Frame):
     def OnCmdSave(self, dummyEvent=None):
         self.StoreEditField()
         tree = self.tree
-        indentString = "    "
 
-        def Traverse(treeId, indent=0, isSequence=False):
-            res = []
-            append = res.append
+        def Traverse(treeId):
+            cls = tree.GetPyData(treeId)[1]
             item, cookie = tree.GetFirstChild(treeId)
+
             while item.IsOk():
                 evalPath, value, transValue = tree.GetPyData(item)
-                key = evalPath.split(".")[-1]
-                if hasattr(value, "__bases__"):
-                    tmp = Traverse(item, indent + 1)
-                    if tmp != "":
-                        append(indentString * indent + "class %s:\n" % key)
-                        append(tmp)
-                elif isinstance(value, list):
-                    tmp = Traverse(item, indent + 1, True)
-                    if tmp != "":
-                        append(indentString * indent + key + " = [\n")
-                        append(tmp)
-                        append(indentString * indent + "]\n")
-                elif isinstance(value, tuple):
-                    tmp = Traverse(item, indent + 1, True)
-                    if tmp != "":
-                        append(indentString * indent + key + " = (\n")
-                        append(tmp)
-                        append(indentString * indent + ")\n")
-                elif isSequence:
-                    if transValue is UnassignedValue:
-                        return ""
-                    if isinstance(transValue, str):
-                        transValue = transValue.decode("latin-1")
-                    append(indentString * indent + MyRepr(transValue) + ",\n")
-                elif transValue is not UnassignedValue and transValue != "":
-                    try:
-                        append(
-                            indentString * indent +
-                            key +
-                            ' = %s\n' % MyRepr(transValue)
-                        )
-                    except:
-                        print value, value.__bases__
-                item, cookie = tree.GetNextChild(treeId, cookie)
-            return "".join(res)
 
-        outFile = codecs.open(
-            join(eg.languagesDir, "%s.py" % Config.language),
-            "wt",
-            "utf_8"
-        )
-        outFile.write("# -*- coding: UTF-8 -*-\n")
-        outFile.write(Traverse(tree.GetRootItem()))
-        outFile.close()
+                key = evalPath.split(".")[-1]
+
+                if type(value) in (types.ClassType, types.InstanceType):
+                    Traverse(item)
+
+                elif transValue != UnassignedValue and transValue:
+                    cls.__dict__[key] = value
+                else:
+                    cls.__dict__[key] = value
+
+                item, cookie = tree.GetNextChild(treeId, cookie)
+
+        Traverse(self.rootId)
+        Config.language.save()
         self.isDirty = False
 
     def OnCmdUndo(self, dummyEvent):

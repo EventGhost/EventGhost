@@ -190,25 +190,6 @@ DISK_NAME="My Install Disk"
 DisplayName="$DISPLAY_NAME"
 """
 
-class Text(eg.TranslatableStrings):
-    dialogCaption = "EventGhost Plugin: %s"
-    downloadMsg = (
-        "EventGhost needs to download additional files before it "
-        "can install the driver for the %s plugin.\n\n"
-        "Do you want to start the download now?\n"
-    )
-    installMsg = (
-        "You need to install the proper driver for this %s device.\n\n"
-        "Should EventGhost start the driver installation for you now?"
-    )
-    restartMsg = (
-        "EventGhost needs to restart, before it can use the new driver.\n\n"
-        "Do you want to restart EventGhost now?"
-    )
-    downloadFailedMsg = (
-        "The download failed!\n\nPlease try again later."
-    )
-
 
 class WinUsb(object):
     installQueue = Queue.Queue()
@@ -245,8 +226,8 @@ class WinUsb(object):
         if neededFiles:
             eg.CallWait(
                 wx.MessageBox,
-                Text.downloadFailedMsg,
-                caption=Text.dialogCaption % self.plugin.name,
+                eg.text.WinUsb.downloadFailedMsg,
+                caption=eg.text.WinUsb.dialogCaption % self.plugin.name,
                 style=wx.OK | wx.ICON_EXCLAMATION | wx.STAY_ON_TOP,
                 parent=eg.document.frame
             )
@@ -409,8 +390,8 @@ class WinUsb(object):
             self = cls.installQueue.get()
             if wx.YES != eg.CallWait(
                 wx.MessageBox,
-                Text.installMsg % self.plugin.name,
-                caption=Text.dialogCaption % self.plugin.name,
+                eg.text.WinUsb.installMsg % self.plugin.name,
+                caption=eg.text.WinUsb.dialogCaption % self.plugin.name,
                 style=wx.YES_NO | wx.ICON_QUESTION | wx.STAY_ON_TOP,
                 parent=eg.document.frame
             ):
@@ -518,15 +499,15 @@ class WinUsb(object):
 
     def ShowDownloadMessage(self):
         return wx.YES == wx.MessageBox(
-            Text.downloadMsg % self.plugin.name,
-            caption=Text.dialogCaption % self.plugin.name,
+            eg.text.WinUsb.downloadMsg % self.plugin.name,
+            caption=eg.text.WinUsb.dialogCaption % self.plugin.name,
             style=wx.YES_NO | wx.ICON_QUESTION | wx.STAY_ON_TOP,
             parent=eg.document.frame
         )
 
     def ShowRestartMessage(self):
         res = wx.MessageBox(
-            Text.restartMsg,
+            eg.text.WinUsb.restartMsg,
             caption=eg.APP_NAME,
             style=wx.YES_NO | wx.ICON_QUESTION | wx.STAY_ON_TOP,
             parent=eg.document.frame

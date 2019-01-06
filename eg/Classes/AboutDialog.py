@@ -37,23 +37,14 @@ try:
 except ImportError:
     is_stackless = False
 
-class Text(eg.TranslatableStrings):
-    Title = "About EventGhost"
-    Author = "Author: %s"
-    Version = "Version: %s (build %s)"
-    CreationDate = "%a, %d %b %Y %H:%M:%S"
-    tabAbout = "About"
-    tabSpecialThanks = "Special Thanks"
-    tabLicense = "License Agreement"
-    tabSystemInfo = "System Information"
-    tabChangelog = "Changelog"
-
 
 class AboutDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
     def Configure(self, parent):  #IGNORE:W0221
+        text = eg.text.AboutDialog
+
         if AboutDialog.instance:
             AboutDialog.instance.Raise()
             return
@@ -61,15 +52,15 @@ class AboutDialog(eg.TaskletDialog):
         eg.TaskletDialog.__init__(
             self,
             parent=parent,
-            title=Text.Title,
+            title=text.Title,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
         notebook = wx.Notebook(self)
-        notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
-        notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
-        notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
-        notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
-        notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
+        notebook.AddPage(AboutPanel(notebook), text.tabAbout)
+        notebook.AddPage(SpecialThanksPanel(notebook), text.tabSpecialThanks)
+        notebook.AddPage(LicensePanel(notebook), text.tabLicense)
+        notebook.AddPage(SystemInfoPanel(notebook), text.tabSystemInfo)
+        notebook.AddPage(ChangelogPanel(notebook), text.tabChangelog)
 
         def OnPageChanged(event):
             pageNum = event.GetSelection()
@@ -219,7 +210,7 @@ class SystemInfoPanel(HtmlPanel):
     def __init__(self, parent):
         from eg.WinApi.SystemInformation import GetWindowsVersionString
         buildTime = time.strftime(
-            Text.CreationDate,
+            eg.text.AboutDialog.CreationDate,
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory = GetRam()[0]

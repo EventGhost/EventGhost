@@ -23,50 +23,40 @@ from types import StringTypes
 # Local imports
 import eg
 
-class Text(eg.TranslatableStrings):
-    title = "Find"
-    searchLabel = "Fi&nd what:"
-    wholeWordsOnly = "Match &whole word only"
-    caseSensitive = "&Match case"
-    searchParameters = "Search action parameters also"
-    direction = "Direction"
-    findButton = "&Find Next"
-    up = "&Up"
-    down = "&Down"
-    notFoundMesg = '"%s" couldn\'t be found.'
-
 
 class FindDialog(wx.Dialog):
     def __init__(self, parent, document):
+        text = eg.text.FindDialog
+
         wx.Dialog.__init__(
             self,
             parent,
             -1,
-            title = Text.title,
+            title = text.title,
             style = wx.DEFAULT_DIALOG_STYLE
         )
         self.parent = parent
         self.choices = [""]
         textCtrl = wx.TextCtrl(self)
-        wholeWordsOnlyCb = wx.CheckBox(self, -1, Text.wholeWordsOnly)
-        caseSensitiveCb = wx.CheckBox(self, -1, Text.caseSensitive)
-        searchParametersCb = wx.CheckBox(self, -1, Text.searchParameters)
+        wholeWordsOnlyCb = wx.CheckBox(self, -1, text.wholeWordsOnly)
+        caseSensitiveCb = wx.CheckBox(self, -1, text.caseSensitive)
+        searchParametersCb = wx.CheckBox(self, -1, text.searchParameters)
         searchParametersCb.SetValue(1)
         directionRb = wx.RadioBox(
             self,
-            label = Text.direction,
-            choices = [Text.up, Text.down],
+            label = text.direction,
+            choices = [text.up, text.down],
             style = wx.RA_SPECIFY_ROWS
         )
         directionRb.SetSelection(1)
-        searchButton = wx.Button(self, -1, Text.findButton)
+        searchButton = wx.Button(self, -1, text.findButton)
         searchButton.SetDefault()
         searchButton.Enable(False)
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
 
         acv = wx.ALIGN_CENTER_VERTICAL
         upperLeftSizer = eg.HBoxSizer(
-            (wx.StaticText(self, -1, Text.searchLabel), 0, acv | wx.RIGHT, 5),
+            (wx.StaticText(self, -1, text.searchLabel), 0, acv | wx.RIGHT, 5),
             (textCtrl, 1, wx.EXPAND),
         )
         cbSizer = eg.VBoxSizer(
@@ -148,7 +138,7 @@ class FindDialog(wx.Dialog):
             if startItem is item:
                 dlg = wx.MessageDialog(
                     None,
-                    Text.notFoundMesg % originalSearchValue,
+                    eg.text.FindDialog.notFoundMesg % originalSearchValue,
                     eg.APP_NAME,
                     wx.OK | wx.ICON_INFORMATION
                 )

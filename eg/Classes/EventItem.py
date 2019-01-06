@@ -20,14 +20,6 @@
 import eg
 from TreeItem import HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, TreeItem
 
-class Text(eg.TranslatableStrings):
-    eventItem = "Event Item"
-    eventName = "Event Name:"
-    notice = (
-        "Note: You can also drag and drop events from the logger to a "
-        "macro."
-    )
-
 
 class EventItem(TreeItem):
     xmlTag = "Event"
@@ -46,9 +38,9 @@ class EventItem(TreeItem):
 
     def Configure(self, name):
         panel = eg.ConfigPanel()
-        staticText = panel.StaticText(Text.eventName)
+        staticText = panel.StaticText(eg.text.EventItem.eventName)
         textCtrl = panel.TextCtrl(name, size=(250, -1))
-        staticText2 = panel.StaticText(Text.notice)
+        staticText2 = panel.StaticText(eg.text.EventItem.notice)
         panel.sizer.Add(staticText)
         panel.sizer.Add(textCtrl)
         panel.sizer.Add((5, 5))
@@ -79,7 +71,7 @@ class EventItem(TreeItem):
         return ""
 
     def GetTypeName(self):
-        return Text.eventItem
+        return eg.text.EventItem.eventItem
 
     def RegisterEvent(self, eventString):
         eventTable = eg.eventTable

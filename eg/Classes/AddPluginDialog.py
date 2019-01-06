@@ -31,23 +31,6 @@ class Config(eg.PersistentData):
     collapsed = set()
 
 
-class Text(eg.TranslatableStrings):
-    title = "Add Plugin..."
-    noInfo = "No information available."
-    noMultiloadTitle = "No multiload possible"
-    noMultiload = (
-        "This plugin doesn't support multiload and you already have one "
-        "instance of this plugin in your configuration."
-    )
-    otherPlugins = "General Plugins"
-    remotePlugins = "Input Devices"
-    programPlugins = "Software Control"
-    externalPlugins = "Hardware Control"
-    author = "Author:"
-    version = "Version:"
-    descriptionBox = "Description"
-
-
 class AddPluginDialog(eg.TaskletDialog):
     instance = None
 
@@ -61,8 +44,8 @@ class AddPluginDialog(eg.TaskletDialog):
             return True
         if any((plugin.info.path == info.path) for plugin in eg.pluginList):
             eg.MessageBox(
-                Text.noMultiload,
-                Text.noMultiloadTitle,
+                eg.text.AddPluginDialog.noMultiload,
+                eg.text.AddPluginDialog.noMultiloadTitle,
                 style=wx.ICON_EXCLAMATION
             )
             return False
@@ -71,8 +54,10 @@ class AddPluginDialog(eg.TaskletDialog):
 
     @eg.LogItWithReturn
     def Configure(self, parent, checkMultiLoad=True, title=None):
+        text = eg.text.AddPluginDialog
+
         if title is None:
-            title = Text.title
+            title = text.title
         self.checkMultiLoad = checkMultiLoad
         if self.__class__.instance:
             self.__class__.instance.Raise()
@@ -118,24 +103,27 @@ class AddPluginDialog(eg.TaskletDialog):
         root = treeCtrl.AddRoot("")
         typeIds = {
             KIND_TAGS[0]: treeCtrl.AppendItem(
-                root, getattr(Text, KIND_TAGS[0] + "Plugins"), 1
+                root, getattr(text, KIND_TAGS[0] + "Plugins"), 1
             ),
             KIND_TAGS[1]: treeCtrl.AppendItem(
-                root, getattr(Text, KIND_TAGS[1] + "Plugins"), 1
+                root, getattr(text, KIND_TAGS[1] + "Plugins"), 1
             ),
             KIND_TAGS[2]: treeCtrl.AppendItem(
-                root, getattr(Text, KIND_TAGS[2] + "Plugins"), 1
+                root, getattr(text, KIND_TAGS[2] + "Plugins"), 1
             ),
             KIND_TAGS[3]: treeCtrl.AppendItem(
-                root, getattr(Text, KIND_TAGS[3] + "Plugins"), 1
+                root, getattr(text, KIND_TAGS[3] + "Plugins"), 1
             ),
         }
         self.typeIds = typeIds
         itemToSelect = typeIds[KIND_TAGS[0]]
 
+        eg.config.language.build_plugin_descriptions()
+
         for info in eg.pluginManager.GetPluginInfoList():
             if info.kind in ("hidden", "core"):
                 continue
+
             if info.icon and info.icon != eg.Icons.PLUGIN_ICON:
                 idx = imageList.Add(
                     eg.Icons.PluginSubIcon(info.icon).GetBitmap()
@@ -178,18 +166,18 @@ class AddPluginDialog(eg.TaskletDialog):
         rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         subSizer = wx.FlexGridSizer(2, 2)
-        self.authorLabel = wx.StaticText(rightPanel, label=Text.author)
+        self.authorLabel = wx.StaticText(rightPanel, label=text.author)
         subSizer.Add(self.authorLabel)
         self.authorText = wx.StaticText(rightPanel)
         subSizer.Add(self.authorText, 0, wx.EXPAND | wx.LEFT, 5)
-        self.versionLabel = wx.StaticText(rightPanel, label=Text.version)
+        self.versionLabel = wx.StaticText(rightPanel, label=text.version)
         subSizer.Add(self.versionLabel)
         self.versionText = wx.StaticText(rightPanel)
         subSizer.Add(self.versionText, 0, wx.EXPAND | wx.LEFT, 5)
         rightSizer.Add(subSizer, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
         staticBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(rightPanel, label=Text.descriptionBox)
+            wx.StaticBox(rightPanel, label=text.descriptionBox)
         )
 
         self.descrBox = eg.HtmlWindow(rightPanel)
@@ -324,7 +312,7 @@ class AddPluginDialog(eg.TaskletDialog):
         self.resultData = info = self.treeCtrl.GetPyData(item)
         if info is None:
             name = self.treeCtrl.GetItemText(item)
-            description = Text.noInfo
+            description = eg.text.AddPluginDialog.noInfo
             self.authorLabel.SetLabel("")
             self.authorText.SetLabel("")
             self.versionLabel.SetLabel("")
@@ -334,10 +322,11 @@ class AddPluginDialog(eg.TaskletDialog):
         else:
             name = info.name
             description = info.description
+
             self.descrBox.SetBasePath(info.path)
-            self.authorLabel.SetLabel(Text.author)
+            self.authorLabel.SetLabel(eg.text.AddPluginDialog.author)
             self.authorText.SetLabel(info.author.replace("&", "&&"))
-            self.versionLabel.SetLabel(Text.version)
+            self.versionLabel.SetLabel(eg.text.AddPluginDialog.version)
             self.versionText.SetLabel(info.version)
             self.okButton.Enable(True)
         self.nameText.SetLabel(name)

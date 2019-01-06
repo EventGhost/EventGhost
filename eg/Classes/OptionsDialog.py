@@ -25,39 +25,9 @@ from wx.combo import BitmapComboBox
 # Local imports
 import eg
 
-INDENT_WIDTH = 18
+from . import Translation
 
-class Text(eg.TranslatableStrings):
-    Title = "Options"
-    Tab1 = "General"
-    CheckPreRelease = "Always notify about new pre-releases"
-    CheckUpdate = "Check for EventGhost updates at launch"
-    confirmDelete = "Confirm deletion of tree items"
-    confirmRestart = (
-        "Language changes only take effect after restarting the application."
-        "\n\n"
-        "Do you want to restart EventGhost now?"
-    )
-    Datestamp = "Datestamp format for log:"
-    DatestampHelp = (
-        "For imformation on format codes read Python's strftime "
-        "documentation:\n"
-        "http://docs.python.org/2/library/datetime.html#strftime-and-strptime-"
-        "behavior\n"
-        "\nHere you can find examples:\n"
-        "http://strftime.org/\n"
-    )
-    HideOnClose = "Keep running in background when window closed"
-    HideOnStartup = "Hide on startup"
-    LanguageGroup = "Language"
-    limitMemory1 = "Limit memory consumption while minimized to"
-    limitMemory2 = "MB"
-    propResize = "Resize window proportionally"
-    refreshEnv = 'Refresh environment before executing "Run" actions'
-    showTrayIcon = "Display EventGhost icon in system tray"
-    StartWithWindows = 'Autostart EventGhost for user "%s"' % os.environ["USERNAME"]
-    UseAutoloadFile = "Autoload file"
-    UseFixedFont = 'Use fixed-size font in the "Log" pane'
+INDENT_WIDTH = 18
 
 
 class OptionsDialog(eg.TaskletDialog):
@@ -70,7 +40,7 @@ class OptionsDialog(eg.TaskletDialog):
             return
         OptionsDialog.instance = self
 
-        text = Text
+        text = eg.text.OptionsDialog
         config = eg.config
         self.useFixedFont = config.useFixedFont
 
@@ -80,14 +50,6 @@ class OptionsDialog(eg.TaskletDialog):
             title=text.Title,
         )
 
-        languageNames = eg.Translation.languageNames
-        languageList = ["en_EN"]
-        for item in os.listdir(eg.languagesDir):
-            name, ext = os.path.splitext(item)
-            if ext == ".py" and name in languageNames:
-                languageList.append(name)
-        languageList.sort()
-        languageNameList = [languageNames[x] for x in languageList]
         notebook = wx.Notebook(self, -1)
         page1 = eg.Panel(notebook)
         notebook.AddPage(page1, text.Tab1)
@@ -95,7 +57,7 @@ class OptionsDialog(eg.TaskletDialog):
         # page 1 controls
         startWithWindowsCtrl = page1.CheckBox(
             exists(join((eg.folderPath.Startup or ""), eg.APP_NAME + ".lnk")),
-            text.StartWithWindows
+            text.StartWithWindows % os.environ["USERNAME"]
         )
         if eg.folderPath.Startup is None:
             startWithWindowsCtrl.Enable(False)
@@ -182,17 +144,24 @@ class OptionsDialog(eg.TaskletDialog):
         datestampCtrl.Bind(wx.EVT_KILL_FOCUS, OnDatestampKillFocus)
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
-        for name, code in zip(languageNameList, languageList):
-            filename = os.path.join(eg.imagesDir, "flags", "%s.png" % code)
-            if os.path.exists(filename):
-                image = wx.Image(filename)
-                image.Resize((16, 16), (0, 3))
-                bmp = image.ConvertToBitmap()
-                languageChoice.Append(name, bmp)
-            else:
-                languageChoice.Append(name)
-        languageChoice.SetSelection(languageList.index(config.language))
-        languageChoice.SetMinSize((150, -1))
+
+        languages = []
+        countries = Translation.countries
+
+        for country in countries:
+            languages.extend(country.wx_languages)
+
+        for language in languages:
+            languageChoice.Append(language.label, language.flag)
+
+        for i, language in enumerate(languages):
+            if language.iso_code == eg.config.language.iso_code:
+                languageChoice.SetSelection(i)
+                break
+        else:
+            languageChoice.SetSelection(0)
+
+        languageChoice.SetMinSize((250, -1))
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
 
@@ -291,7 +260,7 @@ class OptionsDialog(eg.TaskletDialog):
     def ShowLanguageWarning(self):
         dlg = wx.MessageDialog(
             eg.document.frame,
-            Text.confirmRestart,
+            eg.text.OptionsDialog.confirmRestart,
             "",
             wx.YES_NO | wx.ICON_QUESTION
         )
