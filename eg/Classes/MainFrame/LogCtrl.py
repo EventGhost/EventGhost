@@ -105,8 +105,7 @@ class LogCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_MENU, self.OnCmdClearLog, id=menuId)
         self.contextMenu = menu
 
-        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
+        self.Bind(wx.EVT_CONTEXT_MENU, self.OnRightUp)
         self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.OnStartDrag)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
