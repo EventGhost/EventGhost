@@ -192,7 +192,6 @@ class OptionsDialog(eg.TaskletDialog):
             else:
                 languageChoice.Append(name)
         
-        # if no translation for language, default to English
         if config.language not in languageList:
             config.language='en_EN'
         
