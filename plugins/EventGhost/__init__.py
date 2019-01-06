@@ -628,6 +628,9 @@ added automatically. So if you specify an event of VolumeUp the actual
 event that will be triggered will be.
 
         Main.VolumeUp
+        
+There is also a check box to enable or disable the Main prefix. 
+You will only be able to disable the Main if there is more then single group
 
   You also have the ability to set the event string using a python 
 expression (see below).
@@ -729,6 +732,7 @@ class TriggerEvent(eg.ActionBase):
         text4 = "Add event to event queue:"
         text5 = "Return eg.event to original event:"
         text6 = "Event Payload:"
+        text7 = 'Remove "Main" prefix:'
 
     def __call__(
         self,
@@ -736,7 +740,8 @@ class TriggerEvent(eg.ActionBase):
         waitTime=0,
         payload=None,
         queueEvent=True,
-        restoreEvent=False
+        restoreEvent=False,
+        removeMain=False
     ):
 
         def parse(value):
@@ -758,6 +763,10 @@ class TriggerEvent(eg.ActionBase):
         split_event = eventString.split('.', 1)
         if len(split_event) == 1:
             split_event.insert(0, 'Main')
+
+        if not removeMain and split_event[0] != 'Main':
+            split_event.insert(0, 'Main')
+            split_event = [split_event[0], '.'.join(split_event[1:])]
 
         kwargs = dict(
             prefix=split_event[0],
@@ -787,7 +796,8 @@ class TriggerEvent(eg.ActionBase):
         waitTime=0,
         payload=None,
         queueEvent=False,
-        restoreEvent=False
+        restoreEvent=False,
+        removeMain=False
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -800,12 +810,26 @@ class TriggerEvent(eg.ActionBase):
         payloadCtrl = panel.TextCtrl(payload)
         queueEventCtrl = wx.CheckBox(panel, -1, '')
         restoreEventCtrl = wx.CheckBox(panel, -1, '')
+        removeMainCtrl = wx.CheckBox(panel, -1, '')
 
         queueEventCtrl.SetValue(queueEvent)
         restoreEventCtrl.SetValue(restoreEvent)
         queueEventCtrl.Enable(not waitTime)
         restoreEventCtrl.Enable(not waitTime and not queueEvent)
 
+        if not eventString:
+            removeMainCtrl.Disable()
+
+        def on_char(evt):
+            if '.' in eventStringCtrl.GetValue():
+                removeMainCtrl.Enable()
+            else:
+                removeMainCtrl.Disable()
+
+            evt.Skip()
+
+        eventStringCtrl.Bind(wx.EVT_TEXT, on_char)
+        
         def on_spin(evt):
             def check_spin():
                 value = bool(waitTimeCtrl.GetValue())
@@ -848,10 +872,12 @@ class TriggerEvent(eg.ActionBase):
 
         eg.EqualizeWidths((
             HBoxSizer(text.text1, eventStringCtrl, prop=1),
+            HBoxSizer(text.text7, removeMainCtrl),
             HBoxSizer(text.text6, payloadCtrl, prop=1),
             HBoxSizer(text.text2, waitTimeCtrl, suf=text.text3),
             HBoxSizer(text.text4, queueEventCtrl),
-            HBoxSizer(text.text5, restoreEventCtrl)
+            HBoxSizer(text.text5, restoreEventCtrl),
+
         ))
 
         while panel.Affirmed():
@@ -860,7 +886,8 @@ class TriggerEvent(eg.ActionBase):
                 waitTimeCtrl.GetValue(),
                 payloadCtrl.GetValue() if payloadCtrl.GetValue() else None,
                 queueEventCtrl.IsEnabled() and queueEventCtrl.GetValue(),
-                restoreEventCtrl.IsEnabled() and restoreEventCtrl.GetValue()
+                restoreEventCtrl.IsEnabled() and restoreEventCtrl.GetValue(),
+                removeMainCtrl.IsEnabled() and removeMainCtrl.GetValue(),
             )
 
     def GetLabel(
