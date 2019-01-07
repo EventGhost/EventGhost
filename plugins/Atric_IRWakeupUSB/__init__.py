@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     kind="remote",
     createMacrosOnAdd=True,
     canMultiLoad=True,
+    url="https://github.com/GruberMarkus/EventGhost",
     description=(
         "<rst>"
         "Plugin for the `Atric IR-WakeupUSB`__ device.\n"
