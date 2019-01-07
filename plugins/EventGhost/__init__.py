@@ -814,8 +814,10 @@ class TriggerEvent(eg.ActionBase):
 
         queueEventCtrl.SetValue(queueEvent)
         restoreEventCtrl.SetValue(restoreEvent)
+        removeMainCtrl.SetValue(removeMain)
         queueEventCtrl.Enable(not waitTime)
         restoreEventCtrl.Enable(not waitTime and not queueEvent)
+        removeMainCtrl.Enable('.' in eventString)
 
         if not eventString:
             removeMainCtrl.Disable()
@@ -829,7 +831,7 @@ class TriggerEvent(eg.ActionBase):
             evt.Skip()
 
         eventStringCtrl.Bind(wx.EVT_TEXT, on_char)
-        
+
         def on_spin(evt):
             def check_spin():
                 value = bool(waitTimeCtrl.GetValue())
