@@ -15,212 +15,80 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+import wx
+import requests
 
-import os
-
-# Local imports
 import eg
-from eg.Utils import SetDefault
 
-class Default:
-    class General:
-        configTree = "Configuration Tree"
-        deleteQuestion = "Are you sure you want to delete this item?"
-        deleteManyQuestion = (
-            "This element has %s subelements.\n\n"
-            "Are you sure you want to delete them all?"
+
+class LanguageLoadDialog(wx.Dialog):
+
+    def __init__(self, language, msg):
+        url = language.translation_url
+        url += (
+            '&text=EventGhost Language Translation'
+            '&text=' + msg
         )
-        deletePlugin = (
-            "This plugin is used by actions in your configuration. You "
-            "cannot remove it before all actions that are using this plugin "
-            "have been removed."
-        )
-        deleteLinkedItems = (
-            "At least one item outside your selection refers to an "
-            "item inside your selection. If you continue to delete "
-            "this selection, the referring item won't work properly "
-            "anymore.\n\n"
-            "Are you sure you want to delete the selection?"
-        )
-        ok = "OK"
-        cancel = "Cancel"
-        apply = "&Apply"
-        yes = "&Yes"
-        no = "&No"
-        help = "&Help"
-        choose = "Choose"
-        browse = "Browse..."
-        test = "&Test"
-        pluginLabel = "Plugin: %s"
-        autostartItem = "Autostart"
-        unnamedFolder = "<unnamed folder>"
-        unnamedMacro = "<unnamed macro>"
-        unnamedEvent = "<unnamed event>"
-        unnamedFile = "<unnamed file>"
-        #moreTag = "more..."
-        supportSentence = "Support for this plugin can be found"
-        supportLink = "here"
-        settingsPluginCaption = "Plugin Item Settings"
-        settingsActionCaption = "Action Item Settings"
-        settingsEventCaption = "Event Item Settings"
-        noOptionsAction = "This action has no options to configure."
-        noOptionsPlugin = "This plugin has no options to configure."
-        monitorsLabel = "Identified monitors:"
-        monitorsHeader = (
-            "Monitor nr.",
-            "X coordinate",
-            "Y coordinate",
-            "Width",
-            "Height",
+        response = requests.get(url, timeout=10)
+        text = list(unicode(item.decode('utf-8')) for item in response.json()['text'])
+        title, message = text
+
+        try:
+            eg.PrintDebugNotice(str(text).encode('utf-8'))
+        except UnicodeDecodeError:
+            eg.PrintDebugNotice(str(text).decode('latin-1').encode('utf-8'))
+
+        message += u' ' + language.label
+
+        wx.Dialog.__init__(
+            self,
+            None,
+            -1,
+            style=0
         )
 
-        smartSpinMenu = (
-            'Change control to "Spin Num"',
-            'Change control to "Text" with {eg.result}',
-            'Change control to "Text" with {eg.event.payload}',
-            'Change control to (empty) "Text"'
-        )
-        smartSpinTooltip = (
-            "Use the right mouse button\n"
-            "to open the context menu!"
-        )
+        try:
+            eg.PrintDebugNotice(message.encode('utf-8'))
+        except UnicodeDecodeError:
+            eg.PrintDebugNotice(message.decode('latin-1').encode('utf-8'))
 
-    class Error:
-        FileNotFound = "File \"%s\" couldn't be found."
-        InAction = 'Error in Action: "%s"'
-        pluginNotActivated = 'Plugin "%s" is not activated'
-        pluginStartError = "Error starting plugin: %s"
-        pluginLoadError = "Error loading plugin file: %s"
-        configureError = "Error while configuring: %s"
+        try:
+            eg.PrintDebugNotice(title.encode('utf-8'))
+        except UnicodeDecodeError:
+            eg.PrintDebugNotice(title.decode('latin-1').encode('utf-8'))
 
-    class Plugin:
-        pass
+        title_ctrl = wx.StaticText(self, -1, title)
+        message_ctrl = wx.StaticText(self, -1, message)
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
 
-    class MainFrame:
-        onlyLogAssigned = "&Log only assigned and activated events"
-        onlyLogAssignedToolTip = (
-            "If checked, the log will only show events that would actually\n"
-            "execute in the current configuration, so you should uncheck\n"
-            "this when you want to assign new events."
-        )
+        v_sizer.Add(title_ctrl, 0, wx.EXPAND | wx.ALL | wx.ALIGN_CENTER, 10)
+        v_sizer.Add(message_ctrl, 0, wx.EXPAND | wx.ALL | wx.ALIGN_CENTER, 10)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.Add(v_sizer, 0, wx.EXPAND | wx.ALIGN_CENTER)
 
-        class TaskBarMenu:
-            Show = "&Show EventGhost"
-            Hide = "&Hide EventGhost"
-            Exit = "E&xit"
+        self.SetSizerAndFit(h_sizer)
+        self.Show()
+        title_ctrl.Show()
+        message_ctrl.Show()
 
-        class Menu:
-            FileMenu = "&File"
-            New = "&New"
-            Open = "&Open..."
-            Save = "&Save"
-            SaveAs = "Save &As..."
-            Options = "O&ptions..."
-            Restart = "&Restart"
-            RestartAsAdmin = "Restart as Administrator"
-            Exit = "E&xit"
-
-            EditMenu = "&Edit"
-            Undo = "&Undo"
-            Redo = "&Redo"
-            Cut = "Cu&t"
-            Copy = "&Copy"
-            Python = "Copy as P&ython"
-            Paste = "&Paste"
-            Delete = "&Delete"
-            SelectAll = "Select &All"
-            Find = "&Find..."
-            FindNext = "Find &Next"
-
-            ViewMenu = "&View"
-            HideShowToolbar = "&Toolbar"
-            ExpandCollapseMenu = "Expand/Collapse"
-            Expand = "Expand"
-            Collapse = "Collapse"
-            ExpandChilds = "Expand all children"
-            CollapseChilds = "Collapse all children"
-            ExpandAll = "&Expand All"
-            CollapseAll = "&Collapse All"
-            ExpandOnEvents = "Select on E&xecution"
-            LogMacros = "Log &Macros"
-            LogActions = "Log &Actions"
-            LogDebug = "Log &Debug Info"
-            IndentLog = "&Indent Log"
-            LogDate = "Datestam&p Log"
-            LogTime = "Time&stamp Log"
-            ClearLog = "Clear &Log"
-
-            ConfigurationMenu = "&Configuration"
-            AddPlugin = "Add Plugin..."
-            AddFolder = "Add Folder"
-            AddMacro = "Add Macro..."
-            AddEvent = "Add Event..."
-            AddAction = "Add Action..."
-            Configure = "Configure Item"
-            Rename = "Rename Item"
-            Execute = "Execute Item"
-            Disabled = "Disable Item"
-
-            HelpMenu = "&Help"
-            HelpContents = "&Help Contents"
-            WebHomepage = "Home &Page"
-            WebForum = "Support &Forums"
-            WebWiki = "&Wiki"
-            PythonShell = "P&ython Shell"
-            WIT = "Widget Inspection Tool"
-            CheckUpdate = "Check for &Updates..."
-            About = "&About EventGhost..."
-
-            Apply = "&Apply Changes"
-            Close = "&Close"
-            Export = "&Export..."
-            Import = "&Import..."
-            Replay = "&Replay"
-            Reset = "&Reset"
-
-        class SaveChanges:
-            mesg = (
-                "Configuration contains unsaved changes.\n\n"
-                "Do you want to save before continuing?"
-            )
-            saveButton = "&Save"
-            dontSaveButton = "Do&n't Save"
-
-        class Logger:
-            caption = "Log"
-            welcomeText = "---> Welcome to EventGhost <---"
-
-        class Tree:
-            caption = "Configuration"
-
-        class Messages:
-            cantAddEvent = (
-                "Events can only be added to macros."
-            )
-            cantAddAction = (
-                "Actions can only be added to macros and Autostart."
-            )
-            cantDisable = (
-                "The root item and Autostart can't be disabled."
-            )
-            cantRename = (
-                "The root item, Autostart, and plugins can't be renamed."
-            )
-            cantExecute = (
-                "The root item, folders, and events can't be executed."
-            )
-            cantConfigure = (
-                "Only plugins, events, and actions can be configured."
-            )
 
 
 def Text(language):
-    class Translation(Default):
-        pass
-    languagePath = os.path.join(eg.languagesDir, "%s.py" % language)
-    try:
-        eg.ExecFile(languagePath, {}, Translation.__dict__)
-    except IOError:
-        pass
-    SetDefault(Translation, Default)
-    return Translation
+    # if not language.is_available:
+    #     import time
+    #
+    #     dlg1 = LanguageLoadDialog(language, 'Translating language to')
+    #     time.sleep(2.0)
+    #     language.load()
+    #     dlg1.Destroy()
+    #     dlg2 = LanguageLoadDialog(language, 'Translating plugin descriptions to')
+    #     time.sleep(2.0)
+    #     language.build_plugin_descriptions()
+    #     dlg2.Destroy()
+    #     return language
+    # else:
+    # eg.app.MainLoop()
+     # eg.app.ExitMainLoop()
+    language.load()
+    language.build_plugin_descriptions()
+    return language

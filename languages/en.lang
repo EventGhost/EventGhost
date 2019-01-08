@@ -1,0 +1,366 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright © 2005-2018 EventGhost Project <http://eventghost.net/>
+#
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+
+class General:
+    configTree = "Configuration Tree"
+    deleteQuestion = "Are you sure you want to delete this item?"
+    deleteManyQuestion = (
+        "This element has %s subelements.\n\n"
+        "Are you sure you want to delete them all?"
+    )
+    deletePlugin = (
+        "This plugin is used by actions in your configuration. You "
+        "cannot remove it before all actions that are using this plugin "
+        "have been removed."
+    )
+    deleteLinkedItems = (
+        "At least one item outside your selection refers to an "
+        "item inside your selection. If you continue to delete "
+        "this selection, the referring item won't work properly "
+        "anymore.\n\n"
+        "Are you sure you want to delete the selection?"
+    )
+    ok = "OK"
+    cancel = "Cancel"
+    apply = "&Apply"
+    yes = "&Yes"
+    no = "&No"
+    help = "&Help"
+    choose = "Choose"
+    browse = "Browse..."
+    test = "&Test"
+    pluginLabel = "Plugin: %s"
+    autostartItem = "Autostart"
+    unnamedFolder = "<unnamed folder>"
+    unnamedMacro = "<unnamed macro>"
+    unnamedEvent = "<unnamed event>"
+    unnamedFile = "<unnamed file>"
+    # moreTag = "more..."
+    supportSentence = "Support for this plugin can be found"
+    supportLink = "here"
+    settingsPluginCaption = "Plugin Item Settings"
+    settingsActionCaption = "Action Item Settings"
+    settingsEventCaption = "Event Item Settings"
+    noOptionsAction = "This action has no options to configure."
+    noOptionsPlugin = "This plugin has no options to configure."
+    monitorsLabel = "Identified monitors:"
+    monitorsHeader = (
+        "Monitor nr.",
+        "X coordinate",
+        "Y coordinate",
+        "Width",
+        "Height",
+    )
+
+    smartSpinMenu = (
+        'Change control to "Spin Num"',
+        'Change control to "Text" with {eg.result}',
+        'Change control to "Text" with {eg.event.payload}',
+        'Change control to (empty) "Text"'
+    )
+    smartSpinTooltip = (
+        "Use the right mouse button\n"
+        "to open the context menu!"
+    )
+
+
+class AddActionGroupDialog:
+    caption = "Add Actions?"
+    message = (
+        "EventGhost can add a folder with all actions of this plugin to your "
+        "configuration tree. If you want to do so, select the location where "
+        "it should be added and press OK.\n\n"
+        "Otherwise press the cancel button."
+    )
+
+
+class AddPluginDialog:
+    title = "Add Plugin..."
+    noInfo = "No information available."
+    noMultiloadTitle = "No multiload possible"
+    noMultiload = (
+        "This plugin doesn't support multiload and you already have one "
+        "instance of this plugin in your configuration."
+    )
+    otherPlugins = "General Plugins"
+    remotePlugins = "Input Devices"
+    programPlugins = "Software Control"
+    externalPlugins = "Hardware Control"
+    author = "Author:"
+    version = "Version:"
+    descriptionBox = "Description"
+
+
+class WinUsb:
+    dialogCaption = "EventGhost Plugin: %s"
+    downloadMsg = (
+        "EventGhost needs to download additional files before it "
+        "can install the driver for the %s plugin.\n\n"
+        "Do you want to start the download now?\n"
+    )
+    installMsg = (
+        "You need to install the proper driver for this %s device.\n\n"
+        "Should EventGhost start the driver installation for you now?"
+    )
+    restartMsg = (
+        "EventGhost needs to restart, before it can use the new driver.\n\n"
+        "Do you want to restart EventGhost now?"
+    )
+    downloadFailedMsg = (
+        "The download failed!\n\nPlease try again later."
+    )
+
+
+class AboutDialog:
+    Title = "About EventGhost"
+    Author = "Author: %s"
+    Version = "Version: %s (build %s)"
+    CreationDate = "%a, %d %b %Y %H:%M:%S"
+    tabAbout = "About"
+    tabSpecialThanks = "Special Thanks"
+    tabLicense = "License Agreement"
+    tabSystemInfo = "System Information"
+    tabChangelog = "Changelog"
+
+
+class FindDialog:
+    title = "Find"
+    searchLabel = "Fi&nd what:"
+    wholeWordsOnly = "Match &whole word only"
+    caseSensitive = "&Match case"
+    searchParameters = "Search action parameters also"
+    direction = "Direction"
+    findButton = "&Find Next"
+    up = "&Up"
+    down = "&Down"
+    notFoundMesg = '"%s" couldn\'t be found.'
+
+
+
+
+class OptionsDialog:
+    Title = "Options"
+    Tab1 = "General"
+    CheckPreRelease = "Always notify about new pre-releases"
+    CheckUpdate = "Check for EventGhost updates at launch"
+    confirmDelete = "Confirm deletion of tree items"
+    confirmRestart = (
+        "Language changes only take effect after restarting the application."
+        "\n\n"
+        "Do you want to restart EventGhost now?"
+    )
+    Datestamp = "Datestamp format for log:"
+    DatestampHelp = (
+        "For imformation on format codes read Python's strftime "
+        "documentation:\n"
+        "http://docs.python.org/2/library/datetime.html#strftime-and-strptime-"
+        "behavior\n"
+        "\nHere you can find examples:\n"
+        "http://strftime.org/\n"
+    )
+    HideOnClose = "Keep running in background when window closed"
+    HideOnStartup = "Hide on startup"
+    LanguageGroup = "Language"
+    limitMemory1 = "Limit memory consumption while minimized to"
+    limitMemory2 = "MB"
+    propResize = "Resize window proportionally"
+    refreshEnv = 'Refresh environment before executing "Run" actions'
+    showTrayIcon = "Display EventGhost icon in system tray"
+    StartWithWindows = 'Autostart EventGhost for user "%s"'
+    UseAutoloadFile = "Autoload file"
+    UseFixedFont = 'Use fixed-size font in the "Log" pane'
+
+
+class EventItem:
+    eventItem = "Event Item"
+    eventName = "Event Name:"
+    notice = (
+        "Note: You can also drag and drop events from the logger to a "
+        "macro."
+    )
+
+
+class AddActionDialog:
+    title = "Add Action..."
+    descriptionLabel = "Description"
+
+
+class Exceptions:
+    DriverNotFound = "Driver not found!"
+    DriverNotOpen = "Could not open driver!"
+    DeviceNotFound = "Device not found!"
+    ProgramNotRunning = "Application is not running!"
+    ProgramNotFound = "Application not found!"
+    InitFailed = "Initialisation failed!"
+    DeviceInitFailed = "Unable to initialise device!"
+    DeviceNotReady = "Device is not ready!"
+    SerialOpenFailed = "Can't open serial port!"
+    PluginNotFound = "Plugin start error!"
+    PluginLoadError = "Plugin load error!"
+
+
+class CheckUpdate:
+    newVersionMesg = \
+        "A new version of EventGhost has been released!\n\n"\
+        "Your version:\t%s\n"\
+        "Newest version:\t%s\n\n"\
+        "Do you want to visit the download page now?"
+    waitMesg = "Please wait while EventGhost retrieves update information."
+    ManOkMesg = "There is currently no newer version of EventGhost available."
+    ManErrorMesg = \
+        "It wasn't possible to get the information from the EventGhost "\
+        "website.\n\n"\
+        "Please try it again later."
+    wipUpdateMsg = "Update check not available when running from source."
+
+
+class Error:
+    FileNotFound = "File \"%s\" couldn't be found."
+    InAction = 'Error in Action: "%s"'
+    pluginNotActivated = 'Plugin "%s" is not activated'
+    pluginStartError = "Error starting plugin: %s"
+    pluginLoadError = "Error loading plugin file: %s"
+    configureError = "Error while configuring: %s"
+
+
+class Plugin:
+    pass
+
+
+class MainFrame:
+    onlyLogAssigned = "&Log only assigned and activated events"
+    onlyLogAssignedToolTip = (
+        "If checked, the log will only show events that would actually\n"
+        "execute in the current configuration, so you should uncheck\n"
+        "this when you want to assign new events."
+    )
+
+
+    class TaskBarMenu:
+        Show = "&Show EventGhost"
+        Hide = "&Hide EventGhost"
+        Exit = "E&xit"
+
+
+    class Menu:
+        FileMenu = "&File"
+        New = "&New"
+        Open = "&Open..."
+        Save = "&Save"
+        SaveAs = "Save &As..."
+        Options = "O&ptions..."
+        Restart = "&Restart"
+        RestartAsAdmin = "Restart as Administrator"
+        Exit = "E&xit"
+
+        EditMenu = "&Edit"
+        Undo = "&Undo"
+        Redo = "&Redo"
+        Cut = "Cu&t"
+        Copy = "&Copy"
+        Python = "Copy as P&ython"
+        Paste = "&Paste"
+        Delete = "&Delete"
+        SelectAll = "Select &All"
+        Find = "&Find..."
+        FindNext = "Find &Next"
+
+        ViewMenu = "&View"
+        HideShowToolbar = "&Toolbar"
+        ExpandCollapseMenu = "Expand/Collapse"
+        Expand = "Expand"
+        Collapse = "Collapse"
+        ExpandChilds = "Expand all children"
+        CollapseChilds = "Collapse all children"
+        ExpandAll = "&Expand All"
+        CollapseAll = "&Collapse All"
+        ExpandOnEvents = "Select on E&xecution"
+        LogMacros = "Log &Macros"
+        LogActions = "Log &Actions"
+        LogDebug = "Log &Debug Info"
+        IndentLog = "&Indent Log"
+        LogDate = "Datestam&p Log"
+        LogTime = "Time&stamp Log"
+        ClearLog = "Clear &Log"
+
+        ConfigurationMenu = "&Configuration"
+        AddPlugin = "Add Plugin..."
+        AddFolder = "Add Folder"
+        AddMacro = "Add Macro..."
+        AddEvent = "Add Event..."
+        AddAction = "Add Action..."
+        Configure = "Configure Item"
+        Rename = "Rename Item"
+        Execute = "Execute Item"
+        Disabled = "Disable Item"
+
+        HelpMenu = "&Help"
+        HelpContents = "&Help Contents"
+        WebHomepage = "Home &Page"
+        WebForum = "Support &Forums"
+        WebWiki = "&Wiki"
+        PythonShell = "P&ython Shell"
+        WIT = "Widget Inspection Tool"
+        CheckUpdate = "Check for &Updates..."
+        About = "&About EventGhost..."
+
+        Apply = "&Apply Changes"
+        Close = "&Close"
+        Export = "&Export..."
+        Import = "&Import..."
+        Replay = "&Replay"
+        Reset = "&Reset"
+
+
+    class SaveChanges:
+        mesg = (
+            "Configuration contains unsaved changes.\n\n"
+            "Do you want to save before continuing?"
+        )
+        saveButton = "&Save"
+        dontSaveButton = "Do&n't Save"
+
+
+    class Logger:
+        caption = "Log"
+        welcomeText = "---> Welcome to EventGhost <---"
+
+
+    class Tree:
+        caption = "Configuration"
+
+
+    class Messages:
+        cantAddEvent = (
+            "Events can only be added to macros."
+        )
+        cantAddAction = (
+            "Actions can only be added to macros and Autostart."
+        )
+        cantDisable = (
+            "The root item and Autostart can't be disabled."
+        )
+        cantRename = (
+            "The root item, Autostart, and plugins can't be renamed."
+        )
+        cantExecute = (
+            "The root item, folders, and events can't be executed."
+        )
+        cantConfigure = (
+            "Only plugins, events, and actions can be configured."
+        )

@@ -350,10 +350,6 @@ def TracebackHook(tType, tValue, traceback):
 sys.excepthook = TracebackHook
 
 eg.colour = eg.Colour()
-if eg.startupArguments.isMain and not eg.startupArguments.translate:
-    eg.text = eg.Text(eg.config.language)
-else:
-    eg.text = eg.Text('en_EN')
 eg.actionThread = eg.ActionThread()
 eg.eventThread = eg.EventThread()
 eg.pluginManager = eg.PluginManager()
@@ -368,6 +364,8 @@ eg.SendKeys = SendKeysParser()
 setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
 
+eg.text = eg.Text(eg.config.language)
+
 eg.taskBarIcon = eg.TaskBarIcon(
     eg.startupArguments.isMain and
     eg.config.showTrayIcon and
@@ -375,7 +373,9 @@ eg.taskBarIcon = eg.TaskBarIcon(
     not eg.startupArguments.install and
     not eg.startupArguments.pluginFile
 )
+
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
+
 eg.wit = None
 eg.socketSever = None
 

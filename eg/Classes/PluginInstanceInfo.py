@@ -19,6 +19,7 @@
 import sys
 from os.path import exists, join
 from types import ClassType
+import threading
 
 # Local imports
 import eg
@@ -41,6 +42,7 @@ class PluginInstanceInfo(PluginModuleInfo):
     isStarted = False
     lastEvent = eg.EventGhostEvent()
     eventList = None
+    englishText = None
 
     def __init__(self):
         pass
@@ -157,28 +159,81 @@ class PluginInstanceInfo(PluginModuleInfo):
         pluginCls = module.__pluginCls__
         self.module = module
         self.pluginCls = pluginCls
-
         englishText = pluginCls.text
+
         if englishText is None:
             englishText = ClassType("EmptyDefaultText", (), {})
+            pluginCls.text = englishText
 
         englishText.name = self.englishName
         englishText.description = self.englishDescription
 
+        pluginCls.name = englishText.name
+        pluginCls.description = englishText.description
+
+        self.englishText = englishText
+
+        t = threading.Thread(
+            target=self.load_language_file,
+            args=(eg.config.language,)
+        )
+        t.daemon = True
+        t.start()
+        return self
+
+    def load_language_file(self, language):
+        pluginCls = self.pluginCls
+        englishText = pluginCls.text
+
+        try:
+            name = self.name.encode('utf-8')
+        except UnicodeDecodeError:
+            name = self.name.decode('latin-1').encode('utf-8')
+
+        def set_default(t):
+            try:
+                SetDefault(t, self.englishText)
+                return True
+            except RuntimeError:
+                return False
+
+        eg.PrintDebugNotice('Loading plugin language ' + englishText.name)
+
         # TODO: the text class should be referenced by the GUID instead of
         #       pluginCls.__name__
-        translatedText = getattr(eg.text.Plugin, pluginCls.__name__, None)
-        if translatedText is None:
-            setattr(eg.text.Plugin, pluginCls.__name__, englishText)
-            text = englishText
-        else:
-            SetDefault(translatedText, englishText)
-            text = translatedText
 
-        pluginCls.text = text
-        pluginCls.name = text.name
-        pluginCls.description = text.description
-        return self
+        if (
+            language.is_plugin_available(self) or
+            language.lang_iso_code == 'en'
+        ):
+            text = eg.config.language.load_plugin(self)
+            while not set_default(text):
+                pass
+        else:
+            eg.PrintNotice(
+                'Acquiring language translations '
+                'for plugin {0}\nplease wait...'.format(englishText.name)
+            )
+
+            try:
+                translatedText = eg.config.language.load_plugin(self)
+                while not set_default(translatedText):
+                    pass
+
+                pluginCls.text = translatedText
+                pluginCls.name = translatedText.name
+                pluginCls.description = translatedText.description
+
+                eg.PrintNotice(
+                    'Translation success for plugin {0}!'.format(name)
+                )
+            except:
+                import traceback
+                eg.PrintError(traceback.format_exc())
+                eg.PrintError(
+                    'Failed to translate text for plugin {0},\nusing '
+                    'supplied english text'.format(name)
+                )
 
     def RemovePluginInstance(self):
         plugin = self.instance

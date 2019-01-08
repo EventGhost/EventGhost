@@ -19,24 +19,12 @@
 # Local imports
 import eg
 
-class Text(eg.TranslatableStrings):
-    DriverNotFound = "Driver not found!"
-    DriverNotOpen = "Could not open driver!"
-    DeviceNotFound = "Device not found!"
-    ProgramNotRunning = "Application is not running!"
-    ProgramNotFound = "Application not found!"
-    InitFailed = "Initialisation failed!"
-    DeviceInitFailed = "Unable to initialise device!"
-    DeviceNotReady = "Device is not ready!"
-    SerialOpenFailed = "Can't open serial port!"
-    PluginNotFound = "Plugin start error!"
-    PluginLoadError = "Plugin load error!"
-
 
 class ProgramError(eg.Exception):
     source = "unknown"
 
     def __init__(self, *args):
+        self.text = getattr(eg.text.Exceptions, self.__class__.__name__)
         self.args = args
 
     def __unicode__(self):
@@ -46,34 +34,34 @@ class ProgramError(eg.Exception):
 
 class Exceptions:
     class DeviceInitFailed(ProgramError):
-        text = Text.DeviceInitFailed
+        pass
 
     class DeviceNotFound(ProgramError):
-        text = Text.DeviceNotFound
+        pass
 
     class DeviceNotReady(ProgramError):
-        text = Text.DeviceNotReady
+        pass
 
     class DriverNotFound(ProgramError):
-        text = Text.DriverNotFound
+        pass
 
     class DriverNotOpen(ProgramError):
-        text = Text.DriverNotOpen
+        pass
 
     class InitFailed(ProgramError):
-        text = Text.InitFailed
+        pass
 
     class PluginLoadError(ProgramError):
-        text = Text.PluginLoadError
+        pass
 
     class PluginNotFound(ProgramError):
-        text = Text.PluginNotFound
+        pass
 
     class ProgramNotFound(ProgramError):
-        text = Text.ProgramNotFound
+        pass
 
     class ProgramNotRunning(ProgramError):
-        text = Text.ProgramNotRunning
+        pass
 
     class SerialOpenFailed(ProgramError):
-        text = Text.SerialOpenFailed
+        pass

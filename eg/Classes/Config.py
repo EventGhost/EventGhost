@@ -24,7 +24,9 @@ from types import ClassType, InstanceType
 
 # Local imports
 import eg
-from eg.Utils import GetClosestLanguage
+from . import Translation
+
+eg.debugLevel = 1
 
 class Section:
     def __init__(self, defaults=None):
@@ -48,7 +50,7 @@ class Section:
 
 class Config(Section):
     version = eg.Version.string
-    language = GetClosestLanguage()
+    language = None
     autoloadFilePath = False
     checkUpdate = True
     checkPreRelease = False
@@ -99,12 +101,43 @@ class Config(Section):
         else:
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
 
+        if self.language is None:
+            self.language = Translation.get_windows_user_language()
+
+        else:
+
+            for country in Translation.countries:
+                for language in country.wx_languages:
+                    if language.iso_code == self.language:
+                        self.language = language
+                        break
+                else:
+                    continue
+
+                break
+
+            else:
+                for country in Translation.countries:
+                    for language in country.wx_languages:
+                        if language.iso_code == 'en_US':
+                            self.language = language
+                            break
+                    else:
+                        continue
+
+                    break
+
     def Save(self):
         self.version = eg.Version.string
         config_data = StringIO()
+        language = self.language
+        self.language = self.language.iso_code
+
         RecursivePySave(self, config_data.write)
         with open(self._configFilePath, 'w+') as config_file:
             config_file.write(config_data.getvalue())
+
+        self.language = language
 
 
 def MakeSectionMetaClass(dummyName, dummyBases, dct):

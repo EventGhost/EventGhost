@@ -48,7 +48,8 @@ __all__ = [
     "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
     "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
     "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow", "GetClosestLanguage"
+    "ExecFile", "GetTopLevelWindow", "GetClosestLanguage", "DecodeReST",
+    "DecodeMarkdown"
 ]
 
 USER_CLASSES = (type, ClassType)

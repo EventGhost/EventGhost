@@ -25,20 +25,6 @@ from pkg_resources import parse_version
 # Local imports
 import eg
 
-class Text(eg.TranslatableStrings):
-    newVersionMesg = \
-        "A new version of EventGhost has been released!\n\n"\
-        "Your version:\t%s\n"\
-        "Newest version:\t%s\n\n"\
-        "Do you want to visit the download page now?"
-    waitMesg = "Please wait while EventGhost retrieves update information."
-    ManOkMesg = "There is currently no newer version of EventGhost available."
-    ManErrorMesg = \
-        "It wasn't possible to get the information from the EventGhost "\
-        "website.\n\n"\
-        "Please try it again later."
-    wipUpdateMsg = "Update check not available when running from source."
-
 
 class CheckUpdate:
     @classmethod
@@ -62,7 +48,7 @@ class MessageDialog(eg.Dialog):
         )
         staticBitmap = wx.StaticBitmap(self, -1, bmp)
         staticText = self.StaticText(
-            Text.newVersionMesg % (eg.Version.string, version)
+            eg.text.CheckUpdate.newVersionMesg % (eg.Version.string, version)
         )
         downloadButton = wx.Button(self, -1, eg.text.General.ok)
         downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -116,7 +102,7 @@ def CenterOnParent(self):
 
 def ShowWaitDialog():
     dialog = wx.Dialog(None, style=wx.THICK_FRAME | wx.DIALOG_NO_PARENT)
-    staticText = wx.StaticText(dialog, -1, Text.waitMesg)
+    staticText = wx.StaticText(dialog, -1, eg.text.CheckUpdate.waitMesg)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     sizer.Add(staticText, 1, wx.ALL, 20)
     dialog.SetSizerAndFit(sizer)
@@ -128,7 +114,7 @@ def ShowWaitDialog():
 def _checkUpdate(manually=False):
     if eg.Version.string == "WIP":
         if manually:
-            wx.MessageBox(Text.wipUpdateMsg, eg.APP_NAME)
+            wx.MessageBox(eg.text.CheckUpdate.wipUpdateMsg, eg.APP_NAME)
         return
 
     dialog = None
@@ -165,7 +151,7 @@ def _checkUpdate(manually=False):
             if manually:
                 dlg = wx.MessageDialog(
                     None,
-                    Text.ManOkMesg,
+                    eg.text.CheckUpdate.ManOkMesg,
                     eg.APP_NAME,
                     style=wx.OK | wx.ICON_INFORMATION
                 )
@@ -177,7 +163,7 @@ def _checkUpdate(manually=False):
         if manually:
             dlg = wx.MessageDialog(
                 None,
-                Text.ManErrorMesg,
+                eg.text.CheckUpdate.ManErrorMesg,
                 eg.APP_NAME,
                 style=wx.OK | wx.ICON_ERROR
             )

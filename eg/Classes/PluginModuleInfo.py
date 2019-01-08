@@ -106,6 +106,7 @@ class PluginModuleInfo(object):
             help = "\n".join([s.strip() for s in help.splitlines()])
             help = help.replace("\n\n", "<p>")
             description += "\n\n<p>" + help
+
         self.name = self.englishName = unicode(name)
         self.description = self.englishDescription = unicode(description)
         self.kind = unicode(kind)
@@ -130,14 +131,12 @@ class PluginModuleInfo(object):
             if exists(iconPath):
                 self.icon = eg.Icons.PathIcon(iconPath)
 
-        # try to translate name and description
-        textCls = getattr(eg.text.Plugin, self.pluginName, None)
-        if textCls is not None:
-            self.name = getattr(textCls, "name", name)
-            self.description = getattr(textCls, "description", description)
-
         # we are done with this plugin module, so we can interrupt further
         # processing by raising RegisterPluginException
+
+        if eg.config.language.is_plugin_description_available(self):
+            eg.config.language.load_plugin_description(self)
+
         raise RegisterPluginException
 
 
