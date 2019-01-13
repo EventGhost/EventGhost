@@ -191,6 +191,10 @@ class OptionsDialog(eg.TaskletDialog):
                 languageChoice.Append(name, bmp)
             else:
                 languageChoice.Append(name)
+        
+        if config.language not in languageList:
+            config.language='en_EN'
+        
         languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 

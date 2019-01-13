@@ -22,10 +22,8 @@ from wx.lib import masked
 
 import eg
 
-l = wx.Locale()
-l.Init2(language=wx.LANGUAGE_DEFAULT, flags=wx.LOCALE_LOAD_DEFAULT)
-THOUSANDS_SEP = l.GetInfo(wx.LOCALE_THOUSANDS_SEP)
-DECIMAL_POINT = l.GetInfo(wx.LOCALE_DECIMAL_POINT)
+THOUSANDS_SEP = eg.app.locale.GetInfo(wx.LOCALE_THOUSANDS_SEP)
+DECIMAL_POINT = eg.app.locale.GetInfo(wx.LOCALE_DECIMAL_POINT)
 
 
 class SpinNumError(ValueError):
