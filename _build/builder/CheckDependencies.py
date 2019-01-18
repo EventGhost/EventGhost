@@ -24,7 +24,6 @@ import re
 import sys
 import warnings
 from os.path import basename, exists, expandvars, join
-from pip._vendor import requests
 from shutil import copy2
 from string import digits
 
@@ -429,12 +428,13 @@ def CreateVirtualEnv():
     return result
 
 def DownloadFile(url, path = "%TEMP%"):
+    import urllib2
+
     file = expandvars(join(path, basename(url.split("?")[0])))
-    r = requests.get(url, stream=True)
+    data = urllib2.urlopen(url)
+
     with open(file, "wb") as f:
-        for chunk in r.iter_content(chunk_size=16384):
-            if chunk:
-                f.write(chunk)
+        f.write(data.read())
     return file
 
 def GetChocolateyPath():
