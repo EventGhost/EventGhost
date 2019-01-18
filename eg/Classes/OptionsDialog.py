@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.org/>
+# Copyright © 2005-2016 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -191,10 +191,10 @@ class OptionsDialog(eg.TaskletDialog):
                 languageChoice.Append(name, bmp)
             else:
                 languageChoice.Append(name)
-        
+
         if config.language not in languageList:
             config.language='en_EN'
-        
+
         languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 
