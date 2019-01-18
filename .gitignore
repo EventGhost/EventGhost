@@ -8,6 +8,8 @@
 /_build/data/Python??/[Ii]mports.py
 /_build/output/
 /eg/StaticImports.py
+/eg/CorePluginModule
+/eg/UserPluginModule
 /lib??/*
 !/lib??/site-packages/
 

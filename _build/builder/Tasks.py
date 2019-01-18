@@ -118,7 +118,7 @@ class SynchronizeWebsite(builder.Task):
 
 
 from builder.CheckSourceCode import CheckSourceCode  # NOQA
-from builder.BuildStaticImports import BuildStaticImports  # NOQA
+from builder.BuildIDEIntegration import BuildIDEIntegration  # NOQA
 from builder.BuildImports import BuildImports  # NOQA
 from builder.BuildInterpreters import BuildInterpreters  # NOQA
 from builder.BuildLibrary import BuildLibrary  # NOQA
@@ -130,7 +130,7 @@ from builder.BuildChangelog import BuildChangelog  # NOQA
 TASKS = [
     BuildVersionFile,
     CheckSourceCode,
-    BuildStaticImports,
+    BuildIDEIntegration,
     BuildImports,
     BuildInterpreters,
     BuildLibrary,
