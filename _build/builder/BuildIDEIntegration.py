@@ -17,15 +17,14 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import ctypes
 from glob import glob
-from os.path import join
+from os.path import join, exists, expandvars
+from ctypes.wintypes import BOOL, DWORD
+
 
 # Local imports
 import builder
-
-SINGLETONS = (
-    "document",
-)
 
 HEADER = '''\
 # -*- coding: utf-8 -*-
@@ -47,12 +46,33 @@ HEADER = '''\
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This file was automatically created by the BuildStaticImports.py script.
+This file was automatically created by the BuildIDEIntegration.py script.
 Don't try to edit this file yourself.
 
-This module is not directly used by EventGhost. It only exists to help
-pylint and other tools to read the sources properly, as EventGhost is using
-a lazy import pattern.
+This module is used to assist and IDE in locating the modules that are apart 
+of EventGhost. Because EventGhost uses a dynamic import system and there are 
+no "hard coded" imports of it's modules, normally an IDE would not be able to 
+track these modules. This file never gets used by the program, it is only here 
+to provide the "hard coded" imports an IDE needs to see.
+
+Follow the instructions below to create an EventGhost programming environment.
+Here is a list of a couple of the features in your IDE that will now work 
+properly.
+
+    Code Completion
+    Function/Method/Class parameters
+    Code Inspection
+    Object Definitions
+
+Instructions for PyCharm
+    Build EventGhost with the Build IDE Integration selected. 
+    File --> Settings --> Project:{YOUR PROJECT NAM} --> Project Structure
+    +Add Content Root
+    Navigate to one level lower then this file location.
+    click on OK
+    click on Sources
+    click on Apply
+    click on OK
 """
 '''
 
@@ -60,13 +80,35 @@ FOOTER = """
 del _tmp
 
 from Classes.IrDecoder import IrDecoder
-
-def RegisterPlugin(**dummyKwArgs):
-    pass
 """
 
-class BuildStaticImports(builder.Task):
-    description = "Build StaticImports.py"
+# BOOLEAN CreateSymbolicLinkA(
+#   LPCSTR lpSymlinkFileName,
+#   LPCSTR lpTargetFileName,
+#   DWORD  dwFlags
+# );
+
+CreateSymbolicLinkW = ctypes.windll.kernel32.CreateSymbolicLinkW
+CreateSymbolicLinkW.restype = BOOL
+
+
+def symlink(source, link_name):
+    flags = 1 if os.path.isdir(source) else 0
+    lpTargetFileName = ctypes.create_unicode_buffer(source)
+    lpSymlinkFileName = ctypes.create_unicode_buffer(link_name)
+    dwFlags = DWORD(flags)
+
+    if not CreateSymbolicLinkW(lpSymlinkFileName, lpTargetFileName, dwFlags):
+        print (
+            'Build IDE Integration: '
+            'Unable to create symbolic links user MUST '
+            'be in the Administrators group'
+        )
+        raise ctypes.WinError()
+
+
+class BuildIDEIntegration(builder.Task):
+    description = "Build IDE Integration (StaticImports.py)"
 
     def Setup(self):
         self.outFileName = join(self.buildSetup.sourceDir,
@@ -88,11 +130,27 @@ class BuildStaticImports(builder.Task):
         ScanDir(outDir, outfile, "Classes.MainFrame")
         ScanDir(outDir, outfile, "Classes.UndoHandler")
         outfile.write("\n")
-        for name in SINGLETONS:
-            clsName = name[0].upper() + name[1:]
-            outfile.write("%s = %s()\n" % (name, clsName))
         outfile.write(FOOTER)
         outfile.close()
+
+        src = join(self.buildSetup.sourceDir, 'plugins')
+        dst = join(self.buildSetup.sourceDir, 'eg', 'CorePluginModule')
+
+        try:
+            symlink(src, dst)
+        except WindowsError:
+            pass
+        else:
+            with open(join(src, '__init__.py'), 'w') as f:
+                f.write('')
+
+            src = join(expandvars('%PROGRAMDATA%'), 'EventGhost', 'plugins')
+            if exists(src):
+                dst = join(self.buildSetup.sourceDir, 'eg', 'UserPluginModule')
+                symlink(src, dst)
+
+                with open(join(src, '__init__.py'), 'w') as f:
+                    f.write('')
 
 
 def ScanDir(srcDir, outfile, modName):
