@@ -52,6 +52,7 @@
 ### WIP builds of pull requests
 
 [//]: # (BEGIN wip_pr)
+* [EventGhost WIP-2019.01.18-21.57.16](https://ci.appveyor.com/api/buildjobs/4tyxre0cjv74y53r/artifacts/_build/output/EventGhost_WIP-2019.01.18-21.57.16_Setup.exe) - [[#365]](https://github.com/EventGhost/EventGhost/pull/365) [GitHub] update downloads.md file on every successful appveyor build
 * [EventGhost WIP-2019.01.18-21.40.59](https://ci.appveyor.com/api/buildjobs/twb0qw68rr1kxchs/artifacts/_build/output/EventGhost_WIP-2019.01.18-21.40.59_Setup.exe) - [[#365]](https://github.com/EventGhost/EventGhost/pull/365) [GitHub] update downloads.md file on every successful appveyor build
 * [EventGhost WIP-2019.01.18-16.27.00](https://ci.appveyor.com/api/buildjobs/vr73lvjkl05qmn73/artifacts/_build/output/EventGhost_WIP-2019.01.18-16.27.00_Setup.exe) - [[#365]](https://github.com/EventGhost/EventGhost/pull/365) [GitHub] update downloads.md file on every successful appveyor build
 * [EventGhost ](https://ci.appveyor.com/api/buildjobs/b767b70u5l8veqb8/artifacts/_build/output/EventGhost_WIP-2019.01.18-16.16.31_Setup.exe) - [[#365]](https://github.com/EventGhost/EventGhost/pull/365) [GitHub] update downloads.md file on every successful appveyor build
