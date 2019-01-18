@@ -117,5 +117,9 @@ $url = git remote get-url origin
 $urlnew = $url.Insert(8, $env:APPVEYOR_ACCOUNT_NAME + ":" + $env:GITHUB_TOKEN + "@")
 git remote set-url origin $urlnew
 git add --ignore-errors downloads.md
+
+PowerShell_ISE.exe
+$blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 git -c user.email = $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL -c user.name = $env:APPVEYOR_REPO_COMMIT_AUTHOR commit -q -m $msg
 git push -q
