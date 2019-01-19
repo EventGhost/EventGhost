@@ -66,6 +66,7 @@ class ColourSelectButton(wx.BitmapButton):
     def SetValue(self, value):
         self.value = value
         width, height = self.GetSize()
-        image = wx.EmptyImage(width - 10, height - 10)
-        image.SetRGBRect((1, 1, width - 12, height - 12), *value)
+        image = wx.Image(width - 10, height - 10)
+        rct = wx.Rect(x=1, y=1, width=width - 12, height=height - 12)
+        image.SetRGB(rct, *value[:3])
         self.SetBitmapLabel(image.ConvertToBitmap())

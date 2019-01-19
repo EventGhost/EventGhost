@@ -293,8 +293,8 @@ class Key(eg.ActionClass):
                     btnDOWN.Enable(False)
                     buttonSizer.Add(btnDOWN,0,wx.TOP,3)
                     #Buttons 'Delete' and 'Insert new'
-                    w1 = panel.GetTextExtent(text.delete)[0]
-                    w2 = panel.GetTextExtent(text.insert)[0]
+                    w1 = panel.GetFullTextExtent(text.delete)[0]
+                    w2 = panel.GetFullTextExtent(text.insert)[0]
                     if w1 > w2:
                         btnDEL=wx.Button(panel,-1,text.delete)
                         btnApp=wx.Button(panel,-1,text.insert,size=btnDEL.GetSize())
@@ -518,8 +518,8 @@ class Multitap(eg.PluginClass):
             wE,hE = ctrlEvtString.GetTextExtent(' ')
             if self.mode == 0 or self.mode >= 3:
                 w3,h3 = statTextCapsLock.GetTextExtent('Caps Lock')
-                w4a = keysLabel.GetTextExtent('88888888')[0]
-                w4b = keysLabel.GetTextExtent(self.oldKeys)[0]
+                w4a = keysLabel.GetFullTextExtent('88888888')[0]
+                w4b = keysLabel.GetFullTextExtent(self.oldKeys)[0]
                 w4 = max(w4a,w4b)
             else:
                 w3=w4=h3=0
@@ -528,7 +528,7 @@ class Multitap(eg.PluginClass):
             h = h1+h2+h3+8+16
             x_pos = x+(ws-w-16)/2
             y_pos = y+(hs-h)/2
-            self.osDialog.SetDimensions(x_pos,y_pos,w+16,h)
+            self.osDialog.SetSize(x_pos, y_pos, w+16, h)
             ctrlEvtString.SetPosition((7,7+8+h3+h1))
             ctrlEvtString.SetSize((w,h2))
             statTextEvent.SetPosition((7,7+h3))
@@ -931,8 +931,8 @@ class Multitap(eg.PluginClass):
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
         #Buttons 'Delete' and 'Insert new'
-        w1 = panel.GetTextExtent(text.delete)[0]
-        w2 = panel.GetTextExtent(text.insert)[0]
+        w1 = panel.GetFullTextExtent(text.delete)[0]
+        w2 = panel.GetFullTextExtent(text.insert)[0]
         if w1 > w2:
             btnDEL=wx.Button(panel,-1,text.delete)
             btnApp=wx.Button(panel,-1,text.insert,size=btnDEL.GetSize())

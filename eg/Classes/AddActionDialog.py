@@ -46,8 +46,7 @@ class AddActionDialog(eg.TaskletDialog):
             Text.title,
             style=(
                 wx.DEFAULT_DIALOG_STYLE |
-                wx.RESIZE_BORDER |
-                wx.THICK_FRAME
+                wx.RESIZE_BORDER
             )
         )
         splitterWindow = wx.SplitterWindow(
@@ -110,9 +109,9 @@ class AddActionDialog(eg.TaskletDialog):
             self.SetResult(self.resultData)
 
         item = self.tree.GetSelection()
-        self.__class__.lastSelectedDataItem = self.tree.GetPyData(item)
-        Config.size = self.GetSizeTuple()
-        Config.position = self.GetPositionTuple()
+        self.__class__.lastSelectedDataItem = self.tree.GetItemData(item)
+        Config.size = self.GetSize()
+        Config.position = self.GetPosition()
         Config.splitPosition = splitterWindow.GetSashPosition()
 
     def FillTree(self):
@@ -140,7 +139,7 @@ class AddActionDialog(eg.TaskletDialog):
         Process wx.EVT_TREE_ITEM_ACTIVATED events.
         """
         treeItem = self.tree.GetSelection()
-        itemData = self.tree.GetPyData(treeItem)
+        itemData = self.tree.GetItemData(treeItem)
         if isinstance(itemData, eg.ActionGroup):
             event.Skip()
         else:
@@ -150,22 +149,24 @@ class AddActionDialog(eg.TaskletDialog):
         """
         Process wx.EVT_TREE_ITEM_COLLAPSED events.
         """
-        self.tree.GetPyData(event.GetItem()).expanded = False
+        self.tree.GetItemData(event.GetItem()).expanded = False
 
     def OnExpanded(self, event):
         """
         Process wx.EVT_TREE_ITEM_EXPANDED events.
         """
-        self.tree.GetPyData(event.GetItem()).expanded = True
+        self.tree.GetItemData(event.GetItem()).expanded = True
 
     def OnSelectionChanged(self, event):
         """
         Process wx.EVT_TREE_SEL_CHANGED events.
         """
+        if not self.tree:
+            return
         treeItem = event.GetItem()
         if not treeItem.IsOk():
             return
-        itemData = self.tree.GetPyData(treeItem)
+        itemData = self.tree.GetItemData(treeItem)
         if isinstance(itemData, eg.ActionGroup):
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
@@ -193,7 +194,7 @@ class AddActionDialog(eg.TaskletDialog):
                 isActionGroup = False
                 iconIndex = dataItem.info.icon.index
             newTreeItem = tree.AppendItem(parentTreeItem, dataItem.name)
-            tree.SetPyData(newTreeItem, dataItem)
+            tree.SetItemData(newTreeItem, dataItem)
             tree.SetItemImage(newTreeItem, iconIndex)
             if isActionGroup:
                 self.RecurseActionGroup(dataItem, tree, newTreeItem)

@@ -226,9 +226,9 @@ class FileOperations(eg.PluginClass):
             observListCtrl.InsertColumn(i, colLabel)
 
         #setting cols width
-        observListCtrl.InsertStringItem(0, 30*"X")
-        observListCtrl.SetStringItem(0, 1, 16*"X")
-        observListCtrl.SetStringItem(0, 2, 16*"X")
+        observListCtrl.InsertItem(0, 30*"X")
+        observListCtrl.SetItem(0, 1, 16*"X")
+        observListCtrl.SetItem(0, 2, 16*"X")
 
         size = 0
         for i in range(3):
@@ -260,9 +260,9 @@ class FileOperations(eg.PluginClass):
             for i, item in enumerate(self.observThreads):
                 t = self.observThreads[item]
                 if t.isAlive():
-                    observListCtrl.InsertStringItem(row, os.path.split(t.fileName)[1])
-                    observListCtrl.SetStringItem(row, 1, t.evtName)
-                    observListCtrl.SetStringItem(row, 2, str(t.period) + " sec")
+                    observListCtrl.InsertItem(row, os.path.split(t.fileName)[1])
+                    observListCtrl.SetItem(row, 1, t.evtName)
+                    observListCtrl.SetItem(row, 2, str(t.period) + " sec")
                     row += 1
             ListSelection(wx.CommandEvent())
 
@@ -447,7 +447,7 @@ class Read(eg.ActionClass):
             buttonText=eg.text.General.browse,
             dialogTitle=text.browseFileDialogTitle
         )
-        width = labelDecErrMode.GetTextExtent(text.txtDecErrMode)[0]
+        width = labelDecErrMode.GetFullTextExtent(text.txtDecErrMode)[0]
         choiceDecErrMode = wx.Choice(
             panel,
             -1,
@@ -478,14 +478,14 @@ class Read(eg.ActionClass):
             min = 0,
             max = 999,
         )
-        w0 = inPageCtrl.GetTextExtent(text.listNotIncluding)[0]
-        w1 = inPageCtrl.GetTextExtent(text.listIncluding)[0]
-        w2 = inPageCtrl.GetTextExtent(text.oneNotIncluding)[0]
-        w3 = inPageCtrl.GetTextExtent(text.oneIncluding)[0]
-        w4 = inPageCtrl.GetTextExtent(text.oneString)[0]
+        w0 = inPageCtrl.GetFullTextExtent(text.listNotIncluding)[0]
+        w1 = inPageCtrl.GetFullTextExtent(text.listIncluding)[0]
+        w2 = inPageCtrl.GetFullTextExtent(text.oneNotIncluding)[0]
+        w3 = inPageCtrl.GetFullTextExtent(text.oneIncluding)[0]
+        w4 = inPageCtrl.GetFullTextExtent(text.oneString)[0]
         width = max(w0,w1,w2,w3,w4)+30
         choiceMode = wx.Choice(panel,-1,size=(width,-1))
-    #Sizers
+        #Sizers
         topSizer = wx.FlexGridSizer(2,0,2,15)
         topSizer.AddGrowableCol(0,1)
         topSizer.AddGrowableCol(1,1)
@@ -531,13 +531,11 @@ class Read(eg.ActionClass):
                 rb1.Enable(True)
 
             if linesNumCtrl.GetValue() == 1:
-                choiceMode.Clear()
-                choiceMode.AppendItems(strings=(text.oneNotIncluding,text.oneIncluding))
+                choiceMode.SetItems([text.oneNotIncluding, text.oneIncluding])
             else:
                 if len(choiceMode.GetStrings()) != 3:
-                    choiceMode.Clear()
-                    choiceMode.AppendItems(
-                        strings=(text.listNotIncluding,text.listIncluding,text.oneString)
+                    choiceMode.SetItems(
+                        [text.listNotIncluding,  text.listIncluding,text.oneString]
                     )
                     if self.mode == 2:
                         flag = True
@@ -612,7 +610,7 @@ class AbortPeriodicalRead(eg.ActionClass):
         def OnTestButton(event):
             self.plugin.AbortObservation(nameCtrl.GetValue())
         panel.dialog.buttonRow.testButton.SetLabel(text.abortNow)
-        panel.dialog.buttonRow.testButton.SetToolTipString(text.tip)
+        panel.dialog.buttonRow.testButton.SetToolTip(text.tip)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
 
         while panel.Affirmed():
@@ -705,7 +703,7 @@ class ReadPeriodically(eg.ActionClass):
             buttonText=eg.text.General.browse,
             dialogTitle=text.browseFileDialogTitle
         )
-        width = labelDecErrMode.GetTextExtent(text.txtDecErrMode)[0]
+        width = labelDecErrMode.GetFullTextExtent(text.txtDecErrMode)[0]
         choiceDecErrMode = wx.Choice(
             panel,
             -1,
@@ -747,11 +745,11 @@ class ReadPeriodically(eg.ActionClass):
             increment = 0.1,
         )
         intervalLbl = wx.StaticText(panel, -1, text.intervalLabel)
-        w0 = inPageCtrl.GetTextExtent(text.listNotIncluding)[0]
-        w1 = inPageCtrl.GetTextExtent(text.listIncluding)[0]
-        w2 = inPageCtrl.GetTextExtent(text.oneNotIncluding)[0]
-        w3 = inPageCtrl.GetTextExtent(text.oneIncluding)[0]
-        w4 = inPageCtrl.GetTextExtent(text.oneString)[0]
+        w0 = inPageCtrl.GetFullTextExtent(text.listNotIncluding)[0]
+        w1 = inPageCtrl.GetFullTextExtent(text.listIncluding)[0]
+        w2 = inPageCtrl.GetFullTextExtent(text.oneNotIncluding)[0]
+        w3 = inPageCtrl.GetFullTextExtent(text.oneIncluding)[0]
+        w4 = inPageCtrl.GetFullTextExtent(text.oneString)[0]
         width = max(w0,w1,w2,w3,w4)+30
         choiceMode = wx.Choice(panel,-1,size=(width,-1))
         evtNameCtrl = wx.TextCtrl(panel,-1,evtName)
@@ -819,13 +817,11 @@ class ReadPeriodically(eg.ActionClass):
                 rb1.Enable(True)
 
             if linesNumCtrl.GetValue() == 1:
-                choiceMode.Clear()
-                choiceMode.AppendItems(strings=(text.oneNotIncluding,text.oneIncluding))
+                choiceMode.SetItems([text.oneNotIncluding, text.oneIncluding])
             else:
                 if len(choiceMode.GetStrings()) != 3:
-                    choiceMode.Clear()
-                    choiceMode.AppendItems(
-                        strings=(text.listNotIncluding,text.listIncluding,text.oneString)
+                    choiceMode.SetItems(
+                        [text.listNotIncluding, text.listIncluding, text.oneString]
                     )
                     if self.mode == 2:
                         flag = True
@@ -968,7 +964,7 @@ class Write(eg.ActionClass):
             buttonText=eg.text.General.browse,
             dialogTitle=text.browseFileDialogTitle
         )
-        width = labelEncErrMode.GetTextExtent(text.txtEncErrMode)[0]
+        width = labelEncErrMode.GetFullTextExtent(text.txtEncErrMode)[0]
         choiceEncErrMode = wx.Choice(
             panel,
             -1,

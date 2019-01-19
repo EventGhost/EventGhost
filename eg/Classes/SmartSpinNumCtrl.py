@@ -72,7 +72,7 @@ class SmartSpinNumCtrl(wx.Window):
                 **self.kwargs
             )
             ctrl.numCtrl.Bind(wx.EVT_RIGHT_UP, self.OnRclick)
-            ctrl.numCtrl.SetToolTipString(eg.text.General.smartSpinTooltip)
+            ctrl.numCtrl.SetToolTip(eg.text.General.smartSpinTooltip)
             if init:
                 ctrl.SetValue(self.value)
         else:
@@ -82,7 +82,7 @@ class SmartSpinNumCtrl(wx.Window):
                 str(self.value),
             )
             ctrl.Bind(wx.EVT_RIGHT_UP, self.OnRclick)
-            ctrl.SetToolTipString(eg.text.General.smartSpinTooltip)
+            ctrl.SetToolTip(eg.text.General.smartSpinTooltip)
             if not init:
                 ctrl.SetValue(("", "{eg.result}", "{eg.event.payload}", "")[ctrlType])
         szr.Add(ctrl, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
@@ -101,10 +101,10 @@ class SmartSpinNumCtrl(wx.Window):
 
     def OnRclick(self, evt):
         if not hasattr(self, "popupId0"):
-            self.popupId0 = wx.NewId()
-            self.popupId1 = wx.NewId()
-            self.popupId2 = wx.NewId()
-            self.popupId3 = wx.NewId()
+            self.popupId0 = wx.NewIdRef()
+            self.popupId1 = wx.NewIdRef()
+            self.popupId2 = wx.NewIdRef()
+            self.popupId3 = wx.NewIdRef()
             self.popups = (
                 self.popupId0,
                 self.popupId1,

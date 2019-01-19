@@ -67,12 +67,12 @@ class WindowTree(wx.TreeCtrl):
 
         # tree context menu
         def OnCmdHighlight(dummyEvent=None):
-            hwnd = self.GetPyData(self.GetSelection())
+            hwnd = self.GetItemData(self.GetSelection())
             for _ in range(10):
                 HighlightWindow(hwnd)
                 sleep(0.1)
         menu = wx.Menu()
-        menuId = wx.NewId()
+        menuId = wx.NewIdRef()
         menu.Append(menuId, "Highlight")
         self.Bind(wx.EVT_MENU, OnCmdHighlight, id=menuId)
         self.contextMenu = menu
@@ -94,7 +94,7 @@ class WindowTree(wx.TreeCtrl):
             if name != "":
                 name = "\"" + name + "\" "
             index = self.AppendItem(item, name + className, 0)
-            self.SetPyData(index, hwnd)
+            self.SetItemData(index, hwnd)
             if className == "Edit" or className == "TEdit":
                 self.SetItemImage(index, 1, which=wx.TreeItemIcon_Normal)
             elif className == "Static" or className == "TStaticText":
@@ -135,12 +135,12 @@ class WindowTree(wx.TreeCtrl):
             for hwnd in self.pids[pid]:
                 icon = GetHwndIcon(hwnd)
                 if icon:
-                    iconIndex = self.imageList.AddIcon(icon)
+                    iconIndex = self.imageList.Add(icon=icon)
                     break
             exe = GetProcessName(pid)
             item = self.AppendItem(self.root, exe)
             self.SetItemHasChildren(item, True)
-            self.SetPyData(item, pid)
+            self.SetItemData(item, pid)
             self.SetItemImage(item, iconIndex, which=wx.TreeItemIcon_Normal)
 
     def AppendToplevelWindows(self, pid, item):
@@ -156,9 +156,9 @@ class WindowTree(wx.TreeCtrl):
                 name = '"%s"' % name
             iconIndex = 0
             if icon:
-                iconIndex = self.imageList.AddIcon(icon)
+                iconIndex = self.imageList.Add(icon=icon)
             newItem = self.AppendItem(item, name)
-            self.SetPyData(newItem, hwnd)
+            self.SetItemData(newItem, hwnd)
             self.SetItemText(newItem, name + className)
             self.SetItemImage(
                 newItem,
@@ -193,10 +193,10 @@ class WindowTree(wx.TreeCtrl):
 
         res = self.GetItemParent(item)
         if res == self.root:
-            pid = self.GetPyData(item)
+            pid = self.GetItemData(item)
             self.AppendToplevelWindows(pid, item)
         else:
-            hwnd = self.GetPyData(item)
+            hwnd = self.GetItemData(item)
             self.AppendChildWindows(hwnd, item)
 
     def OnItemRightClick(self, dummyEvent):
@@ -219,7 +219,7 @@ class WindowTree(wx.TreeCtrl):
             return
         _, pid = GetWindowThreadProcessId(hwnd)
         item, cookie = self.GetFirstChild(self.root)
-        while self.GetPyData(item) != pid:
+        while self.GetItemData(item) != pid:
             item, cookie = self.GetNextChild(self.root, cookie)
             if not item.IsOk():
                 return
@@ -235,7 +235,7 @@ class WindowTree(wx.TreeCtrl):
         for child in chain[::-1]:
             self.Expand(item)
             item, cookie = self.GetFirstChild(lastItem)
-            while self.GetPyData(item) != child:
+            while self.GetItemData(item) != child:
                 item, cookie = self.GetNextChild(lastItem, cookie)
                 if not item.IsOk():
                     return

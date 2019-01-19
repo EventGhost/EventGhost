@@ -98,7 +98,7 @@ class TransferDialog(wx.Dialog):
         sizer4.Add(self.overallFileCtrl, 1, wx.EXPAND)
         sizer4.Add(self.overallProgressCtrl, 0, wx.ALIGN_RIGHT)
 
-        sizer5 = wx.FlexGridSizer(4, 5, 5, 5)
+        sizer5 = wx.FlexGridSizer(cols=4, rows=5, hgap=5, vgap=5)
         sizer5.Add(SText("Elapsed time:"), 0, wx.ALIGN_RIGHT)
         sizer5.Add(self.elapsedCtrl)
         sizer5.Add((10, 0), 1, wx.EXPAND)

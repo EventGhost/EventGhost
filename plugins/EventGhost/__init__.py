@@ -108,7 +108,7 @@ class EnableItem(eg.ActionBase):
         while panel.Affirmed():
             treeItem = tree.GetSelection()
             if treeItem.IsOk():
-                obj = tree.GetPyData(treeItem)
+                obj = tree.GetItemData(treeItem)
                 if self.IsSelectableItem(obj):
                     link.SetTarget(obj)
                     panel.SetResult(link)

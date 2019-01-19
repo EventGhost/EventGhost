@@ -40,8 +40,8 @@ class Colour:
 
     These might get configurable in the future.
     """
-    windowText = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
-    windowBackground = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW).Get()
+    windowText = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
+    windowBackground = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW).Get()
     treeItem = windowText
     pluginError = (255, 0, 0)
     errorText = (0, 0, 0)
@@ -96,5 +96,5 @@ class Colour:
         """
         Returns HSV (Hue, Saturation, Value) from a RGB colour tuple.
         """
-        red, green, blue = colour
+        red, green, blue = colour[:3]
         return colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)

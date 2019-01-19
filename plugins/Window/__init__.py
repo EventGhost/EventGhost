@@ -631,8 +631,9 @@ class SendMessage(eg.ActionBase):
             validator=eg.DigitOnlyValidator(mesgNames)
         )
 
+        import sys
         wParamCtrl = panel.SpinIntCtrl(wParam, max=65535)
-        lParamCtrl = panel.SpinIntCtrl(lParam, max=4294967295)
+        lParamCtrl = panel.SpinIntCtrl(lParam, max=sys.maxint)  # why not anymore 4294967295? (topic2k)
         kindCB = panel.CheckBox(kind == 1, self.text.text1)
 
         panel.AddLine("Message:", mesgCtrl)

@@ -252,7 +252,7 @@ class SoundMixerTree(wx.TreeCtrl):
                 parentItem,
                 mixerControl.szName
             )
-            self.SetPyData(ctrlItem, mixerControl.dwControlID)
+            self.SetItemData(ctrlItem, mixerControl.dwControlID)
 
     def FillTree(self):
         root = self.AddRoot("Sound Card")
@@ -294,7 +294,7 @@ class SoundMixerTree(wx.TreeCtrl):
                 self.AddControls(sourceItem, mixerline)
 
     def OnSelectionChanged(self, event):
-        dwControlID = self.GetPyData(event.GetItem())
+        dwControlID = self.GetItemData(event.GetItem())
         panel = self.panel
         panel.DestroyChildren()
         sizer = wx.BoxSizer(wx.VERTICAL)

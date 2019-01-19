@@ -41,7 +41,7 @@ class TimeCtrl(wx.lib.masked.TimeCtrl):
         try:
             self._SetValue(newvalue)
         except ValueError:  # must not be in bounds:
-            if not wx.Validator_IsSilent():
+            if not wx.Validator.IsSilent():
                 wx.Bell()
 
     def _TimeCtrl__validateValue(self, value):
@@ -50,7 +50,7 @@ class TimeCtrl(wx.lib.masked.TimeCtrl):
         try:
             #value = self.GetWxDateTime(value) - THIS CAUSES THE PROBLEM !!!!!!!
             args = [int(slice) for slice in value.split(":")]
-            value = wx.DateTimeFromHMS(*args)
+            value = wx.DateTime.FromHMS(*args)
         except:
             raise
         if self.IsLimited() and not self.IsInBounds(value):

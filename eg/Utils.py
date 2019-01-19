@@ -25,7 +25,7 @@ import warnings
 import wx
 import traceback
 from locale import windows_locale
-from CommonMark import commonmark
+from commonmark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
 from docutils.core import publish_parts as ReSTPublishParts

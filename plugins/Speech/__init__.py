@@ -367,7 +367,7 @@ class TextToSpeech(eg.ActionClass):
             maxLabel=text.loud,
             style=wx.SL_AUTOTICKS | wx.SL_TOP
         )
-        volumeCtrl.slider.SetTickFreq(10, 3)
+        volumeCtrl.slider.SetTickFreq(10)  # , 3)
 
         sizer1 = eg.HBoxSizer((textCtrl, 1, wx.EXPAND))
         sizer2 = eg.HBoxSizer(

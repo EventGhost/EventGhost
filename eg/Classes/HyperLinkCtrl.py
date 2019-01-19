@@ -17,10 +17,10 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import webbrowser
-import wx.lib.hyperlink
+import wx.lib.agw.hyperlink
 from threading import Thread
 
-class HyperLinkCtrl(wx.lib.hyperlink.HyperLinkCtrl):
+class HyperLinkCtrl(wx.lib.agw.hyperlink.HyperLinkCtrl):
     def GotoURL(self, URL, ReportErrors=True, NotSameWinIfPossible=False):
         Thread(
             target=webbrowser.open,

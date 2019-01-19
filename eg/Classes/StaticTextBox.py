@@ -18,9 +18,9 @@
 
 import wx
 
-class StaticTextBox(wx.PyWindow):
+class StaticTextBox(wx.Window):
     def __init__(self, parent, id=-1, label='', pos=(-1, -1), size=(-1, -1)):
-        wx.PyWindow.__init__(
+        wx.Window.__init__(
             self,
             parent,
             id,

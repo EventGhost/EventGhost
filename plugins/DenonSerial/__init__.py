@@ -357,6 +357,7 @@ class DenonSerial(eg.PluginClass):
 
     def __init__(self):
         self.serial = None
+        self.readerkiller = None
         group = self
 
         for cmd_name, cmd_text, cmd_cmd, cmd_rangespec in cmdList:
@@ -398,7 +399,10 @@ class DenonSerial(eg.PluginClass):
         line = ""
         parmre = re.compile('(.+?)([0-9]{2,3})$')
         while self.readerkiller is False:
-            ch = self.serial.read()
+            try:
+                ch = self.serial.read()
+            except pywintypes.error:
+                ch = ''
             if ch == '\r':
                 m = parmre.match(line)
                 if m is not None:

@@ -720,7 +720,7 @@ class RegistryLazyTree(wx.TreeCtrl):
         self.treeRoot = self.AddRoot(
             "Registry",
             image = rootIcon,
-            data = wx.TreeItemData((True, None, None, None))
+            data = (True, None, None, None)
         )
         #Adding keys
         for item in regKeys:
@@ -730,11 +730,11 @@ class RegistryLazyTree(wx.TreeCtrl):
             #2) _winreg.hkey constant
             #3) name of the key
             #4) value name, None if just a key, empty string for default value
-            tmp = self.AppendItem(
+            tmp = self.Append(
                 self.treeRoot,
                 item[1],
                 image = self.folderIcon,
-                data =wx.TreeItemData((False, item[0], "", None))
+                data =(False, item[0], "", None)
             )
             self.SetItemHasChildren(tmp, True)
             if item[0] == key:
@@ -748,7 +748,7 @@ class RegistryLazyTree(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnExpandNode)
 
     def GetValue(self):
-        data = self.GetItemData(self.GetSelection()).GetData()
+        data = self.GetItemData(self.GetSelection())
         return data[1], data[2], data[3]
 
     def OnExpandNode(self, event):
@@ -766,16 +766,14 @@ class RegistryLazyTree(wx.TreeCtrl):
             node = self.GetSelection()
 
         keyHasBeenQueried, fatherKey, \
-            fatherSubkey, fatherValueName = self.GetItemData(node).GetData()
+            fatherSubkey, fatherValueName = self.GetItemData(node)
         subkey2Find = None
         newItemSelected = False
 
         if not keyHasBeenQueried:  #check for subkeys
             self.SetItemData(
                 node,
-                wx.TreeItemData(
-                    (True, fatherKey, fatherSubkey, fatherValueName)
-                )
+                (True, fatherKey, fatherSubkey, fatherValueName)
             )
 
             #buildung tree
@@ -821,11 +819,11 @@ class RegistryLazyTree(wx.TreeCtrl):
                     parentSubkey + keyName,
                     None
                 )
-                tmp = self.AppendItem(
+                tmp = self.Append(
                     node,
                     keyName,
                     image=self.folderIcon,
-                    data=wx.TreeItemData(data)
+                    data=data
                 )
                 if subkey2Find == keyName.lower():
                     newItemSelected = True
@@ -839,11 +837,11 @@ class RegistryLazyTree(wx.TreeCtrl):
                 else:
                     enumValueName = valueName
                 data = (True, fatherKey, fatherSubkey, valueName)
-                tmp = self.AppendItem(
+                tmp = self.Append(
                     node,
                     enumValueName,
                     image = self.valueIcon,
-                    data = wx.TreeItemData(data)
+                    data = data
                 )
                 if (
                     valueName2Select is not None and

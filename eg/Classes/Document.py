@@ -388,7 +388,7 @@ class Document(object):
         if self.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
         if filePath is None:
-            filePath = self.AskFile(wx.OPEN)
+            filePath = self.AskFile(wx.FD_OPEN)
         if filePath is None:
             return wx.ID_CANCEL
         self.StartSession(filePath)
@@ -438,7 +438,7 @@ class Document(object):
         return wx.ID_YES
 
     def SaveAs(self):
-        filePath = self.AskFile(style=wx.SAVE | wx.OVERWRITE_PROMPT)
+        filePath = self.AskFile(style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if filePath is None:
             return wx.ID_CANCEL
         self.WriteFile(filePath)

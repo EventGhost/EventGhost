@@ -18,11 +18,12 @@
 
 import types
 import wx
+import wx.adv
 
 # Local imports
 import eg
 
-class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
+class ConfigPanel(wx.Panel, eg.ControlProviderMixin):
     """
     A panel with some magic.
     """
@@ -38,7 +39,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         dialog.panel = self
         dialog.__init__(resizable, showLine)
         self.dialog = dialog
-        wx.PyPanel.__init__(self, dialog.notebook)
+        wx.Panel.__init__(self, dialog.notebook)
         dialog.notebook.AddPage(self, "Settings")
         self.lines = []
         dialog.sizer.Add(self, 1, wx.EXPAND)
@@ -145,7 +146,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.Bind(wx.EVT_RADIOBOX, OnEvent)
         self.Bind(wx.EVT_RADIOBUTTON, OnEvent)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, OnEvent)
-        self.Bind(wx.EVT_DATE_CHANGED, OnEvent)
+        self.Bind(wx.adv.EVT_DATE_CHANGED, OnEvent)
         self.Bind(eg.EVT_VALUE_CHANGED, OnEvent)
         self.Bind(wx.EVT_CHECKLISTBOX, OnEvent)
         self.Bind(wx.EVT_SCROLL, OnEvent)

@@ -93,7 +93,7 @@ class IconBase(object):
         """
         Return a wx.Icon of the icon.
         """
-        icon = wx.EmptyIcon()
+        icon = wx.Icon()
         icon.CopyFromBitmap(PilToBitmap(self.pil))
         return icon
 
@@ -206,7 +206,7 @@ def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
     small = foregroundIcon.pil.resize(size, Image.BICUBIC)
     pil = backgroundIcon.pil.copy()
     pil.paste(small, (16 - size[0], 16 - size[1]), small)
-    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
+    return wx.Bitmap.FromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
 
 def GetBitmap(filePath):
     """
@@ -231,7 +231,7 @@ def PilToBitmap(pil):
     """
     Convert a PIL image to a wx.Bitmap (with alpha channel support).
     """
-    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
+    return wx.Bitmap.FromBufferRGBA(pil.size[0], pil.size[1], str(pil.tobytes()))
 
 # setup some commonly used icons
 INFO_ICON = PathIcon(join(IMAGES_PATH, "info.png"))

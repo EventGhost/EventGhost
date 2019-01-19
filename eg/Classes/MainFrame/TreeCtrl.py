@@ -67,19 +67,19 @@ class DropSource(wx.DropSource):
         self.SetData(data)
 
 
-class DropTarget(wx.PyDropTarget):
+class DropTarget(wx.DropTarget):
     """
     This class represents a target for a drag and drop operation of the
     TreeCtrl.
     """
     @eg.AssertInMainThread
     def __init__(self, treeCtrl):
-        wx.PyDropTarget.__init__(self)
+        wx.DropTarget.__init__(self)
         self.treeCtrl = treeCtrl
         self.srcNode = eg.EventItem
         # specify the type of data we will accept
         textData = wx.TextDataObject()
-        self.customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
+        self.customData = wx.CustomDataObject(wx.DataFormat("DragItem"))
         self.customData.SetData("")
         compositeData = wx.DataObjectComposite()
         compositeData.Add(textData)
@@ -90,7 +90,7 @@ class DropTarget(wx.PyDropTarget):
         self.whereToDrop = None
         self.lastDropTime = clock()
         self.lastTargetItemId = None
-        timerId = wx.NewId()
+        timerId = wx.NewIdRef()
         self.autoScrollTimer = wx.Timer(self.treeCtrl, timerId)
         self.treeCtrl.Bind(wx.EVT_TIMER, self.OnDragTimerEvent, id=timerId)
 
@@ -115,7 +115,7 @@ class DropTarget(wx.PyDropTarget):
                 if self.lastHighlighted is not None:
                     tree.SetItemDropHighlight(self.lastHighlighted, False)
                 if self.customData.GetDataSize() > 0:
-                    label = self.customData.GetData()
+                    label = self.customData.GetData().tobytes()
                     self.customData.SetData("")
                     parent, pos = self.whereToDrop
                     eg.UndoHandler.NewEvent(tree.document).Do(
@@ -146,7 +146,7 @@ class DropTarget(wx.PyDropTarget):
         if not (flags & HITTEST_FLAG):
             return wx.DragNone
 
-        dstNode = tree.GetPyData(dstItemId)
+        dstNode = tree.GetItemData(dstItemId)
         srcNode = self.srcNode
 
         # check if dstNode would get a parent of the srcNode
@@ -428,7 +428,7 @@ class TreeCtrl(wx.TreeCtrl):
             node.GetLabel(),
             node.imageIndex,
             -1,
-            wx.TreeItemData(node)
+            node
         )
         self.visibleNodes[node] = itemId
         self.SetItemHasChildren(itemId, True)
@@ -442,7 +442,7 @@ class TreeCtrl(wx.TreeCtrl):
             node.GetLabel(),
             node.imageIndex,
             -1,
-            wx.TreeItemData(node)
+            node
         )
         node.SetAttributes(self, itemId)
         self.visibleNodes[node] = itemId
@@ -457,13 +457,13 @@ class TreeCtrl(wx.TreeCtrl):
         if pos == -1 or pos >= len(parentNode.childs):
             return self.CreateTreeItem(node, parentId)
         else:
-            itemId = self.InsertItemBefore(
-                parentId,
-                pos,
-                node.GetLabel(),
-                node.imageIndex,
-                -1,
-                wx.TreeItemData(node)
+            itemId = self.InsertItem(
+                parent=parentId,
+                pos=pos,
+                text=node.GetLabel(),
+                image=node.imageIndex,
+                selImage=-1,
+                data=node
             )
             node.SetAttributes(self, itemId)
             self.visibleNodes[node] = itemId
@@ -545,7 +545,7 @@ class TreeCtrl(wx.TreeCtrl):
         itemId = self.GetFirstVisibleItem()
         if not itemId.IsOk():
             return None
-        return self.GetPyData(itemId)
+        return self.GetItemData(itemId)
 
     @eg.AssertInMainThread
     def GetSelectedNode(self):
@@ -555,12 +555,12 @@ class TreeCtrl(wx.TreeCtrl):
         itemId = self.GetSelection()
         if not itemId.IsOk():
             return None
-        return self.GetPyData(itemId)
+        return self.GetItemData(itemId)
 
     @eg.AssertInMainThread
     def SetInsertMark(self, treeItem, after):
         if treeItem:
-            lParam = long(treeItem.m_pItem)
+            lParam = long(treeItem.GetID().__int__())
             if self.insertionMark == (lParam, after):
                 return
             # TVM_SETINSERTMARK = 4378
@@ -574,7 +574,7 @@ class TreeCtrl(wx.TreeCtrl):
         childId, cookie = self.GetFirstChild(itemId)
         while childId.IsOk():
             self.TraverseDelete(childId)
-            node = self.GetPyData(childId)
+            node = self.GetItemData(childId)
             del self.visibleNodes[node]
             childId, cookie = self.GetNextChild(childId, cookie)
 
@@ -589,7 +589,7 @@ class TreeCtrl(wx.TreeCtrl):
         Handles wx.EVT_TREE_BEGIN_DRAG
         """
         srcItemId = event.GetItem()
-        srcNode = self.GetPyData(srcItemId)
+        srcNode = self.GetItemData(srcItemId)
         if not srcNode.isMoveable:
             return
         self.SelectItem(srcItemId)
@@ -615,7 +615,7 @@ class TreeCtrl(wx.TreeCtrl):
         """
         Handles wx.EVT_TREE_BEGIN_LABEL_EDIT
         """
-        node = self.GetPyData(event.GetItem())
+        node = self.GetItemData(event.GetItem())
         if not node.isRenameable or self.FindFocus() is not self:
             event.Veto()
             return
@@ -634,7 +634,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.editLabelId = None
         eg.Notify("FocusChange", self)
         itemId = event.GetItem()
-        node = self.GetPyData(itemId)
+        node = self.GetItemData(itemId)
         newLabel = event.GetLabel()
         if not event.IsEditCancelled() and node.GetLabel() != newLabel:
             eg.UndoHandler.Rename(self.document).Do(node, newLabel)
@@ -656,7 +656,7 @@ class TreeCtrl(wx.TreeCtrl):
         """
         itemId = event.GetItem()
         if itemId.IsOk():
-            node = self.GetPyData(itemId)
+            node = self.GetItemData(itemId)
             if node.isConfigurable:
                 wx.CallAfter(self.document.OnCmdConfigure, node)
         event.Skip()
@@ -677,7 +677,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsingEvent)
         self.DeleteChildren(itemId)
         self.SetItemHasChildren(itemId)
-        node = self.GetPyData(itemId)
+        node = self.GetItemData(itemId)
         self.expandedNodes.discard(node)
 
     @eg.AssertInMainThread
@@ -688,7 +688,7 @@ class TreeCtrl(wx.TreeCtrl):
         itemId = event.GetItem()
         self.ClearInsertMark()
         if not self.IsExpanded(itemId):
-            node = self.GetPyData(itemId)
+            node = self.GetItemData(itemId)
             self.expandedNodes.add(node)
             for subNode in node.childs:
                 self.CreateTreeItem(subNode, itemId)
@@ -721,7 +721,7 @@ class TreeCtrl(wx.TreeCtrl):
         """
         itemId = self.HitTest(event.GetPosition())[0]
         if itemId.IsOk():
-            node = self.GetPyData(itemId)
+            node = self.GetItemData(itemId)
             if node.isConfigurable:
                 while wx.GetMouseState().LeftIsDown():
                     wx.GetApp().Yield()
@@ -741,7 +741,7 @@ class TreeCtrl(wx.TreeCtrl):
         """
         Handles wx.EVT_TREE_SEL_CHANGED
         """
-        node = self.GetPyData(event.GetItem())
+        node = self.GetItemData(event.GetItem())
         self.document.selection = node
         eg.Notify("SelectionChange", node)
         event.Skip()

@@ -2253,8 +2253,8 @@ class Suntracker(eg.PluginClass):
             suntrackerListCtrl.InsertColumn(i, colLabel)
 
         #setting col width to fit label
-        suntrackerListCtrl.InsertStringItem(0, "Test Suntracker Name")
-        suntrackerListCtrl.SetStringItem(0, 1, "Test EventName On")
+        suntrackerListCtrl.InsertItem(0, "Test Suntracker Name")
+        suntrackerListCtrl.SetItem(0, 1, "Test EventName On")
 
         size = 0
         for i in range(2):
@@ -2331,7 +2331,6 @@ class Suntracker(eg.PluginClass):
         mySizer_2.Add(myLongitudeCtrl,(1,1))
 
         # Select or accept proposed timezone
-        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '-12.00',
             '-11.00',
@@ -2372,8 +2371,8 @@ class Suntracker(eg.PluginClass):
             '+13.00',
             '+14.00'
         ]
+        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         iTimeZoneCtrl.SetInitialSize((60,-1))
-        iTimeZoneCtrl.AppendItems(strings=list)
         if list.count(iTimeZone)==0:
             iTimeZoneCtrl.Select(n=0)
         else:
@@ -2396,9 +2395,8 @@ class Suntracker(eg.PluginClass):
         Location.SetInitialSize((200,-1))
         mySizer_2.Add(Location,(2,1))
 
-        unitCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = ['metric', 'non-metric']
-        unitCtrl.AppendItems(strings=list)
+        unitCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(unit)==0:
             unitCtrl.Select(n=0)
         else:
@@ -2444,7 +2442,6 @@ class Suntracker(eg.PluginClass):
         )
         mySizer_2.Add(variableHolidaysCtrl,(6,1))
 
-        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '--',
             '01',
@@ -2460,7 +2457,7 @@ class Suntracker(eg.PluginClass):
             '11',
             '12'
         ]
-        summerBeginsCtrl.AppendItems(strings=list)
+        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(summerSeasonBegins)==0:
             summerBeginsCtrl.Select(n=0)
         else:
@@ -2470,7 +2467,6 @@ class Suntracker(eg.PluginClass):
         mySizer_2.Add(sBtxt,(7,0))
         mySizer_2.Add(summerBeginsCtrl,(7,1))
 
-        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '--',
             '01',
@@ -2486,7 +2482,7 @@ class Suntracker(eg.PluginClass):
             '11',
             '12'
         ]
-        summerEndsCtrl.AppendItems(strings=list)
+        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(summerSeasonEnds)==0:
             summerEndsCtrl.Select(n=0)
         else:
@@ -2560,10 +2556,10 @@ class Suntracker(eg.PluginClass):
             for i, item in enumerate(self.suntrackerThreads):
                 t = self.suntrackerThreads[item]
                 if t.isAlive():
-                    suntrackerListCtrl.InsertStringItem(row, t.name)
-                    suntrackerListCtrl.SetStringItem(row,
+                    suntrackerListCtrl.InsertItem(row, t.name)
+                    suntrackerListCtrl.SetItem(row,
                         1, t.eventNameOn)
-                    suntrackerListCtrl.SetStringItem(row,
+                    suntrackerListCtrl.SetItem(row,
                         2, t.eventNameOff)
                     row += 1
             ListSelection(wx.CommandEvent())
@@ -4533,7 +4529,7 @@ class GetSunStatusWeatherCompensated(eg.ActionClass):
 
     def Configure(
         self,
-        iWeather = 0
+        iWeather = 1
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -4957,8 +4953,7 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
         )
         mySizer_0.Add(iWeatherCtrl,(2,1))
 
-        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10))
-        tlStartTypeCtrl.AppendItems(strings=list)
+        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(tlStartType)==0:
             tlStartTypeCtrl.Select(n=0)
         else:
@@ -4968,8 +4963,7 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
         mySizer_1.Add(sBtxt,(1,0))
         mySizer_1.Add(tlStartTypeCtrl,(1,1))
 
-        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10))
-        tlEndTypeCtrl.AppendItems(strings=list)
+        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(tlEndType)==0:
             tlEndTypeCtrl.Select(n=0)
         else:
@@ -5229,8 +5223,7 @@ class InsideRange(eg.ActionClass):
         )
         mySizer_0.Add(iTimeAheadCtrl,(1,1))
 
-        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10))
-        tlStartTypeCtrl.AppendItems(strings=list)
+        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(tlStartType)==0:
             tlStartTypeCtrl.Select(n=0)
         else:
@@ -5240,8 +5233,7 @@ class InsideRange(eg.ActionClass):
         mySizer_1.Add(sBtxt,(1,0))
         mySizer_1.Add(tlStartTypeCtrl,(1,1))
 
-        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10))
-        tlEndTypeCtrl.AppendItems(strings=list)
+        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(tlEndType)==0:
             tlEndTypeCtrl.Select(n=0)
         else:
@@ -5302,8 +5294,9 @@ class GetCurrentCondition(eg.ActionClass):
     description = "Action to get current condition"
 
     def __call__(self):
-        if not self.plugin.initsynch:
-            return self.plugin.weather_data['condition']
+        condition = self.plugin.weather_data.get('condition', None)
+        if not self.plugin.initsynch and condition:
+            return condition
         else:
             print self.text.txtInit
             return "Undefined"
@@ -5315,8 +5308,9 @@ class GetForecasts(eg.ActionClass):
     description = "Action to get weather forecasts"
 
     def __call__(self):
-        if not self.plugin.initsynch:
-            return self.plugin.weather_data['forecasts']
+        forecast = self.plugin.weather_data['forecasts']
+        if not self.plugin.initsynch and forecast:
+            return forecast
         else:
             print self.text.txtInit
             return "Undefined"
@@ -5328,8 +5322,9 @@ class GetWindData(eg.ActionClass):
     description = "Action to get wind data"
 
     def __call__(self):
-        if not self.plugin.initsynch:
-            return self.plugin.weather_data['wind']
+        wind = self.plugin.weather_data['wind']
+        if not self.plugin.initsynch and wind:
+            return wind
         else:
             print self.text.txtInit
             return "Undefined"
@@ -5341,8 +5336,9 @@ class GetAtmosphereData(eg.ActionClass):
     description = "Action to get atmosphere data"
 
     def __call__(self):
-        if not self.plugin.initsynch:
-            return self.plugin.weather_data['atmosphere']
+        atmosphere = self.plugin.weather_data['atmosphere']
+        if not self.plugin.initsynch and atmosphere:
+            return atmosphere
         else:
             print self.text.txtInit
             return "Undefined"
@@ -5534,7 +5530,6 @@ class SetLocation(eg.ActionClass):
         mySizer_1.Add(myLongitudeCtrl,(2,1))
 
         # Select or accept proposed timezone
-        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '-12.00',
             '-11.00',
@@ -5575,8 +5570,8 @@ class SetLocation(eg.ActionClass):
             '+13.00',
             '+14.00'
         ]
+        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         iTimeZoneCtrl.SetInitialSize((60,-1))
-        iTimeZoneCtrl.AppendItems(strings=list)
         if list.count(iTimeZone)==0:
             iTimeZoneCtrl.Select(n=0)
         else:
@@ -5623,7 +5618,6 @@ class SetLocation(eg.ActionClass):
         )
         mySizer_1.Add(variableHolidaysCtrl,(6,1))
 
-        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '--',
             '01',
@@ -5639,7 +5633,7 @@ class SetLocation(eg.ActionClass):
             '11',
             '12'
         ]
-        summerBeginsCtrl.AppendItems(strings=list)
+        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(summerSeasonBegins)==0:
             summerBeginsCtrl.Select(n=0)
         else:
@@ -5649,7 +5643,6 @@ class SetLocation(eg.ActionClass):
         mySizer_1.Add(sBtxt,(7,0))
         mySizer_1.Add(summerBeginsCtrl,(7,1))
 
-        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '--',
             '01',
@@ -5665,7 +5658,7 @@ class SetLocation(eg.ActionClass):
             '11',
             '12'
         ]
-        summerEndsCtrl.AppendItems(strings=list)
+        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(summerSeasonEnds)==0:
             summerEndsCtrl.Select(n=0)
         else:

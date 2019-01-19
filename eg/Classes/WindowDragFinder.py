@@ -28,13 +28,13 @@ from eg.WinApi import (
     HighlightWindow,
 )
 
-class WindowDragFinder(wx.PyWindow):
+class WindowDragFinder(wx.Window):
     def __init__(self, parent, startFunc, endFunc):
         self.startFunc = startFunc
         self.endFunc = endFunc
 
         self.text = eg.plugins.Window.FindWindow.text
-        wx.PyWindow.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
+        wx.Window.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
@@ -47,11 +47,11 @@ class WindowDragFinder(wx.PyWindow):
 
         # since this image didn't come from a .cur file, tell it where the
         # hotspot is
-        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 15)
-        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 16)
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 15)
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 16)
 
         # make the image into a cursor
-        self.cursor = wx.CursorFromImage(image)
+        self.cursor = wx.Cursor(image)
 
         # the image of the drag target
         dragBoxImage = wx.StaticBitmap(self, -1, self.dragBoxBitmap)

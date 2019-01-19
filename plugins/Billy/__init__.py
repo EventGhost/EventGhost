@@ -394,9 +394,7 @@ class ShowMenu(eg.ActionClass):
                 colourData = colourDlg.GetColourData()
                 colour=colourData.GetColour().Get()
                 self.SetValue(colour)
-                listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[0].GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()
+                listBoxCtrl = self.FindWindowByName('listBox')
                 btnId = event.GetId()
                 if btnId == 1:
                     listBoxCtrl.SetBackgroundColour(colour)
@@ -416,8 +414,8 @@ class ShowMenu(eg.ActionClass):
         def SetValue(self, value):
             self.value = value
             w, h = self.GetSize()
-            image = wx.EmptyImage(w-10, h-10)
-            image.SetRGBRect((1, 1, w-12, h-12), *value)
+            image = wx.Image(w-10, h-10)
+            image.SetRGB((1, 1, w-12, h-12), *value[:3])
             self.SetBitmapLabel(image.ConvertToBitmap())
 #===============================================================================
 
@@ -451,24 +449,22 @@ class ShowMenu(eg.ActionClass):
         def OnButton(self, event):
             data = wx.FontData()
             if self.fontInfo is not None:
-                font = wx.FontFromNativeInfoString(self.fontInfo)
+                font = wx.Font(self.fontInfo)
                 data.SetInitialFont(font)
             else:
                 data.SetInitialFont(
-                    wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT )
+                    wx.SystemSettings.GetFont(wx.SYS_ANSI_VAR_FONT )
                 )
             dlg = wx.FontDialog(self.window, data)
             if dlg.ShowModal() == wx.ID_OK:
                 data = dlg.GetFontData()
                 font = data.GetChosenFont()
 
-                listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[0].GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()
+                listBoxCtrl = self.FindWindowByName('listBox')
                 for n in range(10,20):
                     font.SetPointSize(n)
                     listBoxCtrl.SetFont(font)
-                    if listBoxCtrl.GetTextExtent('X')[1]>20:
+                    if listBoxCtrl.GetFullTextExtent('X')[1]>20:
                         break
                 self.fontInfo = data.GetChosenFont().GetNativeFontInfo().\
                     ToString()
@@ -533,7 +529,7 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         favChoiceCtrl.SetFont(font)
         # menu height calculation:
         h=favChoiceCtrl.GetCharHeight()
@@ -543,13 +539,13 @@ class ShowMenu(eg.ActionClass):
         # menu width calculation:
         width_lst=[]
         for item in choices:
-            width_lst.append(favChoiceCtrl.GetTextExtent(item+' ')[0])
+            width_lst.append(favChoiceCtrl.GetFullTextExtent(item+' ')[0])
         width = max(width_lst)+8
         if height < height0:
             width += 20 #for vertical scrollbar
         width = min((width,GetSystemMetrics (0)-50))
         self.plugin.menuDlg.SetSize((width+6,height+6))
-        favChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
+        favChoiceCtrl.SetSize(2, 2, width, height, wx.SIZE_AUTO)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
         self.plugin.menuDlg.SetSizer(mainSizer)
         favChoiceCtrl.SetSelection(0)
@@ -614,15 +610,25 @@ class ShowMenu(eg.ActionClass):
         folder = False,
         dirpath = ""
     ):
-
-#        class MyDirBrowseButton(eg.DirBrowseButton):
-#            def GetTextCtrl(self):          #  now I can make build-in textCtrl non-editable !!!
-#                return self.textControl     #
+        global panel
+        panel = eg.ConfigPanel(self)
 
         dir = self.plugin.BillyPath+'\\Favorites'
         if not os.path.exists(dir):
-            self.PrintError(self.text.dir_err)
+            panel.sizer.Add(panel.StaticText(self.text.dir_err))
+            panel.sizer.Add(panel.StaticText(dir))
+            while panel.Affirmed():
+                panel.SetResult(
+                    fore,
+                    back,
+                    fontInfo,
+                    play,
+                    force,
+                    folder,
+                    dirpath,
+                )
             return
+
 #        files = os.listdir(dir)
         if not os.path.exists(dirpath):
             dirpath = dir
@@ -633,14 +639,11 @@ class ShowMenu(eg.ActionClass):
                 choices.append(item[:-4])
         choices.sort()
         self.plugin.favList = choices #
-
         self.fore = fore
         self.back = back
         self.oldSel=0
 
-    #Controls
-        global panel
-        panel = eg.ConfigPanel(self)
+        #Controls
         previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
@@ -659,9 +662,9 @@ class ShowMenu(eg.ActionClass):
             back,
             self.text.background
         )
-        w1 = panel.GetTextExtent(self.text.menuFont)[0]
-        w2 = panel.GetTextExtent(self.text.txtColour+':')[0]
-        w3 = panel.GetTextExtent(self.text.background+':')[0]
+        w1 = panel.GetFullTextExtent(self.text.menuFont)[0]
+        w2 = panel.GetFullTextExtent(self.text.txtColour+':')[0]
+        w3 = panel.GetFullTextExtent(self.text.background+':')[0]
         w = max(w1,w2,w3)
         listBoxCtrl=wx.ListBox(
             panel,-1,
@@ -675,11 +678,11 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             listBoxCtrl.SetFont(font)
-            if listBoxCtrl.GetTextExtent('X')[1]>20:
+            if listBoxCtrl.GetFullTextExtent('X')[1]>20:
                 break
         playCtrl = wx.CheckBox(panel, -1, '  '+self.text.play_label)
         playCtrl.SetValue(play)
@@ -701,7 +704,7 @@ class ShowMenu(eg.ActionClass):
         dirpathCtrl.SetValue(dirpath)
         box = wx.StaticBox(panel,-1,self.text.radioPath)
 
-    #Sizers
+        #Sizers
         mainSizer=wx.BoxSizer(wx.VERTICAL)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         leftSizer = wx.BoxSizer(wx.VERTICAL)
@@ -729,7 +732,7 @@ class ShowMenu(eg.ActionClass):
         mainSizer.Add(playCtrl,0,wx.TOP,10)
         mainSizer.Add(forceCtrl,0,wx.TOP,8)
 
-    #Events handling
+        #Events handling
         def OnRadioButton(event=None):
             flag = rb2.GetValue()
             dirpathCtrl.Enable(flag)
@@ -768,8 +771,7 @@ class ShowMenu(eg.ActionClass):
             self.testFlag = True
             event.Skip()
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
-
-    #On close panel
+        #On close panel
         while panel.Affirmed():
             panel.SetResult(
             foreColourButton.GetValue(),

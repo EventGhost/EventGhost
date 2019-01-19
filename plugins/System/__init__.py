@@ -23,6 +23,7 @@ import struct
 import thread
 import time
 import wx
+import wx.adv
 import _winreg
 import win32con
 import win32gui
@@ -683,9 +684,9 @@ class SetDisplayPreset(eg.ActionBase):
             result[0] = args
             listCtrl.DeleteAllItems()
             for i, argLine in enumerate(args):
-                listCtrl.InsertStringItem(i, "")
+                listCtrl.InsertItem(i, "")
                 for col, arg in enumerate(argLine):
-                    listCtrl.SetStringItem(i, col, str(arg))
+                    listCtrl.SetItem(i, col, str(arg))
         FillList(args)
 
         for i in range(1, len(fields)):
@@ -924,7 +925,7 @@ class ShapedFrame(wx.Frame):
                 Image.NEAREST)[resample]
             pil = pil.resize((w, h), meth)
         if (w, h) != (width_, height_) and width_ >= w and height_ >= h:
-            im = Image.new("RGBA", (width_, height_), tuple(back))
+            im = Image.new("RGBA", (width_, height_), tuple(back)[:4])
             im.paste(pil, ((width_ - w) / 2, (height_ - h) / 2), pil.convert("RGBA"))
         else:
             im = pil
@@ -933,10 +934,10 @@ class ShapedFrame(wx.Frame):
 
         cliSize = (width_, height_)
         self.SetClientSize(cliSize)
-        self.bmp = wx.BitmapFromImage(im)
+        self.bmp = wx.Bitmap(im)
         if self.hasAlpha:
             im.ConvertAlphaToMask()  # Here we can set threshold of alpha channel
-            self.region = wx.RegionFromBitmap(wx.BitmapFromImage(im))
+            self.region = wx.Region(wx.Bitmap(im))
             if self.shaped:
                 self.SetWindowShape()
 
@@ -1024,7 +1025,7 @@ class ShowPictureFrame(wx.Frame):
         self.SetBackgroundColour(wx.Colour(0, 0, 0))
         self.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        bitmap = wx.EmptyBitmap(1, 1)
+        bitmap = wx.Bitmap(1, 1)
         self.staticBitmap = wx.StaticBitmap(self, -1, bitmap)
         self.staticBitmap.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
         self.staticBitmap.Bind(wx.EVT_MOTION, self.ShowCursor)
@@ -1033,7 +1034,7 @@ class ShowPictureFrame(wx.Frame):
     def HideCursor(self):
         wx.CallAfter(
             self.staticBitmap.SetCursor,
-            wx.StockCursor(wx.CURSOR_BLANK)
+            wx.Cursor(wx.CURSOR_BLANK)
         )
 
     def LeftDblClick(self, dummyEvent):
@@ -1047,7 +1048,7 @@ class ShowPictureFrame(wx.Frame):
         BringHwndToFront(self.GetHandle())
         self.Raise()
         self.Update()
-        self.staticBitmap.SetCursor(wx.StockCursor(wx.CURSOR_BLANK))
+        self.staticBitmap.SetCursor(wx.Cursor(wx.CURSOR_BLANK))
 
     def SetPicture(self, picturePath = None, display = 0):
         if not picturePath:
@@ -1066,7 +1067,7 @@ class ShowPictureFrame(wx.Frame):
         self.staticBitmap.SetBitmap(bitmap)
         x = GetMonitorDimensions()[display][0] + (width_ - w) / 2
         y = GetMonitorDimensions()[display][1] + (height_ - h) / 2
-        self.SetDimensions(x, y, w, h)
+        self.SetSize(x, y, w, h)
 
     def ShowCursor(self, event):
         self.staticBitmap.SetCursor(wx.NullCursor)
@@ -1258,7 +1259,7 @@ class DisplayImage(eg.ActionBase):
             ),
             buttonText=eg.text.General.browse,
         )
-        filepathCtrl.textControl.SetToolTipString(text.toolTipFile)
+        filepathCtrl.textControl.SetToolTip(text.toolTipFile)
         displayChoice = eg.DisplayChoice(panel, display)
         xCoordLbl = wx.StaticText(panel, -1, text.xCoord)
         yCoordLbl = wx.StaticText(panel, -1, text.yCoord)
@@ -1654,8 +1655,8 @@ class ShowQRcode(eg.ActionBase):
             textWidth = 105
         )
         titleCtrl = wx.TextCtrl(panel, -1, title)
-        titleLbl.SetToolTipString(self.text.titleTool)
-        titleCtrl.SetToolTipString(self.text.titleTool)
+        titleLbl.SetToolTip(self.text.titleTool)
+        titleCtrl.SetToolTip(self.text.titleTool)
         sizeModeLbl = wx.StaticText(panel, -1, self.text.sizeMode)
         sizeModeCtrl = wx.CheckBox(panel, -1, "")
         sizeModeCtrl.SetValue(sizeMode)
@@ -2009,17 +2010,17 @@ class PlaySound(eg.ActionWithStringParameter):
             self.prefix = prefix
 
         def run(self):
-            self.sound.Play(wx.SOUND_SYNC)
+            self.sound.Play(wx.adv.SOUND_SYNC)
             eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
-    def __call__(self, wavfile, flags=wx.SOUND_ASYNC, evt = False):
-        self.sound = wx.Sound(wavfile)
+    def __call__(self, wavfile, flags=wx.adv.SOUND_ASYNC, evt = False):
+        self.sound = wx.adv.Sound(wavfile)
         suffix = "%s.%s" % (
             "%s.%s" % (self.name.replace(' ', ''), self.text.eventSuffix),
             os.path.splitext(os.path.split(wavfile)[1])[0].replace('.', '_')
         )
         prefix = self.plugin.name.replace(' ', '')
-        if flags == wx.SOUND_SYNC:
+        if flags == wx.adv.SOUND_SYNC:
             self.sound.Play(flags)
             if evt:
                 eg.TriggerEvent(suffix, prefix = prefix)
@@ -2029,11 +2030,11 @@ class PlaySound(eg.ActionWithStringParameter):
         else:
             self.sound.Play(flags)
 
-    def Configure(self, wavfile='', flags=wx.SOUND_ASYNC, evt = False):
+    def Configure(self, wavfile='', flags=wx.adv.SOUND_ASYNC, evt = False):
         panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = panel.FileBrowseButton(wavfile, fileMask=text.fileMask)
-        waitCheckbox = panel.CheckBox(flags == wx.SOUND_SYNC, text.text2)
+        waitCheckbox = panel.CheckBox(flags == wx.adv.SOUND_SYNC, text.text2)
         eventCheckbox = panel.CheckBox(evt, text.text3)
 
         panel.sizer.Add(panel.StaticText(text.text1), 0, wx.EXPAND)
@@ -2043,9 +2044,9 @@ class PlaySound(eg.ActionWithStringParameter):
 
         while panel.Affirmed():
             if waitCheckbox.IsChecked():
-                flags = wx.SOUND_SYNC
+                flags = wx.adv.SOUND_SYNC
             else:
-                flags = wx.SOUND_ASYNC
+                flags = wx.adv.SOUND_ASYNC
             panel.SetResult(
                 filepathCtrl.GetValue(),
                 flags,
@@ -2183,11 +2184,11 @@ def piltoimage(pil, hasAlpha):
     """
     Convert PIL Image to wx.Image.
     """
-    image = wx.EmptyImage(*pil.size)
+    image = wx.Image(*pil.size)
     rgbPil = pil.convert('RGB')
     if hasAlpha:
         image.SetData(rgbPil.tobytes())
-        image.SetAlphaData(pil.convert("RGBA").tobytes()[3::4])
+        image.SetAlpha(pil.convert("RGBA").tobytes()[3::4])
     else:
         new_image = rgbPil
         data = new_image.tobytes()

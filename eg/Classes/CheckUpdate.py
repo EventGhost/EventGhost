@@ -115,7 +115,7 @@ def CenterOnParent(self):
     )
 
 def ShowWaitDialog():
-    dialog = wx.Dialog(None, style=wx.THICK_FRAME | wx.DIALOG_NO_PARENT)
+    dialog = wx.Dialog(None, style=wx.DIALOG_NO_PARENT)
     staticText = wx.StaticText(dialog, -1, Text.waitMesg)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     sizer.Add(staticText, 1, wx.ALL, 20)

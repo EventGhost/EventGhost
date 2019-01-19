@@ -17,6 +17,7 @@
 # 2009-12-19  0.4.0 compatible GUID added
 # 2009-12-02  Walter Kraembring: First version
 ##############################################################################
+import wx
 
 eg.RegisterPlugin(
     name = "RFXcom_xPL",
@@ -408,13 +409,8 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for schema
-        schemaCtrl = wx.Choice(parent=panel, pos=(10,10))
-        list = ['x10.basic']
-        schemaCtrl.AppendItems(strings=list)
-        if list.count(schema)==0:
-            schemaCtrl.Select(n=0)
-        else:
-            schemaCtrl.SetSelection(int(list.index(schema)))
+        schemaCtrl = wx.Choice(parent=panel, pos=(10,10), choices=['x10.basic'])
+        schemaCtrl.Select(n=0)
         schemaCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
 
         staticBox = wx.StaticBox(panel, -1, text.textBoxSchema)
@@ -425,14 +421,13 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for protocol
-        protocolCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             'Nexa',
             'Intertechno',
             'Proove',
             'HomeEasy'
         ]
-        protocolCtrl.AppendItems(strings=list)
+        protocolCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(protocol)==0:
             protocolCtrl.Select(n=0)
         else:
@@ -447,12 +442,11 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for house code
-        houseCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
             'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'
         ]
-        houseCtrl.AppendItems(strings=list)
+        houseCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(house)==0:
             houseCtrl.Select(n=0)
         else:
@@ -467,12 +461,11 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for device code
-        deviceCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9',
             '10', '11', '12', '13', '14', '15', '16'
         ]
-        deviceCtrl.AppendItems(strings=list)
+        deviceCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(pdevice)==0:
             deviceCtrl.Select(n=0)
         else:
@@ -487,16 +480,12 @@ class sendRFXcom_x10_basic(eg.ActionClass):
         deviceCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
 
         # Create a dropdown for command
-        commandCtrl = wx.Choice(parent=panel, pos=(10,10))
-        list = [
-            'on',
-            'off'
-        ]
-        commandCtrl.AppendItems(strings=list)
-        if list.count(command)==0:
-            commandCtrl.Select(n=0)
-        else:
+        list = ['on', 'off']
+        commandCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
+        try:
             commandCtrl.SetSelection(int(list.index(command)))
+        except ValueError:
+            commandCtrl.SetSelection(0)
 
         staticBox = wx.StaticBox(panel, -1, text.textBoxCommand)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
@@ -606,9 +595,8 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for schema
-        schemaCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = ['homeeasy.basic']
-        schemaCtrl.AppendItems(strings=list)
+        schemaCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(schema)==0:
             schemaCtrl.Select(n=0)
         else:
@@ -633,12 +621,11 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         # Create a dropdown for device unit
-        deviceCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15', 'group'
         ]
-        deviceCtrl.AppendItems(strings=list)
+        deviceCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(unit)==0:
             deviceCtrl.Select(n=0)
         else:
@@ -653,9 +640,12 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         deviceCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
 
         # Create a dropdown for command
-        commandCtrl = wx.Choice(parent=panel, pos=(10,10))
-        list = ['on', 'off', 'preset']
-        commandCtrl.AppendItems(strings=list)
+        llllist=['on', 'off', 'preset']
+        commandCtrl = wx.Choice(
+            parent=panel,
+            pos=(10,10),
+            choices=list
+        )
         if list.count(command)==0:
             commandCtrl.Select(n=0)
         else:
@@ -670,12 +660,11 @@ class sendRFXcom_homeeasy_basic(eg.ActionClass):
         commandCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
 
         # Create a dropdown for dim level
-        levelCtrl = wx.Choice(parent=panel, pos=(10,10))
         list = [
             '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15'
         ]
-        levelCtrl.AppendItems(strings=list)
+        levelCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
         if list.count(level)==0:
             levelCtrl.Select(n=0)
         else:

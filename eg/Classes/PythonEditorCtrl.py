@@ -204,11 +204,11 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         self.SetSelBackground(
             True,
-            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
         )
         self.SetSelForeground(
             True,
-            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
         )
         self.UsePopUp(False)
 

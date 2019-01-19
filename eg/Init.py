@@ -183,16 +183,6 @@ def InitPathsAndBuiltins():
     eg.CorePluginModule = corePluginPackage
     eg.UserPluginModule = userPluginPackage
 
-def InitPil():
-    """
-    Initialize PIL's Image module.
-    """
-    import PIL.Image
-    import PIL.PngImagePlugin
-    import PIL.JpegImagePlugin
-    import PIL.BmpImagePlugin
-    import PIL.GifImagePlugin
-    PIL.Image._initialized = 2
 
 # replace builtin input() with a small dialog
 def Input(prompt=None):

@@ -146,6 +146,7 @@ eg.RegisterPlugin(
 )
 
 import socket, asyncore, time, threading
+import wx
 
 ############################## BEGIN TEXT CLASS ##############################
 ###
@@ -441,7 +442,7 @@ class Lirc(eg.RawReceiverPlugin):
             self.HandlePrint(self.text.noremotesfoundtip)
 
     def HandlePrint(self, msg):
-        print("LIRC Client: %s" % msg)
+        eg.Print("LIRC Client: %s" % msg)
 
     def HandleWarning(self, msg):
         self.PrintError("LIRC Client: %s" % msg)
@@ -475,7 +476,7 @@ class Lirc(eg.RawReceiverPlugin):
            return False
         time.sleep(0.05)
         asyncore.poll()
-        if not self.reader.connected:
+        if self.reader and not self.reader.connected:
            return False
         return True
 
@@ -540,7 +541,7 @@ class Lirc(eg.RawReceiverPlugin):
         RetryBox.Add(RetryIntervalCtrl, 0, wx.ALL, 2)
         RetryBox.Add(RetryIntervalText, 0, wx.ALL, 5)
 
-        HostSizer = wx.FlexGridSizer(cols=3)
+        HostSizer = wx.FlexGridSizer(cols=3, vgap=3, hgap=5)
         HostSizer.Add(HostText, 0, wx.ALL, 5)
         HostSizer.Add(HostCtrl, 0, wx.ALL, 3)
         HostSizer.Add(RetryTitle, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 54)
@@ -685,7 +686,7 @@ __ http://www.lirc.org/html/technical.html#applications
 
         def Configure(self, actionStr=""):
             text = self.text
-            actionParam = "0"
+            actionParam = 0
             if len(self.remotes) == 0:
                self.remotes.append(["N/A", ['N/A']])
                self.remotelist = ["N/A"]
@@ -762,14 +763,14 @@ __ http://www.lirc.org/html/technical.html#applications
             textCtrl = wx.TextCtrl(panel, -1, actionStr)
             actionhelpText = wx.StaticText(panel, -1, text.acthelp)
 
-            SelectionSizer = wx.FlexGridSizer(rows=2)
-            SelectionSizer.Add(cmdText, 0, wx.LEFT, 5)
-            SelectionSizer.Add(remoteText, 0, wx.LEFT, 5)
-            SelectionSizer.Add(actionText, 0, wx.LEFT, 5)
-            SelectionSizer.Add(repeatText, 0, wx.LEFT, 5)
+            SelectionSizer = wx.FlexGridSizer(cols=2, vgap=3, hgap=5)
+            SelectionSizer.Add(cmdText, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5)
             SelectionSizer.Add(cmdCtrl, 0, wx.ALL, 3)
+            SelectionSizer.Add(remoteText, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5)
             SelectionSizer.Add(remoteCtrl, 0, wx.ALL, 3)
+            SelectionSizer.Add(actionText, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5)
             SelectionSizer.Add(actionCtrl, 0, wx.ALL, 3)
+            SelectionSizer.Add(repeatText, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5)
             SelectionSizer.Add(repeatCtrl, 0, wx.ALL, 3)
 
             SelectionBox = wx.StaticBox(panel, -1, text.selectiontitle)

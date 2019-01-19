@@ -64,8 +64,8 @@ class App(wx.App):
             return False
         if eg.pyCrustFrame:
             eg.pyCrustFrame.Close()
-        eg.document.Close()
         eg.taskBarIcon.Close()
+        eg.document.Close()
         if not eg.startupArguments.translate:
             def DoOnClose():
                 eg.PrintDebugNotice("Triggering OnClose")
@@ -110,8 +110,8 @@ class App(wx.App):
 
         currentThread = threading.currentThread()
 
-        while self.Pending():
-            self.Dispatch()
+        while self.HasPendingEvents():
+            self.ProcessPendingEvents()
 
         # try to wait till all utility threads have ended
         startTime = time.clock()
@@ -131,8 +131,8 @@ class App(wx.App):
             waitTime = time.clock() - startTime
             if waitTime > 5.0:
                 break
-            while self.Pending():
-                self.Dispatch()
+            while self.HasPendingEvents():
+                self.ProcessPendingEvents()
             time.sleep(0.01)
         eg.PrintDebugNotice(
             "Waited for threads shutdown: %f s" % (time.clock() - startTime)

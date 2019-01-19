@@ -17,7 +17,6 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from wx import SystemSettings_GetColour as GetColour
 from wx.lib import masked
 
 import eg
@@ -140,9 +139,9 @@ class SpinNumCtrl(wx.Window):
         self.numCtrl = numCtrl
 
         numCtrl.SetCtrlParameters(
-            validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
-            emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
-            foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
+            validBackgroundColour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
+            emptyBackgroundColour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
+            foregroundColour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT),
         )
 
         height = numCtrl.GetSize()[1]

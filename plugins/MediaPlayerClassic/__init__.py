@@ -339,6 +339,7 @@ class FixedWidth(wx.FontEnumerator):
     def OnFacename(self, fontname):
         if not fontname.startswith("@"):
             self.fontList.append(fontname)
+        return True
 #===============================================================================
 
 def GetSec(timeStr):
@@ -471,7 +472,7 @@ class MyTextDropTarget(EventDropTarget):
 
     def OnData(self, dummyX, dummyY, dragResult):
         if self.GetData() and self.customData.GetDataSize() > 0:
-            txt = self.customData.GetData()
+            txt = self.customData.GetData().tobytes()
             ix, evtList = self.object.GetEvtList()
             flag = True
             for lst in evtList:
@@ -479,10 +480,13 @@ class MyTextDropTarget(EventDropTarget):
                     flag = False
                     break
             if flag:
-                self.object.InsertImageStringItem(len(evtList[ix]), txt, 0)
+                self.object.InsertItem(index=len(evtList[ix]), label=txt, imageIndex=0)
                 self.object.UpdateEvtList(ix, txt)
+                return wx.DragCopy
             else:
-                PlaySound('SystemExclamation', SND_ASYNC)
+                wx.Bell()
+                return wx.DragNone
+        return wx.DragError
 
 
     def OnLeave(self):
@@ -502,7 +506,7 @@ class EventListCtrl(wx.ListCtrl):
         self.plugin = plugin
         self.sel = -1
         self.il = wx.ImageList(16, 16)
-        self.il.Add(wx.BitmapFromImage(wx.Image(join(eg.imagesDir, "event.png"), wx.BITMAP_TYPE_PNG)))
+        self.il.Add(wx.Bitmap(wx.Image(join(eg.imagesDir, "event.png"), wx.BITMAP_TYPE_PNG)))
         self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, '')
         self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
@@ -511,7 +515,7 @@ class EventListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
-        self.SetToolTipString(self.plugin.text.toolTip)
+        self.SetToolTip(self.plugin.text.toolTip)
 
 
     def OnSelect(self, event):
@@ -529,8 +533,8 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
-            self.popupID1 = wx.NewId()
-            self.popupID2 = wx.NewId()
+            self.popupID1 = wx.NewIdRef()
+            self.popupID2 = wx.NewIdRef()
             self.Bind(wx.EVT_MENU, self.OnDeleteButton, id=self.popupID1)
             self.Bind(wx.EVT_MENU, self.OnDeleteAllButton, id=self.popupID2)
         # make a menu
@@ -750,7 +754,7 @@ class GoToFrame(wx.Frame):
             x,y,ws,hs = monDim[monitor]
         except IndexError:
             x,y,ws,hs = monDim[0]
-        width,height = self.GetSizeTuple()
+        width,height = self.GetSize()
         x_pos = x + (ws - width)/2
         y_pos = y + (hs - height)/2
         self.SetPosition((x_pos,y_pos) )
@@ -758,7 +762,7 @@ class GoToFrame(wx.Frame):
         self.gotoLbl.SetFocus()
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
-        wx.Yield()
+        wx.GetApp().Yield()
         SetEvent(event)
 
 
@@ -875,31 +879,31 @@ class MenuEventsDialog(wx.MiniFrame):
         sizer.SetMinSize((450, 308))
         topSizer=wx.GridBagSizer(2, 20)
         textLbl_0=wx.StaticText(self, -1, labels[0])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.plugin)
         eventsCtrl_0.SetItems(self.evtList[0])
         dt0 = MyTextDropTarget(eventsCtrl_0)
         eventsCtrl_0.SetDropTarget(dt0)
         textLbl_1=wx.StaticText(self, -1, labels[1])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.plugin)
         eventsCtrl_1.SetItems(self.evtList[1])
         dt1 = MyTextDropTarget(eventsCtrl_1)
         eventsCtrl_1.SetDropTarget(dt1)
         textLbl_2=wx.StaticText(self, -1, labels[2])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.plugin)
         eventsCtrl_2.SetItems(self.evtList[2])
         dt2 = MyTextDropTarget(eventsCtrl_2)
         eventsCtrl_2.SetDropTarget(dt2)
         textLbl_3=wx.StaticText(self, -1, labels[3])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.plugin)
         eventsCtrl_3.SetItems(self.evtList[3])
         dt3 = MyTextDropTarget(eventsCtrl_3)
         eventsCtrl_3.SetDropTarget(dt3)
         textLbl_4=wx.StaticText(self, -1, labels[4])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_4 = EventListCtrl(self, id, self.evtList, 4, self.plugin)
         eventsCtrl_4.SetItems(self.evtList[4])
         dt4 = MyTextDropTarget(eventsCtrl_4)
@@ -1057,7 +1061,7 @@ class Menu(wx.Frame):
         # menu width calculation:
         width_lst=[]
         for item in self.choices:
-            width_lst.append(self.GetTextExtent(item+' ')[0])
+            width_lst.append(self.GetFullTextExtent(item+' ')[0])
         width = max(width_lst)+8
         self.menuGridCtrl.SetColSize(0,self.w0)
         self.menuGridCtrl.SetColSize(1,width)
@@ -1073,8 +1077,8 @@ class Menu(wx.Frame):
         width += 6
         x_pos = x + (ws - width)/2
         y_pos = y + (hs - height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.menuGridCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
+        self.SetSize(x_pos, y_pos, width, height)
+        self.menuGridCtrl.SetSize(2, 2, width-6, height-6, wx.SIZE_AUTO)
         self.Show(True)
         self.Raise()
 
@@ -1134,20 +1138,20 @@ class Menu(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(gridlib.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.menuGridCtrl)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         self.menuGridCtrl.SetFont(font)
-        arial = wx.FontFromNativeInfoString(arialInfoString)
+        arial = wx.Font(arialInfoString)
         self.SetFont(font)
-        hght = self.GetTextExtent('X')[1]
+        hght = self.GetFullTextExtent('X')[1]
         for n in range(1,1000):
             arial.SetPointSize(n)
             self.SetFont(arial)
-            h = self.GetTextExtent(u"\u25a0")[1]
+            h = self.GetFullTextExtent(u"\u25a0")[1]
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
         self.SetFont(arial)
-        self.w0 = 2 * self.GetTextExtent(u"\u25a0")[0]
+        self.w0 = 2 * self.GetFullTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
@@ -1155,12 +1159,12 @@ class Menu(wx.Frame):
         for n in range(1,1000):
             arial.SetPointSize(n)
             self.SetFont(arial)
-            h = self.GetTextExtent(u"\u25ba")[1]
+            h = self.GetFullTextExtent(u"\u25ba")[1]
             if h > hght:
                 break
         arial.SetPointSize(n/2)
         self.SetFont(arial)
-        self.w2 = 2 * self.GetTextExtent(u"\u25ba")[0]
+        self.w2 = 2 * self.GetFullTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
@@ -1174,7 +1178,7 @@ class Menu(wx.Frame):
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
         self.DrawMenu(ix)
-        wx.Yield()
+        wx.GetApp().Yield()
         SetEvent(event)
 
 
@@ -1769,7 +1773,7 @@ class GoTo_OSD(eg.ActionBase):
         backSelColourButton = eg.ColourSelectButton(panel,backSel, title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog, size = (w, -1))
-        dialogButton.SetToolTipString(self.text.btnToolTip)
+        dialogButton.SetToolTip(self.text.btnToolTip)
         foreSelLbl.Enable(not inverted)
         foreSelColourButton.Enable(not inverted)
         backSelLbl.Enable(not inverted)
@@ -1851,11 +1855,11 @@ class GoTo_OSD(eg.ActionBase):
         def OnFontFaceChoice(event = None):
             fnt.SetFaceName(fontFaceCtrl.GetStringSelection())
             GoToCtrl.SetFont(fnt)
-            if GoToCtrl.GetTextExtent("01:25:30")[0] < 120:
+            if GoToCtrl.GetFullTextExtent("01:25:30")[0] < 120:
                 self.sizeFlag = True
             else:
                 self.sizeFlag = False
-            te = GoToCtrl.GetTextExtent("01:25:30")
+            te = GoToCtrl.GetFullTextExtent("01:25:30")
             GoToCtrl.SetSize((158, te[1]))
             GoToCtrl.SetPosition((1, 5+gt[1]+(sz[1]-gt[1]-te[1])/2))
             pos = 3
@@ -2080,25 +2084,25 @@ class ShowMenu(eg.ActionClass):
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
         fontButton = eg.FontSelectButton(panel, value = fontInfo)
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             fontButton.SetFont(font)
-            hght = fontButton.GetTextExtent('X')[1]
+            hght = fontButton.GetFullTextExtent('X')[1]
             if hght > 20:
                 break
         listBoxCtrl.SetDefaultCellFont(font)
-        arial = wx.FontFromNativeInfoString(arialInfoString)
+        arial = wx.Font(arialInfoString)
         fontButton.SetFont(font)
         for n in range(1,1000):
             arial.SetPointSize(n)
             fontButton.SetFont(arial)
-            h = fontButton.GetTextExtent(u"\u25a0")[1]
+            h = fontButton.GetFullTextExtent(u"\u25a0")[1]
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
         fontButton.SetFont(arial)
-        w0 = 2 * fontButton.GetTextExtent(u"\u25a0")[0]
+        w0 = 2 * fontButton.GetFullTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
@@ -2106,12 +2110,12 @@ class ShowMenu(eg.ActionClass):
         for n in range(1,1000):
             arial.SetPointSize(n)
             fontButton.SetFont(arial)
-            h = fontButton.GetTextExtent(u"\u25ba")[1]
+            h = fontButton.GetFullTextExtent(u"\u25ba")[1]
             if h > hght:
                 break
         arial.SetPointSize(n/2)
         fontButton.SetFont(arial)
-        w2 = 2 * fontButton.GetTextExtent(u"\u25ba")[0]
+        w2 = 2 * fontButton.GetFullTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
@@ -2136,7 +2140,7 @@ class ShowMenu(eg.ActionClass):
         backSelColourButton = eg.ColourSelectButton(panel,backSel,title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog)
-        dialogButton.SetToolTipString(self.text.btnToolTip)
+        dialogButton.SetToolTip(self.text.btnToolTip)
         foreSelLbl.Enable(not inverted)
         foreSelColourButton.Enable(not inverted)
         backSelLbl.Enable(not inverted)
@@ -2211,11 +2215,11 @@ class ShowMenu(eg.ActionClass):
         def OnFontBtn(evt):
             value = evt.GetValue()
             self.fontInfo = value
-            font = wx.FontFromNativeInfoString(value)
+            font = wx.Font(value)
             for n in range(10,20):
                 font.SetPointSize(n)
                 fontButton.SetFont(font)
-                hght = fontButton.GetTextExtent('X')[1]
+                hght = fontButton.GetFullTextExtent('X')[1]
                 if hght > 20:
                     break
             listBoxCtrl.SetDefaultCellFont(font)
@@ -2670,11 +2674,11 @@ class SetInteger(eg.ActionBase):
         self.plugin.SendCopydata(self.value[0], value)
 
 
-    def Configure(self, value=0):
+    def Configure(self, value=1):
         panel = eg.ConfigPanel()
         label_1 = wx.StaticText(panel,-1,self.text.labels[self.value[1]][0])
         label_2 = wx.StaticText(panel,-1,self.text.labels[self.value[1]][1])
-        valueCtrl = eg.SpinIntCtrl(panel, -1, value, max=self.value[3],min=self.value[2])
+        valueCtrl = eg.SpinIntCtrl(panel, -1, value, max=self.value[3], min=self.value[2])
         sizer = wx.FlexGridSizer(1, 3, 5, 10)
         sizer.Add(label_1,0,wx.TOP,3)
         sizer.Add(valueCtrl)

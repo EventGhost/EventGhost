@@ -96,11 +96,11 @@ class LogCtrl(wx.ListCtrl):
         menu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
         self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
         menu.AppendSeparator()
-        menuId = wx.NewId()
+        menuId = wx.NewIdRef()
         menu.Append(menuId, eg.text.MainFrame.Menu.Replay)
         self.Bind(wx.EVT_MENU, self.OnCmdReplay, id=menuId)
         menu.AppendSeparator()
-        menuId = wx.NewId()
+        menuId = wx.NewIdRef()
         menu.Append(menuId, eg.text.MainFrame.Menu.ClearLog)
         self.Bind(wx.EVT_MENU, self.OnCmdClearLog, id=menuId)
         self.contextMenu = menu
@@ -276,7 +276,7 @@ class LogCtrl(wx.ListCtrl):
         text = itemData[2]
         # create our own data format and use it in a
         # custom data object
-        customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
+        customData = wx.CustomDataObject(wx.DataFormat("DragItem"))
         customData.SetData(text.encode("utf-8"))
 
         # And finally, create the drop source and begin the drag

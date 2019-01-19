@@ -123,9 +123,9 @@ class AddEventDialog(eg.TaskletDialog):
         while self.Affirmed():
             self.SetResult(self.resultData)
         item = tree.GetSelection()
-        gLastSelected = tree.GetPyData(item)
-        Config.size = self.GetSizeTuple()
-        Config.position = self.GetPositionTuple()
+        gLastSelected = tree.GetItemData(item)
+        Config.size = self.GetSize()
+        Config.position = self.GetPosition()
         Config.splitPosition = splitterWindow.GetSashPosition()
 
     def FillTree(self):
@@ -135,28 +135,28 @@ class AddEventDialog(eg.TaskletDialog):
             if not eventList:
                 continue
             item = tree.AppendItem(self.root, plugin.name)
-            tree.SetPyData(item, plugin.info)
+            tree.SetItemData(item, plugin.info)
             tree.SetItemImage(item, plugin.info.icon.folderIndex)
 
             for eventName, description in eventList:
                 data = EventInfo(eventName, description, plugin.info)
                 tmp = tree.AppendItem(item, eventName)
-                tree.SetPyData(tmp, data)
+                tree.SetItemData(tmp, data)
                 tree.SetItemImage(tmp, data.icon.index)
 
     def OnActivated(self, event):
         item = self.tree.GetSelection()
-        data = self.tree.GetPyData(item)
+        data = self.tree.GetItemData(item)
         if isinstance(data, EventInfo):
             self.OnOK(event)
         else:
             event.Skip()
 
     def OnCollapsed(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = False
+        self.tree.GetItemData(event.GetItem()).expanded = False
 
     def OnExpanded(self, event):
-        self.tree.GetPyData(event.GetItem()).expanded = True
+        self.tree.GetItemData(event.GetItem()).expanded = True
 
     def OnFocusTree(self, event):
         item = self.tree.GetSelection()
@@ -176,11 +176,11 @@ class AddEventDialog(eg.TaskletDialog):
 
     @eg.LogItWithReturn
     def OnStartDrag(self, event):
-        item = self.tree.GetPyData(event.GetItem())
+        item = self.tree.GetItemData(event.GetItem())
         text = item.info.eventPrefix + "." + item.name
         # create our own data format and use it in a
         # custom data object
-        customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
+        customData = wx.CustomDataObject(wx.DataFormat("DragItem"))
         customData.SetData(text.encode("utf-8"))
 
         # And finally, create the drop source and begin the drag
@@ -199,7 +199,7 @@ class AddEventDialog(eg.TaskletDialog):
 
     def DoSelectionChanged(self, item):
         try:
-            data = self.tree.GetPyData(item)
+            data = self.tree.GetItemData(item)
         except RuntimeError:
             return
         if isinstance(data, EventInfo):

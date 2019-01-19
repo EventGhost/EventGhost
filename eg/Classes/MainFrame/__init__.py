@@ -40,12 +40,12 @@ ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
 ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
 
-ID_DISABLED = wx.NewId()
-ID_EXECUTE = wx.NewId()
-ID_PYTHON = wx.NewId()
-ID_TOOLBAR_EXECUTE = wx.NewId()
+ID_DISABLED = wx.NewIdRef()
+ID_EXECUTE = wx.NewIdRef()
+ID_PYTHON = wx.NewIdRef()
+ID_TOOLBAR_EXECUTE = wx.NewIdRef()
 
-ID = defaultdict(wx.NewId, {
+ID = defaultdict(wx.NewIdRef, {
     "Save": wx.ID_SAVE,
     "Undo": wx.ID_UNDO,
     "Redo": wx.ID_REDO,
@@ -122,13 +122,13 @@ class MainFrame(wx.Frame):
 
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
-        icon = wx.EmptyIcon()
+        icon = wx.Icon()
         icon.LoadFile(join(eg.imagesDir, "icon32x32.png"), wx.BITMAP_TYPE_PNG)
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
 
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
-        self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
+        self.menuBar.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.mainSizeFlag = True
         self.ratioLock = False
@@ -192,8 +192,8 @@ class MainFrame(wx.Frame):
             eg.config.onlyLogAssigned = flag
             self.statusBar.SetCheckBoxColour(flag)
 
-        toggleOnlyLogAssignedId = wx.NewId()
-        wx.EVT_MENU(self, toggleOnlyLogAssignedId, ToggleOnlyLogAssigned)
+        toggleOnlyLogAssignedId = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, ToggleOnlyLogAssigned, id=toggleOnlyLogAssignedId)
 
         # find the accelerator key in the label of the checkbox
         labelText = eg.text.MainFrame.onlyLogAssigned
@@ -209,14 +209,14 @@ class MainFrame(wx.Frame):
 
         def OnDelKey(dummyEvent):
             self.DispatchCommand('OnCmdDelete')
-        delId = wx.NewId()
-        wx.EVT_MENU(self, delId, OnDelKey)
+        delId = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, OnDelKey, id=delId)
 
         def OnEnterKey(dummyEvent):
             if self.lastFocus == self.treeCtrl.editControl:
                 self.treeCtrl.EndEditLabel(self.treeCtrl.editLabelId, False)
-        enterId = wx.NewId()
-        wx.EVT_MENU(self, enterId, OnEnterKey)
+        enterId = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, OnEnterKey, id=enterId)
 
         self.acceleratorTable = wx.AcceleratorTable(
             [
@@ -268,7 +268,7 @@ class MainFrame(wx.Frame):
             item = wx.MenuItem(menu, ID[ident], label + hotkey, "", kind)
             if image:
                 item.SetBitmap(image)
-            menu.AppendItem(item)
+            menu.Append(item)
             func = getattr(self, "OnCmd" + ident)
 
             def FuncWrapper(dummyEvent):
@@ -380,7 +380,12 @@ class MainFrame(wx.Frame):
         text = Text.Menu
 
         def Append(ident, image):
-            toolBar.AddSimpleTool(ID[ident], image, getattr(text, ident))
+            toolBar.AddTool(
+                toolId=ID[ident],
+                label=getattr(text, ident),
+                bitmap=image,
+                shortHelp=getattr(text, ident)
+            )
 
         Append("New", GetInternalBitmap("New"))
         Append("Open", GetInternalBitmap("Open"))
@@ -405,10 +410,11 @@ class MainFrame(wx.Frame):
         # the execute button must be added with unique id, because otherwise
         # the menu command OnCmdExecute will be used in conjunction to
         # our special mouse click handlers
-        toolBar.AddSimpleTool(
-            ID_TOOLBAR_EXECUTE,
-            GetInternalBitmap("Execute"),
-            getattr(text, "Execute")
+        toolBar.AddTool(
+            toolId=ID_TOOLBAR_EXECUTE,
+            label=getattr(text, "Execute"),
+            bitmap=GetInternalBitmap("Execute"),
+            shortHelp=getattr(text, "Execute")
         )
         toolBar.AddSeparator()
         Append("Expand", GetInternalBitmap("expand"))
@@ -454,7 +460,7 @@ class MainFrame(wx.Frame):
         def Append(ident, kind=wx.ITEM_NORMAL, image=wx.NullBitmap):
             item = wx.MenuItem(menu, ID[ident], getattr(text, ident), "", kind)
             item.SetBitmap(image)
-            menu.AppendItem(item)
+            menu.Append(item)
             return item
 
         Append("Expand", image=GetInternalBitmap("expand"))
@@ -475,7 +481,7 @@ class MainFrame(wx.Frame):
         Append("Paste")
         Append("Delete")
         menu.AppendSeparator()
-        menu.AppendMenu(wx.ID_ANY, text=text.ExpandCollapseMenu, submenu=subm)
+        menu.AppendSubMenu(text=text.ExpandCollapseMenu, submenu=subm)
         menu.AppendSeparator()
         Append("AddPlugin", image=ADD_PLUGIN_ICON)
         Append("AddFolder", image=ADD_FOLDER_ICON)
@@ -581,6 +587,9 @@ class MainFrame(wx.Frame):
         else:
             wx.Frame.Iconize(self, flag)
 
+            if not flag:
+                self.Raise()
+
             for dialog in self.openDialogs:
                 dialog.Iconize(flag)
 
@@ -660,7 +669,7 @@ class MainFrame(wx.Frame):
         """
         Handle wx.EVT_ICONIZE
         """
-        self.Iconize(event.Iconized())
+        self.Iconize(event.IsIconized())
 
     def OnLogCtrlSize(self, evt):
         if self.mainSizeFlag:
@@ -678,7 +687,7 @@ class MainFrame(wx.Frame):
         Handle wx.EVT_MOVE
         """
         if not self.IsMaximized() and not self.IsIconized():
-            Config.position = self.GetPositionTuple()
+            Config.position = self.GetPosition()
         event.Skip()
 
     def OnPaneClose(self, event):
@@ -792,7 +801,7 @@ class MainFrame(wx.Frame):
     def UpdateRatio(self):
         self.logCtrl.SetColumnWidth(
             0,
-            self.logCtrl.GetSizeTuple()[0] - self.corConst
+            self.logCtrl.GetSize()[0] - self.corConst
         )
         if not eg.config.propResize:
             return
@@ -809,8 +818,8 @@ class MainFrame(wx.Frame):
             elif dir in ("1", "3"):
                 coord = 1
             if coord is not None:
-                l_val = self.logCtrl.GetSizeTuple()[coord]
-                t_val = self.treeCtrl.GetSizeTuple()[coord]
+                l_val = self.logCtrl.GetSize()[coord]
+                t_val = self.treeCtrl.GetSize()[coord]
                 self.ratio = float(t_val) / float(l_val)
                 Config.ratio = self.ratio
         else:
@@ -828,9 +837,9 @@ class MainFrame(wx.Frame):
                 elif dir in ("1", "3"):
                     coord = 1
                 if coord is not None:
-                    l_val = self.logCtrl.GetSizeTuple()[coord]
-                    t_val = self.treeCtrl.GetSizeTuple()[coord]
-                    c_val = self.GetClientSizeTuple()[coord]
+                    l_val = self.logCtrl.GetSize()[coord]
+                    t_val = self.treeCtrl.GetSize()[coord]
+                    c_val = self.GetClientSize()[coord]
                     k = c_val - l_val - t_val
                     l_val = int((c_val - k) / (1 + self.ratio))
                     #t_val = (c_val-k)-l_val
@@ -841,11 +850,11 @@ class MainFrame(wx.Frame):
                     self.auiManager.LoadPerspective(s, True)
                     self.logCtrl.SetColumnWidth(
                         0,
-                        self.logCtrl.GetSizeTuple()[0] - self.corConst
+                        self.logCtrl.GetSize()[0] - self.corConst
                     )
         self.mainSizeFlag = True
         if not self.IsMaximized() and not self.IsIconized():
-            Config.size = self.GetSizeTuple()
+            Config.size = self.GetSize()
 
     def UpdateViewOptions(self):
         expandOnEvents = (
@@ -1073,7 +1082,7 @@ class MainFrame(wx.Frame):
             if self.IsExpanded(item):
                 self.addChildren(item)
             self.setText('')
-            obj = self.GetPyData(item)
+            obj = self.GetItemData(item)
             if wx.Platform == '__WXMSW__':
                 if obj is None:  # Windows bug fix.
                     return

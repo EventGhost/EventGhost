@@ -138,7 +138,7 @@ class Log(object):
             self.PrintDebugNotice("----------------------------------------")
 
         # redirect all wxPython error messages to our log
-        class MyLog(wx.PyLog):
+        class MyLog(wx.Log):
             def DoLog(self, level, msg, dummyTimestamp):
                 if (level >= 6):
                     return
@@ -235,8 +235,8 @@ class Log(object):
         slist = [
             'Traceback (most recent call last) (%s):\n' % eg.Version.string
         ]
+        decode = codecs.getdecoder('mbcs')
         if tbTraceback:
-            decode = codecs.getdecoder('mbcs')
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
                     u'  File "%s", line %d, in %s\n' % (

@@ -57,5 +57,5 @@ class ExportDialog(eg.TaskletDialog):
         self.SetSize((450, 400))
         while self.Affirmed():
             items = tree.GetSelections()
-            GetPyData = tree.GetPyData
-            self.SetResult([GetPyData(item) for item in items])
+            GetItemData = tree.GetItemData
+            self.SetResult([GetItemData(item) for item in items])

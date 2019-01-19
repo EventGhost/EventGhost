@@ -86,6 +86,7 @@ __ https://www.libreoffice.org/features/impress/
 
 import os
 import wx.grid as gridlib
+import wx.adv
 from os.path import join, exists
 from copy import deepcopy as cpy
 from time import sleep
@@ -227,7 +228,7 @@ class Menu(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(gridlib.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.menuGridCtrl)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         self.menuGridCtrl.SetFont(font)
         self.SetFont(font)
         self.SetBackgroundColour((0, 0, 0))
@@ -240,7 +241,7 @@ class Menu(wx.Frame):
         self.menuGridCtrl.Set(self.data)
         self.DrawMenu()
         self.plugin.menuDlg = self
-        wx.Yield()
+        wx.GetApp().Yield()
         SetEvent(event)
 
 
@@ -263,7 +264,7 @@ class Menu(wx.Frame):
         # menu width calculation:
         width_lst=[]
         for item in self.data:
-            width_lst.append(self.GetTextExtent(item[0]+' ')[0])
+            width_lst.append(self.GetFullTextExtent(item[0]+' ')[0])
         width = max(width_lst)+8
         self.menuGridCtrl.SetColSize(0,width)
         self.menuGridCtrl.ForceRefresh()
@@ -276,8 +277,8 @@ class Menu(wx.Frame):
         width += 6
         x_pos = x + (ws - width)/2
         y_pos = y + (hs - height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.menuGridCtrl.SetDimensions(2, 2, width-6, height-6, wx.SIZE_AUTO)
+        self.SetSize(x_pos, y_pos, width, height)
+        self.menuGridCtrl.SetSize(2, 2, width-6, height-6, wx.SIZE_AUTO)
         self.menuGridCtrl.SelectRow(self.actFileIx)
         self.menuGridCtrl.MakeCellVisible(self.actFileIx, 0)
         self.Show(True)
@@ -384,7 +385,7 @@ class MyTextDropTarget(EventDropTarget):
 
     def OnData(self, dummyX, dummyY, dragResult):
         if self.GetData() and self.customData.GetDataSize() > 0:
-            txt = self.customData.GetData()
+            txt = self.customData.GetData().tobytes()
             ix, evtList = self.object.GetEvtList()
             flag = True
             for lst in evtList:
@@ -392,11 +393,13 @@ class MyTextDropTarget(EventDropTarget):
                     flag = False
                     break
             if flag:
-                self.object.InsertImageStringItem(len(evtList[ix]), txt, 0)
+                self.object.InsertItem(index=len(evtList[ix]), label=txt, imageIndex=0)
                 self.object.UpdateEvtList(ix, txt)
+                return wx.DragCopy
             else:
-                PlaySound('SystemExclamation', SND_ASYNC)
-
+                wx.Bell()
+                return wx.DragNone
+        return wx.DragError
 
     def OnLeave(self):
         pass
@@ -415,7 +418,7 @@ class EventListCtrl(wx.ListCtrl):
         self.action = action
         self.sel = -1
         self.il = wx.ImageList(16, 16)
-        self.il.Add(wx.BitmapFromImage(wx.Image(join(eg.imagesDir, "event.png"), wx.BITMAP_TYPE_PNG)))
+        self.il.Add(wx.Bitmap(wx.Image(join(eg.imagesDir, "event.png"), wx.BITMAP_TYPE_PNG)))
         self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, '')
         self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
@@ -424,7 +427,7 @@ class EventListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
-        self.SetToolTipString(self.action.text.toolTip)
+        self.SetToolTip(self.action.text.toolTip)
 
 
     def OnSelect(self, event):
@@ -442,8 +445,8 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
-            self.popupID1 = wx.NewId()
-            self.popupID2 = wx.NewId()
+            self.popupID1 = wx.NewIdRef()
+            self.popupID2 = wx.NewIdRef()
             self.Bind(wx.EVT_MENU, self.OnDeleteButton, id=self.popupID1)
             self.Bind(wx.EVT_MENU, self.OnDeleteAllButton, id=self.popupID2)
         # make a menu
@@ -485,7 +488,7 @@ class EventListCtrl(wx.ListCtrl):
 
     def SetItems(self, evtList):
         for i in range(len(evtList)):
-            self.InsertImageStringItem(i, evtList[i], 0)
+            self.InsertItem(index=i, label=evtList[i], imageIndex=0)
 #===============================================================================
 
 class MenuEventsDialog(wx.MiniFrame):
@@ -515,25 +518,25 @@ class MenuEventsDialog(wx.MiniFrame):
         sizer.SetMinSize((450, 308))
         topSizer=wx.GridBagSizer(2, 20)
         textLbl_0=wx.StaticText(self, -1, labels[0])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.action)
         eventsCtrl_0.SetItems(self.evtList[0])
         dt0 = MyTextDropTarget(eventsCtrl_0)
         eventsCtrl_0.SetDropTarget(dt0)
         textLbl_1=wx.StaticText(self, -1, labels[1])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.action)
         eventsCtrl_1.SetItems(self.evtList[1])
         dt1 = MyTextDropTarget(eventsCtrl_1)
         eventsCtrl_1.SetDropTarget(dt1)
         textLbl_2=wx.StaticText(self, -1, labels[2])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.action)
         eventsCtrl_2.SetItems(self.evtList[2])
         dt2 = MyTextDropTarget(eventsCtrl_2)
         eventsCtrl_2.SetDropTarget(dt2)
         textLbl_3=wx.StaticText(self, -1, labels[3])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.action)
         eventsCtrl_3.SetItems(self.evtList[3])
         dt3 = MyTextDropTarget(eventsCtrl_3)
@@ -745,8 +748,6 @@ class StartPresentation(eg.ActionClass):
 
     def Configure(self, url = None, start = 1, endless = False, pause = 0):
         panel = eg.ConfigPanel(self)
-        sizer = wx.FlexGridSizer(2, 2, 20, 5)
-        sizer.AddGrowableCol(1)
         label = wx.StaticText(
             panel,
             -1,
@@ -762,13 +763,13 @@ class StartPresentation(eg.ActionClass):
             -1,
             self.plugin.text.endless,
         )
-        label3.SetToolTipString(self.plugin.text.endlessToolTip)
+        label3.SetToolTip(self.plugin.text.endlessToolTip)
         label4 = wx.StaticText(
             panel,
             -1,
             self.plugin.text.pause,
         )
-        label4.SetToolTipString(self.plugin.text.pauseToolTip)
+        label4.SetToolTip(self.plugin.text.pauseToolTip)
         filepathCtrl = MyFileBrowseButton(
             panel,
             initialValue = url if (url is not None) else '',
@@ -787,7 +788,7 @@ class StartPresentation(eg.ActionClass):
         filepathCtrl.GetTextCtrl().SetEditable(False)
         endlessCtrl = wx.CheckBox(panel, -1, "")
         endlessCtrl.SetValue(endless)
-        endlessCtrl.SetToolTipString(self.plugin.text.endlessToolTip)
+        endlessCtrl.SetToolTip(self.plugin.text.endlessToolTip)
 
         def onEndless(evt=None):
             flag = endlessCtrl.GetValue()
@@ -804,10 +805,10 @@ class StartPresentation(eg.ActionClass):
             min = 0,
             max = 999
         )
-        pauseCtrl.SetToolTipString(self.plugin.text.pauseToolTip)
+        pauseCtrl.SetToolTip(self.plugin.text.pauseToolTip)
         onEndless()
 
-        panel.sizer.Add(sizer, 1, wx.EXPAND|wx.ALL, 10)
+        sizer = wx.FlexGridSizer(4, 2, 20, 5)
         sizer.Add(label, 0, wx.TOP, 3)
         sizer.Add(filepathCtrl, 0, wx.EXPAND)
         sizer.Add(label2, 0, wx.TOP, 3)
@@ -816,6 +817,8 @@ class StartPresentation(eg.ActionClass):
         sizer.Add(endlessCtrl, 0, wx.EXPAND)
         sizer.Add(label4, 0, wx.TOP, 3)
         sizer.Add(pauseCtrl)
+        sizer.AddGrowableCol(1)
+        panel.sizer.Add(sizer, 1, wx.EXPAND|wx.ALL, 10)
 
         while panel.Affirmed():
             panel.SetResult(
@@ -959,8 +962,8 @@ class ShowMenu(eg.ActionClass):
         global panel
         panel = eg.ConfigPanel(self)
         panel.evtList = cpy(evtList)
-        w1 = panel.GetTextExtent(self.text.label)[0]
-        w2 = panel.GetTextExtent(self.text.path)[0]
+        w1 = panel.GetFullTextExtent(self.text.label)[0]
+        w2 = panel.GetFullTextExtent(self.text.path)[0]
         w = max((w1,w2))
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -994,11 +997,11 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         for n in range(10, 20):
             font.SetPointSize(n)
             previewLbl.SetFont(font)
-            if previewLbl.GetTextExtent('X')[1] >= 28:
+            if previewLbl.GetFullTextExtent('X')[1] >= 28:
                 font.SetPointSize(n - 4)
                 previewLbl.SetFont(font)
                 break
@@ -1011,16 +1014,16 @@ class ShowMenu(eg.ActionClass):
             -1,
             self.plugin.text.endless,
         )
-        label3.SetToolTipString(self.plugin.text.endlessToolTip)
+        label3.SetToolTip(self.plugin.text.endlessToolTip)
         label4 = wx.StaticText(
             panel,
             -1,
             self.plugin.text.pause,
         )
-        label4.SetToolTipString(self.plugin.text.pauseToolTip)
+        label4.SetToolTip(self.plugin.text.pauseToolTip)
 
         endlessCtrl = wx.CheckBox(panel, -1, "")
-        endlessCtrl.SetToolTipString(self.plugin.text.endlessToolTip)
+        endlessCtrl.SetToolTip(self.plugin.text.endlessToolTip)
         pauseCtrl = eg.SpinIntCtrl(
             panel,
             -1,
@@ -1028,7 +1031,7 @@ class ShowMenu(eg.ActionClass):
             min = 0,
             max = 999
         )
-        pauseCtrl.SetToolTipString(self.plugin.text.pauseToolTip)
+        pauseCtrl.SetToolTip(self.plugin.text.pauseToolTip)
 
         topSizer.Add(listBoxCtrl,0,wx.EXPAND)
         topSizer.Add((10,1))
@@ -1081,8 +1084,8 @@ class ShowMenu(eg.ActionClass):
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
         #Buttons 'Delete' and 'Insert new'
-        w1 = panel.GetTextExtent(self.text.delete)[0]
-        w2 = panel.GetTextExtent(self.text.insert)[0]
+        w1 = panel.GetFullTextExtent(self.text.delete)[0]
+        w2 = panel.GetFullTextExtent(self.text.insert)[0]
         if w1 > w2:
             btnDEL=wx.Button(panel,-1,self.text.delete)
             btnApp=wx.Button(panel,-1,self.text.insert,size=btnDEL.GetSize())
@@ -1273,11 +1276,11 @@ class ShowMenu(eg.ActionClass):
             value = evt.GetValue()
             self.fontInfo = value
             oldFont = previewLbl.GetFont()
-            font = wx.FontFromNativeInfoString(value)
+            font = wx.Font(value)
             for n in range(10, 20):
                 font.SetPointSize(n)
                 previewLbl.SetFont(font)
-                if previewLbl.GetTextExtent('X')[1] >= 28:
+                if previewLbl.GetFullTextExtent('X')[1] >= 28:
                     font.SetPointSize(n - 4)
                     previewLbl.SetFont(font)
                     break
@@ -1712,7 +1715,7 @@ class Impress(eg.PluginClass):
             self.numDialog.SetBackgroundColour(wx.Colour(0,255,255))
             statText.SetForegroundColour(wx.Colour(0,255,255))
             statText.SetBackgroundColour(wx.Colour(0, 0, 139))
-            w,h = statText.GetTextExtent('8888')
+            w,h = statText.GetFullTextExtent('8888')
             self.numDialog.SetSize((w+16,h+16))
             statText.SetPosition((7,7))
             statText.SetSize((w,h))

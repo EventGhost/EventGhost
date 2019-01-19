@@ -143,9 +143,10 @@ Adds actions to control the `Radio?Sure!`_
 )
 #===============================================================================
 
+import wx
 import wx.grid as gridlib
 import subprocess
-import wx.calendar as wxCal
+import wx.adv as wxCal
 from wx.lib.masked import EVT_TIMEUPDATE
 from subprocess import Popen
 from os import listdir, remove, rename
@@ -184,6 +185,9 @@ if eg.Version.base >= "0.4.0":
 else:
     from eg.Classes.MainFrame.TreeCtrl import EventDropTarget
     IMAGES_DIR = eg.IMAGES_DIR
+
+
+month_name = [name.decode('mbcs') for name in month_name]
 
 ARIAL_INFO  = "0;-35;0;0;0;700;0;0;0;0;3;2;1;34;Arial"
 TAHOMA_INFO = "0;-27;0;0;0;400;0;0;0;0;3;2;1;34;Tahoma"
@@ -628,7 +632,7 @@ class MessageBoxDialog(wx.Dialog):
             self.SetReturnCode(evt.GetId())
             self.Close()
             evt.Skip()
-        wx.EVT_BUTTON(self, -1, OnButton)
+        self.Bind(wx.EVT_BUTTON, OnButton)
 
         def onClose(evt):
             if self.GetReturnCode() not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_YES, wx.ID_NO):
@@ -636,7 +640,6 @@ class MessageBoxDialog(wx.Dialog):
             if self.timer:
                 self.timer.Stop()
                 del self.timer
-            self.MakeModal(False)
             self.GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
@@ -698,7 +701,7 @@ class HolidaysFrame(wx.Dialog):
         calW, calH = self.fixWin.GetWinSize()
         fixLbl = wx.StaticText(self, -1, text.fixBoxLabel)
         variableLbl = wx.StaticText(self, -1, text.varBoxLabel)
-        widthList = [self.GetTextExtent("30. %s 2000" % month)[0] +
+        widthList = [self.GetFullTextExtent(u"30. %s 2000" % month)[0] +
             SYS_VSCROLL_X for month in list(month_name)]
         widthList.append(fixLbl.GetSize()[0])
         widthList.append(variableLbl.GetSize()[0])
@@ -768,12 +771,10 @@ class HolidaysFrame(wx.Dialog):
         self.Bind(wx.EVT_LISTBOX, self.onHolBoxSel)
         sizer.Layout()
         self.SetSizer(sizer)
-        self.MakeModal(True)
         self.Show(True)
 
 
     def onClose(self, evt):
-        self.MakeModal(False)
         self.GetParent().GetParent().Raise()
         self.Destroy()
 
@@ -878,7 +879,8 @@ class CalendarPopup(wx.PopupWindow):
                 | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
                 | wxCal.CAL_SHOW_SURROUNDING_WEEKS
         )
-        self.cal.EnableYearChange(yearChange)
+        # (topic2k) YearChange isn't supported anymore. Use other calendar control?
+        # self.cal.EnableYearChange(yearChange)
         sz = self.cal.GetBestSize()
         self.SetSize(sz)
         self.cal.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)
@@ -909,7 +911,7 @@ class CalendarPopup(wx.PopupWindow):
             self.holidays.sort()
         date = self.cal.GetDate()
         self.cal.SetHoliday(day)
-        date.AddDS(wx.DateSpan.Day())
+        date.Add(wx.DateSpan.Day())
         self.cal.SetDate(date)
         self.Refresh()
         evt.Skip()
@@ -957,16 +959,16 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         curFile = abspath(join(dirname(__file__), "contextCursor.cur"))
         img = None
         if exists(curFile):
-            img = wx.EmptyImage(32, 32)
+            img = wx.Image(32, 32)
             img.LoadFile(curFile, wx.BITMAP_TYPE_CUR)
         if not img or not img.IsOk():
             from cStringIO import StringIO
             from base64 import b64decode
             stream = StringIO(b64decode(CUR_STRING))
-            img = wx.ImageFromStream(stream)
+            img = wx.Image(stream)
             stream.close()
-            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
-            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
+            img.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
+            img.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
         self.SetCursor(wx.CursorFromImage(img))
         self.selRow = -1
         self.back = self.GetBackgroundColour()
@@ -975,10 +977,10 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         self.selFore = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
         for i, colLabel in enumerate(text.header):
             self.InsertColumn(i, colLabel)
-        self.InsertStringItem(0, " ")
+        self.InsertItem(0, " ")
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
-        self.SetStringItem(0, 1, "Test Name")
-        self.SetStringItem(0, 2, "8888-88-88 88:88:88")
+        self.SetItem(0, 1, "Test Name")
+        self.SetItem(0, 2, "8888-88-88 88:88:88")
         self.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
         col0 = self.GetColumnWidth(0)
         col23 = self.GetColumnWidth(2)
@@ -1019,7 +1021,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
     def AppendRow(self):
         ix = self.GetItemCount()
-        self.InsertStringItem(ix, "")
+        self.InsertItem(ix, "")
         self.CheckItem(ix)
         self.EnsureVisible(ix)
         self.SelRow(ix)
@@ -1039,13 +1041,13 @@ class ManagerDialog(wx.Dialog):
         self.plugin = plugin
         statusRS = self.plugin.GetStatusRS()
 
-        self.idUp      = wx.NewId()
-        self.idDown    = wx.NewId()
-        self.idTop     = wx.NewId()
-        self.idBottom  = wx.NewId()
-        self.idSort    = wx.NewId()
-        self.idRefr    = wx.NewId()
-        self.idPlay    = wx.NewId()
+        self.idUp      = wx.NewIdRef()
+        self.idDown    = wx.NewIdRef()
+        self.idTop     = wx.NewIdRef()
+        self.idBottom  = wx.NewIdRef()
+        self.idSort    = wx.NewIdRef()
+        self.idRefr    = wx.NewIdRef()
+        self.idPlay    = wx.NewIdRef()
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
         self.plugin.manager = self
         self.text = text
@@ -1076,16 +1078,16 @@ class ManagerDialog(wx.Dialog):
         curFile = abspath(join(dirname(__file__), "contextCursor.cur"))
         img = None
         if exists(curFile):
-            img = wx.EmptyImage(32, 32)
+            img = wx.Image(32, 32)
             img.LoadFile(curFile, wx.BITMAP_TYPE_CUR)
         if not img or not img.IsOk():
             from cStringIO import StringIO
             from base64 import b64decode
             stream = StringIO(b64decode(CUR_STRING))
-            img = wx.ImageFromStream(stream)
+            img = wx.Image(stream)
             stream.close()
-            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
-            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
+            img.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
+            img.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
         self.grid = wx.ListCtrl(self, style = wx.LC_REPORT|wx.LC_NO_HEADER|wx.LC_HRULES|wx.LC_VRULES)
         self.grid.SetCursor(wx.CursorFromImage(img))
         self.grid.InsertColumn(0,"")
@@ -1093,32 +1095,32 @@ class ManagerDialog(wx.Dialog):
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(self, self.idUp, bmp)
-        btnUP.SetToolTipString(self.text.toolTipUp)
+        btnUP.SetToolTip(self.text.toolTipUp)
         #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(self, self.idDown, bmp)
-        btnDOWN.SetToolTipString(self.text.toolTipDown)
+        btnDOWN.SetToolTip(self.text.toolTipDown)
         #Button DEL
         bmp = wx.ArtProvider.GetBitmap(wx.ART_DELETE, wx.ART_OTHER, (16, 16))
         btnDEL = wx.BitmapButton(self, -1, bmp)
-        btnDEL.SetToolTipString(self.text.toolTipDelete)
+        btnDEL.SetToolTip(self.text.toolTipDelete)
 
         btnExp = wx.Button(self, wx.ID_SAVEAS, self.text.export)
-        btnExp.SetToolTipString(self.text.toolTipExport)
+        btnExp.SetToolTip(self.text.toolTipExport)
 
         btnImp = wx.Button(self, wx.ID_OPEN, self.text.imprt)
-        btnImp.SetToolTipString(self.text.toolTipImport)
+        btnImp.SetToolTip(self.text.toolTipImport)
 
         btnImpSR = wx.Button(self, wx.ID_FILE, self.text.importSR)
-        btnImpSR.SetToolTipString(self.text.toolTipImportSR)
+        btnImpSR.SetToolTip(self.text.toolTipImportSR)
 
         bmp = wx.ArtProvider.GetBitmap(wx.ART_HELP_SETTINGS, wx.ART_OTHER, (16, 16))
         btnSort = wx.BitmapButton(self, self.idSort, bmp)
-        btnSort.SetToolTipString(self.text.sort)
+        btnSort.SetToolTip(self.text.sort)
 
         bmp = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_OTHER, (16, 16))
         btnRefr = wx.BitmapButton(self, self.idRefr, bmp)
-        btnRefr.SetToolTipString(self.text.refresh)
+        btnRefr.SetToolTip(self.text.refresh)
 
 
 
@@ -1190,7 +1192,7 @@ class ManagerDialog(wx.Dialog):
             self.tmpFavs = cpy(self.favs)
             self.grid.DeleteAllItems()
             for row in range(len(self.tmpFavs)):
-                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+                self.grid.InsertItem(row, self.tmpFavs[row][1])
             self.grid.SetColumnWidth(0, -1)
             self.grid.SetColumnWidth(0, self.grid.GetColumnWidth(0) + 6)
             ListSelection()
@@ -1204,7 +1206,7 @@ class ManagerDialog(wx.Dialog):
             self.tmpFavs = sorted(self.tmpFavs, key=lambda i: strxfrm(i[1].encode(eg.systemEncoding)))
             self.grid.DeleteAllItems()
             for row in range(len(self.tmpFavs)):
-                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+                self.grid.InsertItem(row, self.tmpFavs[row][1])
             ListSelection()
             self.Diff()
             self.Colour()
@@ -1332,7 +1334,7 @@ class ManagerDialog(wx.Dialog):
                     self.tmpFavs = p1
             self.grid.DeleteAllItems()
             for row in range(len(self.tmpFavs)):
-                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+                self.grid.InsertItem(row, self.tmpFavs[row][1])
             if id == self.idUp:
                 if first:
                     b, e = (first-1, first-1+cnt)
@@ -1445,8 +1447,8 @@ class ManagerDialog(wx.Dialog):
 
         def OnRightClick(evt):
             if not hasattr(self, "popupID1"):
-                self.popupID1 = wx.NewId()
-                self.popupID2 = wx.NewId()
+                self.popupID1 = wx.NewIdRef()
+                self.popupID2 = wx.NewIdRef()
                 self.Bind(wx.EVT_MENU, onDelete, id = self.popupID1)
                 self.Bind(wx.EVT_MENU, onRemDupl, id = self.popupID2)
                 self.Bind(wx.EVT_MENU, Move, id = self.idUp)
@@ -1691,7 +1693,7 @@ class ManagerDialog(wx.Dialog):
         self.tmpFavs.extend(data)
         self.grid.DeleteAllItems()
         for row in range(len(self.tmpFavs)):
-            self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+            self.grid.InsertItem(row, self.tmpFavs[row][1])
         self.grid.SetColumnWidth(0, -1)
         self.grid.SetColumnWidth(0, self.grid.GetColumnWidth(0) + 6)
         self.grid.EnsureVisible(len(self.tmpFavs)-1)
@@ -1892,8 +1894,8 @@ class SchedulerDialog(wx.Dialog):
             if flag:
                 dynamicSizer.Clear(True)
                 self.ctrls=[]
-                self.ctrls.append(wx.NewId())
-                self.ctrls.append(wx.NewId())
+                self.ctrls.append(wx.NewIdRef())
+                self.ctrls.append(wx.NewIdRef())
             if type == -1:
                 return
             if type != 1 and flag:
@@ -1903,11 +1905,11 @@ class SchedulerDialog(wx.Dialog):
                 )
             if type == 0:
                 if flag:
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
                             style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
                     topSizer.Add(dp,0,wx.EXPAND)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     yearlyCtrl = wx.CheckBox(self, self.ctrls[3], self.text.yearly)
                     topSizer.Add(yearlyCtrl, 0, wx.EXPAND|wx.LEFT, 30)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND|wx.TOP, 2)
@@ -1916,7 +1918,7 @@ class SchedulerDialog(wx.Dialog):
                     yearlyCtrl = wx.FindWindowById(self.ctrls[3])
                 if data:
                     if not data[2]:
-                        val = wx.DateTime_Now()
+                        val = wx.DateTime.Now()
                         data[2] = str(dt.now())[:10]
                     wxDttm = wx.DateTime()
                     wxDttm.Set(
@@ -1933,20 +1935,20 @@ class SchedulerDialog(wx.Dialog):
                         choices.insert(0, list(day_name)[-1])
                     else:
                         choices = list(day_name)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
                         choices = choices,
                         size=((-1,110)),
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_2 = wx.CheckBox(
                         self,
                         self.ctrls[3],
                         self.text.holidCheck_2
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_1 = wx.CheckBox(
                         self,
                         self.ctrls[4],
@@ -1999,7 +2001,7 @@ class SchedulerDialog(wx.Dialog):
                     )
                     topSizer.Add(dateSizer, 0, wx.EXPAND)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP,2)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     serialCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
@@ -2012,7 +2014,7 @@ class SchedulerDialog(wx.Dialog):
                         choices.insert(0, list(day_name)[-1])
                     else:
                         choices = list(day_name)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[3],
@@ -2029,7 +2031,7 @@ class SchedulerDialog(wx.Dialog):
                         0,
                         wx.ALIGN_CENTER | wx.LEFT, 10
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_1 = wx.CheckListBox(
                         self,
                         self.ctrls[4],
@@ -2037,7 +2039,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((-1, 95)),
                     )
                     dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_2 = wx.CheckListBox(
                         self,
                         self.ctrls[5],
@@ -2045,7 +2047,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((-1, 95)),
                     )
                     dateSizer.Add(monthsCtrl_2, 0, wx.ALIGN_CENTER | wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_1 = wx.CheckBox(
                         self,
                         self.ctrls[6],
@@ -2083,7 +2085,7 @@ class SchedulerDialog(wx.Dialog):
                     dateSizer = wx.BoxSizer(wx.HORIZONTAL)
                     topSizer.Add(dateSizer, 0, wx.EXPAND)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP, 2)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_1_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
@@ -2091,7 +2093,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((40, 125)),
                     )
                     dateSizer.Add(q_1_Ctrl, 0, wx.LEFT, 5)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_2_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[3],
@@ -2099,7 +2101,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((46, 125)),
                     )
                     dateSizer.Add(q_2_Ctrl, 0, wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_3_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[4],
@@ -2107,7 +2109,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((46, 125)),
                     )
                     dateSizer.Add(q_3_Ctrl, 0, wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_4_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[5],
@@ -2116,7 +2118,7 @@ class SchedulerDialog(wx.Dialog):
                     )
                     dateSizer.Add(q_4_Ctrl, 0, wx.LEFT, -1)
                     dateSizer.Add((-1, 1), 1, wx.EXPAND)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_1 = wx.CheckListBox(
                         self,
                         self.ctrls[6],
@@ -2124,7 +2126,7 @@ class SchedulerDialog(wx.Dialog):
                         size = ((-1, 95)),
                     )
                     dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_2 = wx.CheckListBox(
                         self,
                         self.ctrls[7],
@@ -2160,7 +2162,7 @@ class SchedulerDialog(wx.Dialog):
                     monthsCtrl_2.Check(i, bool(val & (2 ** i)))
             elif type == 5:
                 if flag:
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
                             style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
                     topSizer.Add(dp, 0, wx.EXPAND)
@@ -2169,7 +2171,7 @@ class SchedulerDialog(wx.Dialog):
                     dp = wx.FindWindowById(self.ctrls[2])
                 if data:
                     if not data[2]:
-                        val = wx.DateTime_Now()
+                        val = wx.DateTime.Now()
                         data[2] = str(dt.now())[:10]
                     wxDttm = wx.DateTime()
                     wxDttm.Set(
@@ -2199,9 +2201,9 @@ class SchedulerDialog(wx.Dialog):
                     (-1, 22),
                     wx.SP_VERTICAL
                 )
-                initTime = wx.DateTime_Now()
+                initTime = wx.DateTime.Now()
                 initTime.SetSecond(0)
-                initTime.AddTS(wx.TimeSpan.Minute())
+                initTime.Add(wx.TimeSpan.Minute())
                 val = data[0] if data and data[0] else initTime
                 timeCtrl = eg.TimeCtrl(
                     self,
@@ -2240,7 +2242,7 @@ class SchedulerDialog(wx.Dialog):
                 bottomSizer.Add(testBttn, 0, wx.EXPAND | wx.RIGHT)
             else:
                 timeCtrl = wx.FindWindowById(self.ctrls[0])
-                val = data[0] if data and data[0] else wx.DateTime_Now()
+                val = data[0] if data and data[0] else wx.DateTime.Now()
                 timeCtrl.SetValue(val)
                 lenCtrl = wx.FindWindowById(self.ctrls[1])
                 val = data[1] if data and data[1] else "00:00"
@@ -2251,7 +2253,7 @@ class SchedulerDialog(wx.Dialog):
                         wx.StaticBox(self, -1, self.text.choosePeriod),
                         wx.HORIZONTAL
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     numCtrl = MySpinIntCtrl(self, -1, value = 1, min = 1)
                     numCtrl.SetNumCtrlId(self.ctrls[3])
                     bottomSizer.Add(
@@ -2264,7 +2266,7 @@ class SchedulerDialog(wx.Dialog):
                         wx.ALIGN_CENTER
                     )
                     bottomSizer.Add(numCtrl, 0, wx.LEFT, 4)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     unitCtrl = wx.Choice(
                         self,
                         self.ctrls[4],
@@ -2329,7 +2331,7 @@ class SchedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -2340,7 +2342,7 @@ class SchedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -2351,7 +2353,7 @@ class SchedulerDialog(wx.Dialog):
                     self.tmpData[self.lastRow][2],
                     self.tmpData[self.lastRow][3]
                 )
-                grid.SetStringItem(self.lastRow, 3, next)
+                grid.SetItem(self.lastRow, 3, next)
             else:
                 evt.Skip()
             Diff()
@@ -2364,7 +2366,7 @@ class SchedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -2379,7 +2381,7 @@ class SchedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -2487,8 +2489,8 @@ class SchedulerDialog(wx.Dialog):
             self.tmpData[lngth][1] = newTitle
             grid.AppendRow()
             grid.SelRow(lngth)
-            grid.SetStringItem(lngth, 1, newTitle)
-            grid.SetStringItem(lngth, 3, nxt)
+            grid.SetItem(lngth, 1, newTitle)
+            grid.SetItem(lngth, 3, nxt)
             OpenSchedule()
             Diff()
 
@@ -2648,7 +2650,7 @@ class SchedulerDialog(wx.Dialog):
 
         def onSchedulerTitle(evt):
             txt = evt.GetString()
-            grid.SetStringItem(self.lastRow, 1, txt)
+            grid.SetItem(self.lastRow, 1, txt)
             self.tmpData[self.lastRow][1] = txt
             Diff()
 
@@ -2660,7 +2662,7 @@ class SchedulerDialog(wx.Dialog):
                     self.tmpData[self.lastRow][2],
                     self.tmpData[self.lastRow][3]
                 )
-                grid.SetStringItem(self.lastRow, 3, next)
+                grid.SetItem(self.lastRow, 3, next)
                 Diff()
             else:
                 evt.Skip()
@@ -2680,13 +2682,13 @@ class SchedulerDialog(wx.Dialog):
 
         def OnRightClick(evt):
             if not hasattr(self, "popupID1"):
-                self.popupID1 = wx.NewId()
-                self.popupID2 = wx.NewId()
-                self.popupID3 = wx.NewId()
-                self.popupID4 = wx.NewId()
-                self.popupID5 = wx.NewId()
-                self.popupID6 = wx.NewId()
-                self.popupID7 = wx.NewId()
+                self.popupID1 = wx.NewIdRef()
+                self.popupID2 = wx.NewIdRef()
+                self.popupID3 = wx.NewIdRef()
+                self.popupID4 = wx.NewIdRef()
+                self.popupID5 = wx.NewIdRef()
+                self.popupID6 = wx.NewIdRef()
+                self.popupID7 = wx.NewIdRef()
                 self.Bind(wx.EVT_MENU, addSchedule, id=self.popupID1)
                 self.Bind(wx.EVT_MENU, duplSchedule, id=self.popupID2)
                 self.Bind(wx.EVT_MENU, delSchedule, id=self.popupID3)
@@ -2715,13 +2717,13 @@ class SchedulerDialog(wx.Dialog):
             rows = len(self.tmpData)
             if rows > 0:
                 for row in range(rows):
-                    grid.InsertStringItem(row, "")
+                    grid.InsertItem(row, "")
                     if self.tmpData[row][0]:
                         grid.CheckItem(row)
-                    grid.SetStringItem(row, 1, self.tmpData[row][1])
-                    grid.SetStringItem(row, 2, self.tmpData[row][4])
+                    grid.SetItem(row, 1, self.tmpData[row][1])
+                    grid.SetItem(row, 2, self.tmpData[row][4])
                     next = self.plugin.NextRun(self.tmpData[row][2], self.tmpData[row][3])
-                    grid.SetStringItem(row, 3, next)
+                    grid.SetItem(row, 3, next)
                 if flag:
                     self.lastRow = 0
                     grid.SelRow(0)
@@ -2868,7 +2870,7 @@ class SchedulerDialog(wx.Dialog):
         bttnSizer.Add((5, -1))
         i = 0
         for bttn in self.text.buttons:
-            id = wx.NewId()
+            id = wx.NewIdRef()
             bttns.append(id)
             b = wx.Button(self, id, bttn)
             bttnSizer.Add(b,1)
@@ -2882,7 +2884,7 @@ class SchedulerDialog(wx.Dialog):
             bttnSizer.Add((5, -1))
             i += 1
         sizer.Add(bttnSizer,0,wx.EXPAND)
-        id = wx.NewId() #testBttn
+        id = wx.NewIdRef() #testBttn
         bttns.append(id)
         self.Bind(wx.EVT_BUTTON, onTestButton, id = id)
         wx.EVT_CHECKLISTBOX(self, -1, onCheckListBox)
@@ -3000,14 +3002,14 @@ class SchedulerDialog(wx.Dialog):
         else:
             ix = len(self.tmpData)
             self.tmpData.append(schedule)
-            self.grid.InsertStringItem(ix, "")
+            self.grid.InsertItem(ix, "")
         if schedule[0]:
             self.grid.CheckItem(ix)
         elif self.grid.IsChecked(ix):
             self.grid.ToggleItem(ix)
-        self.grid.SetStringItem(ix, 1, schedule[1])
+        self.grid.SetItem(ix, 1, schedule[1])
         next = self.plugin.NextRun(schedule[2], schedule[3])
-        self.grid.SetStringItem(ix, 3, next)
+        self.grid.SetItem(ix, 3, next)
         if self.lastRow == ix:
             evt = eg.ValueChangedEvent(ix)
             wx.PostEvent(self, evt)
@@ -3015,8 +3017,8 @@ class SchedulerDialog(wx.Dialog):
 
     def RefreshGrid(self, ix, last, next):
         if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
-            self.grid.SetStringItem(ix, 2, last)
-            self.grid.SetStringItem(ix, 3, next)
+            self.grid.SetItem(ix, 2, last)
+            self.grid.SetItem(ix, 3, next)
 
 
     def onClose(self, evt):
@@ -3263,7 +3265,7 @@ class MyTextDropTarget(EventDropTarget):
 
     def OnData(self, dummyX, dummyY, dragResult):
         if self.GetData() and self.customData.GetDataSize() > 0:
-            txt = self.customData.GetData()
+            txt = self.customData.GetData().tobytes()
             ix, evtList = self.object.GetEvtList()
             flag = True
             for lst in evtList:
@@ -3271,10 +3273,13 @@ class MyTextDropTarget(EventDropTarget):
                     flag = False
                     break
             if flag:
-                self.object.InsertImageStringItem(len(evtList[ix]), txt, 0)
+                self.object.InsertItem(index=len(evtList[ix]), label=txt, imageIndex=0)
                 self.object.UpdateEvtList(ix, txt)
+                return wx.DragCopy
             else:
-                PlaySound('SystemExclamation', SND_ASYNC)
+                wx.Bell()
+                return wx.DragNone
+        return wx.DragError
 
 
     def OnLeave(self):
@@ -3294,7 +3299,7 @@ class EventListCtrl(wx.ListCtrl):
         self.plugin = plugin
         self.sel = -1
         self.il = wx.ImageList(16, 16)
-        self.il.Add(wx.BitmapFromImage(wx.Image(join(IMAGES_DIR, "event.png"), wx.BITMAP_TYPE_PNG)))
+        self.il.Add(wx.Bitmap(wx.Image(join(IMAGES_DIR, "event.png"), wx.BITMAP_TYPE_PNG)))
         self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, '')
         self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
@@ -3303,7 +3308,7 @@ class EventListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
-        self.SetToolTipString(self.plugin.text.toolTip)
+        self.SetToolTip(self.plugin.text.toolTip)
 
 
     def OnSelect(self, event):
@@ -3321,8 +3326,8 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
-            self.popupID1 = wx.NewId()
-            self.popupID2 = wx.NewId()
+            self.popupID1 = wx.NewIdRef()
+            self.popupID2 = wx.NewIdRef()
             self.Bind(wx.EVT_MENU, self.OnDeleteButton, id=self.popupID1)
             self.Bind(wx.EVT_MENU, self.OnDeleteAllButton, id=self.popupID2)
         # make a menu
@@ -3394,31 +3399,31 @@ class MenuEventsDialog(wx.MiniFrame):
         sizer.SetMinSize((450, 308))
         topSizer=wx.GridBagSizer(2, 20)
         textLbl_0=wx.StaticText(self, -1, labels[0])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.plugin)
         eventsCtrl_0.SetItems(self.evtList[0])
         dt0 = MyTextDropTarget(eventsCtrl_0)
         eventsCtrl_0.SetDropTarget(dt0)
         textLbl_1=wx.StaticText(self, -1, labels[1])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.plugin)
         eventsCtrl_1.SetItems(self.evtList[1])
         dt1 = MyTextDropTarget(eventsCtrl_1)
         eventsCtrl_1.SetDropTarget(dt1)
         textLbl_2=wx.StaticText(self, -1, labels[2])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.plugin)
         eventsCtrl_2.SetItems(self.evtList[2])
         dt2 = MyTextDropTarget(eventsCtrl_2)
         eventsCtrl_2.SetDropTarget(dt2)
         textLbl_3=wx.StaticText(self, -1, labels[3])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.plugin)
         eventsCtrl_3.SetItems(self.evtList[3])
         dt3 = MyTextDropTarget(eventsCtrl_3)
         eventsCtrl_3.SetDropTarget(dt3)
         textLbl_4=wx.StaticText(self, -1, labels[4])
-        id = wx.NewId()
+        id = wx.NewIdRef()
         eventsCtrl_4 = EventListCtrl(self, id, self.evtList, 4, self.plugin)
         eventsCtrl_4.SetItems(self.evtList[4])
         dt4 = MyTextDropTarget(eventsCtrl_4)
@@ -3597,20 +3602,20 @@ class Menu(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(gridlib.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.menuGridCtrl)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         self.menuGridCtrl.SetFont(font)
-        arial = wx.FontFromNativeInfoString(ARIAL_INFO)
+        arial = wx.Font(ARIAL_INFO)
         self.SetFont(font)
-        hght = self.GetTextExtent('X')[1]
+        hght = self.GetFullTextExtent(u'X')[1]
         for n in range(1,1000):
             arial.SetPointSize(n)
             self.SetFont(arial)
-            h = self.GetTextExtent(u"\u25a0")[1]
+            h = self.GetFullTextExtent(u"\u25a0")[1]
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
         self.SetFont(arial)
-        self.w0 = 2 * self.GetTextExtent(u"\u25a0")[0]
+        self.w0 = 2 * self.GetFullTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
@@ -3618,12 +3623,12 @@ class Menu(wx.Frame):
         for n in range(1,1000):
             arial.SetPointSize(n)
             self.SetFont(arial)
-            h = self.GetTextExtent(u"\u25ba")[1]
+            h = self.GetFullTextExtent(u"\u25ba")[1]
             if h > hght:
                 break
         arial.SetPointSize(n/2)
         self.SetFont(arial)
-        self.w2 = 2 * self.GetTextExtent(u"\u25ba")[0]
+        self.w2 = 2 * self.GetFullTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
@@ -3639,7 +3644,7 @@ class Menu(wx.Frame):
         self.menuGridCtrl.Set(self.items)
         self.UpdateMenu(ix == 0, ix)
         self.plugin.menuDlg = self
-        wx.Yield()
+        wx.GetApp().Yield()
         SetEvent(event)
 
 
@@ -3665,7 +3670,7 @@ class Menu(wx.Frame):
         # menu width calculation:
         width_lst=[]
         for item in self.choices:
-            width_lst.append(self.GetTextExtent(item+' ')[0])
+            width_lst.append(self.GetFullTextExtent(item+u' ')[0])
         width = max(width_lst)+8
         self.menuGridCtrl.SetColSize(0,self.w0)
         self.menuGridCtrl.SetColSize(1,width)
@@ -3681,8 +3686,8 @@ class Menu(wx.Frame):
         width += 6
         x_pos = x + (ws - width)/2
         y_pos = y + (hs - height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.menuGridCtrl.SetDimensions(2, 2, width-6, height-6, wx.SIZE_AUTO)
+        self.SetSize(x_pos, y_pos, width, height)
+        self.menuGridCtrl.SetSize(2, 2, width-6, height-6, wx.SIZE_AUTO)
         self.Show(True)
         self.Raise()
 
@@ -3923,6 +3928,8 @@ class RadioSure(eg.PluginBase):
 
     def GetLanguageXml(self):
         xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
+        if not exists(xmltoparse):
+            return None
         xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
         xmldoc = miniDom.parse(xmltoparse)
         general = xmldoc.getElementsByTagName('General')
@@ -5515,10 +5522,10 @@ If the string is empty, the event is not triggered."""
         intervalLbl = wx.StaticText(panel, -1, self.text.intervalLabel)
         textLabel = wx.StaticText(panel, -1, self.text.label)
         textControl = wx.TextCtrl(panel, -1, evtName, size = (200,-1))
-        textControl.SetToolTipString(self.text.toolSuffix)
+        textControl.SetToolTip(self.text.toolSuffix)
         textLabel2 = wx.StaticText(panel, -1, self.text.label2)
         textControl2 = wx.TextCtrl(panel, -1, evtName2, size = (200,-1))
-        textControl2.SetToolTipString(self.text.toolSuffix)
+        textControl2.SetToolTip(self.text.toolSuffix)
         AddCtrl = panel.sizer.Add
         AddCtrl(intervalLbl, 0, wx.TOP, 20)
         AddCtrl(periodNumCtrl, 0, wx.TOP, 3)
@@ -5878,25 +5885,25 @@ class ShowMenu(eg.ActionClass):
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
         fontButton = eg.FontSelectButton(panel, value = fontInfo)
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             fontButton.SetFont(font)
-            hght = fontButton.GetTextExtent('X')[1]
+            hght = fontButton.GetFullTextExtent(u'X')[1]
             if hght > 20:
                 break
         listBoxCtrl.SetDefaultCellFont(font)
-        arial = wx.FontFromNativeInfoString(ARIAL_INFO)
+        arial = wx.Font(ARIAL_INFO)
         fontButton.SetFont(font)
         for n in range(1,1000):
             arial.SetPointSize(n)
             fontButton.SetFont(arial)
-            h = fontButton.GetTextExtent(u"\u25a0")[1]
+            h = fontButton.GetFullTextExtent(u"\u25a0")[1]
             if h > hght:
                 break
         arial.SetPointSize(2*n/3)
         fontButton.SetFont(arial)
-        w0 = 2 * fontButton.GetTextExtent(u"\u25a0")[0]
+        w0 = 2 * fontButton.GetFullTextExtent(u"\u25a0")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
@@ -5904,12 +5911,12 @@ class ShowMenu(eg.ActionClass):
         for n in range(1,1000):
             arial.SetPointSize(n)
             fontButton.SetFont(arial)
-            h = fontButton.GetTextExtent(u"\u25ba")[1]
+            h = fontButton.GetFullTextExtent(u"\u25ba")[1]
             if h > hght:
                 break
         arial.SetPointSize(n/2)
         fontButton.SetFont(arial)
-        w2 = 2 * fontButton.GetTextExtent(u"\u25ba")[0]
+        w2 = 2 * fontButton.GetFullTextExtent(u"\u25ba")[0]
         attr = gridlib.GridCellAttr()
         attr.SetFont(arial)
         attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
@@ -5941,7 +5948,7 @@ class ShowMenu(eg.ActionClass):
         backSelColourButton = eg.ColourSelectButton(panel,backSel,title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog)
-        dialogButton.SetToolTipString(self.text.btnToolTip)
+        dialogButton.SetToolTip(self.text.btnToolTip)
         foreSelLbl.Enable(not inverted)
         foreSelColourButton.Enable(not inverted)
         backSelLbl.Enable(not inverted)
@@ -6018,11 +6025,11 @@ class ShowMenu(eg.ActionClass):
         def OnFontBtn(evt):
             value = evt.GetValue()
             self.fontInfo = value
-            font = wx.FontFromNativeInfoString(value)
+            font = wx.Font(value)
             for n in range(10,20):
                 font.SetPointSize(n)
                 fontButton.SetFont(font)
-                hght = fontButton.GetTextExtent('X')[1]
+                hght = fontButton.GetFullTextExtent(u'X')[1]
                 if hght > 20:
                     break
             listBoxCtrl.SetDefaultCellFont(font)

@@ -27,9 +27,9 @@ from eg.WinApi.Dynamic import (
 
 FLAGS = WS_CHILD | WS_VISIBLE | SBS_SIZEGRIP | SBS_SIZEBOXTOPLEFTALIGN
 
-class SizeGrip(wx.PyWindow):
+class SizeGrip(wx.Window):
     def __init__(self, parent):
-        wx.PyWindow.__init__(self, parent)
+        wx.Window.__init__(self, parent)
         size = GetSystemMetrics(SM_CYHSCROLL), GetSystemMetrics(SM_CXVSCROLL)
         self.SetMinSize(size)
         self.SetMaxSize(size)

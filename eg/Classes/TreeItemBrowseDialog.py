@@ -67,7 +67,7 @@ class TreeItemBrowseDialog(eg.TaskletDialog):
     def OnSelectionChanged(self, event):
         item = event.GetItem()
         if item.IsOk():
-            obj = self.treeCtrl.GetPyData(item)
+            obj = self.treeCtrl.GetItemData(item)
             if isinstance(obj, self.resultClasses):
                 self.resultData = obj
                 self.buttonRow.okButton.Enable(True)

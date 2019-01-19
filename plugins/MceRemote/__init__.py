@@ -54,6 +54,7 @@ eg.RegisterPlugin(
 import wx
 import os
 import _winreg as reg
+import tempfile
 from threading import Timer
 from msvcrt import get_osfhandle
 
@@ -384,12 +385,12 @@ class TransmitIr(eg.ActionBase):
     name = "Transmit IR"
 
     def __call__(self, code=""):
-        tmpFile = os.tmpfile()
-        tmpFile.write(code)
-        tmpFile.seek(0)
-        self.plugin.msgThread.dll.MceIrPlaybackFromFile(
-            get_osfhandle(tmpFile.fileno())
-        )
+        with tempfile.TemporaryFile() as tmpFile:
+            tmpFile.write(code)
+            tmpFile.seek(0)
+            self.plugin.msgThread.dll.MceIrPlaybackFromFile(
+                get_osfhandle(tmpFile.fileno())
+            )
 
 
     def Configure(self, code=""):

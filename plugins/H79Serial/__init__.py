@@ -9,6 +9,7 @@
 # 0.1 - initial
 # 0.2 - EventGhost 0.3.1+ compatibility
 #
+import pywintypes
 
 help = """\
 Commands are taken straight out of the RS232_H79.pdf document
@@ -153,9 +154,12 @@ class H79Serial(eg.PluginClass):
     def reader(self):
         line=""
         while self.readerkiller is False:
-            ch=self.serial.read()
+            try:
+                ch=self.serial.read()
+            except pywintypes.error:
+                ch=''
             if ch=='\n':
-                continue;
+                continue
             if ch=='\r':
                 if line != "":
                     self.TriggerEvent(line)

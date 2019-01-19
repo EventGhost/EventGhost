@@ -23,7 +23,6 @@ eg.RegisterPlugin(
 )
 
 import binascii
-import sys
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
 from eg.WinApi.HID import IsDeviceName

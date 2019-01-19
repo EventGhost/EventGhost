@@ -101,9 +101,9 @@ class OnkyoISCP(eg.PluginBase):
         try:
             s.connect((ip, port))
         except Exception as e:
-            self.PrintError("OnkyoISCP: Failed to connect to " + ip + ":" + str(port) + ": " + str(e))
+            self.PrintError(u"OnkyoISCP: Failed to connect to " + ip + u":" + str(port) + ": " + repr(e))
         else:
-            print "Connected to " + ip + ":" + str(port)
+            print u"Connected to " + ip + u":" + str(port)
         self.stopThreadEvent = Event()
         thread = Thread(
             target = self.Receive,
@@ -111,7 +111,7 @@ class OnkyoISCP(eg.PluginBase):
         thread.start()
 
 
-    def Configure(self, ip="", port="60128", timeout="1"):
+    def Configure(self, ip="", port=60128, timeout="1"):
         text = self.text
         panel = eg.ConfigPanel()
         wx_ip = panel.TextCtrl(ip)

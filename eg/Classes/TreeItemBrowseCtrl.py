@@ -50,9 +50,9 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         srcRoot = srcTree.GetRootItem()
         text = srcTree.GetItemText(srcRoot)
         image = srcTree.GetItemImage(srcRoot)
-        obj = srcTree.GetPyData(srcRoot)
+        obj = srcTree.GetItemData(srcRoot)
         self.root = root = self.AddRoot(text, image)
-        self.SetPyData(root, obj)
+        self.SetItemData(root, obj)
 
         self.normalfont = self.GetItemFont(self.root)
         # evil workaround to get another font
@@ -80,7 +80,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             if not self.IsExpanded(treeId):
                 self.Expand(treeId)
             tmp, cookie = self.GetFirstChild(treeId)
-            while self.GetPyData(tmp) is not item:
+            while self.GetItemData(tmp) is not item:
                 tmp, cookie = self.GetNextChild(tmp, cookie)
             treeId = tmp
         self.EnsureVisible(root)
@@ -101,7 +101,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
     @eg.LogIt
     def OnExpanding(self, event):
         treeId = event.GetItem()
-        obj = self.GetPyData(treeId)
+        obj = self.GetItemData(treeId)
         for child in obj.childs:
             if not self.filterFunc(child):
                 continue
@@ -113,7 +113,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
                     else child.icon.disabledIndex
                 ),
                 -1,
-                wx.TreeItemData(child)
+                child
             )
             for subChild in child.childs:
                 if self.filterFunc(subChild):

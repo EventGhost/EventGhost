@@ -306,7 +306,7 @@ class Table(wx.ListCtrl):
                 colLabel,
                 format = wx.LIST_FORMAT_LEFT
             )
-        self.InsertStringItem(0, "dummy")
+        self.InsertItem(0, "dummy")
         rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         self.minHeight = 4 + rect[1] + minRows * rect[3]
         self.DeleteAllItems()
@@ -331,7 +331,7 @@ class VarTable(wx.ListCtrl, TextEditMixin):
         self.InsertColumn(1, txt.defVal, wx.LIST_FORMAT_LEFT)
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
         self.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
-        self.InsertStringItem(0, "dummy")
+        self.InsertItem(0, "dummy")
         rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hh = rect[1] #header height
         hi = rect[3] #item height
@@ -364,8 +364,8 @@ class VarTable(wx.ListCtrl, TextEditMixin):
         cnt = len(data)
         i = 0
         for key, value in data.iteritems():
-            self.InsertStringItem(i, key)
-            self.SetStringItem(i, 1, value)
+            self.InsertItem(i, key)
+            self.SetItem(i, 1, value)
             i += 1
         self.Enable(i > 0)
 
@@ -379,7 +379,7 @@ class VarTable(wx.ListCtrl, TextEditMixin):
     def CloseEditor(self, event = None): #Hack of default method
         TextEditMixin.CloseEditor(self, event)
         if not event:
-            self.SetStringItem(*self.edCell) #WORKAROUND !!!
+            self.SetItem(*self.edCell) #WORKAROUND !!!
         elif isinstance(event, wx.CommandEvent):
             row, col, oldVal = self.edCell
             newVal = self.GetItem(row, col).GetText()
@@ -531,7 +531,7 @@ class VariableDialog(wx.Frame):
         sizer.Fit(self)
 
         def onClose(evt):
-            self.MakeModal(False)
+            # self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -547,7 +547,7 @@ class VariableDialog(wx.Frame):
         self.SetMinSize((500, -1))
         sizer.Layout()
         self.Raise()
-        self.MakeModal(True)
+        # self.MakeModal(True)
         self.Show()
 #===============================================================================
 
@@ -585,17 +585,17 @@ class ClientsDialog(wx.Frame):
             3
         )
         #setting cols width
-        clientListCtrl.InsertStringItem(0, " 255.255.255.255")
-        clientListCtrl.SetStringItem(0, 1, "HHHHHHH")
-        clientListCtrl.SetStringItem(0, 2, "0000-00-00 00:00:00")
+        clientListCtrl.InsertItem(0, " 255.255.255.255")
+        clientListCtrl.SetItem(0, 1, "HHHHHHH")
+        clientListCtrl.SetItem(0, 2, "0000-00-00 00:00:00")
         width_c = SYS_VSCROLL_X + clientListCtrl.GetWindowBorderSize()[0]
         for i in range(3):
             clientListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             width_c += clientListCtrl.GetColumnWidth(i)
         clientListCtrl.SetMinSize((width_c, clientListCtrl.minHeight))
         #buttons
-        abCli_Id = wx.NewId()
-        abAllCli_Id = wx.NewId()
+        abCli_Id = wx.NewIdRef()
+        abAllCli_Id = wx.NewIdRef()
         self.buttonIds = (abCli_Id, abAllCli_Id)
         abortButtonCli = wx.Button(panel, abCli_Id, text.abort)
         abortAllButtonCli = wx.Button(panel, abAllCli_Id, text.abortAll)
@@ -669,7 +669,7 @@ class ClientsDialog(wx.Frame):
         abortButtonCli.Enable(False)
 
         def onClose(evt):
-            self.MakeModal(False)
+            # self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -684,16 +684,16 @@ class ClientsDialog(wx.Frame):
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
-        self.MakeModal(True)
+        # self.MakeModal(True)
         self.Show()
 
     def RefreshTable(self):
         table = self.table
         table.DeleteAllItems()
         for i, clnt in enumerate(list(self.plugin.wsClients.iterkeys())):
-            table.InsertStringItem(i, clnt[0])
-            table.SetStringItem(i, 1, str(clnt[1]))
-            table.SetStringItem(i, 2, dt.fromtimestamp(
+            table.InsertItem(i, clnt[0])
+            table.SetItem(i, 1, str(clnt[1]))
+            table.SetItem(i, 2, dt.fromtimestamp(
                     self.plugin.wsClientsTime[clnt]
                 ).strftime('%Y-%m-%d %H:%M:%S'))
         cnt = table.GetItemCount()
@@ -735,17 +735,17 @@ class ServersDialog(wx.Frame):
             3
         )
         #setting cols width
-        serverListCtrl.InsertStringItem(0, 16*"H")
-        serverListCtrl.SetStringItem(0, 1, 24*"H")
-        serverListCtrl.SetStringItem(0, 2, "0000-00-00 00:00:00")
+        serverListCtrl.InsertItem(0, 16*"H")
+        serverListCtrl.SetItem(0, 1, 24*"H")
+        serverListCtrl.SetItem(0, 2, "0000-00-00 00:00:00")
         width_c = SYS_VSCROLL_X + serverListCtrl.GetWindowBorderSize()[0]
         for i in range(3):
             serverListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             width_c += serverListCtrl.GetColumnWidth(i)
         serverListCtrl.SetMinSize((width_c, serverListCtrl.minHeight))
         #buttons
-        abSrv_Id = wx.NewId()
-        abAllSrv_Id = wx.NewId()
+        abSrv_Id = wx.NewIdRef()
+        abAllSrv_Id = wx.NewIdRef()
         self.buttonIds = (abSrv_Id, abAllSrv_Id)
         abortButtonSrv = wx.Button(panel, abSrv_Id, text.abort)
         abortAllButtonSrv = wx.Button(panel, abAllSrv_Id, text.abortAll)
@@ -819,7 +819,7 @@ class ServersDialog(wx.Frame):
         abortButtonSrv.Enable(False)
 
         def onClose(evt):
-            self.MakeModal(False)
+            # self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -834,7 +834,7 @@ class ServersDialog(wx.Frame):
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
-        self.MakeModal(True)
+        # self.MakeModal(True)
         self.Show()
 
     def RefreshTable(self):
@@ -842,12 +842,12 @@ class ServersDialog(wx.Frame):
         table.DeleteAllItems()
         for i, srvr in enumerate(list(self.plugin.wsServers.iterkeys())):
             server = self.plugin.wsServers[srvr]
-            table.InsertStringItem(i, server.title)
-            table.SetStringItem(i, 1, str(server.url))
+            table.InsertItem(i, server.title)
+            table.SetItem(i, 1, str(server.url))
             ts = dt.fromtimestamp(
                 server.conTime
             ).strftime('%Y-%m-%d %H:%M:%S') if server.conTime else ""
-            table.SetStringItem(i, 2, ts)
+            table.SetItem(i, 2, ts)
         cnt = table.GetItemCount()
         abortAllButtonSrv = wx.FindWindowById(self.buttonIds[1])
         abortAllButtonSrv.Enable(cnt > 0)
@@ -2128,7 +2128,7 @@ class WsBroadcastCommand(eg.ActionBase):
         arg3Ctrl = wx.TextCtrl(panel, -1, arg3)
         othCtrl = wx.TextCtrl(panel, -1, othArgs)
         kwCtrl = wx.TextCtrl(panel, -1, kwArgs)
-        mainSizer = wx.FlexGridSizer(7, 2, 2, 10)
+        mainSizer = wx.FlexGridSizer(8, 2, 2, 10)
         mainSizer.AddGrowableCol(1)
         mainSizer.Add(nameLabel, 0, ACV)
         mainSizer.Add(nameCtrl,0,wx.EXPAND)
@@ -2471,9 +2471,9 @@ class WsSendMessage(eg.ActionBase):
     ):
         text = self.text
         panel = eg.ConfigPanel()
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -2692,9 +2692,9 @@ class WsSendValue(eg.ActionBase):
     ):
         text = self.text
         panel = eg.ConfigPanel()
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -2872,9 +2872,9 @@ class WsSendAllValues(eg.ActionBase):
     ):
         text = self.text
         panel = eg.ConfigPanel()
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -3069,9 +3069,9 @@ class WsSendData(eg.ActionBase):
     ):
         text = self.text
         panel = eg.ConfigPanel()
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -3362,9 +3362,9 @@ class WsSendCommand(eg.ActionBase):
     ):
         panel = eg.ConfigPanel(self)
         text = self.text
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -3420,7 +3420,7 @@ class WsSendCommand(eg.ActionBase):
         arg3Ctrl = wx.TextCtrl(panel, -1, arg3)
         othCtrl = wx.TextCtrl(panel, -1, othArgs)
         kwCtrl = wx.TextCtrl(panel, -1, kwArgs)
-        mainSizer = wx.FlexGridSizer(7, 2, 2, 10)
+        mainSizer = wx.FlexGridSizer(8, 2, 2, 10)
         mainSizer.AddGrowableCol(1)
         mainSizer.Add(nameLabel, 0, ACV)
         mainSizer.Add(nameCtrl,0,wx.EXPAND)
@@ -3638,9 +3638,9 @@ class WsSendUniversal(eg.ActionBase):
     ):
         panel = eg.ConfigPanel(self)
         text = self.text
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -3786,9 +3786,9 @@ class WsStopClientPeriodicTasks(eg.ActionBase):
         panel = eg.ConfigPanel()
         label = wx.StaticText(panel,-1,self.text.label)
         taskCtrl = wx.TextCtrl(panel,-1,taskName)
-        id2 = wx.NewId()
-        id3 = wx.NewId()
-        id4 = wx.NewId()
+        id2 = wx.NewIdRef()
+        id3 = wx.NewIdRef()
+        id4 = wx.NewIdRef()
         radioBoxModeClient = wx.RadioBox(
             panel,
             -1,
@@ -5024,8 +5024,8 @@ class Webserver(eg.PluginBase):
             panel.StaticText(text.keyfile + ":")
         )
         eg.EqualizeWidths(labels)
-        labels[8].SetToolTipString(text.sslTool)
-        labels[9].SetToolTipString(text.sslTool)
+        labels[8].SetToolTip(text.sslTool)
+        labels[9].SetToolTip(text.sslTool)
         noAutWsCtrl = wx.CheckBox(panel, -1, self.text.noAutWs)
         noAutWsCtrl.SetValue(noAutWs)
 
@@ -5175,7 +5175,7 @@ class ConfigureTargetsDialog(eg.Dialog):
         self.listCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnDeselectItem)
         self.listCtrl.InsertColumn(0, "Target")
         for i in range(10):
-            self.listCtrl.InsertStringItem(i, "Test %d" % i)
+            self.listCtrl.InsertItem(i, "Test %d" % i)
 
         addButton = self.Button("Add")
         editButton = self.Button("Edit")
@@ -5248,7 +5248,7 @@ class StartClient(eg.ActionBase):
 
 
         titleCtrl = wx.TextCtrl(panel,-1,title)
-        titleCtrl.SetToolTipString(text.uniq)
+        titleCtrl.SetToolTip(text.uniq)
         titleSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, pext.serverTitle),
             wx.HORIZONTAL
@@ -6067,9 +6067,9 @@ class JumpIf(eg.ActionBase):
         lbl2 = wx.StaticText(panel, -1, self.text.text2)
         lbl4 = wx.StaticText(panel, -1, self.text.text4)
         ctrl1 = wx.TextCtrl(panel, -1, var)
-        ctrl1.SetToolTipString(text.tooltip1)
+        ctrl1.SetToolTip(text.tooltip1)
         ctrl2 = wx.TextCtrl(panel, -1, val)
-        ctrl2.SetToolTipString(text.tooltip2)
+        ctrl2.SetToolTip(text.tooltip2)
         kindCtrl = panel.Choice(kind, choices=self.text.choices)
         linkCtrl = panel.MacroSelectButton(
             eg.text.General.choose,
@@ -6077,8 +6077,8 @@ class JumpIf(eg.ActionBase):
             text.mesg2,
             link
         )
-        linkCtrl.textBox.textCtrl.SetToolTipString(text.mesg2)
-        linkCtrl.button.SetToolTipString(text.mesg2)
+        linkCtrl.textBox.textCtrl.SetToolTip(text.mesg2)
+        linkCtrl.button.SetToolTip(text.mesg2)
         gosubCtrl = panel.CheckBox(gosub, text.text3)
         linkCtrl2 = panel.MacroSelectButton(
             eg.text.General.choose,
@@ -6086,8 +6086,8 @@ class JumpIf(eg.ActionBase):
             text.mesg3,
             link2
         )
-        linkCtrl2.textBox.textCtrl.SetToolTipString(text.mesg3)
-        linkCtrl2.button.SetToolTipString(text.mesg3)
+        linkCtrl2.textBox.textCtrl.SetToolTip(text.mesg3)
+        linkCtrl2.button.SetToolTip(text.mesg3)
         gosubCtrl2 = panel.CheckBox(gosub2, text.text3)
         eg.EqualizeWidths((lbl1,lbl2,lbl4))
         topSizer = wx.FlexGridSizer(1, 4, 15, 5)
@@ -6098,8 +6098,7 @@ class JumpIf(eg.ActionBase):
         topSizer.Add(kindCtrl, 0, wx.EXPAND)
         topSizer.Add(ctrl2, 0, wx.EXPAND)
 
-        sizer = wx.FlexGridSizer(4, 2, 3, 5)
-        sizer.AddGrowableCol(1)
+        sizer = wx.FlexGridSizer(5, 2, 3, 5)
         sizer.Add(lbl2, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(linkCtrl, 1, wx.EXPAND)
         sizer.Add((0, 0))
@@ -6110,6 +6109,7 @@ class JumpIf(eg.ActionBase):
         sizer.Add(linkCtrl2, 1, wx.EXPAND)
         sizer.Add((0, 0))
         sizer.Add(gosubCtrl2)
+        sizer.AddGrowableCol(1)
 
         panel.sizer.Add(topSizer, 0, wx.TOP|wx.EXPAND, 10)
         panel.sizer.Add(sizer,0,wx.TOP|wx.EXPAND, 25)

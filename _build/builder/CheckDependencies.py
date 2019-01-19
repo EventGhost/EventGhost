@@ -131,7 +131,7 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
-    version = "5.5.8"
+    version = "5.5.9"
     package = "innosetup"
     #url = "http://www.innosetup.com/isdl.php"
     url = "http://www.innosetup.com/download.php/is-unicode.exe"
@@ -175,8 +175,8 @@ class ModuleDependency(DependencyBase):
 
 class PyWin32Dependency(DependencyBase):
     name = "pywin32"
-    version = "220"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
+    version = "224"
+    # url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
 
     def Check(self):
         versionFilePath = join(
@@ -192,8 +192,8 @@ class PyWin32Dependency(DependencyBase):
 
 class StacklessDependency(DependencyBase):
     name = "Stackless Python"
-    version = "2.7.9"
-    url = "http://www.stackless.com/binaries/python-2.7.9150-stackless.msi"
+    version = "2.7.15"
+    url = "http://www.stackless.com/binaries/python-2.7.15150-stackless.msi"
 
     def Check(self):
         try:
@@ -206,20 +206,20 @@ class StacklessDependency(DependencyBase):
 
 DEPENDENCIES = [
     ModuleDependency(
-        name = "CommonMark",
-        module = "CommonMark",
-        version = "0.7.0",
+        name = "commonmark",
+        module = "commonmark",
+        version = "0.8.1",
     ),
     ModuleDependency(
         name = "comtypes",
         module = "comtypes",
-        version = "1.1.2",
+        version = "1.1.7",
     ),
     ModuleDependency(
         name = "ctypeslib",
         module = "ctypeslib",
         version = "0.5.6",
-        url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
+        url = "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
     ),
     ModuleDependency(
         name = "future",
@@ -242,7 +242,7 @@ DEPENDENCIES = [
         name = "Pillow",
         module = "PIL",
         attr = "PILLOW_VERSION",
-        version = "3.1.1",
+        version = "5.4.1",
     ),
     ModuleDependency(
         name = "py2exe_py2",
@@ -250,23 +250,21 @@ DEPENDENCIES = [
         version = "0.6.9",
     ),
     ModuleDependency(
-        name = "PyCrypto",
+        name = "pycryptodome",
         module = "Crypto",
-        version = "2.6.1",
-        url = "https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl",
+        version = "3.7.2",
     ),
     PyWin32Dependency(),
     ModuleDependency(
         name = "Sphinx",
         module = "sphinx",
-        version = "1.7.5",
+        version = "1.8.0",
     ),
     StacklessDependency(),
     ModuleDependency(
         name = "wxPython",
         module = "wx",
-        version = "3.0.2.0",
-        url = "https://eventghost.github.io/dist/dependencies/wxPython-3.0.2.0-cp27-none-win32.whl",
+        version = "4.0.4",
     ),
 ]
 

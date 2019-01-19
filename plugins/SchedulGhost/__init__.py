@@ -134,8 +134,9 @@ once only, daily, weekly, monthly or yearly.''',
 #===============================================================================
 
 import os
+import wx
 import wx.lib.masked as maskedlib
-import wx.calendar as wxCal
+import wx.adv as wxCal
 from wx.lib.mixins.listctrl import CheckListCtrlMixin
 from eg.WinApi.Dynamic import BringWindowToTop
 from calendar import day_name, month_name, monthrange
@@ -148,6 +149,8 @@ from win32gui import MessageBox, GetWindowPlacement
 from codecs import lookup
 from codecs import open as openFile
 from winsound import PlaySound, SND_ASYNC
+
+month_name = [name.decode('mbcs') for name in month_name]
 
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
@@ -365,7 +368,7 @@ class HolidaysFrame(wx.Dialog):
         calW, calH = self.fixWin.GetWinSize()
         fixLbl = wx.StaticText(self, -1, text.fixBoxLabel)
         variableLbl = wx.StaticText(self, -1, text.varBoxLabel)
-        widthList = [self.GetTextExtent("30. %s 2000" % month)[0] +
+        widthList = [self.GetFullTextExtent(u"30. %s 2000" % month)[0] +
             SYS_VSCROLL_X for month in list(month_name)]
         widthList.append(fixLbl.GetSize()[0])
         widthList.append(variableLbl.GetSize()[0])
@@ -435,12 +438,10 @@ class HolidaysFrame(wx.Dialog):
         self.Bind(wx.EVT_LISTBOX, self.onHolBoxSel)
         sizer.Layout()
         self.SetSizer(sizer)
-        self.MakeModal(True)
         self.Show(True)
 
 
     def onClose(self, evt):
-        self.MakeModal(False)
         self.GetParent().GetParent().Raise()
         self.Destroy()
 
@@ -536,16 +537,16 @@ class CalendarPopup(wx.PopupWindow):
         wx.PopupWindow.__init__(self, parent)
         startDate = wx.DateTime()
         startDate.Set(1, 0)
-        self.cal = wxCal.GenericCalendarCtrl(
+        self.cal = wxCal.CalendarCtrl(
             self,
             -1,
             startDate,
-            style = (wxCal.CAL_MONDAY_FIRST, wxCal.CAL_SUNDAY_FIRST)[first_day]
+            style=(wxCal.CAL_MONDAY_FIRST, wxCal.CAL_SUNDAY_FIRST)[first_day]
                 | wxCal.CAL_SHOW_HOLIDAYS
                 | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
                 | wxCal.CAL_SHOW_SURROUNDING_WEEKS
         )
-        self.cal.EnableYearChange(yearChange)
+        # self.cal.EnableYearChange(yearChange)
         sz = self.cal.GetBestSize()
         self.SetSize(sz)
         self.cal.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)
@@ -576,7 +577,7 @@ class CalendarPopup(wx.PopupWindow):
             self.holidays.sort()
         date = self.cal.GetDate()
         self.cal.SetHoliday(day)
-        date.AddDS(wx.DateSpan.Day())
+        date.Add(wx.DateSpan.Day())
         self.cal.SetDate(date)
         self.Refresh()
         evt.Skip()
@@ -639,7 +640,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
 
     def OnItemSelected(self, evt):
-        self.SelRow(evt.m_itemIndex)
+        self.SelRow(evt.GetSelection())
         evt.Skip()
 
 
@@ -667,7 +668,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
     def AppendRow(self):
         ix = self.GetItemCount()
-        self.InsertStringItem(ix, "")
+        self.InsertItem(ix, "")
         self.CheckItem(ix)
         self.EnsureVisible(ix)
         self.SelRow(ix)
@@ -709,8 +710,8 @@ class schedulerDialog(wx.Dialog):
             if flag:
                 dynamicSizer.Clear(True)
                 self.ctrls = []
-                self.ctrls.append(wx.NewId())
-                self.ctrls.append(wx.NewId())
+                self.ctrls.append(wx.NewIdRef())
+                self.ctrls.append(wx.NewIdRef())
             if type == -1:
                 return
             if type != 1 and type != 6  and flag:
@@ -720,11 +721,11 @@ class schedulerDialog(wx.Dialog):
                 )
             if type == 0:
                 if flag:
-                    self.ctrls.append(wx.NewId())
-                    dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
-                            style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+                    self.ctrls.append(wx.NewIdRef())
+                    dp = wx.adv.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
+                            style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY)
                     topSizer.Add(dp,0,wx.EXPAND)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     yearlyCtrl = wx.CheckBox(self, self.ctrls[3], self.text.yearly)
                     topSizer.Add(yearlyCtrl, 0, wx.EXPAND|wx.LEFT, 30)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND|wx.TOP, 2)
@@ -733,7 +734,7 @@ class schedulerDialog(wx.Dialog):
                     yearlyCtrl = wx.FindWindowById(self.ctrls[3])
                 if data:
                     if not data[2]:
-                        val = wx.DateTime_Now()
+                        val = wx.DateTime.Now()
                         data[2] = str(dt.now())[:10]
                     wxDttm = wx.DateTime()
                     wxDttm.Set(
@@ -750,31 +751,31 @@ class schedulerDialog(wx.Dialog):
                         choices.insert(0, list(day_name)[-1])
                     else:
                         choices = list(day_name)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
                         choices = choices,
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_2 = wx.CheckBox(
                         self,
                         self.ctrls[3],
                         self.text.holidCheck_2
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_1 = wx.CheckBox(
                         self,
                         self.ctrls[4],
                         self.text.holidCheck_1
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_4 = wx.CheckBox(
                         self,
                         self.ctrls[5],
                         self.text.holidCheck_4
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_3 = wx.CheckBox(
                         self,
                         self.ctrls[6],
@@ -845,7 +846,7 @@ class schedulerDialog(wx.Dialog):
                     )
                     topSizer.Add(dateSizer, 0, wx.EXPAND)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP,2)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     serialCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
@@ -857,7 +858,7 @@ class schedulerDialog(wx.Dialog):
                         choices.insert(0, list(day_name)[-1])
                     else:
                         choices = list(day_name)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[3],
@@ -873,28 +874,28 @@ class schedulerDialog(wx.Dialog):
                         0,
                         wx.ALIGN_CENTER | wx.LEFT, 10
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_1 = wx.CheckListBox(
                         self,
                         self.ctrls[4],
                         choices = list(month_name)[1:7],
                     )
                     dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_2 = wx.CheckListBox(
                         self,
                         self.ctrls[5],
                         choices = list(month_name)[7:],
                     )
                     dateSizer.Add(monthsCtrl_2, 0, wx.ALIGN_CENTER | wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_1 = wx.CheckBox(
                         self,
                         self.ctrls[6],
                         self.text.holidCheck_1
                     )
                     dynamicSizer.Add(holidCheck_1, 0, wx.TOP, 2)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     holidCheck_3 = wx.CheckBox(
                         self,
                         self.ctrls[7],
@@ -937,28 +938,28 @@ class schedulerDialog(wx.Dialog):
                     dateSizer = wx.BoxSizer(wx.HORIZONTAL)
                     topSizer.Add(dateSizer, 0, wx.EXPAND)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP, 2)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_1_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
                         choices = [str(i) + '.' for i in range(1, 9)],
                     )
                     dateSizer.Add(q_1_Ctrl, 0, wx.LEFT, 5)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_2_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[3],
                         choices = [str(i) + '.' for i in range(9, 17)],
                     )
                     dateSizer.Add(q_2_Ctrl, 0, wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_3_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[4],
                         choices = [str(i) + '.' for i in range(17, 25)],
                     )
                     dateSizer.Add(q_3_Ctrl, 0, wx.LEFT, -1)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     q_4_Ctrl = wx.CheckListBox(
                         self,
                         self.ctrls[5],
@@ -966,14 +967,14 @@ class schedulerDialog(wx.Dialog):
                     )
                     dateSizer.Add(q_4_Ctrl, 0, wx.LEFT, -1)
                     dateSizer.Add((-1, 1), 1, wx.EXPAND)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_1 = wx.CheckListBox(
                         self,
                         self.ctrls[6],
                         choices = list(month_name)[1:7],
                     )
                     dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     monthsCtrl_2 = wx.CheckListBox(
                         self,
                         self.ctrls[7],
@@ -1008,16 +1009,16 @@ class schedulerDialog(wx.Dialog):
                     monthsCtrl_2.Check(i, bool(val & (2 ** i)))
             elif type == 5:
                 if flag:
-                    self.ctrls.append(wx.NewId())
-                    dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
-                            style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+                    self.ctrls.append(wx.NewIdRef())
+                    dp = wx.adv.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
+                            style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY)
                     topSizer.Add(dp, 0, wx.EXPAND)
                     dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP, 2)
                 else:
                     dp = wx.FindWindowById(self.ctrls[2])
                 if data:
                     if not data[2]:
-                        val = wx.DateTime_Now()
+                        val = wx.DateTime.Now()
                         data[2] = str(dt.now())[:10]
                     wxDttm = wx.DateTime()
                     wxDttm.Set(
@@ -1049,9 +1050,9 @@ class schedulerDialog(wx.Dialog):
                     (-1, 22),
                     wx.SP_VERTICAL
                 )
-                initTime = wx.DateTime_Now()
+                initTime = wx.DateTime.Now()
                 initTime.SetSecond(0)
-                initTime.AddTS(wx.TimeSpan.Minute())
+                initTime.Add(wx.TimeSpan.Minute())
                 val = data[0] if data and data[0] else initTime
                 timeCtrl = eg.TimeCtrl(
                     self,
@@ -1089,7 +1090,7 @@ class schedulerDialog(wx.Dialog):
                 bottomSizer.Add(testBttn, 0, wx.EXPAND | wx.RIGHT)
             else:
                 timeCtrl = wx.FindWindowById(self.ctrls[0])
-                val = data[0] if data and data[0] else wx.DateTime_Now()
+                val = data[0] if data and data[0] else wx.DateTime.Now()
                 timeCtrl.SetValue(val)
                 lenCtrl = wx.FindWindowById(self.ctrls[1])
                 val = data[1] if data and data[1] else "00:00:00"
@@ -1101,7 +1102,7 @@ class schedulerDialog(wx.Dialog):
                         wx.StaticBox(self, -1, self.text.choosePeriod),
                         wx.HORIZONTAL
                     )
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     numCtrl = MySpinIntCtrl(self, -1, value = 1, min = 1)
                     numCtrl.SetNumCtrlId(self.ctrls[3])
                     bottomSizer.Add(
@@ -1114,7 +1115,7 @@ class schedulerDialog(wx.Dialog):
                         wx.ALIGN_CENTER
                     )
                     bottomSizer.Add(numCtrl, 0, wx.LEFT, 4)
-                    self.ctrls.append(wx.NewId())
+                    self.ctrls.append(wx.NewIdRef())
                     unitCtrl = wx.Choice(
                         self,
                         self.ctrls[4],
@@ -1164,7 +1165,7 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -1176,7 +1177,7 @@ class schedulerDialog(wx.Dialog):
                     self.tmpData[self.lastRow][2],
                     self.tmpData[self.lastRow][3]
                 )
-                grid.SetStringItem(self.lastRow, 3, next)
+                grid.SetItem(self.lastRow, 3, next)
             else:
                 ix = 1
             if ix == 1:
@@ -1195,7 +1196,7 @@ class schedulerDialog(wx.Dialog):
                     self.tmpData[self.lastRow][2],
                     self.tmpData[self.lastRow][3]
                 )
-                grid.SetStringItem(self.lastRow, 3, next)
+                grid.SetItem(self.lastRow, 3, next)
             else:
                 evt.Skip()
             Diff()
@@ -1208,7 +1209,7 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -1251,7 +1252,7 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
             )
-            grid.SetStringItem(self.lastRow, 3, next)
+            grid.SetItem(self.lastRow, 3, next)
             Diff()
 
 
@@ -1261,7 +1262,7 @@ class schedulerDialog(wx.Dialog):
 
 
         def OnSelectCell(evt):
-            self.lastRow = evt.m_itemIndex
+            self.lastRow = evt.GetSelection()
             OpenSchedule()
             Diff()
             evt.Skip() # necessary !!!
@@ -1353,7 +1354,7 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[lngth][1] = newTitle
                 grid.AppendRow()
                 grid.SelRow(lngth)
-                grid.SetStringItem(lngth, 1, newTitle)
+                grid.SetItem(lngth, 1, newTitle)
                 OpenSchedule()
             elif id == bttns[2]: # Delete
                 self.tmpData.pop(self.lastRow)
@@ -1389,7 +1390,7 @@ class schedulerDialog(wx.Dialog):
                         self.tmpData[i][2],
                         self.tmpData[i][3]
                     )
-                    grid.SetStringItem(i, 3, next)
+                    grid.SetItem(i, 3, next)
                 self.plugin.data = cpy(self.tmpData)
                 self.plugin.dataToXml()
                 self.plugin.UpdateEGscheduler()
@@ -1445,7 +1446,7 @@ class schedulerDialog(wx.Dialog):
 
         def onSchedulerTitle(evt):
             txt = evt.GetString()
-            grid.SetStringItem(self.lastRow, 1, txt)
+            grid.SetItem(self.lastRow, 1, txt)
             self.tmpData[self.lastRow][1] = txt
             Diff()
 
@@ -1476,7 +1477,7 @@ class schedulerDialog(wx.Dialog):
                     self.tmpData[self.lastRow][2],
                     self.tmpData[self.lastRow][3]
                 )
-                grid.SetStringItem(self.lastRow, 3, next)
+                grid.SetItem(self.lastRow, 3, next)
                 Diff()
             else:
                 evt.Skip()
@@ -1530,7 +1531,7 @@ class schedulerDialog(wx.Dialog):
         bttnSizer.Add((5, -1))
         i = 0
         for bttn in self.text.buttons:
-            id = wx.NewId()
+            id = wx.NewIdRef()
             bttns.append(id)
             b = wx.Button(self, id, bttn)
             bttnSizer.Add(b,1)
@@ -1544,15 +1545,15 @@ class schedulerDialog(wx.Dialog):
         sizer.Add(bttnSizer,0,wx.EXPAND)
         schedulerName = wx.TextCtrl(self, -1, "")
         typeChoice = wx.Choice(self, -1, choices = self.text.sched_type)
-        id = wx.NewId() #testBttn
+        id = wx.NewIdRef() #testBttn
         bttns.append(id)
         self.Bind(wx.EVT_BUTTON, onTestButton, id = id)
-        wx.EVT_CHECKLISTBOX(self, -1, onCheckListBox)
-        maskedlib.EVT_TIMEUPDATE(self, -1, OnTimeChange)
-        wx.EVT_TEXT(self, -1, onPeriodNumber)
-        wx.EVT_CHOICE(self, -1, onPeriodUnit)
-        wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
-        wx.EVT_CHECKBOX(self, -1, onCheckBox)
+        self.Bind(wx.EVT_CHECKLISTBOX, onCheckListBox)
+        self.Bind(maskedlib.EVT_TIMEUPDATE, OnTimeChange)
+        self.Bind(wx.EVT_TEXT, onPeriodNumber)
+        self.Bind(wx.EVT_CHOICE, onPeriodUnit)
+        self.Bind(wx.adv.EVT_DATE_CHANGED, onDatePicker)
+        self.Bind(wx.EVT_CHECKBOX, onCheckBox)
         self.Bind(eg.EVT_VALUE_CHANGED, OnUpdateDialog)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, OnSelectCell)
         typeChoice.Bind(wx.EVT_CHOICE, onTypeChoice)
@@ -1588,13 +1589,13 @@ class schedulerDialog(wx.Dialog):
         rows = len(self.tmpData)
         if rows > 0:
             for row in range(rows):
-                grid.InsertStringItem(row, "")
+                grid.InsertItem(row, "")
                 if self.tmpData[row][0]:
                     grid.CheckItem(row)
-                grid.SetStringItem(row, 1, self.tmpData[row][1])
-                grid.SetStringItem(row, 2, self.tmpData[row][4])
+                grid.SetItem(row, 1, self.tmpData[row][1])
+                grid.SetItem(row, 2, self.tmpData[row][4])
                 next = self.plugin.NextRun(self.tmpData[row][2], self.tmpData[row][3])
-                grid.SetStringItem(row, 3, next)
+                grid.SetItem(row, 3, next)
             self.lastRow = 0
             grid.SelRow(0)
             OpenSchedule()
@@ -1655,14 +1656,14 @@ class schedulerDialog(wx.Dialog):
         else:
             ix = len(self.tmpData)
             self.tmpData.append(schedule)
-            self.grid.InsertStringItem(ix, "")
+            self.grid.InsertItem(ix, "")
         if schedule[0]:
             self.grid.CheckItem(ix)
         elif self.grid.IsChecked(ix):
             self.grid.ToggleItem(ix)
-        self.grid.SetStringItem(ix, 1, schedule[1])
+        self.grid.SetItem(ix, 1, schedule[1])
         next = self.plugin.NextRun(schedule[2], schedule[3])
-        self.grid.SetStringItem(ix, 3, next)
+        self.grid.SetItem(ix, 3, next)
         if self.lastRow == ix:
             evt = eg.ValueChangedEvent(ix)
             wx.PostEvent(self, evt)
@@ -1670,8 +1671,8 @@ class schedulerDialog(wx.Dialog):
 
     def RefreshGrid(self, ix, last, next):
         if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
-            self.grid.SetStringItem(ix, 2, last)
-            self.grid.SetStringItem(ix, 3, next)
+            self.grid.SetItem(ix, 2, last)
+            self.grid.SetItem(ix, 3, next)
 
 
     def onClose(self, evt):
@@ -1814,21 +1815,21 @@ class SchedulGhost(eg.PluginBase):
         defaultPrefCtrl  = wx.TextCtrl(panel, -1, prefix)
 
         def AlignButtonLines(line_1, line_2):
-            l_1 = panel.GetTextExtent(line_1)[0]
-            l_2 = panel.GetTextExtent(line_2)[0]
+            l_1 = panel.GetFullTextExtent(line_1)[0]
+            l_2 = panel.GetFullTextExtent(line_2)[0]
             if l_1 == l_2:
                 return line_1 + "\n" + line_2
             Max = max(l_1, l_2)
-            if panel.GetTextExtent(line_1)[0] < Max:
+            if panel.GetFullTextExtent(line_1)[0] < Max:
                 flg = True
                 tmp = line_1
             else:
                 flg = False
                 tmp = line_2
-            Len = panel.GetTextExtent(tmp)[0]
+            Len = panel.GetFullTextExtent(tmp)[0]
             while Max > Len:
                 tmp += " "
-                Len = panel.GetTextExtent(tmp)[0]
+                Len = panel.GetFullTextExtent(tmp)[0]
             if flg:
                 return tmp + "\n" + line_2
             return line_1 + "\n" + tmp
@@ -2971,9 +2972,9 @@ class PopupText(wx.Frame):
             self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
             label.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
             tip = plugin.text.popupTip1 % str(dt.now())[:19]
-        label.SetToolTipString(tip)
+        label.SetToolTip(tip)
         self.SetColor(fore = self.args[2], back = self.args[1])
-        self.UpdateText(txt = self.args[0], font = wx.FontFromNativeInfoString(self.args[3]))
+        self.UpdateText(txt = self.args[0], font = wx.Font(self.args[3]))
         self.SetPosition(self.args[4])
         self.Show(True)
         BringWindowToTop(self.GetHandle())
@@ -3059,9 +3060,9 @@ class EggTimerFrame(wx.Frame):
         self.val = args[0]
         self.SetBackgroundColour(wx.NullColour)
         durLabel = wx.StaticText(self, -1, text.timeLbl)
-        initTime = wx.DateTime_Now()
+        initTime = wx.DateTime.Now()
         initTime.SetSecond(0)
-        initTime.AddTS(wx.TimeSpan.Minute())
+        initTime.Add(wx.TimeSpan.Minute())
         timeCtrl = eg.TimeCtrl_Duration(self, -1, self.val, fmt24hr = True, style = wx.BORDER_SUNKEN)
         fnt = timeCtrl.GetFont()
         fnt.SetPointSize(4 * fnt.GetPointSize())
@@ -3093,7 +3094,6 @@ class EggTimerFrame(wx.Frame):
         self.startBtn.Bind(wx.EVT_BUTTON, self.onStart)
         timeCtrl.Bind(maskedlib.EVT_TIMEUPDATE, self.OnTimeChange)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        #self.MakeModal(True)
         self.Show(True)
         self.startBtn.Show(self.val != "00:00:00")
         timeCtrl.SetSelection(3, 5)
@@ -3119,7 +3119,6 @@ class EggTimerFrame(wx.Frame):
 
 
     def onClose(self, evt):
-        #self.MakeModal(False)
         self.plugin.eggPos = self.GetPosition()
         self.plugin.eggTimer = None
         wx.CallAfter(self.Show, False)
@@ -3176,7 +3175,7 @@ class EggTimersList(wx.Frame):
                 eggListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             size += eggListCtrl.GetColumnWidth(i)
         eggListCtrl.SetMinSize((size, -1))
-        eggListCtrl.InsertStringItem(0, "")
+        eggListCtrl.InsertItem(0, "")
         rect = eggListCtrl.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hh = rect[1]
         hi = rect[3]
@@ -3209,12 +3208,12 @@ class EggTimersList(wx.Frame):
                 cnt = len(tmpLst)
                 for row in range(cnt):
                     args = self.plugin.eggTimers[tmpLst[row][2][0]]
-                    eggListCtrl.InsertStringItem(row, "")  #Dummy column 0
-                    eggListCtrl.SetStringItem(row, 1, args[9])
-                    eggListCtrl.SetStringItem(row, 2, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
-                    eggListCtrl.SetStringItem(row, 3, "%s.%s" % (args[1], args[2]))
-                    eggListCtrl.SetStringItem(row, 4, args[4])
-                    eggListCtrl.SetStringItem(row, 5, self.text.yes if len(args[3]) > 0 else "")
+                    eggListCtrl.InsertItem(row, "")  #Dummy column 0
+                    eggListCtrl.SetItem(row, 1, args[9])
+                    eggListCtrl.SetItem(row, 2, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
+                    eggListCtrl.SetItem(row, 3, "%s.%s" % (args[1], args[2]))
+                    eggListCtrl.SetItem(row, 4, args[4])
+                    eggListCtrl.SetItem(row, 5, self.text.yes if len(args[3]) > 0 else "")
             self.SetClientSize((self.GetClientSize()[0], 4 + hh + cnt * hi))
             if event:
                 event.Skip()
@@ -3236,7 +3235,6 @@ class EggTimersList(wx.Frame):
     def onClose(self, evt):
         self.timer.Stop()
         del self.timer
-        self.MakeModal(False)
         self.plugin.eggListPos = self.GetPosition()
         self.plugin.eggTimersList = None
         wx.CallAfter(self.Show, False)
@@ -3492,7 +3490,7 @@ class SetEggTimer(eg.ActionBase):
 
         def OnFontBtn(evt):
             if self.panel.popupFrame:
-                font = wx.FontFromNativeInfoString(evt.GetValue())
+                font = wx.Font(evt.GetValue())
                 self.panel.popupFrame.UpdateText(font = font)
             evt.Skip()
         fontBtn.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
