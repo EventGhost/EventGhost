@@ -246,7 +246,7 @@ class AddEventDialog(eg.TaskletDialog):
         def FindItem(item, text):
             subItem, cookie = tree.GetFirstChild(item)
             while subItem.IsOk():
-                if tree.GetItemData(subItem).Data.name == text:
+                if tree.GetItemData(subItem).name == text:
                     return subItem
                 FindItem(subItem, text)
                 subItem = tree.GetNextSibling(subItem)

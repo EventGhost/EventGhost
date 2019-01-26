@@ -1,0 +1,478 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>DisplayText</title></head>
+<body>
+<h3>The Display Text action</h3>
+<p>The&nbsp;<i>Display Text</i> action displays
+an arbitrary text on the
+LCD or VFD
+display. It acquires the display first, if necessary (see action <i>Acquire
+Display</i> action for details).</p>
+<p>The action supports <b>four different modes</b>,
+depending on the use case:</p><p></p>
+<table border="1" cellpadding="5" cellspacing="0" width="100%">
+<tbody>
+<tr>
+<td bgcolor="#cccccc"></td>
+<td bgcolor="#cccccc"><b>Use case</b></td>
+<td bgcolor="#cccccc"><b>Example</b></td>
+<td bgcolor="#cccccc"><b>Mode</b></td>
+<td bgcolor="#cccccc"><b>Method</b></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Display static text</td>
+<td>After system startup or resume, you want
+to&nbsp;display "Welcome to my home cinema!"</td>
+<td>Simple, static text mode</td>
+<td>Configure <i>Display Text</i> action
+through the GUI configuration dialog</td>
+</tr>
+<tr><td>2</td><td>Display dynamic text with variables</td><td>You store the current volume in a variable <tt>eg.globals.Volume</tt>. Your display shall display this value, even when it changes.</td><td>Simple, variable text mode</td><td>Configure <i>Display Text</i> action
+through the GUI configuration dialog, passing variables.</td></tr><tr>
+<td>3</td>
+<td>Display dynamic text, event triggered</td>
+<td>Your favorite music player creates EG events (for
+example 'PlaybackStart'
+and 'PlaybackStop') when it starts/stops playing a song. You want to
+display the current song title or album info on the VFD or LCD screen.</td>
+<td>Script mode</td>
+<td>Call the <i>DisplayText</i> action in a EG
+Python Script action and pass it variables for the text to display.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Display dynamic text, periodically updated, <i>not</i>
+event triggered</td>
+<td>You
+want to display&nbsp;dynamic information which requires periodic
+updates and for which you don't get events in EG, like a clock, weather
+info, CPU temperature, e-mail status etc.</td>
+<td>User callback mode</td>
+<td>In an EG Python Script, create a user callback function
+and pass it to the&nbsp; <i>DisplayText</i>
+action.&nbsp;<i>DisplayText</i> calls this function
+periodically. </td>
+</tr>
+</tbody>
+</table>
+<br><h4>1. Simple, Static Text Mode</h4>
+<p>The&nbsp;<i>simple, static text mode</i> is
+what is provided through this GUI
+dialog: You can display an arbitrary, static text on the iMON VFD or
+LCD display by calling this action, 'out of the box'. There are a lot
+of nice options to control the scroll mode, scroll speed and auto
+clear. Just play around with them to learn how they work.</p><h4>2. Simple, Variable Text Mode</h4>The <i>simple, variable text mode</i> is still very easy to use but you'll be surprised how powerful it is.<br><br>Suppose you store the current volume of your player in a global variable <tt>eg.globals.Volume</tt>.
+Now you intend to display the value of this variable, e.g. "Volume 55"
+on the display and even when this value changes, the new value shall be displayed, without calling the <i>Display Text</i> action again and again. This can still be done very easy using the GUI dialog, just following a special syntax: Enter <br><i>&nbsp;&nbsp;&nbsp;&nbsp;Volume {eg.globals.Volume}</i><br>in the text field of the GUI dialog. The <i>Display Text </i>action parses the entered text continuously; if it finds text blocks following the pattern <i>{valid_python_expression}</i>
+it replaces the block with its evaluated value. This replacement (aka
+'evaluation') is done continuously; at any time the value changes, the
+new value is&nbsp;shown on the display.<br><br>You could also display the payload of the last event using the variable <tt>eg.event.payload</tt>, but it's not advisable, because the next event overwrites this value again. And since <i>Display Text</i>
+evaluates the variable continuously, it would probably not display what
+you want. If you want to display the payload of an event, it's better
+to assign the value to your own global variable first. In the event
+handler macro of that event, just create a <i>Python Command</i> <tt>eg.globals.MyVariable = eg.event.payload</tt> and&nbsp;call <i>Display Text</i> with the expression <tt>{eg.globals.MyVariable}</tt>.<br><h4>Display Priorities</h4>
+<p>Before we discuss the <i>script mode</i>,
+let's have a look at <i>Display Priorities</i>,
+another&nbsp;concept of this plugin. They are easy to understand.&nbsp;</p><p>Imagine a stack of
+written papers. You can only see and read the top sheet of this stack,
+unless you remove it, then you see the next lower one. The 'Display
+Text' action works the same: It can handle an arbitrary number of
+display texts, but
+only the one with the highest display priority (i.e. the one with the
+lowest number) is actually displayed.
+As soon as it gets cleared, the next message with the next lower
+priority is being displayed.&nbsp;</p><p>You
+can add (and clear) messages at any time with any priority. If a new
+message has top priority, it is
+immediately displayed, if it has a lower priority, it waits until the
+higher priority messages are
+cleared. Just if you add two messages with the same priority (let's say
+you add msg1 with prio=3 and msg2 with prio=3), the latter one replaces
+the
+first one.&nbsp;</p>
+<p>In a real-life configuration, you could use <i>display
+priorities</i> as follows:</p>
+<table border="1" cellpadding="5" cellspacing="0" width="100%">
+<tbody>
+<tr>
+<td bgcolor="#cccccc"><b>Priority</b></td>
+<td bgcolor="#cccccc"><b>Usage</b></td>
+<td bgcolor="#cccccc"><b>Meaning</b></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Keypress</td>
+<td>Display the name of the pressed key of the remote
+control during 1 second, then let it disappear again (see autoclear
+options)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DVBViewer Recordings</td>
+<td>While DVBViewer is recording, display recording
+information (channel, show, duration etc.) on the display</td>
+</tr>
+<tr>
+<td>5</td>
+<td>DVBViewer Playback or Live TV</td>
+<td>During normal live TV or playback of recordings
+information (channel, show, duration etc.) is shown.</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Clock</td>
+<td>If nothing else happens, display a date-time clock on
+the display.</td>
+</tr>
+</tbody>
+</table><h4>3. Script Mode</h4>
+<p>For most real-life situations the <i>static text mode</i>
+is not sufficient, because you want to display dynamic, real-life
+information on the display, like the song title or album information of
+what your favorite player currently plays or the status of an ongoing
+DVB recording. Sometimes such requirements can be achieved by the previously discussed&nbsp;<i>dynamic text mode</i>, but not always. In such cases the&nbsp;<i>script mode</i> comes into&nbsp;play.</p>
+<p>One thing has to be said in advance: you need&nbsp;little
+Python
+knowledge&nbsp;to achieve this, or at least you are not frightened
+to learn it ;) It's not as difficult as it sounds in this
+documentation (it's my flaw to explain things too complicate ;))</p>
+<p>OK,
+let's start. At the beginning, you need an EG event, like 'Play' or
+'StartRecording' or similar. Such events are generated by other
+EventGhost Plugins like the VLC plugin or the DVBViewer plugin.</p>
+<p>Triggered by such an event, you call an <i>EventGhost
+Python Script</i>, gather all information you want to display and
+call the <i>DisplayText</i> action with that information.</p>
+<p>Here's an example of displaying information about what is
+currently shown in DVBViewer:</p>
+<pre># Basic initialization<br>line1, line2 = '', ''<br><br># Step 1: Get the data from DVBViewer and format it for the iMON display<br>data = eg.plugins.DVBViewer.GetCurrentShowDetails()<br>if data is not None and len(data) &gt; 0:<br>    line1 = '[' + data['channel'] + '] ' + data['title'] <br>    line2 = data['starttime'] + ' - ' + data['endtime']<br><br># Step 2: Display the data on the screen<br>eg.plugins.iMON_Display.DisplayText(<br>    msgPriority=5,<br>    line1=line1,<br>    line2=line2<br>)</pre>
+<h5><b>Discussion</b></h5>
+<ul>
+<li>Put
+this code&nbsp;into an <i>EG Python Script</i> and
+call the action whenever the playstate changes (in case of DVBViewer:
+events <i>DVBViewer.Channel, DVBViewer.DisplayChange:TV,
+DVBViewer.DisplayChange:MEDIA, DVBViewer.PlaystateChange:PLAY,
+DVBViewer.DVBViewerIsConnected</i>).</li>
+<li>In
+Step 1 we call another action to get data from an information source -
+DVBViewer in our case. However, any other player plugin might provide
+similar information.</li>
+<li>In Step 2 the the formatted text is passed to the <i>DisplayText</i>
+action.</li>
+<li>The <i>DisplayText</i> action starts now
+displaying and scrolling the text until you replace it with another one
+or until you call the&nbsp;<i>ClearText</i> action.</li>
+<li>Note that this is the minimal call interface for the <i>DisplayText</i>
+action. It assumes default values for all other parameters, especially
+those influencing the scroll behavior. See discussion of the <i>DisplayText</i>
+action to learn more about the available parameters.</li>
+<li>The example is kept as simple as possible, you might want
+to improve it for your own needs.</li>
+</ul><h4>4. User Callback Mode</h4>
+<p>In the previous chapter we saw how to display dynamic text in
+the <i>script mode</i>, initially started by an event. But
+what if you don't have an
+event as&nbsp;starting point but your information is&nbsp;dynamically
+changing over the time and requires periodic updates? What if you want
+to display a clock (along with
+other information)? Maybe you could achieve that somehow
+with the <i>script mode</i> - but your configuration would
+probably end in a
+complicated monster.</p>
+<p>With the&nbsp;<i>user callback
+mode </i>there exists a much more elegant
+way. The rest of this chapter focuses on this mode.&nbsp; </p>
+<h5>User Callback Functions</h5>
+Suppose you want to show a simple clock on the
+display in the format "HH:MM:SS". This text changes every second.
+Without a callback you would have
+to call the&nbsp;<i>Display Text</i> action every
+second from your configuration
+script. Very cumbersome and
+inelegant. <i>User callbacks</i> as provided by
+the&nbsp;<i>Display Text</i> action open a much more
+elegant
+way to achieve this.
+All you have to do is:
+<ol>
+<li>To write a Python script function returning the text to
+display ("15:43:28", "15:43:29", "15:43:30", ...) and </li>
+<li>To tell the plugin to call this function every second (or
+in any other period). </li>
+</ol>
+<p>That's the trick: "Don't call us, we call you" ;) With this
+powerful
+concept you're able to bring almost every desired
+text on the screen. </p>
+<p>Here's the minimal code you have to put into an EG Python
+Script
+action:&nbsp;</p>
+<pre>from time import localtime, strftime<br><br># Step 1: Define the callback function. (Reduced to the bare minimum for this example)<br># The callback function must return two strings (they can be empty), regardless of LCD or VFD display. <br>def MyClockCallback( displayType, msgPriority, userCallbackObj ):<br>    line1 = strftime( "%H:%M:%S", localtime() )<br>    line2 = ''<br>    print "MyClockCallback called. Going to display '" + line1 + "'" # just for debug purposes. You can safely delete this line<br>    return line1, line2<br><br># Step 2: Call the 'DisplayText' plugin action<br>#   Pass the previously defined callback function. <br>#   The callback function will be called every 'userCallbackFreqInSec' seconds.<br>eg.plugins.iMON_Display.DisplayText(<br>    userCallbackFunc=MyClockCallback,   # that's the trick: pass the callback into the action<br>    userCallbackFreqInSec=1.0,          # how often the callback is called<br>)</pre>
+<p>Run this action script once... and your iMON display starts
+displaying a clock, second by second... :)
+</p>
+<p>One could even more shrink this code (I didn't do it to keep
+it better
+readable). With not more than four (effective) lines of code you have
+already a running
+clock on your iMON display.</p>
+<p>Let's dive a bit deeper into the details...<br>
+</p>
+<h5>User callback function format</h5>
+Your callback function must have the following format (or interface):
+<pre>def UniqueCallbackFunctionName( displayType, msgPriority, userCallbackObj ):<br>	return str( line1 ), str( line2 )<br></pre>
+<table border="1" cellpadding="5" cellspacing="0" height="312" width="100%">
+<tbody>
+<tr>
+<td bgcolor="#cccccc"><b>Name</b></td>
+<td bgcolor="#cccccc"><b>Type</b></td>
+<td bgcolor="#cccccc"><b>Description</b></td>
+</tr>
+<tr>
+<td><b>UniqueCallbackFunctionName</b></td>
+<td>Function</td>
+<td>The name of the callback function is arbitrary - as
+long as it is unique within your configuration!</td>
+</tr>
+<tr>
+<td><b>displayType </b></td>
+<td>String</td>
+<td>Input parameter; indicates the current display type. It
+is either 'LCD' or 'VFD'.</td>
+</tr>
+<tr>
+<td><b>msgPriority</b></td>
+<td>Integer</td>
+<td>Input parameter; indicates the message priority.</td>
+</tr>
+<tr>
+<td><b>userCallbackObj</b></td>
+<td>Object</td>
+<td>In-Out parameter; an optional, arbitrary object for
+user data,
+will be passed around with every callback function call. It allows the
+programmer to cache data and to get it back with the next cycle. <br>
+<p>The <tt>userCallbackObj</tt>
+must be defined and passed into the DisplayText action; see description
+of<tt> DisplayText()</tt> parameters below for details.</p>
+</td>
+</tr>
+<tr>
+<td><b>return str( line1 ), str( line2 )</b></td>
+<td>String, String</td>
+<td>The function must return two strings, regardless if VFD
+or LCD display. On VFD displays, they represent the two display lines.
+On LCD displays, the two strings are simply concatenated. The strings
+can be empty, of course.</td>
+</tr>
+</tbody>
+</table>
+<br><h4>The&nbsp;<i>DisplayText</i> action and its
+parameters</h4>
+<p>When working in <i>script mode</i> or&nbsp;<i>user
+callback mode</i>, you have to call the <tt>DisplayText</tt>
+action directly from a script. This section describes the parameters of
+the action. </p>
+<p><b>Notes</b>&nbsp;</p>
+<ul>
+<li><i>ALL </i>parameters are optional - if
+you omit them, the plugin uses defaults.</li>
+<li>Most scroll parameters are designed for iMON VFD
+screens, but they have no effect on iMON LCD screens. iMON LCD screens
+are controlled in a different way and have less possibilities than VFD
+screens.</li>
+</ul>
+<table border="1" cellpadding="5" cellspacing="0" width="100%">
+<tbody>
+<tr>
+<td bgcolor="#cccccc"><b>Name</b></td>
+<td bgcolor="#cccccc"><b>Type</b></td>
+<td bgcolor="#cccccc"><b>Default</b></td>
+<td bgcolor="#cccccc"><b>Description</b></td>
+</tr>
+<tr>
+<td><b>msgPriority</b></td>
+<td>Positive integer</td>
+<td>100</td>
+<td>The display priority of the message.
+<p>The rules are:</p>
+<ul>
+<li>Only the text with the highest priority is displayed,
+it hides all other texts with lower priorities.</li>
+<li>As soon as 'ClearText' on the text with highest
+priority is called, the text with next lower priority is displayed. </li>
+<li>Two texts with same priority can't exist together,
+the later one replaces the earlier one.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><b>line1, line2</b></td>
+<td>String</td>
+<td>(empty String)</td>
+<td>The upper and lower line on a VFD screen.
+<p>Or the beginning and end of display text on a LCD screen.</p><p>Supports variables and expressions with the following syntax: <tt>{valid_python_expression}</tt></p>
+</td>
+</tr>
+<tr>
+<td><b>scrollMode</b></td>
+<td>Positive integer</td>
+<td>1</td>
+<td>Controls how the text is scrolled over the screen.
+<p>Supported values:</p>
+<ul>
+<li>scrollMode = 0 - SCROLL_MODE_NO_SCROLL:<br>
+Don't scroll. The text is clipped if it exceeds the display width.</li>
+<li>scrollMode = 1 - SCROLL_MODE_ENDLESS_LOOP:<br>
+Scroll continously in an endless loop.</li>
+<li>scrollMode = 2 - SCROLL_MODE_STOP_SCROLL_STOP: <br>
+Wait at the
+beginning, scroll till the end of the text, wait again, then start over.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><b>scrollSpeed</b></td>
+<td> Positive decimal number</td>
+<td> 8.0 chars/sec</td>
+<td>Defines the scroll speed in characters per second</td>
+</tr>
+<tr>
+<td><b>scrollWaitSec</b></td>
+<td>Positive decimal number</td>
+<td>1.0 sec</td>
+<td>Only applies for scrollMode = 2 -
+SCROLL_MODE_STOP_SCROLL_STOP: <br>
+Defines
+the wait time in seconds at the beginning and at the end.</td>
+</tr>
+<tr>
+<td><b>maxScrollLoops</b></td>
+<td>Positive integer or -1</td>
+<td>-1</td>
+<td>maxScrollLoops &gt; 0: <br>
+The number of scroll loops to be performed. After that the message
+stands still.
+<p>maxScrollLoops = -1: <br>
+The feature is deactivated.</p>
+</td>
+</tr>
+<tr>
+<td><b>autoClearAfterSec</b></td>
+<td>Positive decimal number or -1</td>
+<td>-1</td>
+<td> autoClearAfterSec &gt; 0: <br>
+Defines the autoClear countdown time. After this time, the message
+is&nbsp;automatically cleared.
+<p>autoClearAfterSec = -1: <br>
+The feature is deactivated.</p>
+Mutually exclusive to 'autoClearAfterLoops'</td>
+</tr>
+<tr>
+<td><b>autoClearTimeAbsolute</b></td>
+<td>Boolean</td>
+<td>True</td>
+<td>Only applies if autoClearAfterSec &gt; 0.
+<p>True: <br>
+The autoClear countdown starts after calling the action.</p>
+<p> False: <br>
+The autoClear countdown starts after the message is first displayed.</p>
+</td>
+</tr>
+<tr>
+<td><b>autoClearAfterLoops</b></td>
+<td>Positive integer or -1</td>
+<td>-1</td>
+<td>autoClearAfterLoops &gt; 0: <br>
+Defines the number of scroll loops after which the message is
+automatically cleared.
+<p> autoClearAfterLoops = -1: <br>
+The feature is deactivated.</p>
+<p>Mutually exclusive to 'autoClearAfterSec'</p>
+</td>
+</tr>
+<tr>
+<td><b>effects</b></td>
+<td>0 or 1</td>
+<td>0</td>
+<td> Defines additional display effects.
+<p>effects = 0: <br>
+Effects turned off</p>
+<p>effects = 1: <br>
+Characters fly from left to right into the display</p>
+<p>(more effects to come maybe in a future release)</p>
+</td>
+</tr>
+<tr>
+<td><b>userCallbackFunc</b></td>
+<td>Function reference or None</td>
+<td>None</td>
+<td>Points to the user callback function (if any). See
+separate
+chapter for more details.</td>
+</tr>
+<tr>
+<td><b>userCallbackFreqInSec</b></td>
+<td>Positive decimal number</td>
+<td>60.0 sec</td>
+<td>Defines the frequency in seconds of the user callback
+calls (i.e. how often the user callback function is called).</td>
+</tr>
+<tr>
+<td><b>userCallbackObj</b></td>
+<td> Object or None</td>
+<td>None</td>
+<td>An arbitrary data object which is passed into the
+callback function.
+Allows to implement a data cache between callback calls etc.<br>
+<p>In most cases a Python data dictionnary is the most
+convenient object type.</p>
+<p>See below for an example on how to define and use it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Tired of all this theoretical stuff? - OK, let's
+practice again, let's demonstrate a full-fledged callback example!</p>
+<p>This example makes use of the <i>DVBViewer</i>
+plugin - however, it's
+just an example on how to get data from an external source in order to
+display it on the screen.</p>
+<pre><pre>from time import time, strftime<br>from datetime import datetime as dt<br><br># Step 0 (optional): Display priorities have been defined outside this script like this:<br>eg.globals.DISP_PRIO_RECORDINGS = 3<br><br># Step 1: Define the callback function.<br>def MyRecCallback(displayType, msgPriority, userCallbackObj):<br>    line1, line2, remaining = '', '', ''<br>    try:<br>        if msgPriority == eg.globals.DISP_PRIO_RECORDINGS:<br>            # get attributes from the user callback object as passed<br>            data = userCallbackObj['lastdata']<br>            lastcall = userCallbackObj['lastcall']<br>            now = time()<br><br>            if (now &gt; lastcall + 30.0 or data is None):<br>                # Optimization: an expensive function is only called twice a minute<br>                data = eg.plugins.DVBViewer.GetTimerDetails(<br>                    active=True,<br>                    enabled=True,<br>                    allRecordings=True, <br>                    enableDVBViewer = eg.plugins.DVBViewer.IsConnected(),<br>                    enableDVBService = True,<br>                    updateDVBService = False<br>                )<br>                #print data<br><br>                # intermediate store for some user data, we get it back again with the next callback<br>                userCallbackObj['lastcall'] = now<br>                userCallbackObj['lastdata'] = data<br>                <br>            if data is not None:<br>                success = data[0]<br>                if success and len(data[1]) &gt; 0:<br>                    timerlist = data[1]<br>                    line1, i = '', 0<br>                    for timer in timerlist:<br>                        if i &gt; 0:<br>                            line1 += '  '<br>                        i += 1<br>                        line1 += '[REC] ' + timer['description'] + ' (' + timer['channelName'] + ') ' + timer['startTime'] + ' - ' + timer['endTime']<br>                        endDateTime = dt.fromtimestamp( float( timer['endDateTime'] ) )<br>                        delta = endDateTime - dt.now()<br>                        totalSecs = delta.days * 24 * 60 * 60 + delta.seconds<br>                        hh, remainder = divmod( int( totalSecs ), 3600 )<br>                        mm, ss = divmod( remainder, 60 )<br>                        d = { 'H': hh, 'M': mm, 'S': ss }<br>                        remaining = '-%(H)02d:%(M)02d' % d  # :)<br>            currTimeStr = strftime("%H:%M:%S")<br>            line2 = currTimeStr + '  ' + remaining<br>            print 'MyRecCallback', line1, line2<br>    except Exception, exc:<br>        print unicode(exc)<br>    return line1, line2<br><br><br>if True or eg.plugins.DVBViewer.IsRecording(<br>    enableDVBViewer = eg.plugins.DVBViewer.IsConnected(),<br>    enableDVBService = True,<br>    updateDVBService = False,<br>):<br>    # Step 2a (optional): Define a user data callback object<br>    myCallbackObj = { 'lastcall': -1, 'lastdata': None }<br><br>    # Step 2b (optional): Prefetch the data in order to start with a fully initialized screen<br>    # Prefetching makes changes between messages smoother.<br>    line1, line2 = MyRecCallback( 'None', eg.globals.DISP_PRIO_RECORDINGS, myCallbackObj )<br><br>    # Step 3: Call the 'DisplayText' action<br>    # See the 'Simple Clock' example for details<br>    eg.plugins.iMON_Display.DisplayText(<br>        msgPriority=eg.globals.DISP_PRIO_RECORDINGS,<br>        line1=line1,<br>        line2=line2,<br>        scrollSpeed=8.0,        # chars per second<br>        scrollMode=2,           # mode STOP_SCROLL_STOP<br>        scrollWaitSec=1.0,      # standstill time at the beginning and the end<br>        maxScrollLoops=-1,      # loop infinite <br>        userCallbackFunc=MyRecCallback,     # That's the trick! The callback function is passed into the action.<br>        userCallbackObj=myCallbackObj,      # You can pass any object back into the callback function<br>        userCallbackFreqInSec=1.0           # How frequent the callback function is called<br>    )<br>else:<br>    eg.plugins.iMON_Display.ClearText(msgPriority=eg.globals.DISP_PRIO_RECORDINGS)</pre></pre>
+<h5><b>Discussion</b></h5>
+<ul>
+<li>Put
+this code&nbsp;into an EG Python Script and call the action
+whenever a
+recording starts or stops. It's purpose is to display information about
+ongoing recordings on the display.</li>
+<li>It's
+a good coding practice to define the display priorities in a central
+script which is called during initialization. However, for the
+completeness of this example I moved the necessary definition here into
+(<i>Step 0</i>).</li>
+<li>The callback function is defined in&nbsp;<i>Step 1</i>.</li>
+<ul>
+<li>It uses the user callback object which has been defined
+in <i>Step 2a</i> before. As you can see, a Python data
+dictionary is a handy structure for this purpose.</li>
+<li>The&nbsp;callback is called every second (in order to
+display a clock as well). However, the DVBViewer function <tt>GetTimerDetails()</tt>
+is rather expensive and it would be nonsense to call it every second.
+Therefore its result is cached in&nbsp;<tt>userCallbackObj['lastdata']
+= data</tt>.</li>
+</ul>
+<li><i>Step 2b</i> is optional, but recommended for
+smoother transitions: call the callback the first time by your own and
+pass its result to the <tt>DisplayText</tt>() action.</li>
+<li>Finally, <i>Step 3</i> calls the <tt>DisplayText</tt>()
+action and passes references of the user callback function and the user
+callback object, along with some more configuration options.</li>
+<li>This action script is also called when the recording ends,
+therefore we have a call to the <tt>ClearText()</tt>
+action here as well.</li>
+</ul>
+<pre></pre>
+</body></html>

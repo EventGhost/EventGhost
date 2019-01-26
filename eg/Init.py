@@ -77,7 +77,6 @@ def ImportAll():
 
 def Init():
     import WinApi.pywin32_patches # NOQA
-    import WinApi.wx_patches # NOQA
     import WinApi.GenPaths  # NOQA
 
 

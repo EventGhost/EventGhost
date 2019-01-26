@@ -31,7 +31,6 @@ class Configure(UndoHandlerBase):
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
-        item.isFirstConfigure = isFirstConfigure
         ActionThreadFunc = eg.actionThread.Func
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
         #oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()

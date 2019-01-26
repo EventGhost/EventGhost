@@ -9,6 +9,14 @@
 ##############################################################################
 # Revision history:
 #
+# 2016-11-28  Bugfix, key word 'non-metric' changed to 'imperial'
+# 2016-08-22  Fixed a compatibilty issue for EG version 0.5.x (AddGrowableCol)
+# 2015-11-27  Further updates due to changed weather service
+# 2015-11-22  Changed to use weather data from Weather.com
+# 2015-04-03  Added support for reading public holidays from an external file
+#             (holidays.py) in the /lib26/site-packages/ folder
+# 2014-09-02  Added action to get the timestamps for last sunrise and sunset,
+#             re-calculated with an offset value.
 # 2014-08-11  Added event to allow controlling restart of threads when
 #             changing 'empty house' and 'vacation' modes
 # 2014-08-04  Added default params to ensure correct startup
@@ -120,33 +128,33 @@
 # 2008-04-22  First version published
 ##############################################################################
 
+import eg
+
 eg.RegisterPlugin(
-    name = "SunTracker",
-    guid = '{6AE8C0C3-93B4-4446-BC77-FDFA2528E531}',
-    author = "Walter Kraembring",
-    version = "1.5.6",
-    description =(
+    name="SunTracker",
+    guid='{6AE8C0C3-93B4-4446-BC77-FDFA2528E531}',
+    author="Walter Kraembring",
+    version="1.6.2",
+    description=(
         'Triggers an event at sunset/sunrise and configurable dates & times'
         '<br\n><br\n>'
         '<center><img src="suntracker_plugin.png" /></center>'
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=982",
+    url="http://www.eventghost.net/forum/viewtopic.php?f=9&t=982",
 )
 
-import eg
-import time
+import calendar
 import datetime
-import math
-import string
-import sys
 import os
 import random
-import calendar
-import Sun
-import pywapi
-import weather_conditions
-from threading import Thread, Event
+import time
+from threading import Event, Thread
 
+import wx
+
+import pywapi
+import Sun
+import weather_conditions
 
 
 class Text:
@@ -155,18 +163,18 @@ class Text:
     pHeading = "Common Plug-In Settings"
     suntrackerFinished = "SunTracker finished"
     listhl = "Currently Active SunTrackers"
-    colLabels =(
+    colLabels = (
         "SunTracker Name",
         "Event Name ON",
         "Event Name OFF"
     )
-    #Buttons
+    # Buttons
     b_abort = "Abort"
     b_abortAll = "Abort all"
     b_refresh = "Refresh"
     b_restartAll = "Restart All"
 
-    #Thread
+    # Thread
     n_SuntrackerThread = "SunTrackerThread"
     nd_mo = "Monday"
     nd_tu = "Tuesday"
@@ -211,7 +219,7 @@ class Text:
     txtUnit = "Select your units:"
     weatherUpdateRate = "Update weather data every x minutes:"
     txtWeatherCondition = "Weather Condition: "
-    txtNoCondition = "Yahoo!Weather condition not in list: "
+    txtNoCondition = "Weather condition not in list: "
     txtTimeCompensation = "Total time compensation(negative is ON earlier and OFF later): "
     txtSummerSeasonBegins = "Summer Season Begins with (month): "
     txtSummerSeasonEnds = "Summer Season Ends with (month): "
@@ -313,6 +321,10 @@ class Text:
     class GetSunStateWithTimeStamp:
         txtInit = "Please wait, SunTracker is just initialising..."
 
+    class GetTimeFor_SunSet_SunRise_with_Offset:
+        txtInit = "Please wait, SunTracker is just initialising..."
+        txtOffset = "Set offset for this control (-120...120 min)"
+
     class GetWeatherCondition:
         txtInit = "Please wait, SunTracker is just initialising..."
 
@@ -341,45 +353,37 @@ class Text:
         txtInit = "Please wait, SunTracker is just initialising..."
 
 
-#All credits to Henrik Haerkoenen for Sun.py
+# All credits to Henrik Haerkoenen for Sun.py
 class SunState(Sun.Sun):
 
     def getSunState(self, year, month, day, lon, lat):
         sunRise, sunSet = self.sunRiseSet(year, month, day, lon, lat)
         return sunRise, sunSet
 
-
     def getCivilTwilight(self, year, month, day, lon, lat):
         cDawn, cDusk = self.civilTwilight(year, month, day, lon, lat)
         return cDawn, cDusk
-
 
     def getNauticalTwilight(self, year, month, day, lon, lat):
         nDawn, nDusk = self.nauticalTwilight(year, month, day, lon, lat)
         return nDawn, nDusk
 
-
     def getAstronomicalTwilight(self, year, month, day, lon, lat):
         aDawn, aDusk = self.astronomicalTwilight(year, month, day, lon, lat)
         return aDawn, aDusk
 
-
     def getCivilDayTwilightLength(self, year, month, day, lon, lat):
         print self.dayCivilTwilightLength(year, month, day, lon, lat)
 
-
     def getNauticalDayTwilightLength(self, year, month, day, lon, lat):
         print self.dayNauticalTwilightLength(year, month, day, lon, lat)
-
 
     def getAstronomicalDayTwilightLength(self, year, month, day, lon, lat):
         print self.dayAstronomicalTwilightLength(year, month, day, lon, lat)
 
 
-
 class ConfigData(eg.PersistentData):
     movingGhost = False
-
 
 
 class SuntrackerThread(Thread):
@@ -432,7 +436,7 @@ class SuntrackerThread(Thread):
         if not eventNameOff:
             eventNameOff = name
         self.name = name
-        self.dayTimeSettings =  dayTimeSettings[:]
+        self.dayTimeSettings = dayTimeSettings[:]
         self.eventNameOn = eventNameOn
         self.eventNameOff = eventNameOff
         self.eventPrefix = eventPrefix
@@ -476,7 +480,6 @@ class SuntrackerThread(Thread):
         self.summerSeasonEnds = summerSeasonEnds
         self.moving_Ghost_excl = moving_Ghost_excl
 
-
     def run(self):
         try:
             dummy
@@ -490,7 +493,6 @@ class SuntrackerThread(Thread):
             iRndm = 0
             bToggle = False
         random.jumpahead(137)
-
 
         def Check_for_holidays():
             currDate = time.strftime("%m/%d/%Y", time.localtime())
@@ -506,19 +508,19 @@ class SuntrackerThread(Thread):
                 dwt = 0
             nDw = dw
 
-            if(
+            if (
                 self.fixedHolidays.find(date) != -1
                 or self.variableHolidays.find(date) != -1
             ):
                 nDw = 5
                 if dwt < 5:
                     nDw = 6
-                if(
+                if (
                     self.fixedHolidays.find(dateTmw) != -1
                     or self.variableHolidays.find(dateTmw) != -1
                 ):
                     nDw = 5
-            if(
+            if (
                 self.fixedHolidays.find(dateTmw) != -1
                 or self.variableHolidays.find(dateTmw) != -1
             ):
@@ -528,11 +530,10 @@ class SuntrackerThread(Thread):
                     nDw = 4
             if self.emptyHouse_m:
                 nDw = 8
-                return(nDw)
+                return (nDw)
             if self.vacation_m:
                 nDw = 7
-            return(nDw)
-
+            return (nDw)
 
         def GetDayOfWeek(dateString):
             # day of week(monday = 0) of a given month/day/year
@@ -544,8 +545,7 @@ class SuntrackerThread(Thread):
                     int(ds[1])
                 )
             )
-            return(dayOfWeek)
-
+            return (dayOfWeek)
 
         def GetNameOfDay(dt):
             nd = ""
@@ -567,11 +567,10 @@ class SuntrackerThread(Thread):
                 nd = self.text.nd_vc
             if dt == "8":
                 nd = self.text.nd_eh
-            return(nd)
-
+            return (nd)
 
         def CheckIfLog(lightOld, light, iSynch, label):
-            if(
+            if (
                 light != lightOld
                 or iSynch == 1
             ):
@@ -583,22 +582,19 @@ class SuntrackerThread(Thread):
                     + ", "
                     + self.text.txtTimeCompensation
                     + str(self.timeCompensation),
-                    'Suntracker_'+self.name+'.html'
+                    'Suntracker_' + self.name + '.html'
                 )
-
 
         def CalcNbrOfMinutes(s):
             iHour = int(s[0:2])
             iMin = int(s[2:4])
-            iTotMin = iHour*60 + iMin
-            return(iTotMin)
-
+            iTotMin = iHour * 60 + iMin
+            return (iTotMin)
 
         def StrCheck(s):
             if s == "----":
                 s = "0000"
-            return(s)
-
+            return (s)
 
         def NightLightON(
             night_OFF,
@@ -608,39 +604,38 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 night_OFF != "----"
-                and(
-                    not lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                not lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                  (int(trigTime) < int(StrCheck(night_OFF))
-                    and int(csSR) >= int(StrCheck(night_OFF))
-                    and int(trigTime) < 0600
-                    and(
-                            int(trigTimeSR) < int(csSR)
-                            or int(trigTime) < int(csSR)
+                if (
+                    (int(trigTime) < int(StrCheck(night_OFF))
+                     and int(csSR) >= int(StrCheck(night_OFF))
+                     and int(trigTime) < 0600
+                     and (
+                         int(trigTimeSR) < int(csSR)
+                         or int(trigTime) < int(csSR)
+                     )
                     )
-                  )
                     or self.lastAction[1] == "ON"
                 ):
                     light = 1;
                     if self.iMinOnPeriod > 0:
-                        if(
+                        if (
                             CalcNbrOfMinutes(csSR) -
                             CalcNbrOfMinutes(trigTimeSR) < self.iMinOnPeriod
                         ):
                             light = 10;
-                        if(
+                        if (
                             CalcNbrOfMinutes(StrCheck(night_OFF)) -
                             CalcNbrOfMinutes(trigTime) < self.iMinOnPeriod
                         ):
                             light = 10;
-            return(light)
-
+            return (light)
 
         def NightLightOFF(
             night_OFF,
@@ -650,50 +645,49 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 night_OFF != "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTime) >= int(StrCheck(night_OFF))
-                    and int(StrCheck(night_OFF)) < 0600
-                    and int(trigTime) < int(StrCheck(morning_ON)))
+                if (
+                    (int(trigTime) >= int(StrCheck(night_OFF))
+                     and int(StrCheck(night_OFF)) < 0600
+                     and int(trigTime) < int(StrCheck(morning_ON)))
                     or self.lastAction[1] == "OFF"
                 ):
                     light = 0
-                if(
+                if (
                     int(trigTime) >= int(StrCheck(night_OFF))
                     and int(StrCheck(night_OFF)) < 0600
                     and morning_ON == "----"
                     and int(trigTime) < 0600
                 ):
                     light = 0
-            if(
+            if (
                 night_OFF == "----"
                 and evening_OFF != "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTime) > 0000
-                    and int(trigTime) < 0600
-                    and(
-                        int(trigTime) < int(StrCheck(morning_ON))
-                        or morning_ON == "----"
+                if (
+                    (int(trigTime) > 0000
+                     and int(trigTime) < 0600
+                     and (
+                         int(trigTime) < int(StrCheck(morning_ON))
+                         or morning_ON == "----"
+                     )
                     )
-                   )
                     or self.lastAction[1] == "OFF"
                 ):
                     light = 0
-            return(light)
-
+            return (light)
 
         def MorningLightON(
             morning_ON,
@@ -703,30 +697,29 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 morning_ON != "----"
-                and(
-                    not lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                not lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTime) >= int(StrCheck(morning_ON))
-                    and int(csSR) >= int(StrCheck(morning_ON))
-                    and int(trigTime) < 1200
-                    and int(trigTimeSR) < int(csSR))
+                if (
+                    (int(trigTime) >= int(StrCheck(morning_ON))
+                     and int(csSR) >= int(StrCheck(morning_ON))
+                     and int(trigTime) < 1200
+                     and int(trigTimeSR) < int(csSR))
                     or self.lastAction[1] == "ON"
                 ):
                     light = 1
                     if self.iMinOnPeriod > 0:
-                        if(
+                        if (
                             CalcNbrOfMinutes(csSR) -
                             CalcNbrOfMinutes(trigTimeSR) < self.iMinOnPeriod
                         ):
                             light = 10
-            return(light)
-
+            return (light)
 
         def MorningLightOFF(
             morning_ON,
@@ -738,57 +731,56 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 morning_ON != "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTimeSR) >= int(trigTime)
-                    and int(trigTimeSR) >= int(csSR)
-                    and int(trigTime) < 1800)
+                if (
+                    (int(trigTimeSR) >= int(trigTime)
+                     and int(trigTimeSR) >= int(csSR)
+                     and int(trigTime) < 1800)
                     or self.lastAction[1] == "OFF"
                 ):
                     if int(trigTimeSR) < int(csSS):
                         light = 0
-                if(
-                   (int(trigTimeSR) < int(trigTime)
-                    and int(trigTimeSR) >= int(csSR)
-                    and int(trigTime) < 1800)
+                if (
+                    (int(trigTimeSR) < int(trigTime)
+                     and int(trigTimeSR) >= int(csSR)
+                     and int(trigTime) < 1800)
                     or self.lastAction[1] == "OFF"
                 ):
                     if int(trigTimeSS) < int(csSS):
                         light = 0
 
-            if(
+            if (
                 morning_ON == "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTimeSR) >= int(trigTime)
-                    and int(trigTimeSR) >= int(csSR)
-                    and int(trigTime) < 1800)
+                if (
+                    (int(trigTimeSR) >= int(trigTime)
+                     and int(trigTimeSR) >= int(csSR)
+                     and int(trigTime) < 1800)
                     or self.lastAction[1] == "OFF"
                 ):
                     if int(trigTimeSR) < int(csSS):
                         light = 0
-                if(
-                   (int(trigTimeSR) < int(trigTime)
-                    and int(trigTimeSR) >= int(csSR)
-                    and int(trigTime) < 1800)
+                if (
+                    (int(trigTimeSR) < int(trigTime)
+                     and int(trigTimeSR) >= int(csSR)
+                     and int(trigTime) < 1800)
                     or self.lastAction[1] == "OFF"
                 ):
                     if int(trigTimeSS) < int(csSS):
                         light = 0
-            return(light)
-
+            return (light)
 
         def EveningLightON(
             morning_ON,
@@ -800,94 +792,93 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 evening_OFF != "----"
-                and(
-                    not lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                not lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
+                if (
                     int(trigTimeSS) >= int(csSS)
                     and int(csSS) > 1200
                 ):
-                    if(
-                       (int(csSS) <= int(StrCheck(evening_OFF))
-                        and int(trigTimeSS) > 1200
-                        and int(trigTime) > 1200
-                        and int(trigTime) < int(StrCheck(evening_OFF)))
+                    if (
+                        (int(csSS) <= int(StrCheck(evening_OFF))
+                         and int(trigTimeSS) > 1200
+                         and int(trigTime) > 1200
+                         and int(trigTime) < int(StrCheck(evening_OFF)))
                         or self.lastAction[1] == "ON"
                     ):
                         light = 1
                         if self.iMinOnPeriod > 0:
-                            if(
+                            if (
                                 CalcNbrOfMinutes(StrCheck(evening_OFF)) -
                                 CalcNbrOfMinutes(trigTimeSS) <
                                 self.iMinOnPeriod
                             ):
                                 light = 10
-            if(
+            if (
                 evening_OFF == "----"
                 and night_OFF != "----"
-                and(
-                    not lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                not lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
+                if (
                     int(trigTimeSS) >= int(csSS)
                     and int(csSS) > 1200
                 ):
-                    if(
-                       (int(csSS) <= 2359
-                        and int(trigTimeSS) > 1200
-                        and int(trigTime) > 1200
-                        and int(trigTime) <= 2359)
+                    if (
+                        (int(csSS) <= 2359
+                         and int(trigTimeSS) > 1200
+                         and int(trigTime) > 1200
+                         and int(trigTime) <= 2359)
                         or self.lastAction[1] == "ON"
                     ):
                         light = 1
                         if self.iMinOnPeriod > 0:
                             # 23 hours 59 minutes == 1439 minutes
-                            if(
-                               (1439 - CalcNbrOfMinutes(trigTimeSS) +
-                                CalcNbrOfMinutes(StrCheck(night_OFF))) <
+                            if (
+                                (1439 - CalcNbrOfMinutes(trigTimeSS) +
+                                 CalcNbrOfMinutes(StrCheck(night_OFF))) <
                                 self.iMinOnPeriod
                             ):
                                 light = 10
-            if(
+            if (
                 evening_OFF == "----"
                 and night_OFF == "----"
                 and morning_ON != "----"
-                and(
-                    not lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                not lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
+                if (
                     int(trigTimeSS) >= int(csSS)
                     and int(csSS) > 1200
                 ):
-                    if(
-                       (int(csSS) <= 2359
-                        and int(trigTimeSS) > 1200
-                        and int(trigTime) > 1200
-                        and int(trigTime) <= 2359)
+                    if (
+                        (int(csSS) <= 2359
+                         and int(trigTimeSS) > 1200
+                         and int(trigTime) > 1200
+                         and int(trigTime) <= 2359)
                         or self.lastAction[1] == "ON"
                     ):
                         light = 1
                         if self.iMinOnPeriod > 0:
                             # 23 hours 59 minutes == 1439 minutes
-                            if(
-                               (1439 - CalcNbrOfMinutes(trigTimeSS) +
-                                CalcNbrOfMinutes(StrCheck(night_OFF))) <
+                            if (
+                                (1439 - CalcNbrOfMinutes(trigTimeSS) +
+                                 CalcNbrOfMinutes(StrCheck(night_OFF))) <
                                 self.iMinOnPeriod
                             ):
                                 light = 10
-            return(light)
-
+            return (light)
 
         def EveningLightOFF(
             morning_ON,
@@ -898,38 +889,37 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            if(
+            if (
                 evening_OFF != "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTime) > 1800
-                    and int(StrCheck(evening_OFF)) > 1800
-                    and int(trigTime) >= int(StrCheck(evening_OFF)))
+                if (
+                    (int(trigTime) > 1800
+                     and int(StrCheck(evening_OFF)) > 1800
+                     and int(trigTime) >= int(StrCheck(evening_OFF)))
                     or self.lastAction[1] == "OFF"
                 ):
                     light = 0
-            if(
+            if (
                 morning_ON != "----"
-                and(
-                    lightON
-                    or iSynchLight == self.iSynchInterval
-                    or initsynch == 1
-                )
+                and (
+                lightON
+                or iSynchLight == self.iSynchInterval
+                or initsynch == 1
+            )
             ):
-                if(
-                   (int(trigTime) > 1800
-                    and int(trigTimeSS) > 1800
-                    and int(trigTimeSS) < int(csSS))
+                if (
+                    (int(trigTime) > 1800
+                     and int(trigTimeSS) > 1800
+                     and int(trigTimeSS) < int(csSS))
                     or self.lastAction[1] == "OFF"
                 ):
                     light = 0
-            return(light)
-
+            return (light)
 
         def CheckNightLightOn(
             dayType,
@@ -939,18 +929,17 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     light = NightLightON(
-                        self.dayTimeSettings[i*3],
+                        self.dayTimeSettings[i * 3],
                         trigTimeSR,
                         trigTime,
                         csSR,
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CheckNightLightOff(
             dayType,
@@ -958,7 +947,7 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     j = i * 3 - 1
                     if j == -1:
@@ -968,15 +957,14 @@ class SuntrackerThread(Thread):
                     elif j == 23:
                         j = 26
                     light = NightLightOFF(
-                        self.dayTimeSettings[i*3],
+                        self.dayTimeSettings[i * 3],
                         self.dayTimeSettings[j],
-                        self.dayTimeSettings[i*3+1],
+                        self.dayTimeSettings[i * 3 + 1],
                         trigTime,
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CheckMorningLightOn(
             dayType,
@@ -986,18 +974,17 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     light = MorningLightON(
-                        self.dayTimeSettings[i*3+1],
+                        self.dayTimeSettings[i * 3 + 1],
                         trigTimeSR,
                         trigTime,
                         csSR,
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CheckMorningLightOff(
             dayType,
@@ -1009,10 +996,10 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     light = MorningLightOFF(
-                        self.dayTimeSettings[i*3+1],
+                        self.dayTimeSettings[i * 3 + 1],
                         trigTimeSR,
                         trigTimeSS,
                         trigTime,
@@ -1021,8 +1008,7 @@ class SuntrackerThread(Thread):
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CheckEveningLightOn(
             dayType,
@@ -1033,7 +1019,7 @@ class SuntrackerThread(Thread):
             lightON
         ):
 
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     j = i * 3 + 3
                     if j == 21:
@@ -1043,8 +1029,8 @@ class SuntrackerThread(Thread):
                     elif j == 27:
                         j = 24
                     light = EveningLightON(
-                        self.dayTimeSettings[i*3+1],
-                        self.dayTimeSettings[i*3+2],
+                        self.dayTimeSettings[i * 3 + 1],
+                        self.dayTimeSettings[i * 3 + 2],
                         self.dayTimeSettings[j],
                         trigTimeSS,
                         trigTime,
@@ -1052,8 +1038,7 @@ class SuntrackerThread(Thread):
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CheckEveningLightOff(
             dayType,
@@ -1063,19 +1048,18 @@ class SuntrackerThread(Thread):
             light,
             lightON
         ):
-            for i in range(0,9):
+            for i in range(0, 9):
                 if dayType == str(i):
                     light = EveningLightOFF(
-                        self.dayTimeSettings[i*3+1],
-                        self.dayTimeSettings[i*3+2],
+                        self.dayTimeSettings[i * 3 + 1],
+                        self.dayTimeSettings[i * 3 + 2],
                         trigTimeSS,
                         trigTime,
                         csSS,
                         light,
                         lightON
                     )
-            return(int(light))
-
+            return (int(light))
 
         def CreateEvent_ON(
             light,
@@ -1104,7 +1088,7 @@ class SuntrackerThread(Thread):
                     )
                     self.finished.wait(self.cmdDelay)
             if light == 1 and not bDoSynch:
-                if(
+                if (
                     not lightON
                     or initsynch == 1
                 ):
@@ -1117,7 +1101,7 @@ class SuntrackerThread(Thread):
                         + ", "
                         + self.text.txtTimeCompensation
                         + str(self.timeCompensation),
-                        'Suntracker_'+self.name+'.html'
+                        'Suntracker_' + self.name + '.html'
                     )
                     self.lastAction = [cmdTime, "ON"]
                     if iSynchLight != self.iSynchInterval:
@@ -1129,8 +1113,7 @@ class SuntrackerThread(Thread):
                             self.plugin.eventPrefix
                         )
                         self.finished.wait(self.cmdDelay)
-            return(lightON)
-
+            return (lightON)
 
         def CreateEvent_OFF(
             light,
@@ -1159,7 +1142,7 @@ class SuntrackerThread(Thread):
                     )
                     self.finished.wait(self.cmdDelay)
             if light == 0 and not bDoSynch:
-                if(
+                if (
                     lightON
                     or initsynch == 1
                 ):
@@ -1172,7 +1155,7 @@ class SuntrackerThread(Thread):
                         + ", "
                         + self.text.txtTimeCompensation
                         + str(self.timeCompensation),
-                        'Suntracker_'+self.name+'.html'
+                        'Suntracker_' + self.name + '.html'
                     )
                     self.lastAction = [cmdTime, "OFF"]
                     if iSynchLight != self.iSynchInterval:
@@ -1184,12 +1167,11 @@ class SuntrackerThread(Thread):
                             self.plugin.eventPrefix
                         )
                         self.finished.wait(self.cmdDelay)
-            return(lightON)
+            return (lightON)
 
-
-        while(not self.abort):
-            if self.plugin.iGetWeather <  self.iWeather * 2:
-                self.plugin.iGetWeather =  self.iWeather * 2
+        while (not self.abort):
+            if self.plugin.iGetWeather < self.iWeather * 2:
+                self.plugin.iGetWeather = self.iWeather * 2
             tr = random.random()
             remain = 61.0 - int(time.strftime("%S", time.localtime())) + tr
             self.finished.wait(remain)
@@ -1241,12 +1223,12 @@ class SuntrackerThread(Thread):
                 self.timeCompensation = 0
 
                 self.currCondition, self.timeCompensation, trigTimeSS, trigTimeSR = (
-                        self.plugin.CalcWeatherCompensation(
-                                self.currCondition,
-                                self.timeCompensation,
-                                self.iWeather,
-                                self.iOffset
-                        )
+                    self.plugin.CalcWeatherCompensation(
+                        self.currCondition,
+                        self.timeCompensation,
+                        self.iWeather,
+                        self.iOffset
+                    )
                 )
 
             # Fetch the times for sunrise/sunset
@@ -1258,25 +1240,25 @@ class SuntrackerThread(Thread):
                 prevDate = currDate
                 od = GetNameOfDay(odayType)
                 nd = GetNameOfDay(dayType)
-                lg =(self.text.lg_today
-                    + od
-                    + self.text.lg_sunrise_sunset_1
-                    + csSR
-                    + self.text.lg_sunrise_sunset_2
-                    + csSS
-                )
+                lg = (self.text.lg_today
+                      + od
+                      + self.text.lg_sunrise_sunset_1
+                      + csSR
+                      + self.text.lg_sunrise_sunset_2
+                      + csSS
+                      )
                 self.plugin.LogToFile(
-                            lg,
-                            'Suntracker_'+self.name+'.html'
+                    lg,
+                    'Suntracker_' + self.name + '.html'
                 )
                 if nd != od and not bMghost:
-                    lg = self.text.lg_dayOfWeek+od
+                    lg = self.text.lg_dayOfWeek + od
                     self.plugin.LogToFile(
-                                lg,
-                                'Suntracker_'+self.name+'.html'
+                        lg,
+                        'Suntracker_' + self.name + '.html'
                     )
                     if dayType == "8":
-                        lg =(
+                        lg = (
                             self.text.lg_emptyhouse_1
                             + self.name
                             + " "
@@ -1285,11 +1267,11 @@ class SuntrackerThread(Thread):
                             + nd
                         )
                         self.plugin.LogToFile(
-                                    lg,
-                                    'Suntracker_'+self.name+'.html'
+                            lg,
+                            'Suntracker_' + self.name + '.html'
                         )
                     if dayType == "7":
-                        lg =(
+                        lg = (
                             self.text.lg_vacation_1
                             + self.name
                             + " "
@@ -1298,11 +1280,11 @@ class SuntrackerThread(Thread):
                             + nd
                         )
                         self.plugin.LogToFile(
-                                    lg,
-                                    'Suntracker_'+self.name+'.html'
+                            lg,
+                            'Suntracker_' + self.name + '.html'
                         )
                     else:
-                        lg =(
+                        lg = (
                             self.text.lg_holiday_1
                             + self.name
                             + " "
@@ -1311,15 +1293,15 @@ class SuntrackerThread(Thread):
                             + nd
                         )
                         self.plugin.LogToFile(
-                                    lg,
-                                    'Suntracker_'+self.name+'.html'
+                            lg,
+                            'Suntracker_' + self.name + '.html'
                         )
 
             # Initial logging when Moving Ghost is activated
             if bMghost and initsynch == 1:
                 self.plugin.LogToFile(
-                            self.text.lg_movingG_1 + self.name,
-                            'Suntracker_'+self.name+'.html'
+                    self.text.lg_movingG_1 + self.name,
+                    'Suntracker_' + self.name + '.html'
                 )
 
             # Restoring to initial value
@@ -1391,28 +1373,28 @@ class SuntrackerThread(Thread):
                 initsynch = 0
                 random.seed(self.name)
                 random.jumpahead(int(len(self.name)))
-                if(
+                if (
                     self.moving_Ghost
-                    or(
-                        self.moving_Ghost_G
-                        and ConfigData.movingGhost
-                    )
+                    or (
+                    self.moving_Ghost_G
+                    and ConfigData.movingGhost
+                )
                 ):
                     self.bDoSynchRestore = self.bDoSynch
                     self.GMG_state = ConfigData.movingGhost
                     self.bDoSynch = False
-                    if(trigTime > csSS or trigTime < csSR):
+                    if (trigTime > csSS or trigTime < csSR):
                         light = 1
             else:
-                if(
+                if (
                     self.moving_Ghost
-                    or(
-                        self.moving_Ghost_G
-                        and ConfigData.movingGhost
-                    )
+                    or (
+                    self.moving_Ghost_G
+                    and ConfigData.movingGhost
+                )
                 ):
                     self.GMG_state = ConfigData.movingGhost
-                    if(trigTime > csSS or trigTime < csSR):
+                    if (trigTime > csSS or trigTime < csSR):
                         light = 10
                         if iRndm == 0:
                             # Get random number
@@ -1450,11 +1432,11 @@ class SuntrackerThread(Thread):
                         if iRndm > 1:
                             iRndm -= 1
 
-                    if(trigTime <= csSS and trigTime >= csSR):
+                    if (trigTime <= csSS and trigTime >= csSR):
                         if lightON:
                             light = 0
 
-            if(
+            if (
                 self.moving_Ghost_G
                 and not ConfigData.movingGhost
                 and self.GMG_state
@@ -1465,7 +1447,7 @@ class SuntrackerThread(Thread):
                         self.bDoSynch = self.bDoSynchRestore
                     self.GMG_state = ConfigData.movingGhost
 
-            #Print basic loop info
+            # Print basic loop info
             if self.doLogLoops and initsynch == 0:
                 print(
                     self.text.nxt_1
@@ -1478,25 +1460,23 @@ class SuntrackerThread(Thread):
                 )
 
             lightON = CreateEvent_ON(
-                    light,
-                    self.bDoSynch,
-                    lightON,
-                    iSynchLight
-                )
+                light,
+                self.bDoSynch,
+                lightON,
+                iSynchLight
+            )
 
             lightON = CreateEvent_OFF(
-                    light,
-                    self.bDoSynch,
-                    lightON,
-                    iSynchLight
-                )
-
+                light,
+                self.bDoSynch,
+                lightON,
+                iSynchLight
+            )
 
     def AbortSuntracker(self):
         self.abort = True
-        #print self.text.thr_abort, self.name
+        # print self.text.thr_abort, self.name
         self.finished.set()
-
 
 
 class Suntracker(eg.PluginClass):
@@ -1516,6 +1496,7 @@ class Suntracker(eg.PluginClass):
         self.AddAction(GetWeatherCondition)
         self.AddAction(GetSunStatusWeatherCompensated)
         self.AddAction(GetTimeFor_SunSet_SunRise)
+        self.AddAction(GetTimeFor_SunSet_SunRise_with_Offset)
         self.AddAction(GetSunState)
         self.AddAction(GetSunStateWithTimeStamp)
         self.AddAction(SetMovingGhostON)
@@ -1555,25 +1536,24 @@ class Suntracker(eg.PluginClass):
         self.started = False
         self.restarted = False
 
-
     def __start__(
         self,
-        myLongitude = "18.0000",
-        myLatitude = "59.2500",
-        location_id = "905335",
-        fixedHolidays = "0101,0501,0606,1224,1225,1226",
-        variableHolidays = "0106,0402,0405,0512,0522,0523,0625",
-        summerSeasonBegins = "--",
-        summerSeasonEnds = "--",
-        vacation_m = False,
-        sunStatus = True,
-        weatherStatus = True,
-        iTimeZone = '+01.00',
-        unit = "metric",
-        weatherUpdateRate = 5,
-        emptyHouse_m = False,
-        eventPrefix = "Main",
-        weatherChange = False
+        myLongitude="18.0000",
+        myLatitude="59.2500",
+        location_id="SWXX0031:1:SW",
+        fixedHolidays="0101,0501,0606,1224,1225,1226",
+        variableHolidays="0106,0402,0405,0512,0522,0523,0625",
+        summerSeasonBegins="--",
+        summerSeasonEnds="--",
+        vacation_m=False,
+        sunStatus=True,
+        weatherStatus=True,
+        iTimeZone='+01.00',
+        unit="metric",
+        weatherUpdateRate=5,
+        emptyHouse_m=False,
+        eventPrefix="Main",
+        weatherChange=False
     ):
         print self.text.started
         self.myLongitude = myLongitude
@@ -1614,11 +1594,11 @@ class Suntracker(eg.PluginClass):
             self.RestartAllSuntrackers()
         self.pData = eg.configDir + '\plugins\SunTracker'
         if not os.path.exists(self.pData) and not os.path.isdir(self.pData):
-                os.makedirs(self.pData)
+            os.makedirs(self.pData)
         if ConfigData.movingGhost:
             print self.text.lg_movingG_2 + "ON"
 
-        #Get the various possible weather conditions
+        # Get the various possible weather conditions
         self.dark = weather_conditions.weather_conditions_dark()
         self.half_bright = weather_conditions.weather_conditions_half_bright()
         self.bright = weather_conditions.weather_conditions_bright()
@@ -1630,21 +1610,18 @@ class Suntracker(eg.PluginClass):
         mainThread.start()
         self.started = True
 
-
     def __stop__(self):
         self.mainThreadEvent.set()
         print self.text.closing
         self.AbortAllSuntrackers()
         self.started = False
 
-
     def __close__(self):
         self.AbortAllSuntrackers()
         self.started = False
 
-
     def SetVarMain(self, trItem, args):
-        eg.actionThread.Func(trItem.SetArguments)(args) # __stop__ / __start__
+        eg.actionThread.Func(trItem.SetArguments)(args)  # __stop__ / __start__
         eg.document.SetIsDirty()
         eg.document.Save()
         eg.TriggerEvent(
@@ -1652,7 +1629,6 @@ class Suntracker(eg.PluginClass):
             None,
             self.eventPrefix
         )
-
 
     def SetVar(self, prm):
         from threading import currentThread
@@ -1664,7 +1640,7 @@ class Suntracker(eg.PluginClass):
             args[int(i)] = arg
         ct = currentThread()
         if ct == eg.actionThread._ThreadWorker__thread:
-            trItem.SetArguments(args) # __stop__ / __start__
+            trItem.SetArguments(args)  # __stop__ / __start__
             eg.document.SetIsDirty()
             eg.document.Save()
             eg.TriggerEvent(
@@ -1676,7 +1652,6 @@ class Suntracker(eg.PluginClass):
             eg.scheduler.AddTask(0.5, self.SetVarMain, trItem, args)
         print 'Vacation/Empty House modes changed for SunTracker: ', prm
 
-
     def LogToFile(self, s, fName):
         bLogToFile = True
         try:
@@ -1687,57 +1662,55 @@ class Suntracker(eg.PluginClass):
             timeStamp = str(
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             )
-            logStr = timeStamp+"\t"+s+"<br\n>"
+            logStr = timeStamp + "\t" + s + "<br\n>"
             fileHandle = None
 
             progData = eg.configDir + '\plugins\SunTracker'
             if not os.path.exists(progData) and not os.path.isdir(progData):
-                    os.makedirs(progData)
-            fileHandle = open(progData+'/'+fName, 'a')
+                os.makedirs(progData)
+            fileHandle = open(progData + '/' + fName, 'a')
             fileHandle.write(logStr)
             fileHandle.close()
-
 
     def Check_for_daylight_saving(self):
         iDLS = 0
         iDLS = time.localtime()[-1]
         if iDLS == 1:
             if self.initsynch:
-                msg = "SunTracker: "+self.text.txt_dls_true
+                msg = "SunTracker: " + self.text.txt_dls_true
                 self.LogToFile(msg, 'Suntracker.html')
                 msg = time.strftime(
-                   ("%Z"+self.text.txt_tz),
+                    ("%Z" + self.text.txt_tz),
                     time.localtime()
                 )
                 self.LogToFile(msg, 'Suntracker.html')
         else:
             iDLS = 0
             if self.initsynch:
-                msg = "SunTracker: "+self.text.txt_dls_false
+                msg = "SunTracker: " + self.text.txt_dls_false
                 self.LogToFile(msg, 'Suntracker.html')
                 msg = time.strftime(
-                   ("%Z"+self.text.txt_tz),
+                    ("%Z" + self.text.txt_tz),
                     time.localtime()
                 )
                 self.LogToFile(msg, 'Suntracker.html')
-        return(iDLS)
-
+        return (iDLS)
 
     def CheckWeatherCondition(self):
         self.weather_data = None
         currCondition = "Undefined"
         try:
-            self.weather_data = pywapi.get_weather_from_yahoo(
-                int(self.location_id),
-                units = self.unit
+            self.weather_data = pywapi.get_weather_from_weather_com(
+                self.location_id,
+                self.unit
             )
-            wd = self.weather_data['html_description'].split(':')[2].split('>')[2]
-            currCondition = wd[1:wd.find(',')]
+            currCondition = (
+                self.weather_data['current_conditions']['text']
+            )
             self.prevcurrCondition = currCondition
         except:
-             currCondition = self.prevcurrCondition
+            currCondition = self.prevcurrCondition
         return currCondition
-
 
     def GetOffsetTimeSR(self, iO):
         if iO > 120:
@@ -1746,13 +1719,12 @@ class Suntracker(eg.PluginClass):
             iO = -120
         now = datetime.datetime.now()
         diff = datetime.timedelta(minutes=abs(iO))
-        if iO<0:
+        if iO < 0:
             corr = now - diff
         else:
             corr = now + diff
         s = corr.strftime("%H%M")
-        return(s)
-
+        return (s)
 
     def GetOffsetTimeSS(self, iO):
         if iO > 120:
@@ -1761,13 +1733,12 @@ class Suntracker(eg.PluginClass):
             iO = -120
         now = datetime.datetime.now()
         diff = datetime.timedelta(minutes=abs(iO))
-        if iO<0:
+        if iO < 0:
             corr = now + diff
         else:
             corr = now - diff
         s = corr.strftime("%H%M")
-        return(s)
-
+        return (s)
 
     def CalcWeatherCompensation(
         self,
@@ -1785,37 +1756,37 @@ class Suntracker(eg.PluginClass):
         trigTimeSR = self.GetOffsetTimeSR(iOffset)
         trigTimeSS = self.GetOffsetTimeSS(iOffset)
 
-        if  currCondition in self.dark:
+        if currCondition in self.dark:
             cFound = True
             trigTimeSR = self.GetOffsetTimeSR(
-                                - iWeather
-                                + iOffset
-                         )
+                - iWeather
+                + iOffset
+            )
             trigTimeSS = self.GetOffsetTimeSS(
-                                - iWeather
-                                + iOffset
-                         )
+                - iWeather
+                + iOffset
+            )
             timeCompensation = - iWeather + iOffset
 
-        if  currCondition in self.half_bright:
+        if currCondition in self.half_bright:
             cFound = True
             trigTimeSR = self.GetOffsetTimeSR(
-                                - iWeather/2
-                                + iOffset
-                         )
+                - iWeather / 2
+                + iOffset
+            )
             trigTimeSS = self.GetOffsetTimeSS(
-                                - iWeather/2
-                                + iOffset
-                         )
-            timeCompensation = - iWeather/2 + iOffset
+                - iWeather / 2
+                + iOffset
+            )
+            timeCompensation = - iWeather / 2 + iOffset
 
-        if  currCondition in self.bright:
+        if currCondition in self.bright:
             cFound = True
-            if(
+            if (
                 not self.summerSeasonBegins == "--"
                 and not self.summerSeasonEnds == "--"
             ):
-                if(
+                if (
                     (
                         int(self.summerSeasonBegins) <=
                         int(self.summerSeasonEnds)
@@ -1827,18 +1798,18 @@ class Suntracker(eg.PluginClass):
                     )
                 ):
                     trigTimeSR = self.GetOffsetTimeSR(
-                                        iWeather
-                                        + iOffset
-                                 )
+                        iWeather
+                        + iOffset
+                    )
                     trigTimeSS = self.GetOffsetTimeSS(
-                                        iWeather
-                                        + iOffset
-                                 )
-                    timeCompensation =(
-                                        iWeather
-                                        + iOffset
-                                        )
-                if(
+                        iWeather
+                        + iOffset
+                    )
+                    timeCompensation = (
+                        iWeather
+                        + iOffset
+                    )
+                if (
                     (
                         int(self.summerSeasonBegins) >
                         int(self.summerSeasonEnds)
@@ -1850,16 +1821,16 @@ class Suntracker(eg.PluginClass):
                     )
                 ):
                     trigTimeSR = self.GetOffsetTimeSR(
-                                        iWeather
-                                        + iOffset
-                                 )
+                        iWeather
+                        + iOffset
+                    )
                     trigTimeSS = self.GetOffsetTimeSS(
-                                        iWeather
-                                        + iOffset
-                                 )
+                        iWeather
+                        + iOffset
+                    )
                     timeCompensation = iWeather + iOffset
             else:
-                timeCompensation = iWeather/2 + iOffset
+                timeCompensation = iWeather / 2 + iOffset
 
         if currCondition in self.excpt:
             cFound = True
@@ -1869,7 +1840,6 @@ class Suntracker(eg.PluginClass):
             eg.PrintError(self.text.txtNoCondition + currCondition)
 
         return (currCondition, timeCompensation, trigTimeSS, trigTimeSR)
-
 
     def GetTimeStrings(self, st, iDLS, strTz):
         st = st.replace("(", "")
@@ -1892,8 +1862,8 @@ class Suntracker(eg.PluginClass):
             strTz[1] = '-' + strTz[1]
 
         if int(dat1[0]) < 0 and int(dat1[1]) > 0:
-            h1 = int(int(dat1[0]) -1 + iDLS + int(strTz[0]))
-            m1 = int(60-float('.' + dat1[1]) * 60 + float(strTz[1]))
+            h1 = int(int(dat1[0]) - 1 + iDLS + int(strTz[0]))
+            m1 = int(60 - float('.' + dat1[1]) * 60 + float(strTz[1]))
         else:
             h1 = int(int(dat1[0]) + iDLS + int(strTz[0]))
             m1 = int(float('.' + dat1[1]) * 60 + float(strTz[1]))
@@ -1943,8 +1913,7 @@ class Suntracker(eg.PluginClass):
 
         return sh1 + sm1, sh2 + sm2
 
-
-    def main(self,mainThreadEvent):
+    def main(self, mainThreadEvent):
         self.iGetWeatherCntr = 0
         i = 0
         while not mainThreadEvent.isSet():
@@ -1961,6 +1930,14 @@ class Suntracker(eg.PluginClass):
             year = int(time.strftime("%Y", time.localtime()))
             month = int(time.strftime("%m", time.localtime()))
             day = int(time.strftime("%d", time.localtime()))
+
+            # Update public holidays if on file
+            try:
+                # reload(holidays)
+                self.fixedHolidays = holidays.fixed_public_holidays()
+                self.variableHolidays = holidays.moveable_public_holidays()
+            except:
+                pass
 
             # Check if we are in daylight savings
             iDLS = self.Check_for_daylight_saving()
@@ -2013,7 +1990,7 @@ class Suntracker(eg.PluginClass):
 
             if len(hr) < 2:
                 hr = '0' + hr
-            if len(mn)< 2 :
+            if len(mn) < 2:
                 mn = '0' + mn
             trigTime = hr + mn
 
@@ -2043,9 +2020,9 @@ class Suntracker(eg.PluginClass):
                 i = 0
                 # Generate an event with current weather condition
                 if self.weatherStatus:
-                    if(
+                    if (
                         (self.weatherChange and
-                             self.currCondition <> self.prevcurrCondition)
+                         self.currCondition <> self.prevcurrCondition)
                         or not self.weatherChange
                     ):
                         eg.TriggerEvent(
@@ -2059,7 +2036,7 @@ class Suntracker(eg.PluginClass):
             remain = 60.0 - int(time.strftime("%S", time.localtime()))
             mainThreadEvent.wait(remain)
 
-    #methods to Control suntrackers
+    # methods to Control suntrackers
     def StartSuntracker(
         self,
         dayTimeSettings,
@@ -2148,13 +2125,11 @@ class Suntracker(eg.PluginClass):
         t.start()
         self.suntrackerThreads[suntrackerName] = t
 
-
     def AbortSuntracker(self, suntracker):
         if self.suntrackerThreads.has_key(suntracker):
             t = self.suntrackerThreads[suntracker]
             t.AbortSuntracker()
             del self.suntrackerThreads[suntracker]
-
 
     def AbortAllSuntrackers(self):
         for i, item in enumerate(self.suntrackerThreads):
@@ -2164,8 +2139,7 @@ class Suntracker(eg.PluginClass):
             time.sleep(0.1)
         self.suntrackerThreads = {}
 
-
-    def RestartAllSuntrackers(self, startNewIfNotAlive = True):
+    def RestartAllSuntrackers(self, startNewIfNotAlive=True):
         self.AbortAllSuntrackers()
         params = self.AllsuntrackerNames
         for i, item in enumerate(params):
@@ -2211,37 +2185,42 @@ class Suntracker(eg.PluginClass):
                     self.weatherChange
                 )
 
-
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
         choice = event.GetSelection()
         event.Skip()
         return choice
 
-
     def Configure(
         self,
-        myLongitude = "18.0000",
-        myLatitude = "59.2500",
-        location_id = "905335",
-        fixedHolidays = "0101,0501,0606,1224,1225,1226",
-        variableHolidays = "0106,0402,0405,0512,0522,0523,0625",
-        summerSeasonBegins = "--",
-        summerSeasonEnds = "--",
-        vacation_m = False,
-        sunStatus = True,
-        weatherStatus = True,
-        iTimeZone = '+01.00',
-        unit = "metric",
-        weatherUpdateRate = 5,
-        emptyHouse_m = False,
-        eventPrefix = "Main",
-        weatherChange = False,
+        myLongitude="18.0000",
+        myLatitude="59.2500",
+        location_id="SWXX0031:1:SW",
+        fixedHolidays="0101,0501,0606,1224,1225,1226",
+        variableHolidays="0106,0402,0405,0512,0522,0523,0625",
+        summerSeasonBegins="--",
+        summerSeasonEnds="--",
+        vacation_m=False,
+        sunStatus=True,
+        weatherStatus=True,
+        iTimeZone='+01.00',
+        unit="metric",
+        weatherUpdateRate=5,
+        emptyHouse_m=False,
+        eventPrefix="Main",
+        weatherChange=False,
         *args
     ):
         panel = eg.ConfigPanel(self, resizable=True)
         mySizer_1 = wx.GridBagSizer(10, 10)
         mySizer_2 = wx.GridBagSizer(10, 10)
+
+        try:
+            import holidays
+            fixedHolidays = holidays.fixed_public_holidays()
+            variableHolidays = holidays.moveable_public_holidays()
+        except:
+            pass
 
         suntrackerListCtrl = wx.ListCtrl(
             panel,
@@ -2252,7 +2231,7 @@ class Suntracker(eg.PluginClass):
         for i, colLabel in enumerate(self.text.colLabels):
             suntrackerListCtrl.InsertColumn(i, colLabel)
 
-        #setting col width to fit label
+        # setting col width to fit label
         suntrackerListCtrl.InsertItem(0, "Test Suntracker Name")
         suntrackerListCtrl.SetItem(0, 1, "Test EventName On")
 
@@ -2261,25 +2240,25 @@ class Suntracker(eg.PluginClass):
             suntrackerListCtrl.SetColumnWidth(
                 i,
                 wx.LIST_AUTOSIZE_USEHEADER
-            ) #wx.LIST_AUTOSIZE
+            )  # wx.LIST_AUTOSIZE
             size += suntrackerListCtrl.GetColumnWidth(i)
 
         suntrackerListCtrl.SetMinSize((size, -1))
 
-        mySizer_1.Add(suntrackerListCtrl,(0,0),(1, 5), flag = wx.EXPAND)
+        mySizer_1.Add(suntrackerListCtrl, (0, 0), (1, 5), flag=wx.EXPAND)
 
-        #buttons
+        # buttons
         abortButton = wx.Button(panel, -1, self.text.b_abort)
-        mySizer_1.Add(abortButton,(1,0))
+        mySizer_1.Add(abortButton, (1, 0))
 
         abortAllButton = wx.Button(panel, -1, self.text.b_abortAll)
-        mySizer_1.Add(abortAllButton,(1,1), flag = wx.ALIGN_RIGHT)
+        mySizer_1.Add(abortAllButton, (1, 1), flag=wx.ALIGN_RIGHT)
 
         restartAllButton = wx.Button(panel, -1, self.text.b_restartAll)
-        mySizer_1.Add(restartAllButton,(1,2), flag = wx.ALIGN_RIGHT)
+        mySizer_1.Add(restartAllButton, (1, 2), flag=wx.ALIGN_RIGHT)
 
         refreshButton = wx.Button(panel, -1, self.text.b_refresh)
-        mySizer_1.Add(refreshButton,(1,4), flag = wx.ALIGN_RIGHT)
+        mySizer_1.Add(refreshButton, (1, 4), flag=wx.ALIGN_RIGHT)
 
         mySizer_1.AddGrowableRow(0)
         mySizer_1.AddGrowableCol(1)
@@ -2289,48 +2268,49 @@ class Suntracker(eg.PluginClass):
         f_myLatitude = float(myLatitude)
         myLatitudeCtrl = panel.SpinNumCtrl(
             f_myLatitude,
-            decimalChar = '.',                 # by default, use '.' for decimal point
-            groupChar = ',',                   # by default, use ',' for grouping
-            fractionWidth = 4,
-            integerWidth = 3,
-            min = -90.0000,
-            max = 90.0000,
-            increment = 0.0050
+            decimalChar='.',  # by default, use '.' for decimal point
+            groupChar=',',  # by default, use ',' for grouping
+            fractionWidth=4,
+            integerWidth=3,
+            min=-90.0000,
+            max=90.0000,
+            increment=0.0050
         )
-        myLatitudeCtrl.SetInitialSize((90,-1))
+        myLatitudeCtrl.SetInitialSize((90, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMyLatitude
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_2.Add(myLatitudeCtrl,(0,1))
+        mySizer_2.Add(myLatitudeCtrl, (0, 1))
 
         f_myLongitude = float(myLongitude)
         myLongitudeCtrl = panel.SpinNumCtrl(
             f_myLongitude,
-            decimalChar = '.',                 # by default, use '.' for decimal point
-            groupChar = ',',                   # by default, use ',' for grouping
-            fractionWidth = 4,
-            integerWidth = 4,
-            min = -180.0000,
-            max = 180.0000,
-            increment = 0.0050
+            decimalChar='.',  # by default, use '.' for decimal point
+            groupChar=',',  # by default, use ',' for grouping
+            fractionWidth=4,
+            integerWidth=4,
+            min=-180.0000,
+            max=180.0000,
+            increment=0.0050
         )
-        myLongitudeCtrl.SetInitialSize((90,-1))
+        myLongitudeCtrl.SetInitialSize((90, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMyLongitude
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_2.Add(myLongitudeCtrl,(1,1))
+        mySizer_2.Add(myLongitudeCtrl, (1, 1))
 
         # Select or accept proposed timezone
+        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '-12.00',
             '-11.00',
@@ -2371,9 +2351,9 @@ class Suntracker(eg.PluginClass):
             '+13.00',
             '+14.00'
         ]
-        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        iTimeZoneCtrl.SetInitialSize((60,-1))
-        if list.count(iTimeZone)==0:
+        iTimeZoneCtrl.SetInitialSize((60, -1))
+        iTimeZoneCtrl.AppendItems(items=list)
+        if list.count(iTimeZone) == 0:
             iTimeZoneCtrl.Select(n=0)
         else:
             iTimeZoneCtrl.SetSelection(int(list.index(iTimeZone)))
@@ -2385,63 +2365,65 @@ class Suntracker(eg.PluginClass):
                 -1,
                 self.text.txtTimeZone
             ),
-           (1,2)
+            (1, 2)
         )
-        mySizer_2.Add(iTimeZoneCtrl,(1,3))
+        mySizer_2.Add(iTimeZoneCtrl, (1, 3))
 
         desc1 = wx.StaticText(panel, -1, self.text.LocationLabel)
-        mySizer_2.Add(desc1,(2,0))
-        Location = wx.TextCtrl(panel, -1,location_id)
-        Location.SetInitialSize((200,-1))
-        mySizer_2.Add(Location,(2,1))
+        mySizer_2.Add(desc1, (2, 0))
+        Location = wx.TextCtrl(panel, -1, location_id)
+        Location.SetInitialSize((200, -1))
+        mySizer_2.Add(Location, (2, 1))
 
-        list = ['metric', 'non-metric']
-        unitCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(unit)==0:
+        unitCtrl = wx.Choice(parent=panel, pos=(10, 10))
+        list = ['metric', 'imperial']
+        unitCtrl.AppendItems(items=list)
+        if list.count(unit) == 0:
             unitCtrl.Select(n=0)
         else:
             unitCtrl.SetSelection(int(list.index(unit)))
         unitCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.txtUnit)
-        mySizer_2.Add(sBtxt,(3,0))
-        mySizer_2.Add(unitCtrl,(3,1))
+        mySizer_2.Add(sBtxt, (3, 0))
+        mySizer_2.Add(unitCtrl, (3, 1))
 
         weatherUpdateRateCtrl = panel.SpinIntCtrl(weatherUpdateRate, 1, 60)
-        weatherUpdateRateCtrl.SetInitialSize((50,-1))
+        weatherUpdateRateCtrl.SetInitialSize((50, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.weatherUpdateRate
             ),
-           (4,0)
+            (4, 0)
         )
-        mySizer_2.Add(weatherUpdateRateCtrl,(4,1))
+        mySizer_2.Add(weatherUpdateRateCtrl, (4, 1))
 
         fixedHolidaysCtrl = wx.TextCtrl(panel, -1, fixedHolidays)
-        fixedHolidaysCtrl.SetInitialSize((300,-1))
+        fixedHolidaysCtrl.SetInitialSize((300, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtFixedHolidays
             ),
-           (5,0)
+            (5, 0)
         )
-        mySizer_2.Add(fixedHolidaysCtrl,(5,1))
+        mySizer_2.Add(fixedHolidaysCtrl, (5, 1))
 
         variableHolidaysCtrl = wx.TextCtrl(panel, -1, variableHolidays)
-        variableHolidaysCtrl.SetInitialSize((300,-1))
+        variableHolidaysCtrl.SetInitialSize((300, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtVariableHolidays
             ),
-           (6,0)
+            (6, 0)
         )
-        mySizer_2.Add(variableHolidaysCtrl,(6,1))
+        mySizer_2.Add(variableHolidaysCtrl, (6, 1))
 
+        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '--',
             '01',
@@ -2457,16 +2439,17 @@ class Suntracker(eg.PluginClass):
             '11',
             '12'
         ]
-        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(summerSeasonBegins)==0:
+        summerBeginsCtrl.AppendItems(items=list)
+        if list.count(summerSeasonBegins) == 0:
             summerBeginsCtrl.Select(n=0)
         else:
             summerBeginsCtrl.SetSelection(int(list.index(summerSeasonBegins)))
         summerBeginsCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.txtSummerSeasonBegins)
-        mySizer_2.Add(sBtxt,(7,0))
-        mySizer_2.Add(summerBeginsCtrl,(7,1))
+        mySizer_2.Add(sBtxt, (7, 0))
+        mySizer_2.Add(summerBeginsCtrl, (7, 1))
 
+        summerEndsCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '--',
             '01',
@@ -2482,47 +2465,47 @@ class Suntracker(eg.PluginClass):
             '11',
             '12'
         ]
-        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(summerSeasonEnds)==0:
+        summerEndsCtrl.AppendItems(items=list)
+        if list.count(summerSeasonEnds) == 0:
             summerEndsCtrl.Select(n=0)
         else:
             summerEndsCtrl.SetSelection(int(list.index(summerSeasonEnds)))
         summerEndsCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sEtxt = wx.StaticText(panel, -1, self.text.txtSummerSeasonEnds)
-        mySizer_2.Add(sEtxt,(8,0))
-        mySizer_2.Add(summerEndsCtrl,(8,1))
+        mySizer_2.Add(sEtxt, (8, 0))
+        mySizer_2.Add(summerEndsCtrl, (8, 1))
 
         eventPrefixCtrl = wx.TextCtrl(panel, -1, eventPrefix)
-        eventPrefixCtrl.SetInitialSize((100,-1))
+        eventPrefixCtrl.SetInitialSize((100, -1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.eventPrefix
             ),
-           (9,0)
+            (9, 0)
         )
-        mySizer_2.Add(eventPrefixCtrl,(9,1))
+        mySizer_2.Add(eventPrefixCtrl, (9, 1))
 
         vacation_mCtrl = wx.CheckBox(panel, -1, self.text.txtVacation_m)
         vacation_mCtrl.SetValue(vacation_m)
-        mySizer_2.Add(vacation_mCtrl,(11,0))
+        mySizer_2.Add(vacation_mCtrl, (11, 0))
 
         emptyHouse_mCtrl = wx.CheckBox(panel, -1, self.text.txtEmptyHouse_m)
         emptyHouse_mCtrl.SetValue(emptyHouse_m)
-        mySizer_2.Add(emptyHouse_mCtrl,(11,1))
+        mySizer_2.Add(emptyHouse_mCtrl, (11, 1))
 
         sunStatusCtrl = wx.CheckBox(panel, -1, self.text.sunStatus)
         sunStatusCtrl.SetValue(sunStatus)
-        mySizer_2.Add(sunStatusCtrl,(12,0))
+        mySizer_2.Add(sunStatusCtrl, (12, 0))
 
         weatherStatusCtrl = wx.CheckBox(panel, -1, self.text.weatherStatus)
         weatherStatusCtrl.SetValue(weatherStatus)
-        mySizer_2.Add(weatherStatusCtrl,(13,0))
+        mySizer_2.Add(weatherStatusCtrl, (13, 0))
 
         weatherChangeCtrl = wx.CheckBox(panel, -1, self.text.txtWeatherChange)
         weatherChangeCtrl.SetValue(weatherChange)
-        mySizer_2.Add(weatherChangeCtrl,(13,1))
+        mySizer_2.Add(weatherChangeCtrl, (13, 1))
 
         font = panel.GetFont()
         p = font.GetPointSize()
@@ -2530,25 +2513,24 @@ class Suntracker(eg.PluginClass):
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.listhl)
+        box = wx.StaticBox(panel, -1, self.text.listhl)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_1 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_1 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_1.Add(mySizer_1)
-        panel.sizer.Add(Sizer_1, 0, flag = wx.EXPAND)
+        panel.sizer.Add(Sizer_1, 0, flag=wx.EXPAND)
 
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.pHeading)
+        box = wx.StaticBox(panel, -1, self.text.pHeading)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_2 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_2 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_2.Add(mySizer_2)
-        panel.sizer.Add(Sizer_2, 0, flag = wx.EXPAND)
-
+        panel.sizer.Add(Sizer_2, 0, flag=wx.EXPAND)
 
         def PopulateList(event):
             suntrackerListCtrl.DeleteAllItems()
@@ -2558,12 +2540,11 @@ class Suntracker(eg.PluginClass):
                 if t.isAlive():
                     suntrackerListCtrl.InsertItem(row, t.name)
                     suntrackerListCtrl.SetItem(row,
-                        1, t.eventNameOn)
+                                               1, t.eventNameOn)
                     suntrackerListCtrl.SetItem(row,
-                        2, t.eventNameOff)
+                                               2, t.eventNameOff)
                     row += 1
             ListSelection(wx.CommandEvent())
-
 
         def OnAbortButton(event):
             item = suntrackerListCtrl.GetFirstSelected()
@@ -2574,24 +2555,20 @@ class Suntracker(eg.PluginClass):
             PopulateList(wx.CommandEvent())
             event.Skip()
 
-
         def OnAbortAllButton(event):
             self.AbortAllSuntrackers()
             PopulateList(wx.CommandEvent())
             event.Skip()
-
 
         def OnRestartAllButton(event):
             self.RestartAllSuntrackers()
             PopulateList(wx.CommandEvent())
             event.Skip()
 
-
         def ListSelection(event):
             flag = suntrackerListCtrl.GetFirstSelected() != -1
             abortButton.Enable(flag)
             event.Skip()
-
 
         def OnSize(event):
             suntrackerListCtrl.SetColumnWidth(
@@ -2600,17 +2577,14 @@ class Suntracker(eg.PluginClass):
             )
             event.Skip()
 
-
         def OnApplyButton(event):
             event.Skip()
             self.RestartAllSuntrackers()
             PopulateList(wx.CommandEvent())
 
-
         def OnOkButton(event):
             event.Skip()
             self.OkButtonClicked = True
-
 
         PopulateList(wx.CommandEvent())
         abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
@@ -2643,317 +2617,268 @@ class Suntracker(eg.PluginClass):
             weatherUpdateRate = weatherUpdateRateCtrl.GetValue()
             weatherChange = weatherChangeCtrl.GetValue()
             panel.SetResult(
-                        myLongitude,
-                        myLatitude,
-                        location_id,
-                        fixedHolidays,
-                        variableHolidays,
-                        summerSeasonBegins,
-                        summerSeasonEnds,
-                        vacation_m,
-                        sunStatus,
-                        weatherStatus,
-                        iTimeZone,
-                        unit,
-                        weatherUpdateRate,
-                        emptyHouse_m,
-                        eventPrefix,
-                        weatherChange,
-                        *args
+                myLongitude,
+                myLatitude,
+                location_id,
+                fixedHolidays,
+                variableHolidays,
+                summerSeasonBegins,
+                summerSeasonEnds,
+                vacation_m,
+                sunStatus,
+                weatherStatus,
+                iTimeZone,
+                unit,
+                weatherUpdateRate,
+                emptyHouse_m,
+                eventPrefix,
+                weatherChange,
+                *args
             )
-
 
     def GetAllsuntrackerNames(self):
         return self.AllsuntrackerNames
 
-
     def GetAlldayTimeSettings(self):
         return self.AlldayTimeSettings
-
 
     def GetAlleventNameOn(self):
         return self.AlleventNameOn
 
-
     def GetAlleventNameOff(self):
         return self.AlleventNameOff
-
 
     def GetAlliNbrOfBurstsON(self):
         return self.AlliNbrOfBurstsON
 
-
     def GetAlliNbrOfBurstsOFF(self):
         return self.AlliNbrOfBurstsOFF
-
 
     def GetAllcmdDelay(self):
         return self.AllcmdDelay
 
-
     def GetAlldoLogLoops(self):
         return self.AlldoLogLoops
-
 
     def GetAllbDoSynch(self):
         return self.AllbDoSynch
 
-
     def GetAlliSynchInterval(self):
         return self.AlliSynchInterval
-
 
     def GetAlliOffset(self):
         return self.AlliOffset
 
-
     def GetAlliWeather(self):
         return self.AlliWeather
-
 
     def GetAlliMinOnPeriod(self):
         return self.AlliMinOnPeriod
 
-
     def GetAllmoving_Ghost(self):
         return self.Allmoving_Ghost
-
 
     def GetAllmoving_Ghost_G(self):
         return self.Allmoving_Ghost_G
 
-
     def GetAllmoving_Ghost_excl(self):
         return self.Allmoving_Ghost_excl
-
 
     def GetAllMoving_Ghost_r1(self):
         return self.AllMoving_Ghost_r1
 
-
     def GetAllMoving_Ghost_r2(self):
         return self.AllMoving_Ghost_r2
-
 
     def GetAllMoving_Ghost_r3(self):
         return self.AllMoving_Ghost_r3
 
-
     def GetAllMoving_Ghost_r4(self):
         return self.AllMoving_Ghost_r4
-
 
     def GetAllMoving_Ghost_r5(self):
         return self.AllMoving_Ghost_r5
 
-
     def GetAllMoving_Ghost_r6(self):
         return self.AllMoving_Ghost_r6
-
 
     def GetAllMoving_Ghost_r7(self):
         return self.AllMoving_Ghost_r7
 
-
     def GetAllMoving_Ghost_r8(self):
         return self.AllMoving_Ghost_r8
-
 
     def AddSuntrackerName(self, suntrackerName):
         if not suntrackerName in self.AllsuntrackerNames:
             self.AllsuntrackerNames.append(suntrackerName)
         return self.AllsuntrackerNames.index(suntrackerName)
 
-
     def AddDayTimeSettings(self, dayTimeSettings, indx):
         try:
             del self.AlldayTimeSettings[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlldayTimeSettings.insert(indx, dayTimeSettings)
-
 
     def AddEventNameOn(self, eventNameOn, indx):
         try:
             del self.AlleventNameOn[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlleventNameOn.insert(indx, eventNameOn)
-
 
     def AddEventNameOff(self, eventNameOff, indx):
         try:
             del self.AlleventNameOff[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlleventNameOff.insert(indx, eventNameOff)
-
 
     def AddInbrOfBurstsON(self, iNbrOfBurstsON, indx):
         try:
             del self.AlliNbrOfBurstsON[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliNbrOfBurstsON.insert(indx, iNbrOfBurstsON)
-
 
     def AddInbrOfBurstsOFF(self, iNbrOfBurstsOFF, indx):
         try:
             del self.AlliNbrOfBurstsOFF[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliNbrOfBurstsOFF.insert(indx, iNbrOfBurstsOFF)
-
 
     def AddCmdDelay(self, cmdDelay, indx):
         try:
             del self.AllcmdDelay[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllcmdDelay.insert(indx, cmdDelay)
-
 
     def AddDoLogLoops(self, doLogLoops, indx):
         try:
             del self.AlldoLogLoops[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlldoLogLoops.insert(indx, doLogLoops)
-
 
     def AddBdoSynch(self, bDoSynch, indx):
         try:
             del self.AllbDoSynch[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllbDoSynch.insert(indx, bDoSynch)
-
 
     def AddIsynchInterval(self, iSynchInterval, indx):
         try:
             del self.AlliSynchInterval[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliSynchInterval.insert(indx, iSynchInterval)
-
 
     def AddiOffset(self, iOffset, indx):
         try:
             del self.AlliOffset[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliOffset.insert(indx, iOffset)
-
 
     def AddiWeather(self, iWeather, indx):
         try:
             del self.AlliWeather[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliWeather.insert(indx, iWeather)
-
 
     def AddiMinOnPeriod(self, iMinOnPeriod, indx):
         try:
             del self.AlliMinOnPeriod[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AlliMinOnPeriod.insert(indx, iMinOnPeriod)
-
 
     def AddMoving_Ghost(self, moving_Ghost, indx):
         try:
             del self.Allmoving_Ghost[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.Allmoving_Ghost.insert(indx, moving_Ghost)
-
 
     def AddMoving_Ghost_G(self, moving_Ghost_G, indx):
         try:
             del self.Allmoving_Ghost_G[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.Allmoving_Ghost_G.insert(indx, moving_Ghost_G)
-
 
     def AddMoving_Ghost_excl(self, moving_Ghost_excl, indx):
         try:
             del self.Allmoving_Ghost_excl[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.Allmoving_Ghost_excl.insert(indx, moving_Ghost_excl)
-
 
     def AddMoving_Ghost_r1(self, moving_Ghost_r1, indx):
         try:
             del self.AllMoving_Ghost_r1[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r1.insert(indx, moving_Ghost_r1)
-
 
     def AddMoving_Ghost_r2(self, moving_Ghost_r2, indx):
         try:
             del self.AllMoving_Ghost_r2[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r2.insert(indx, moving_Ghost_r2)
-
 
     def AddMoving_Ghost_r3(self, moving_Ghost_r3, indx):
         try:
             del self.AllMoving_Ghost_r3[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r3.insert(indx, moving_Ghost_r3)
-
 
     def AddMoving_Ghost_r4(self, moving_Ghost_r4, indx):
         try:
             del self.AllMoving_Ghost_r4[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r4.insert(indx, moving_Ghost_r4)
-
 
     def AddMoving_Ghost_r5(self, moving_Ghost_r5, indx):
         try:
             del self.AllMoving_Ghost_r5[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r5.insert(indx, moving_Ghost_r5)
-
 
     def AddMoving_Ghost_r6(self, moving_Ghost_r6, indx):
         try:
             del self.AllMoving_Ghost_r6[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r6.insert(indx, moving_Ghost_r6)
-
 
     def AddMoving_Ghost_r7(self, moving_Ghost_r7, indx):
         try:
             del self.AllMoving_Ghost_r7[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r7.insert(indx, moving_Ghost_r7)
-
 
     def AddMoving_Ghost_r8(self, moving_Ghost_r8, indx):
         try:
             del self.AllMoving_Ghost_r8[indx]
         except IndexError:
-            i = -1 # no match
+            i = -1  # no match
         self.AllMoving_Ghost_r8.insert(indx, moving_Ghost_r8)
-
 
 
 class SuntrackerAction(eg.ActionClass):
     name = "Start new or control running SunTracker"
-    description =(
-        "Allows starting, stopping or resetting SunTrackers, which "+
+    description = (
+        "Allows starting, stopping or resetting SunTrackers, which " +
         "triggers an event at sunset/sunrise and a given date & time"
     )
     iconFile = "suntracker"
@@ -3065,7 +2990,6 @@ class SuntrackerAction(eg.ActionClass):
             self.plugin.weatherChange
         )
 
-
     def GetLabel(
         self,
         dayTimeSettings,
@@ -3134,7 +3058,6 @@ class SuntrackerAction(eg.ActionClass):
         weatherChange
     ):
 
-
         indx = self.plugin.AddSuntrackerName(suntrackerName)
         self.plugin.AddDayTimeSettings(dayTimeSettings, indx)
         self.plugin.AddEventNameOn(eventNameOn, indx)
@@ -3160,13 +3083,12 @@ class SuntrackerAction(eg.ActionClass):
         self.plugin.AddMoving_Ghost_r7(moving_Ghost_r7, indx)
         self.plugin.AddMoving_Ghost_r8(moving_Ghost_r8, indx)
 
-        return self.text.labelStart %(suntrackerName)
-
+        return self.text.labelStart % (suntrackerName)
 
     def timeFormat(self, theString):
         if theString == "----":
             return theString
-        if(
+        if (
             theString == "0000"
             or theString == "000"
             or theString == "00"
@@ -3178,12 +3100,11 @@ class SuntrackerAction(eg.ActionClass):
             return "----"
         dat1 = theString[:2]
         dat2 = theString[2:]
-        if int(dat1)>23:
+        if int(dat1) > 23:
             dat1 = "23"
-        if int(dat2)>59:
+        if int(dat2) > 59:
             dat2 = "59"
-        return(dat1+dat2)
-
+        return (dat1 + dat2)
 
     def nightOffFormat(self, theString):
         if theString == "----":
@@ -3194,7 +3115,6 @@ class SuntrackerAction(eg.ActionClass):
             return "0559"
         return theString
 
-
     def morningOnFormat(self, theString):
         if theString == "----":
             return theString
@@ -3203,7 +3123,6 @@ class SuntrackerAction(eg.ActionClass):
         elif int(theString) > int("1159"):
             return "1159"
         return theString
-
 
     def eveningOffFormat(self, theString):
         if theString == "----":
@@ -3214,73 +3133,72 @@ class SuntrackerAction(eg.ActionClass):
             return "2359"
         return theString
 
-
     def Configure(
         self,
-        dayTimeSettings = [],
-        suntrackerName = "Give suntracker a name",
-        eventNameOn = "nn ON",
-        eventNameOff = "nn OFF",
-        moNight_OFF = "----",
-        moMorning_ON = "----",
-        moEvening_OFF = "----",
-        tuNight_OFF = "----",
-        tuMorning_ON = "----",
-        tuEvening_OFF = "----",
-        weNight_OFF = "----",
-        weMorning_ON = "----",
-        weEvening_OFF = "----",
-        thNight_OFF = "----",
-        thMorning_ON = "----",
-        thEvening_OFF = "----",
-        frNight_OFF = "----",
-        frMorning_ON = "----",
-        frEvening_OFF = "----",
-        saNight_OFF = "----",
-        saMorning_ON = "----",
-        saEvening_OFF = "----",
-        suNight_OFF = "----",
-        suMorning_ON = "----",
-        suEvening_OFF = "----",
-        vaNight_OFF = "----",
-        vaMorning_ON = "----",
-        vaEvening_OFF = "----",
-        fixedHolidays = "0101,0501,0606,1224,1225,1226,1231",
-        variableHolidays = "0106,0321,0324,0620",
-        iNbrOfBurstsON = 1,
-        iNbrOfBurstsOFF = 1,
-        cmdDelay = 1.5,
-        doLogLoops = False,
-        vacation_m = False,
-        moving_Ghost = False,
-        moving_Ghost_G = False,
-        moving_Ghost_r1 = 10,
-        moving_Ghost_r2 = 40,
-        moving_Ghost_r3 = 10,
-        moving_Ghost_r4 = 40,
-        moving_Ghost_r5 = 3,
-        moving_Ghost_r6 = 10,
-        moving_Ghost_r7 = 40,
-        moving_Ghost_r8 = 80,
-        bDoSynch = True,
-        iOffset = 0,
-        iWeather = 0,
-        iMinOnPeriod = 10,
-        myLongitude = "18.0000",
-        myLatitude = "59.2500",
-        location_id = "905335",
-        iSynchInterval = 30,
-        summerSeasonBegins = "--",
-        summerSeasonEnds = "--",
-        moving_Ghost_excl = False,
-        unit = 'metric',
-        weatherUpdateRate = 5,
-        ehNight_OFF = "----",
-        ehMorning_ON = "----",
-        ehEvening_OFF = "----",
-        emptyHouse_m = False,
-        eventPrefix = 'Main',
-        weatherChange = False
+        dayTimeSettings=[],
+        suntrackerName="Give suntracker a name",
+        eventNameOn="nn ON",
+        eventNameOff="nn OFF",
+        moNight_OFF="----",
+        moMorning_ON="----",
+        moEvening_OFF="----",
+        tuNight_OFF="----",
+        tuMorning_ON="----",
+        tuEvening_OFF="----",
+        weNight_OFF="----",
+        weMorning_ON="----",
+        weEvening_OFF="----",
+        thNight_OFF="----",
+        thMorning_ON="----",
+        thEvening_OFF="----",
+        frNight_OFF="----",
+        frMorning_ON="----",
+        frEvening_OFF="----",
+        saNight_OFF="----",
+        saMorning_ON="----",
+        saEvening_OFF="----",
+        suNight_OFF="----",
+        suMorning_ON="----",
+        suEvening_OFF="----",
+        vaNight_OFF="----",
+        vaMorning_ON="----",
+        vaEvening_OFF="----",
+        fixedHolidays="0101,0501,0606,1224,1225,1226,1231",
+        variableHolidays="0106,0321,0324,0620",
+        iNbrOfBurstsON=1,
+        iNbrOfBurstsOFF=1,
+        cmdDelay=1.5,
+        doLogLoops=False,
+        vacation_m=False,
+        moving_Ghost=False,
+        moving_Ghost_G=False,
+        moving_Ghost_r1=10,
+        moving_Ghost_r2=40,
+        moving_Ghost_r3=10,
+        moving_Ghost_r4=40,
+        moving_Ghost_r5=3,
+        moving_Ghost_r6=10,
+        moving_Ghost_r7=40,
+        moving_Ghost_r8=80,
+        bDoSynch=True,
+        iOffset=0,
+        iWeather=0,
+        iMinOnPeriod=10,
+        myLongitude="18.0000",
+        myLatitude="59.2500",
+        location_id="SWXX0031:1:SW",
+        iSynchInterval=30,
+        summerSeasonBegins="--",
+        summerSeasonEnds="--",
+        moving_Ghost_excl=False,
+        unit='metric',
+        weatherUpdateRate=5,
+        ehNight_OFF="----",
+        ehMorning_ON="----",
+        ehEvening_OFF="----",
+        emptyHouse_m=False,
+        eventPrefix='Main',
+        weatherChange=False
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -3289,18 +3207,18 @@ class SuntrackerAction(eg.ActionClass):
         mySizer_3 = wx.GridBagSizer(5, 5)
         mySizer_4 = wx.GridBagSizer(5, 5)
 
-        #name
+        # name
         suntrackerNameCtrl = wx.TextCtrl(panel, -1, suntrackerName)
-        suntrackerNameCtrl.SetInitialSize((250,-1))
+        suntrackerNameCtrl.SetInitialSize((250, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.suntrackerName
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_1.Add(suntrackerNameCtrl,(0,1))
+        mySizer_1.Add(suntrackerNameCtrl, (0, 1))
 
         doLogLoopsCtrl = wx.CheckBox(panel, -1, "")
         doLogLoopsCtrl.SetValue(doLogLoops)
@@ -3310,42 +3228,42 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.doLogLoopsText
             ),
-           (0,5)
+            (0, 5)
         )
-        mySizer_1.Add(doLogLoopsCtrl,(0,6))
+        mySizer_1.Add(doLogLoopsCtrl, (0, 6))
 
-        #eventName ON
+        # eventName ON
         eventNameOnCtrl = wx.TextCtrl(panel, -1, eventNameOn)
-        eventNameOnCtrl.SetInitialSize((150,-1))
+        eventNameOnCtrl.SetInitialSize((150, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.eventNameOn
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_1.Add(eventNameOnCtrl,(1,1))
+        mySizer_1.Add(eventNameOnCtrl, (1, 1))
 
-        #eventName OFF
+        # eventName OFF
         eventNameOffCtrl = wx.TextCtrl(panel, -1, eventNameOff)
-        eventNameOffCtrl.SetInitialSize((150,-1))
+        eventNameOffCtrl.SetInitialSize((150, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.eventNameOff
             ),
-           (2,0)
+            (2, 0)
         )
-        mySizer_1.Add(eventNameOffCtrl,(2,1))
+        mySizer_1.Add(eventNameOffCtrl, (2, 1))
 
         moNight_OFFCtrl = wx.TextCtrl(panel, -1, moNight_OFF)
-        moNight_OFFCtrl.SetInitialSize((35,-1))
+        moNight_OFFCtrl.SetInitialSize((35, -1))
         moMorning_ONCtrl = wx.TextCtrl(panel, -1, moMorning_ON)
-        moMorning_ONCtrl.SetInitialSize((35,-1))
+        moMorning_ONCtrl.SetInitialSize((35, -1))
         moEvening_OFFCtrl = wx.TextCtrl(panel, -1, moEvening_OFF)
-        moEvening_OFFCtrl.SetInitialSize((35,-1))
+        moEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3353,34 +3271,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_moNightOFF
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_2.Add(moNight_OFFCtrl,(0,1))
+        mySizer_2.Add(moNight_OFFCtrl, (0, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_moMorningON
             ),
-           (0,2)
+            (0, 2)
         )
-        mySizer_2.Add(moMorning_ONCtrl,(0,3))
+        mySizer_2.Add(moMorning_ONCtrl, (0, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_moEveningOFF
             ),
-           (0,4)
+            (0, 4)
         )
-        mySizer_2.Add(moEvening_OFFCtrl,(0,5))
+        mySizer_2.Add(moEvening_OFFCtrl, (0, 5))
 
         tuNight_OFFCtrl = wx.TextCtrl(panel, -1, tuNight_OFF)
-        tuNight_OFFCtrl.SetInitialSize((35,-1))
+        tuNight_OFFCtrl.SetInitialSize((35, -1))
         tuMorning_ONCtrl = wx.TextCtrl(panel, -1, tuMorning_ON)
-        tuMorning_ONCtrl.SetInitialSize((35,-1))
+        tuMorning_ONCtrl.SetInitialSize((35, -1))
         tuEvening_OFFCtrl = wx.TextCtrl(panel, -1, tuEvening_OFF)
-        tuEvening_OFFCtrl.SetInitialSize((35,-1))
+        tuEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3388,34 +3306,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_tuNightOFF
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_2.Add(tuNight_OFFCtrl,(1,1))
+        mySizer_2.Add(tuNight_OFFCtrl, (1, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_tuMorningON
             ),
-           (1,2)
+            (1, 2)
         )
-        mySizer_2.Add(tuMorning_ONCtrl,(1,3))
+        mySizer_2.Add(tuMorning_ONCtrl, (1, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_tuEveningOFF
             ),
-           (1,4)
+            (1, 4)
         )
-        mySizer_2.Add(tuEvening_OFFCtrl,(1,5))
+        mySizer_2.Add(tuEvening_OFFCtrl, (1, 5))
 
         weNight_OFFCtrl = wx.TextCtrl(panel, -1, weNight_OFF)
-        weNight_OFFCtrl.SetInitialSize((35,-1))
+        weNight_OFFCtrl.SetInitialSize((35, -1))
         weMorning_ONCtrl = wx.TextCtrl(panel, -1, weMorning_ON)
-        weMorning_ONCtrl.SetInitialSize((35,-1))
+        weMorning_ONCtrl.SetInitialSize((35, -1))
         weEvening_OFFCtrl = wx.TextCtrl(panel, -1, weEvening_OFF)
-        weEvening_OFFCtrl.SetInitialSize((35,-1))
+        weEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3423,34 +3341,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_weNightOFF
             ),
-           (2,0)
+            (2, 0)
         )
-        mySizer_2.Add(weNight_OFFCtrl,(2,1))
+        mySizer_2.Add(weNight_OFFCtrl, (2, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_weMorningON
             ),
-           (2,2)
+            (2, 2)
         )
-        mySizer_2.Add(weMorning_ONCtrl,(2,3))
+        mySizer_2.Add(weMorning_ONCtrl, (2, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_weEveningOFF
             ),
-           (2,4)
+            (2, 4)
         )
-        mySizer_2.Add(weEvening_OFFCtrl,(2,5))
+        mySizer_2.Add(weEvening_OFFCtrl, (2, 5))
 
         thNight_OFFCtrl = wx.TextCtrl(panel, -1, thNight_OFF)
-        thNight_OFFCtrl.SetInitialSize((35,-1))
+        thNight_OFFCtrl.SetInitialSize((35, -1))
         thMorning_ONCtrl = wx.TextCtrl(panel, -1, thMorning_ON)
-        thMorning_ONCtrl.SetInitialSize((35,-1))
+        thMorning_ONCtrl.SetInitialSize((35, -1))
         thEvening_OFFCtrl = wx.TextCtrl(panel, -1, thEvening_OFF)
-        thEvening_OFFCtrl.SetInitialSize((35,-1))
+        thEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3458,34 +3376,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_thNightOFF
             ),
-           (3,0)
+            (3, 0)
         )
-        mySizer_2.Add(thNight_OFFCtrl,(3,1))
+        mySizer_2.Add(thNight_OFFCtrl, (3, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_thMorningON
             ),
-           (3,2)
+            (3, 2)
         )
-        mySizer_2.Add(thMorning_ONCtrl,(3,3))
+        mySizer_2.Add(thMorning_ONCtrl, (3, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_thEveningOFF
             ),
-           (3,4)
+            (3, 4)
         )
-        mySizer_2.Add(thEvening_OFFCtrl,(3,5))
+        mySizer_2.Add(thEvening_OFFCtrl, (3, 5))
 
         frNight_OFFCtrl = wx.TextCtrl(panel, -1, frNight_OFF)
-        frNight_OFFCtrl.SetInitialSize((35,-1))
+        frNight_OFFCtrl.SetInitialSize((35, -1))
         frMorning_ONCtrl = wx.TextCtrl(panel, -1, frMorning_ON)
-        frMorning_ONCtrl.SetInitialSize((35,-1))
+        frMorning_ONCtrl.SetInitialSize((35, -1))
         frEvening_OFFCtrl = wx.TextCtrl(panel, -1, frEvening_OFF)
-        frEvening_OFFCtrl.SetInitialSize((35,-1))
+        frEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3493,34 +3411,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_frNightOFF
             ),
-           (4,0)
+            (4, 0)
         )
-        mySizer_2.Add(frNight_OFFCtrl,(4,1))
+        mySizer_2.Add(frNight_OFFCtrl, (4, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_frMorningON
             ),
-           (4,2)
+            (4, 2)
         )
-        mySizer_2.Add(frMorning_ONCtrl,(4,3))
+        mySizer_2.Add(frMorning_ONCtrl, (4, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_frEveningOFF
             ),
-           (4,4)
+            (4, 4)
         )
-        mySizer_2.Add(frEvening_OFFCtrl,(4,5))
+        mySizer_2.Add(frEvening_OFFCtrl, (4, 5))
 
         saNight_OFFCtrl = wx.TextCtrl(panel, -1, saNight_OFF)
-        saNight_OFFCtrl.SetInitialSize((35,-1))
+        saNight_OFFCtrl.SetInitialSize((35, -1))
         saMorning_ONCtrl = wx.TextCtrl(panel, -1, saMorning_ON)
-        saMorning_ONCtrl.SetInitialSize((35,-1))
+        saMorning_ONCtrl.SetInitialSize((35, -1))
         saEvening_OFFCtrl = wx.TextCtrl(panel, -1, saEvening_OFF)
-        saEvening_OFFCtrl.SetInitialSize((35,-1))
+        saEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3528,34 +3446,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_saNightOFF
             ),
-           (5,0)
+            (5, 0)
         )
-        mySizer_2.Add(saNight_OFFCtrl,(5,1))
+        mySizer_2.Add(saNight_OFFCtrl, (5, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_saMorningON
             ),
-           (5,2)
+            (5, 2)
         )
-        mySizer_2.Add(saMorning_ONCtrl,(5,3))
+        mySizer_2.Add(saMorning_ONCtrl, (5, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_saEveningOFF
             ),
-           (5,4)
+            (5, 4)
         )
-        mySizer_2.Add(saEvening_OFFCtrl,(5,5))
+        mySizer_2.Add(saEvening_OFFCtrl, (5, 5))
 
         suNight_OFFCtrl = wx.TextCtrl(panel, -1, suNight_OFF)
-        suNight_OFFCtrl.SetInitialSize((35,-1))
+        suNight_OFFCtrl.SetInitialSize((35, -1))
         suMorning_ONCtrl = wx.TextCtrl(panel, -1, suMorning_ON)
-        suMorning_ONCtrl.SetInitialSize((35,-1))
+        suMorning_ONCtrl.SetInitialSize((35, -1))
         suEvening_OFFCtrl = wx.TextCtrl(panel, -1, suEvening_OFF)
-        suEvening_OFFCtrl.SetInitialSize((35,-1))
+        suEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3563,34 +3481,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_suNightOFF
             ),
-           (6,0)
+            (6, 0)
         )
-        mySizer_2.Add(suNight_OFFCtrl,(6,1))
+        mySizer_2.Add(suNight_OFFCtrl, (6, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_suMorningON
             ),
-           (6,2)
+            (6, 2)
         )
-        mySizer_2.Add(suMorning_ONCtrl,(6,3))
+        mySizer_2.Add(suMorning_ONCtrl, (6, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_suEveningOFF
             ),
-           (6,4)
+            (6, 4)
         )
-        mySizer_2.Add(suEvening_OFFCtrl,(6,5))
+        mySizer_2.Add(suEvening_OFFCtrl, (6, 5))
 
         vaNight_OFFCtrl = wx.TextCtrl(panel, -1, vaNight_OFF)
-        vaNight_OFFCtrl.SetInitialSize((35,-1))
+        vaNight_OFFCtrl.SetInitialSize((35, -1))
         vaMorning_ONCtrl = wx.TextCtrl(panel, -1, vaMorning_ON)
-        vaMorning_ONCtrl.SetInitialSize((35,-1))
+        vaMorning_ONCtrl.SetInitialSize((35, -1))
         vaEvening_OFFCtrl = wx.TextCtrl(panel, -1, vaEvening_OFF)
-        vaEvening_OFFCtrl.SetInitialSize((35,-1))
+        vaEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3598,34 +3516,34 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_vaNightOFF
             ),
-           (7,0)
+            (7, 0)
         )
-        mySizer_2.Add(vaNight_OFFCtrl,(7,1))
+        mySizer_2.Add(vaNight_OFFCtrl, (7, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_vaMorningON
             ),
-           (7,2)
+            (7, 2)
         )
-        mySizer_2.Add(vaMorning_ONCtrl,(7,3))
+        mySizer_2.Add(vaMorning_ONCtrl, (7, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_vaEveningOFF
             ),
-           (7,4)
+            (7, 4)
         )
-        mySizer_2.Add(vaEvening_OFFCtrl,(7,5))
+        mySizer_2.Add(vaEvening_OFFCtrl, (7, 5))
 
         ehNight_OFFCtrl = wx.TextCtrl(panel, -1, ehNight_OFF)
-        ehNight_OFFCtrl.SetInitialSize((35,-1))
+        ehNight_OFFCtrl.SetInitialSize((35, -1))
         ehMorning_ONCtrl = wx.TextCtrl(panel, -1, ehMorning_ON)
-        ehMorning_ONCtrl.SetInitialSize((35,-1))
+        ehMorning_ONCtrl.SetInitialSize((35, -1))
         ehEvening_OFFCtrl = wx.TextCtrl(panel, -1, ehEvening_OFF)
-        ehEvening_OFFCtrl.SetInitialSize((35,-1))
+        ehEvening_OFFCtrl.SetInitialSize((35, -1))
 
         mySizer_2.Add(
             wx.StaticText(
@@ -3633,37 +3551,37 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txt_ehNightOFF
             ),
-           (8,0)
+            (8, 0)
         )
-        mySizer_2.Add(ehNight_OFFCtrl,(8,1))
+        mySizer_2.Add(ehNight_OFFCtrl, (8, 1))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_ehMorningON
             ),
-           (8,2)
+            (8, 2)
         )
-        mySizer_2.Add(ehMorning_ONCtrl,(8,3))
+        mySizer_2.Add(ehMorning_ONCtrl, (8, 3))
         mySizer_2.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txt_ehEveningOFF
             ),
-           (8,4)
+            (8, 4)
         )
-        mySizer_2.Add(ehEvening_OFFCtrl,(8,5))
+        mySizer_2.Add(ehEvening_OFFCtrl, (8, 5))
 
         iNbrOfBurstsCtrlON = panel.SpinIntCtrl(iNbrOfBurstsON, 1, 10)
-        iNbrOfBurstsCtrlON.SetInitialSize((45,-1))
+        iNbrOfBurstsCtrlON.SetInitialSize((45, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtNbrBursts
             ),
-           (0,0)
+            (0, 0)
         )
         mySizer_3.Add(
             wx.StaticText(
@@ -3671,19 +3589,19 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtON
             ),
-           (0,1)
+            (0, 1)
         )
-        mySizer_3.Add(iNbrOfBurstsCtrlON,(0,2))
+        mySizer_3.Add(iNbrOfBurstsCtrlON, (0, 2))
 
         iNbrOfBurstsCtrlOFF = panel.SpinIntCtrl(iNbrOfBurstsOFF, 1, 10)
-        iNbrOfBurstsCtrlOFF.SetInitialSize((45,-1))
+        iNbrOfBurstsCtrlOFF.SetInitialSize((45, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtNbrBursts
             ),
-           (0,3)
+            (0, 3)
         )
         mySizer_3.Add(
             wx.StaticText(
@@ -3691,42 +3609,42 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtOFF
             ),
-           (0,4)
+            (0, 4)
         )
-        mySizer_3.Add(iNbrOfBurstsCtrlOFF,(0,5))
+        mySizer_3.Add(iNbrOfBurstsCtrlOFF, (0, 5))
 
         cmdDelayCtrl = panel.SpinNumCtrl(
             cmdDelay,
-            decimalChar = '.',  # by default, use '.' for decimal point
-            groupChar = ',',    # by default, use ',' for grouping
-            fractionWidth = 1,
-            integerWidth = 2,
-            min = 0.5,
-            max = 5.0,
-            increment = 0.5
+            decimalChar='.',  # by default, use '.' for decimal point
+            groupChar=',',  # by default, use ',' for grouping
+            fractionWidth=1,
+            integerWidth=2,
+            min=0.5,
+            max=5.0,
+            increment=0.5
         )
-        cmdDelayCtrl.SetInitialSize((45,-1))
+        cmdDelayCtrl.SetInitialSize((45, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtCmdDelay
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_3.Add(cmdDelayCtrl,(1,1))
+        mySizer_3.Add(cmdDelayCtrl, (1, 1))
 
         iMinOnPeriodCtrl = panel.SpinIntCtrl(iMinOnPeriod, 0, 60)
-        iMinOnPeriodCtrl.SetInitialSize((40,-1))
+        iMinOnPeriodCtrl.SetInitialSize((40, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMinOnPeriod
             ),
-           (1,2)
+            (1, 2)
         )
-        mySizer_3.Add(iMinOnPeriodCtrl,(1,3))
+        mySizer_3.Add(iMinOnPeriodCtrl, (1, 3))
 
         bDoSynchCtrl = wx.CheckBox(panel, -1, "")
         bDoSynchCtrl.SetValue(bDoSynch)
@@ -3736,45 +3654,45 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtDoSynch
             ),
-           (2,0)
+            (2, 0)
         )
-        mySizer_3.Add(bDoSynchCtrl,(2,1))
+        mySizer_3.Add(bDoSynchCtrl, (2, 1))
 
         iSynchIntervalCtrl = panel.SpinIntCtrl(iSynchInterval, 6, 600)
-        iSynchIntervalCtrl.SetInitialSize((50,-1))
+        iSynchIntervalCtrl.SetInitialSize((50, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtSynchInterval
             ),
-           (2,2)
+            (2, 2)
         )
-        mySizer_3.Add(iSynchIntervalCtrl,(2,3))
+        mySizer_3.Add(iSynchIntervalCtrl, (2, 3))
 
         iOffsetCtrl = panel.SpinIntCtrl(iOffset, -120, 120)
-        iOffsetCtrl.SetInitialSize((50,-1))
+        iOffsetCtrl.SetInitialSize((50, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtOffset
             ),
-           (3,0)
+            (3, 0)
         )
-        mySizer_3.Add(iOffsetCtrl,(3,1))
+        mySizer_3.Add(iOffsetCtrl, (3, 1))
 
         iWeatherCtrl = panel.SpinIntCtrl(iWeather, 0, 120)
-        iWeatherCtrl.SetInitialSize((50,-1))
+        iWeatherCtrl.SetInitialSize((50, -1))
         mySizer_3.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtWeather
             ),
-           (3,2)
+            (3, 2)
         )
-        mySizer_3.Add(iWeatherCtrl,(3,3))
+        mySizer_3.Add(iWeatherCtrl, (3, 3))
 
         moving_GhostCtrl = wx.CheckBox(panel, -1, "")
         moving_GhostCtrl.SetValue(moving_Ghost)
@@ -3784,9 +3702,9 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtMoving_Ghost
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_4.Add(moving_GhostCtrl,(0,1))
+        mySizer_4.Add(moving_GhostCtrl, (0, 1))
 
         moving_Ghost_G_Ctrl = wx.CheckBox(panel, -1, "")
         moving_Ghost_G_Ctrl.SetValue(moving_Ghost_G)
@@ -3796,9 +3714,9 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtMoving_Ghost_G
             ),
-           (0,2)
+            (0, 2)
         )
-        mySizer_4.Add(moving_Ghost_G_Ctrl,(0,3))
+        mySizer_4.Add(moving_Ghost_G_Ctrl, (0, 3))
 
         moving_Ghost_excl_Ctrl = wx.CheckBox(panel, -1, "")
         moving_Ghost_excl_Ctrl.SetValue(moving_Ghost_excl)
@@ -3808,25 +3726,25 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtMoving_Ghost_excl
             ),
-           (0,4)
+            (0, 4)
         )
-        mySizer_4.Add(moving_Ghost_excl_Ctrl,(0,5))
+        mySizer_4.Add(moving_Ghost_excl_Ctrl, (0, 5))
 
         moving_Ghost_r1Ctrl = panel.SpinIntCtrl(moving_Ghost_r1, 1, 99)
-        moving_Ghost_r1Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r1Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r2Ctrl = panel.SpinIntCtrl(moving_Ghost_r2, 1, 99)
-        moving_Ghost_r2Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r2Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r3Ctrl = panel.SpinIntCtrl(moving_Ghost_r3, 1, 99)
-        moving_Ghost_r3Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r3Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r4Ctrl = panel.SpinIntCtrl(moving_Ghost_r4, 1, 99)
-        moving_Ghost_r4Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r4Ctrl.SetInitialSize((45, -1))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_r_1
             ),
-           (2,0)
+            (2, 0)
         )
         mySizer_4.Add(
             wx.StaticText(
@@ -3834,52 +3752,52 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtMoving_Ghost_ON_min
             ),
-           (2,1)
+            (2, 1)
         )
-        mySizer_4.Add(moving_Ghost_r1Ctrl,(2,2))
+        mySizer_4.Add(moving_Ghost_r1Ctrl, (2, 2))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_ON_max
             ),
-           (2,3)
+            (2, 3)
         )
-        mySizer_4.Add(moving_Ghost_r2Ctrl,(2,4))
+        mySizer_4.Add(moving_Ghost_r2Ctrl, (2, 4))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_OFF_min
             ),
-           (2,5)
+            (2, 5)
         )
-        mySizer_4.Add(moving_Ghost_r3Ctrl,(2,6))
+        mySizer_4.Add(moving_Ghost_r3Ctrl, (2, 6))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_OFF_max
             ),
-           (2,7)
+            (2, 7)
         )
-        mySizer_4.Add(moving_Ghost_r4Ctrl,(2,8))
+        mySizer_4.Add(moving_Ghost_r4Ctrl, (2, 8))
 
         moving_Ghost_r5Ctrl = panel.SpinIntCtrl(moving_Ghost_r5, 1, 99)
-        moving_Ghost_r5Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r5Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r6Ctrl = panel.SpinIntCtrl(moving_Ghost_r6, 1, 99)
-        moving_Ghost_r6Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r6Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r7Ctrl = panel.SpinIntCtrl(moving_Ghost_r7, 1, 99)
-        moving_Ghost_r7Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r7Ctrl.SetInitialSize((45, -1))
         moving_Ghost_r8Ctrl = panel.SpinIntCtrl(moving_Ghost_r8, 1, 99)
-        moving_Ghost_r8Ctrl.SetInitialSize((45,-1))
+        moving_Ghost_r8Ctrl.SetInitialSize((45, -1))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_r_2
             ),
-           (3,0)
+            (3, 0)
         )
         mySizer_4.Add(
             wx.StaticText(
@@ -3887,36 +3805,36 @@ class SuntrackerAction(eg.ActionClass):
                 -1,
                 self.text.txtMoving_Ghost_ON_min
             ),
-           (3,1)
+            (3, 1)
         )
-        mySizer_4.Add(moving_Ghost_r5Ctrl,(3,2))
+        mySizer_4.Add(moving_Ghost_r5Ctrl, (3, 2))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_ON_max
             ),
-           (3,3)
+            (3, 3)
         )
-        mySizer_4.Add(moving_Ghost_r6Ctrl,(3,4))
+        mySizer_4.Add(moving_Ghost_r6Ctrl, (3, 4))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_OFF_min
             ),
-           (3,5)
+            (3, 5)
         )
-        mySizer_4.Add(moving_Ghost_r7Ctrl,(3,6))
+        mySizer_4.Add(moving_Ghost_r7Ctrl, (3, 6))
         mySizer_4.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtMoving_Ghost_OFF_max
             ),
-           (3,7)
+            (3, 7)
         )
-        mySizer_4.Add(moving_Ghost_r8Ctrl,(3,8))
+        mySizer_4.Add(moving_Ghost_r8Ctrl, (3, 8))
 
         font = panel.GetFont()
         p = font.GetPointSize()
@@ -3924,47 +3842,46 @@ class SuntrackerAction(eg.ActionClass):
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.general)
+        box = wx.StaticBox(panel, -1, self.text.general)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_1 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_1 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_1.Add(mySizer_1)
-        panel.sizer.Add(Sizer_1, 0, flag = wx.EXPAND)
+        panel.sizer.Add(Sizer_1, 0, flag=wx.EXPAND)
 
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.daytime)
+        box = wx.StaticBox(panel, -1, self.text.daytime)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_2 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_2 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_2.Add(mySizer_2)
-        panel.sizer.Add(Sizer_2, 0, flag = wx.EXPAND)
+        panel.sizer.Add(Sizer_2, 0, flag=wx.EXPAND)
 
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.eventrules)
+        box = wx.StaticBox(panel, -1, self.text.eventrules)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_3 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_3 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_3.Add(mySizer_3)
-        panel.sizer.Add(Sizer_3, 0, flag = wx.EXPAND)
+        panel.sizer.Add(Sizer_3, 0, flag=wx.EXPAND)
 
         font.SetPointSize(9)
         font.SetWeight(wx.BOLD)
         panel.SetFont(font)
-        box = wx.StaticBox(panel,-1, self.text.mghost)
+        box = wx.StaticBox(panel, -1, self.text.mghost)
         font.SetPointSize(p)
         font.SetWeight(wx.NORMAL)
         panel.SetFont(font)
-        Sizer_4 = wx.StaticBoxSizer(box,wx.VERTICAL)
+        Sizer_4 = wx.StaticBoxSizer(box, wx.VERTICAL)
         Sizer_4.Add(mySizer_4)
-        panel.sizer.Add(Sizer_4, 0, flag = wx.EXPAND)
-
+        panel.sizer.Add(Sizer_4, 0, flag=wx.EXPAND)
 
         def OnButton(event):
             event.Skip()
@@ -4376,7 +4293,6 @@ class SuntrackerAction(eg.ActionClass):
             )
 
 
-
 class SetMovingGhostON(eg.ActionClass):
     name = "MovingGhost ON"
     description = "Action to set the MovingGhost flag TRUE"
@@ -4388,7 +4304,6 @@ class SetMovingGhostON(eg.ActionClass):
             ConfigData.movingGhost = True
         else:
             print self.text.txtInit
-
 
 
 class SetMovingGhostOFF(eg.ActionClass):
@@ -4404,7 +4319,6 @@ class SetMovingGhostOFF(eg.ActionClass):
             print self.text.txtInit
 
 
-
 class GetSunState(eg.ActionClass):
     name = "GetSunState"
     description = "Action to check if sun is up or down"
@@ -4417,7 +4331,6 @@ class GetSunState(eg.ActionClass):
             return False
 
 
-
 class GetSunStateWithTimeStamp(eg.ActionClass):
     name = "GetSunStateWithTimeStamp"
     description = "Action to check if sun is up or down with time stamp"
@@ -4425,28 +4338,113 @@ class GetSunStateWithTimeStamp(eg.ActionClass):
     def __call__(self):
         if not self.plugin.initsynch:
             if self.plugin.sunIsUp:
-                return 'Up|'+str(self.plugin.csSR)
+                return 'Up|' + str(self.plugin.csSR)
             else:
-                return 'Down|'+str(self.plugin.csSS)
+                return 'Down|' + str(self.plugin.csSS)
         else:
             print self.text.txtInit
             return "Undefined"
-
 
 
 class GetTimeFor_SunSet_SunRise(eg.ActionClass):
     name = "GetTimeFor_SunSet_SunRise"
-    description = ("Action to retrieve current time stamps for todays "+
-                  " Sunset and Sunrise"
-    )
+    description = ("Action to retrieve current time stamps for todays " +
+                   " Sunset and Sunrise"
+                   )
 
     def __call__(self):
         if not self.plugin.initsynch:
-            return 'Up|'+str(self.plugin.csSR), 'Down|'+str(self.plugin.csSS)
+            return 'Up|' + str(self.plugin.csSR), 'Down|' + str(self.plugin.csSS)
         else:
             print self.text.txtInit
             return "Undefined"
 
+
+class GetTimeFor_SunSet_SunRise_with_Offset(eg.ActionClass):
+    name = "GetTimeFor_SunSet_SunRise_with_Offset"
+    description = (
+        "This plugin action retrieves current time stamps for todays Sunset " +
+        "and Sunrise based on an offset entered in the first drop down " +
+        "field. This can be from 0 to 240 minutes prior to or after the " +
+        "''true sunrise/sunset time''. " +
+        "Finally, the result of this action returns with the offset " +
+        "calculated ''virtual sunrise/sunset times''. " +
+        "Note: the calculated ''virtual sunrise/sunset times'' can be " +
+        "obtained by executing this action block and examining the payload " +
+        "of the event in the log. " +
+        "Executing the action from a python script will return the result " +
+        "as strings, formatted typically like " +
+        "''UpWithOffset|0547:DownWithOffset|1948''. " +
+        "For further information and help, please visit the forum thread " +
+        "for the SunTracker plugin. "
+    )
+
+    def __call__(self, iOffset):
+        if not self.plugin.initsynch:
+            # Create datetime objects for sunrise/sunset times
+            sU = datetime.datetime.strptime(self.plugin.csSR, "%H%M")
+            sD = datetime.datetime.strptime(self.plugin.csSS, "%H%M")
+
+            # Calculate new times with the offset
+            sD_offset = (sD + datetime.timedelta(minutes=iOffset)).time()
+            if iOffset < 0:
+                sU_offset = (
+                    (sU + datetime.timedelta(minutes=abs(iOffset))).time()
+                )
+            else:
+                sU_offset = (
+                    (sU - datetime.timedelta(minutes=iOffset)).time()
+                )
+            sUp = str(sU_offset).split(':')
+            sDn = str(sD_offset).split(':')
+            pLoad = (
+                'UpWithOffset|' +
+                sUp[0] +
+                sUp[1] +
+                ':' +
+                'DownWithOffset|' +
+                sDn[0] +
+                sDn[1]
+            )
+            eg.TriggerEvent(
+                "SunSetSunRiseWithOffset",
+                pLoad,
+                self.plugin.eventPrefix
+            )
+            return (
+                'UpWithOffset|' + sUp[0] + sUp[1],
+                'DownWithOffset|' + sDn[0] + sDn[1]
+            )
+        else:
+            print self.text.txtInit
+            return "Undefined"
+
+    def Configure(
+        self,
+        iOffset=-20
+    ):
+        plugin = self.plugin
+        panel = eg.ConfigPanel(self)
+        mySizer_0 = wx.GridBagSizer(5, 5)
+
+        iOffsetCtrl = panel.SpinIntCtrl(iOffset, -240, 240)
+        iOffsetCtrl.SetInitialSize((50, -1))
+        mySizer_0.Add(
+            wx.StaticText(
+                panel,
+                -1,
+                self.text.txtOffset
+            ),
+            (0, 0)
+        )
+        mySizer_0.Add(iOffsetCtrl, (0, 1))
+        panel.sizer.Add(mySizer_0, 0, flag=wx.EXPAND)
+
+        while panel.Affirmed():
+            iOffset = iOffsetCtrl.GetValue()
+            panel.SetResult(
+                iOffset
+            )
 
 
 class GetWeatherCondition(eg.ActionClass):
@@ -4461,21 +4459,20 @@ class GetWeatherCondition(eg.ActionClass):
             return "Undefined"
 
 
-
 class GetSunStatusWeatherCompensated(eg.ActionClass):
     name = "Sunstate with weather compensation"
     description = (
-        "This action can be used to request weather compensated sun status. "+
-        "It is useful when determining if lights shall be turned on and off"+
-        " during various weather conditions like sunny, cloudy, foggy etc. "+
-        "The split of weather conditions in the separate python file"+
-        " 'weather_condition.py' into the various sections defines"+
-        " how the calculation will be executed for various conditions. "+
-        "If the weather condition is one of those in section"+
-        " 'weather_conditions_dark' the full time will be applied. "+
-        "If the weather is fair, clear, sunny or something else in"+
-        " the section 'weather_conditions_bright' no time will be added or subtracted. "+
-        "Finally, the section for 'weather_conditions_half_bright' will be used"+
+        "This action can be used to request weather compensated sun status. " +
+        "It is useful when determining if lights shall be turned on and off" +
+        " during various weather conditions like sunny, cloudy, foggy etc. " +
+        "The split of weather conditions in the separate python file" +
+        " 'weather_condition.py' into the various sections defines" +
+        " how the calculation will be executed for various conditions. " +
+        "If the weather condition is one of those in section" +
+        " 'weather_conditions_dark' the full time will be applied. " +
+        "If the weather is fair, clear, sunny or something else in" +
+        " the section 'weather_conditions_bright' no time will be added or subtracted. " +
+        "Finally, the section for 'weather_conditions_half_bright' will be used" +
         " to divide the time compensation into half. "
     )
 
@@ -4499,23 +4496,23 @@ class GetSunStatusWeatherCompensated(eg.ActionClass):
                 # Adjust the sunrise/sunset trig times to weather condition
                 timeCompensation = 0
 
-                currCondition, timeCompensation, trigTimeSS, trigTimeSR  = (
-                        self.plugin.CalcWeatherCompensation(
-                                currCondition,
-                                timeCompensation,
-                                self.iWeather,
-                                0
-                        )
+                currCondition, timeCompensation, trigTimeSS, trigTimeSR = (
+                    self.plugin.CalcWeatherCompensation(
+                        currCondition,
+                        timeCompensation,
+                        self.iWeather,
+                        0
+                    )
                 )
 
             # Set the weather compensated flag for sun status
-            if(
+            if (
                 trigTimeSS >= self.plugin.csSS
                 or trigTimeSS < self.plugin.csSR
             ):
                 sunIsUpW = False
 
-            if(
+            if (
                 trigTimeSR < self.plugin.csSR
                 or trigTimeSR >= self.plugin.csSS
             ):
@@ -4526,28 +4523,27 @@ class GetSunStatusWeatherCompensated(eg.ActionClass):
 
         return sunIsUpW
 
-
     def Configure(
         self,
-        iWeather = 1
+        iWeather=1
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
         mySizer_0 = wx.GridBagSizer(5, 5)
 
-        iWeatherCtrl = panel.SpinIntCtrl(iWeather, 1, 120)
-        iWeatherCtrl.SetInitialSize((50,-1))
+        iWeatherCtrl = panel.SpinIntCtrl(value=iWeather, min=1, max=120)
+        iWeatherCtrl.SetInitialSize((50, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtWeather
             ),
-           (0,0)
+            (0, 0)
         )
 
-        mySizer_0.Add(iWeatherCtrl,(0,1))
-        panel.sizer.Add(mySizer_0, 0, flag = wx.EXPAND)
+        mySizer_0.Add(iWeatherCtrl, (0, 1))
+        panel.sizer.Add(mySizer_0, 0, flag=wx.EXPAND)
 
         while panel.Affirmed():
             iWeather = iWeatherCtrl.GetValue()
@@ -4557,45 +4553,42 @@ class GetSunStatusWeatherCompensated(eg.ActionClass):
             )
 
 
-
 class IsSunDown(eg.ActionClass):
     name = "Check if Sun will be down in X minutes"
     description = (
-        "This plugin action creates a ''virtual new sunset time'' based on an "+
-        "offset entered in the first drop down field. This can be 120 minutes "+
-        "prior to and 120 minutes after the ''true sunset time''. "+
-        "Furthermore, this new ''virual sunset time'' can be further modified "+
-        "if the Weather compensation factor is used. "+
-        "Although the maximum amount of modification time to be applied "+
-        "is entered by the user, the actual amount of this additional time "+
-        "factor is calculated by the plugin automatically based on actual "+
-        "weather conditions obtained from the internet. "+
-        "Finally, the result of this action block returns True if, at the "+
-        "time this action block is executed, the Sun would have been down "+
-        "according to the calculated ''virtual sunset time''. "+
-        "Note: the true (unmodified) sunset time can be obtained by executing "+
-        "this action block and examining the payload of the event in the log. "+
-        "For further information and help, please visit the forum thread for "+
+        "This plugin action creates a ''virtual new sunset time'' based on an " +
+        "offset entered in the first drop down field. This can be 120 minutes " +
+        "prior to and 120 minutes after the ''true sunset time''. " +
+        "Furthermore, this new ''virual sunset time'' can be further modified " +
+        "if the Weather compensation factor is used. " +
+        "Although the maximum amount of modification time to be applied " +
+        "is entered by the user, the actual amount of this additional time " +
+        "factor is calculated by the plugin automatically based on actual " +
+        "weather conditions obtained from the internet. " +
+        "Finally, the result of this action block returns True if, at the " +
+        "time this action block is executed, the Sun would have been down " +
+        "according to the calculated ''virtual sunset time''. " +
+        "Note: the true (unmodified) sunset time can be obtained by executing " +
+        "this action block and examining the payload of the event in the log. " +
+        "For further information and help, please visit the forum thread for " +
         "the SunTracker plugin. "
     )
 
     def CalcNbrOfMinutes(self, s):
         iHour = int(s[0:2])
         iMin = int(s[2:4])
-        iTotMin = iHour*60 + iMin
-        return(iTotMin)
-
+        iTotMin = iHour * 60 + iMin
+        return (iTotMin)
 
     def GetVirtualSunset(self, iO):
         now = datetime.datetime.now()
         diff = datetime.timedelta(minutes=abs(iO))
-        if iO<0:
+        if iO < 0:
             corr = now - diff
         else:
             corr = now + diff
         s = corr.strftime("%H%M")
-        return(s)
-
+        return (s)
 
     def __call__(
         self,
@@ -4615,12 +4608,12 @@ class IsSunDown(eg.ActionClass):
             # adjust actual time for comparison use
             currCondition = self.plugin.currCondition
             currCondition, timeCompensation, currTimeCompensated, notUsed = (
-                    self.plugin.CalcWeatherCompensation(
-                            currCondition,
-                            timeCompensation,
-                            self.iWeather,
-                            self.iTimeAhead
-                    )
+                self.plugin.CalcWeatherCompensation(
+                    currCondition,
+                    timeCompensation,
+                    self.iWeather,
+                    self.iTimeAhead
+                )
             )
 
             # Expected Sunset time of today is given by variable self.plugin.csSS
@@ -4630,7 +4623,7 @@ class IsSunDown(eg.ActionClass):
             virtualSS = self.GetVirtualSunset(ssMins - crMins)
 
             # Set the flag for the virtual sun status
-            if(ssMins - crMins <= 0):
+            if (ssMins - crMins <= 0):
                 sunIsDown = True
             else:
                 sunIsDown = False
@@ -4645,12 +4638,12 @@ class IsSunDown(eg.ActionClass):
                 sunIsDown = True
 
             pLoad = (
-                str(self.iTimeAhead)+'|'+str(self.iWeather)+'|'+currCondition+'|'+
-                'Real Sunset expected:'+'|'+self.plugin.csSS+'|'+
-                'Virtual Sunset expected:'+'|'+virtualSS+'|'+
-                'Minutes to Virtual Sunset:'+'|'+str(ssMins - crMins)+'|'+
-                'Minutes adjusted:'+'|'+str(timeCompensation)+'|'+
-                'IsSunDown:'+'|'+str(sunIsDown)
+                str(self.iTimeAhead) + '|' + str(self.iWeather) + '|' + currCondition + '|' +
+                'Real Sunset expected:' + '|' + self.plugin.csSS + '|' +
+                'Virtual Sunset expected:' + '|' + virtualSS + '|' +
+                'Minutes to Virtual Sunset:' + '|' + str(ssMins - crMins) + '|' +
+                'Minutes adjusted:' + '|' + str(timeCompensation) + '|' +
+                'IsSunDown:' + '|' + str(sunIsDown)
             )
             eg.TriggerEvent(
                 "IsSunDown." + str(sunIsDown),
@@ -4665,11 +4658,10 @@ class IsSunDown(eg.ActionClass):
 
         return sunIsDown
 
-
     def Configure(
         self,
-        iTimeAhead = -30,
-        iWeather = 0
+        iTimeAhead=-30,
+        iWeather=0
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -4677,30 +4669,30 @@ class IsSunDown(eg.ActionClass):
         mySizer_1 = wx.GridBagSizer(5, 5)
 
         iTimeAheadCtrl = panel.SpinIntCtrl(iTimeAhead, -120, 120)
-        iTimeAheadCtrl.SetInitialSize((50,-1))
+        iTimeAheadCtrl.SetInitialSize((50, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtOffset
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_0.Add(iTimeAheadCtrl,(0,1))
-        panel.sizer.Add(mySizer_0, 0, flag = wx.EXPAND)
+        mySizer_0.Add(iTimeAheadCtrl, (0, 1))
+        panel.sizer.Add(mySizer_0, 0, flag=wx.EXPAND)
 
         iWeatherCtrl = panel.SpinIntCtrl(iWeather, 0, 120)
-        iWeatherCtrl.SetInitialSize((50,-1))
+        iWeatherCtrl.SetInitialSize((50, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtWeather
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_1.Add(iWeatherCtrl,(1,1))
-        panel.sizer.Add(mySizer_1, 0, flag = wx.EXPAND)
+        mySizer_1.Add(iWeatherCtrl, (1, 1))
+        panel.sizer.Add(mySizer_1, 0, flag=wx.EXPAND)
 
         while panel.Affirmed():
             iTimeAhead = iTimeAheadCtrl.GetValue()
@@ -4712,25 +4704,24 @@ class IsSunDown(eg.ActionClass):
             )
 
 
-
 class InsideRangeWeatherCompensated(eg.ActionClass):
-    name = ("Check if time now is inside calculated virtual range including "+
-           " a weather compensated offset"
-    )
+    name = ("Check if time now is inside calculated virtual range including " +
+            " a weather compensated offset"
+            )
     description = (
-        "This plugin action creates a ''virtual start and end time range'' based "+
-        " on the selected twilight types and an additional weather compensated offset "+
-        " entered in the drop down fields. "+
-        "The selected twilight types for start and end time can be freely "+
-        " selected from the list. "+
-        "The offset can be 120 minutes prior to and 120 minutes after the "+
-        " ''true times'' also depending on actual weather condition. "+
-        "The result of this action returns True if, at the actual time "+
-        " when executed, the time is between the calculated "+
-        " virtual range. If outside, it will return False. "+
-        "In addition it is selectable if the current running macro should stop or "+
-        " continue when the returned result is True or False. "+
-        "For further information and help, please visit the forum thread for "+
+        "This plugin action creates a ''virtual start and end time range'' based " +
+        " on the selected twilight types and an additional weather compensated offset " +
+        " entered in the drop down fields. " +
+        "The selected twilight types for start and end time can be freely " +
+        " selected from the list. " +
+        "The offset can be 120 minutes prior to and 120 minutes after the " +
+        " ''true times'' also depending on actual weather condition. " +
+        "The result of this action returns True if, at the actual time " +
+        " when executed, the time is between the calculated " +
+        " virtual range. If outside, it will return False. " +
+        "In addition it is selectable if the current running macro should stop or " +
+        " continue when the returned result is True or False. " +
+        "For further information and help, please visit the forum thread for " +
         " the SunTracker plugin. "
     )
     iTimeAhead = 0
@@ -4738,21 +4729,19 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
     def CalcNbrOfMinutes(self, s):
         iHour = int(s[0:2])
         iMin = int(s[2:4])
-        iTotMin = iHour*60 + iMin
-        return(iTotMin)
-
+        iTotMin = iHour * 60 + iMin
+        return (iTotMin)
 
     def GetVirtualTime(self, iO):
         s = str(datetime.timedelta(minutes=iO))
         s = s.split(':')
         Hour = str(s[0])
-        if len(Hour)<2:
-            Hour = '0'+Hour
+        if len(Hour) < 2:
+            Hour = '0' + Hour
         Minute = str(s[1])
-        if len(Minute)<2:
-            Minute = '0'+Minute
-        return(Hour+Minute)
-
+        if len(Minute) < 2:
+            Minute = '0' + Minute
+        return (Hour + Minute)
 
     def __call__(
         self,
@@ -4796,13 +4785,13 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
             except:
                 currCondition = "Undefined"
             try:
-                currCondition, timeCompensation, tSS, tSR  = (
-                        self.plugin.CalcWeatherCompensation(
-                                currCondition,
-                                0,
-                                self.iWeather,
-                                self.iOffset
-                        )
+                currCondition, timeCompensation, tSS, tSR = (
+                    self.plugin.CalcWeatherCompensation(
+                        currCondition,
+                        0,
+                        self.iWeather,
+                        self.iOffset
+                    )
                 )
             except:
                 timeCompensation = 0
@@ -4811,53 +4800,53 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
 
             if tlStartType == list[0]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.aDawn)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[1]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.nDawn)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[2]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.cDawn)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[3]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.csSR)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[4]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.csSS)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[5]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.cDusk)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[6]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.nDusk)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
             elif tlStartType == list[7]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.aDusk)
-                virtualStart = self.GetVirtualTime(startMins-iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - iTimeAhead)
 
             if tlEndType == list[0]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.aDawn)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[1]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.nDawn)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[2]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.cDawn)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[3]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.csSR)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[4]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.csSS)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[5]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.cDusk)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[6]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.nDusk)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
             elif tlEndType == list[7]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.aDusk)
-                virtualEnd = self.GetVirtualTime(endMins+iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + iTimeAhead)
 
             # Check if time is between virtual start and virtual end,
             # control macro execution
@@ -4883,23 +4872,21 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
 
         return isInsideRange
 
-
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
         choice = event.GetSelection()
         event.Skip()
         return choice
 
-
     def Configure(
         self,
-        rangeName = 'Give the range a descriptive name',
-        iOffset = -60,
-        tlStartType = '',
-        tlEndType = '',
-        stopMacroOnTrue = True,
-        stopMacroOnFalse = False,
-        iWeather = 30
+        rangeName='Give the range a descriptive name',
+        iOffset=-60,
+        tlStartType='',
+        tlEndType='',
+        stopMacroOnTrue=True,
+        stopMacroOnFalse=False,
+        iWeather=30
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -4918,60 +4905,62 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
         ]
 
         rangeNameCtrl = wx.TextCtrl(panel, -1, rangeName)
-        rangeNameCtrl.SetInitialSize((150,-1))
+        rangeNameCtrl.SetInitialSize((150, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.rangeName
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_0.Add(rangeNameCtrl,(0,1))
+        mySizer_0.Add(rangeNameCtrl, (0, 1))
 
         iOffsetCtrl = panel.SpinIntCtrl(iOffset, -120, 120)
-        iOffsetCtrl.SetInitialSize((50,-1))
+        iOffsetCtrl.SetInitialSize((50, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtOffset
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_0.Add(iOffsetCtrl,(1,1))
+        mySizer_0.Add(iOffsetCtrl, (1, 1))
 
         iWeatherCtrl = panel.SpinIntCtrl(iWeather, 0, 120)
-        iWeatherCtrl.SetInitialSize((50,-1))
+        iWeatherCtrl.SetInitialSize((50, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtWeather
             ),
-           (2,0)
+            (2, 0)
         )
-        mySizer_0.Add(iWeatherCtrl,(2,1))
+        mySizer_0.Add(iWeatherCtrl, (2, 1))
 
-        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(tlStartType)==0:
+        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10, 10))
+        tlStartTypeCtrl.AppendItems(items=list)
+        if list.count(tlStartType) == 0:
             tlStartTypeCtrl.Select(n=0)
         else:
             tlStartTypeCtrl.SetSelection(int(list.index(tlStartType)))
         tlStartTypeCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.tlStartType)
-        mySizer_1.Add(sBtxt,(1,0))
-        mySizer_1.Add(tlStartTypeCtrl,(1,1))
+        mySizer_1.Add(sBtxt, (1, 0))
+        mySizer_1.Add(tlStartTypeCtrl, (1, 1))
 
-        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(tlEndType)==0:
+        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10, 10))
+        tlEndTypeCtrl.AppendItems(items=list)
+        if list.count(tlEndType) == 0:
             tlEndTypeCtrl.Select(n=0)
         else:
             tlEndTypeCtrl.SetSelection(int(list.index(tlEndType)))
         tlEndTypeCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.tlEndType)
-        mySizer_1.Add(sBtxt,(2,0))
-        mySizer_1.Add(tlEndTypeCtrl,(2,1))
+        mySizer_1.Add(sBtxt, (2, 0))
+        mySizer_1.Add(tlEndTypeCtrl, (2, 1))
 
         stopMacroOnTrueCtrl = wx.CheckBox(panel, -1, "")
         stopMacroOnTrueCtrl.SetValue(stopMacroOnTrue)
@@ -4981,9 +4970,9 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
                 -1,
                 self.text.stopMacroOnTrue
             ),
-           (3,0)
+            (3, 0)
         )
-        mySizer_1.Add(stopMacroOnTrueCtrl,(3,1))
+        mySizer_1.Add(stopMacroOnTrueCtrl, (3, 1))
 
         stopMacroOnFalseCtrl = wx.CheckBox(panel, -1, "")
         stopMacroOnFalseCtrl.SetValue(stopMacroOnFalse)
@@ -4993,12 +4982,12 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
                 -1,
                 self.text.stopMacroOnFalse
             ),
-           (4,0)
+            (4, 0)
         )
-        mySizer_1.Add(stopMacroOnFalseCtrl,(4,1))
+        mySizer_1.Add(stopMacroOnFalseCtrl, (4, 1))
 
-        panel.sizer.Add(mySizer_0, 0, flag = wx.EXPAND)
-        panel.sizer.Add(mySizer_1, 0, flag = wx.EXPAND)
+        panel.sizer.Add(mySizer_0, 0, flag=wx.EXPAND)
+        panel.sizer.Add(mySizer_1, 0, flag=wx.EXPAND)
 
         while panel.Affirmed():
             rangeName = rangeNameCtrl.GetValue()
@@ -5020,44 +5009,41 @@ class InsideRangeWeatherCompensated(eg.ActionClass):
             )
 
 
-
 class InsideRange(eg.ActionClass):
     name = "Check if time now is inside calculated virtual range"
     description = (
-        "This plugin action creates a ''virtual start and end time range'' based "+
-        "on the selected twilight types and an additional offset entered in the drop "+
-        "down fields."+
-        "The selected twilight types for start and end time can be freely "+
-        "selected from the list. "+
-        "The offset can be 120 minutes prior to and 120 minutes after the "+
-        "''true times''. "+
-        "The result of this action returns True if, at the actual time "+
-        "when executed, the time is between the calculated "+
-        "virtual range. If outside, it will return False. "+
-        "In addition it is selectable if the current running macro should stop or "+
-        "continue when the returned result is True or False. "+
-        "For further information and help, please visit the forum thread for "+
+        "This plugin action creates a ''virtual start and end time range'' based " +
+        "on the selected twilight types and an additional offset entered in the drop " +
+        "down fields." +
+        "The selected twilight types for start and end time can be freely " +
+        "selected from the list. " +
+        "The offset can be 120 minutes prior to and 120 minutes after the " +
+        "''true times''. " +
+        "The result of this action returns True if, at the actual time " +
+        "when executed, the time is between the calculated " +
+        "virtual range. If outside, it will return False. " +
+        "In addition it is selectable if the current running macro should stop or " +
+        "continue when the returned result is True or False. " +
+        "For further information and help, please visit the forum thread for " +
         "the SunTracker plugin. "
     )
 
     def CalcNbrOfMinutes(self, s):
         iHour = int(s[0:2])
         iMin = int(s[2:4])
-        iTotMin = iHour*60 + iMin
-        return(iTotMin)
-
+        iTotMin = iHour * 60 + iMin
+        return (iTotMin)
 
     def GetVirtualTime(self, iO):
         s = str(datetime.timedelta(minutes=iO))
         s = s.split(':')
         Hour = str(s[0])
-        if len(Hour)<2:
-            Hour = '0'+Hour
+        if len(Hour) < 2:
+            Hour = '0' + Hour
         Minute = str(s[1])
-        if len(Minute)<2:
-            Minute = '0'+Minute
-        return(Hour+Minute)
-
+        if len(Minute) < 2:
+            Minute = '0' + Minute
+        return (Hour + Minute)
 
     def __call__(
         self,
@@ -5094,53 +5080,53 @@ class InsideRange(eg.ActionClass):
 
             if tlStartType == list[0]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.aDawn)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[1]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.nDawn)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[2]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.cDawn)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[3]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.csSR)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[4]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.csSS)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[5]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.cDusk)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[6]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.nDusk)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
             elif tlStartType == list[7]:
                 startMins = self.CalcNbrOfMinutes(self.plugin.aDusk)
-                virtualStart = self.GetVirtualTime(startMins-self.iTimeAhead)
+                virtualStart = self.GetVirtualTime(startMins - self.iTimeAhead)
 
             if tlEndType == list[0]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.aDawn)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[1]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.nDawn)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[2]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.cDawn)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[3]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.csSR)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[4]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.csSS)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[5]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.cDusk)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[6]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.nDusk)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
             elif tlEndType == list[7]:
                 endMins = self.CalcNbrOfMinutes(self.plugin.aDusk)
-                virtualEnd = self.GetVirtualTime(endMins+self.iTimeAhead)
+                virtualEnd = self.GetVirtualTime(endMins + self.iTimeAhead)
 
             # Check if time is between virtual start and virtual end,
             # control macro execution
@@ -5166,22 +5152,20 @@ class InsideRange(eg.ActionClass):
 
         return isInsideRange
 
-
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
         choice = event.GetSelection()
         event.Skip()
         return choice
 
-
     def Configure(
         self,
-        rangeName = 'Give the range a descriptive name',
-        iTimeAhead = -30,
-        tlStartType = '',
-        tlEndType = '',
-        stopMacroOnTrue = True,
-        stopMacroOnFalse = False
+        rangeName='Give the range a descriptive name',
+        iTimeAhead=-30,
+        tlStartType='',
+        tlEndType='',
+        stopMacroOnTrue=True,
+        stopMacroOnFalse=False
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -5200,48 +5184,50 @@ class InsideRange(eg.ActionClass):
         ]
 
         rangeNameCtrl = wx.TextCtrl(panel, -1, rangeName)
-        rangeNameCtrl.SetInitialSize((150,-1))
+        rangeNameCtrl.SetInitialSize((150, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.rangeName
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_0.Add(rangeNameCtrl,(0,1))
+        mySizer_0.Add(rangeNameCtrl, (0, 1))
 
         iTimeAheadCtrl = panel.SpinIntCtrl(iTimeAhead, -120, 120)
-        iTimeAheadCtrl.SetInitialSize((50,-1))
+        iTimeAheadCtrl.SetInitialSize((50, -1))
         mySizer_0.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.txtOffset
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_0.Add(iTimeAheadCtrl,(1,1))
+        mySizer_0.Add(iTimeAheadCtrl, (1, 1))
 
-        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(tlStartType)==0:
+        tlStartTypeCtrl = wx.Choice(parent=panel, pos=(10, 10))
+        tlStartTypeCtrl.AppendItems(items=list)
+        if list.count(tlStartType) == 0:
             tlStartTypeCtrl.Select(n=0)
         else:
             tlStartTypeCtrl.SetSelection(int(list.index(tlStartType)))
         tlStartTypeCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.tlStartType)
-        mySizer_1.Add(sBtxt,(1,0))
-        mySizer_1.Add(tlStartTypeCtrl,(1,1))
+        mySizer_1.Add(sBtxt, (1, 0))
+        mySizer_1.Add(tlStartTypeCtrl, (1, 1))
 
-        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(tlEndType)==0:
+        tlEndTypeCtrl = wx.Choice(parent=panel, pos=(10, 10))
+        tlEndTypeCtrl.AppendItems(items=list)
+        if list.count(tlEndType) == 0:
             tlEndTypeCtrl.Select(n=0)
         else:
             tlEndTypeCtrl.SetSelection(int(list.index(tlEndType)))
         tlEndTypeCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, self.text.tlEndType)
-        mySizer_1.Add(sBtxt,(2,0))
-        mySizer_1.Add(tlEndTypeCtrl,(2,1))
+        mySizer_1.Add(sBtxt, (2, 0))
+        mySizer_1.Add(tlEndTypeCtrl, (2, 1))
 
         stopMacroOnTrueCtrl = wx.CheckBox(panel, -1, "")
         stopMacroOnTrueCtrl.SetValue(stopMacroOnTrue)
@@ -5251,9 +5237,9 @@ class InsideRange(eg.ActionClass):
                 -1,
                 self.text.stopMacroOnTrue
             ),
-           (3,0)
+            (3, 0)
         )
-        mySizer_1.Add(stopMacroOnTrueCtrl,(3,1))
+        mySizer_1.Add(stopMacroOnTrueCtrl, (3, 1))
 
         stopMacroOnFalseCtrl = wx.CheckBox(panel, -1, "")
         stopMacroOnFalseCtrl.SetValue(stopMacroOnFalse)
@@ -5263,12 +5249,12 @@ class InsideRange(eg.ActionClass):
                 -1,
                 self.text.stopMacroOnFalse
             ),
-           (4,0)
+            (4, 0)
         )
-        mySizer_1.Add(stopMacroOnFalseCtrl,(4,1))
+        mySizer_1.Add(stopMacroOnFalseCtrl, (4, 1))
 
-        panel.sizer.Add(mySizer_0, 0, flag = wx.EXPAND)
-        panel.sizer.Add(mySizer_1, 0, flag = wx.EXPAND)
+        panel.sizer.Add(mySizer_0, 0, flag=wx.EXPAND)
+        panel.sizer.Add(mySizer_1, 0, flag=wx.EXPAND)
 
         while panel.Affirmed():
             rangeName = rangeNameCtrl.GetValue()
@@ -5288,19 +5274,16 @@ class InsideRange(eg.ActionClass):
             )
 
 
-
 class GetCurrentCondition(eg.ActionClass):
     name = "GetCurrentCondition"
     description = "Action to get current condition"
 
     def __call__(self):
-        condition = self.plugin.weather_data.get('condition', None)
-        if not self.plugin.initsynch and condition:
-            return condition
+        if not self.plugin.initsynch:
+            return self.plugin.weather_data['current_conditions']
         else:
             print self.text.txtInit
             return "Undefined"
-
 
 
 class GetForecasts(eg.ActionClass):
@@ -5308,13 +5291,11 @@ class GetForecasts(eg.ActionClass):
     description = "Action to get weather forecasts"
 
     def __call__(self):
-        forecast = self.plugin.weather_data['forecasts']
-        if not self.plugin.initsynch and forecast:
-            return forecast
+        if not self.plugin.initsynch:
+            return self.plugin.weather_data['forecasts']
         else:
             print self.text.txtInit
             return "Undefined"
-
 
 
 class GetWindData(eg.ActionClass):
@@ -5322,13 +5303,11 @@ class GetWindData(eg.ActionClass):
     description = "Action to get wind data"
 
     def __call__(self):
-        wind = self.plugin.weather_data['wind']
-        if not self.plugin.initsynch and wind:
-            return wind
+        if not self.plugin.initsynch:
+            return self.plugin.weather_data['current_conditions']['wind']
         else:
             print self.text.txtInit
             return "Undefined"
-
 
 
 class GetAtmosphereData(eg.ActionClass):
@@ -5336,13 +5315,11 @@ class GetAtmosphereData(eg.ActionClass):
     description = "Action to get atmosphere data"
 
     def __call__(self):
-        atmosphere = self.plugin.weather_data['atmosphere']
-        if not self.plugin.initsynch and atmosphere:
-            return atmosphere
+        if not self.plugin.initsynch:
+            return self.plugin.weather_data['current_conditions']['barometer']
         else:
             print self.text.txtInit
             return "Undefined"
-
 
 
 class SetVacationON(eg.ActionClass):
@@ -5352,12 +5329,11 @@ class SetVacationON(eg.ActionClass):
     def __call__(self):
         if self.plugin.started:
             prm = {
-                '7':True
+                '7': True
             }
             self.plugin.SetVar(prm)
         else:
             print self.text.txtInit
-
 
 
 class SetVacationOFF(eg.ActionClass):
@@ -5367,12 +5343,11 @@ class SetVacationOFF(eg.ActionClass):
     def __call__(self):
         if self.plugin.started:
             prm = {
-                '7':False
+                '7': False
             }
             self.plugin.SetVar(prm)
         else:
             print self.text.txtInit
-
 
 
 class SetEmptyHouseON(eg.ActionClass):
@@ -5382,12 +5357,11 @@ class SetEmptyHouseON(eg.ActionClass):
     def __call__(self):
         if self.plugin.started:
             prm = {
-                '13':True
+                '13': True
             }
             self.plugin.SetVar(prm)
         else:
             print self.text.txtInit
-
 
 
 class SetEmptyHouseOFF(eg.ActionClass):
@@ -5397,18 +5371,17 @@ class SetEmptyHouseOFF(eg.ActionClass):
     def __call__(self):
         if self.plugin.started:
             prm = {
-                '13':False
+                '13': False
             }
             self.plugin.SetVar(prm)
         else:
             print self.text.txtInit
 
 
-
 class SetLocation(eg.ActionClass):
     name = "Set your location specifics"
     description = (
-        "This plugin action is used to set your location specific data"+
+        "This plugin action is used to set your location specific data" +
         " including latitude, longitude, time zone and others. "
     )
 
@@ -5426,19 +5399,18 @@ class SetLocation(eg.ActionClass):
     ):
         if self.plugin.started:
             prm = {
-                '0':myLongitude,
-                '1':myLatitude,
-                '2':location_id,
-                '3':fixedHolidays,
-                '4':variableHolidays,
-                '5':summerSeasonBegins,
-                '6':summerSeasonEnds,
-                '10':iTimeZone
+                '0': myLongitude,
+                '1': myLatitude,
+                '2': location_id,
+                '3': fixedHolidays,
+                '4': variableHolidays,
+                '5': summerSeasonBegins,
+                '6': summerSeasonEnds,
+                '10': iTimeZone
             }
             self.plugin.SetVar(prm)
         else:
             print self.text.txtInit
-
 
     # Get the choice from dropdown and perform some action
     def OnChoice(self, event):
@@ -5446,18 +5418,17 @@ class SetLocation(eg.ActionClass):
         event.Skip()
         return choice
 
-
     def Configure(
         self,
-        label = '',
-        myLongitude = None,
-        myLatitude = None,
-        location_id = None,
-        fixedHolidays = None,
-        variableHolidays = None,
-        summerSeasonBegins = None,
-        summerSeasonEnds = None,
-        iTimeZone = None
+        label='',
+        myLongitude=None,
+        myLatitude=None,
+        location_id=None,
+        fixedHolidays=None,
+        variableHolidays=None,
+        summerSeasonBegins=None,
+        summerSeasonEnds=None,
+        iTimeZone=None
     ):
         plugin = self.plugin
         panel = eg.ConfigPanel(self)
@@ -5474,62 +5445,63 @@ class SetLocation(eg.ActionClass):
             iTimeZone = str(plugin.iTimeZone)
 
         labelCtrl = wx.TextCtrl(panel, -1, label)
-        labelCtrl.SetInitialSize((150,-1))
+        labelCtrl.SetInitialSize((150, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 self.text.label
             ),
-           (0,0)
+            (0, 0)
         )
-        mySizer_1.Add(labelCtrl,(0,1))
+        mySizer_1.Add(labelCtrl, (0, 1))
 
         f_myLatitude = float(myLatitude)
         myLatitudeCtrl = panel.SpinNumCtrl(
             f_myLatitude,
-            decimalChar = '.',                 # by default, use '.' for decimal point
-            groupChar = ',',                   # by default, use ',' for grouping
-            fractionWidth = 4,
-            integerWidth = 3,
-            min = -90.0000,
-            max = 90.0000,
-            increment = 0.0050
+            decimalChar='.',  # by default, use '.' for decimal point
+            groupChar=',',  # by default, use ',' for grouping
+            fractionWidth=4,
+            integerWidth=3,
+            min=-90.0000,
+            max=90.0000,
+            increment=0.0050
         )
-        myLatitudeCtrl.SetInitialSize((90,-1))
+        myLatitudeCtrl.SetInitialSize((90, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 plugin.text.txtMyLatitude
             ),
-           (1,0)
+            (1, 0)
         )
-        mySizer_1.Add(myLatitudeCtrl,(1,1))
+        mySizer_1.Add(myLatitudeCtrl, (1, 1))
 
         f_myLongitude = float(myLongitude)
         myLongitudeCtrl = panel.SpinNumCtrl(
             f_myLongitude,
-            decimalChar = '.',                 # by default, use '.' for decimal point
-            groupChar = ',',                   # by default, use ',' for grouping
-            fractionWidth = 4,
-            integerWidth = 4,
-            min = -180.0000,
-            max = 180.0000,
-            increment = 0.0050
+            decimalChar='.',  # by default, use '.' for decimal point
+            groupChar=',',  # by default, use ',' for grouping
+            fractionWidth=4,
+            integerWidth=4,
+            min=-180.0000,
+            max=180.0000,
+            increment=0.0050
         )
-        myLongitudeCtrl.SetInitialSize((90,-1))
+        myLongitudeCtrl.SetInitialSize((90, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 plugin.text.txtMyLongitude
             ),
-           (2,0)
+            (2, 0)
         )
-        mySizer_1.Add(myLongitudeCtrl,(2,1))
+        mySizer_1.Add(myLongitudeCtrl, (2, 1))
 
         # Select or accept proposed timezone
+        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '-12.00',
             '-11.00',
@@ -5570,9 +5542,9 @@ class SetLocation(eg.ActionClass):
             '+13.00',
             '+14.00'
         ]
-        iTimeZoneCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        iTimeZoneCtrl.SetInitialSize((60,-1))
-        if list.count(iTimeZone)==0:
+        iTimeZoneCtrl.SetInitialSize((60, -1))
+        iTimeZoneCtrl.AppendItems(items=list)
+        if list.count(iTimeZone) == 0:
             iTimeZoneCtrl.Select(n=0)
         else:
             iTimeZoneCtrl.SetSelection(int(list.index(iTimeZone)))
@@ -5584,40 +5556,41 @@ class SetLocation(eg.ActionClass):
                 -1,
                 plugin.text.txtTimeZone
             ),
-           (3,0)
+            (3, 0)
         )
-        mySizer_1.Add(iTimeZoneCtrl,(3,1))
+        mySizer_1.Add(iTimeZoneCtrl, (3, 1))
 
         desc1 = wx.StaticText(panel, -1, plugin.text.LocationLabel)
-        mySizer_1.Add(desc1,(4,0))
-        Location = wx.TextCtrl(panel, -1,location_id)
-        Location.SetInitialSize((200,-1))
-        mySizer_1.Add(Location,(4,1))
+        mySizer_1.Add(desc1, (4, 0))
+        Location = wx.TextCtrl(panel, -1, location_id)
+        Location.SetInitialSize((200, -1))
+        mySizer_1.Add(Location, (4, 1))
 
         fixedHolidaysCtrl = wx.TextCtrl(panel, -1, fixedHolidays)
-        fixedHolidaysCtrl.SetInitialSize((300,-1))
+        fixedHolidaysCtrl.SetInitialSize((300, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 plugin.text.txtFixedHolidays
             ),
-           (5,0)
+            (5, 0)
         )
-        mySizer_1.Add(fixedHolidaysCtrl,(5,1))
+        mySizer_1.Add(fixedHolidaysCtrl, (5, 1))
 
         variableHolidaysCtrl = wx.TextCtrl(panel, -1, variableHolidays)
-        variableHolidaysCtrl.SetInitialSize((300,-1))
+        variableHolidaysCtrl.SetInitialSize((300, -1))
         mySizer_1.Add(
             wx.StaticText(
                 panel,
                 -1,
                 plugin.text.txtVariableHolidays
             ),
-           (6,0)
+            (6, 0)
         )
-        mySizer_1.Add(variableHolidaysCtrl,(6,1))
+        mySizer_1.Add(variableHolidaysCtrl, (6, 1))
 
+        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '--',
             '01',
@@ -5633,16 +5606,17 @@ class SetLocation(eg.ActionClass):
             '11',
             '12'
         ]
-        summerBeginsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(summerSeasonBegins)==0:
+        summerBeginsCtrl.AppendItems(items=list)
+        if list.count(summerSeasonBegins) == 0:
             summerBeginsCtrl.Select(n=0)
         else:
             summerBeginsCtrl.SetSelection(int(list.index(summerSeasonBegins)))
         summerBeginsCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sBtxt = wx.StaticText(panel, -1, plugin.text.txtSummerSeasonBegins)
-        mySizer_1.Add(sBtxt,(7,0))
-        mySizer_1.Add(summerBeginsCtrl,(7,1))
+        mySizer_1.Add(sBtxt, (7, 0))
+        mySizer_1.Add(summerBeginsCtrl, (7, 1))
 
+        summerEndsCtrl = wx.Choice(parent=panel, pos=(10, 10))
         list = [
             '--',
             '01',
@@ -5658,17 +5632,17 @@ class SetLocation(eg.ActionClass):
             '11',
             '12'
         ]
-        summerEndsCtrl = wx.Choice(parent=panel, pos=(10,10), choices=list)
-        if list.count(summerSeasonEnds)==0:
+        summerEndsCtrl.AppendItems(items=list)
+        if list.count(summerSeasonEnds) == 0:
             summerEndsCtrl.Select(n=0)
         else:
             summerEndsCtrl.SetSelection(int(list.index(summerSeasonEnds)))
         summerEndsCtrl.Bind(wx.EVT_CHOICE, self.OnChoice)
         sEtxt = wx.StaticText(panel, -1, plugin.text.txtSummerSeasonEnds)
-        mySizer_1.Add(sEtxt,(8,0))
-        mySizer_1.Add(summerEndsCtrl,(8,1))
+        mySizer_1.Add(sEtxt, (8, 0))
+        mySizer_1.Add(summerEndsCtrl, (8, 1))
 
-        panel.sizer.Add(mySizer_1, 0, flag = wx.EXPAND)
+        panel.sizer.Add(mySizer_1, 0, flag=wx.EXPAND)
 
         while panel.Affirmed():
             label = labelCtrl.GetValue()
@@ -5681,13 +5655,13 @@ class SetLocation(eg.ActionClass):
             summerSeasonEnds = summerEndsCtrl.GetStringSelection()
             iTimeZone = iTimeZoneCtrl.GetStringSelection()
             panel.SetResult(
-                        label,
-                        myLongitude,
-                        myLatitude,
-                        location_id,
-                        fixedHolidays,
-                        variableHolidays,
-                        summerSeasonBegins,
-                        summerSeasonEnds,
-                        iTimeZone
+                label,
+                myLongitude,
+                myLatitude,
+                location_id,
+                fixedHolidays,
+                variableHolidays,
+                summerSeasonBegins,
+                summerSeasonEnds,
+                iTimeZone
             )
