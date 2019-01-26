@@ -194,7 +194,11 @@ class PluginItem(ActionItem):
             eg.actionThread.Call(self.info.Start)
 
     def SetAttributes(self, tree, itemId):
-        if self.info.lastException or self.info.initFailed:
+        if (
+            self.info is None or
+            self.info.lastException or
+            self.info.initFailed
+        ):
             tree.SetItemTextColour(itemId, eg.colour.pluginError)
 
     @eg.AssertInActionThread
