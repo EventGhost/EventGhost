@@ -335,7 +335,7 @@ class MainFrame(wx.Frame):
         Append("LogDate", kind=wx.ITEM_CHECK).Check(Config.logDate)
         Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
         menu.AppendSeparator()
-        Append("ClearLog")
+        Append("ClearLog", "\tCtrl+L")
 
         # configuration menu
         menu = wx.Menu()
