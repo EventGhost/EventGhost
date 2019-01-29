@@ -36,6 +36,7 @@ from types import ClassType
 
 # Local imports
 import eg
+from . import PythonPaths
 
 # Make sure our deprecation warnings will be shown
 warnings.filterwarnings(
@@ -300,7 +301,7 @@ def GetClosestLanguage():
     """
     Returns the language file closest to system locale.
     """
-    langDir = join(dirname(abspath(sys.executable)), "languages")
+    langDir = join(PythonPaths.install_directory, "languages")
     if exists(langDir):
         uiLang = windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
 
