@@ -24,14 +24,24 @@ import ctypes
 import locale
 import os
 import sys
-import threading
-from os.path import abspath, dirname, join
+from os.path import abspath, join
 
-import PythonPaths
-import LoopbackSocket
+import wx
+
+from . import LoopbackSocket
+from . import PythonPaths
+from .Classes.Translation import LCID_TO_WX
+
+kernel32 = ctypes.windll.kernel32
+
+lang_id = LCID_TO_WX.get(kernel32.GetUserDefaultUILanguage(), 0)
+wx_loc = wx.Locale(lang_id, wx.LOCALE_DONT_LOAD_DEFAULT)
+li = wx_loc.FindLanguageInfo(locale.getdefaultlocale()[0].split('_')[0])
+locale.setlocale(locale.LC_ALL, li.GetLocaleName())
+del li
+del wx_loc
 
 ENCODING = locale.getdefaultlocale()[1]
-locale.setlocale(locale.LC_ALL, '')
 argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
@@ -194,7 +204,7 @@ if args.isMain:
             else:
                 sys.exit(0)
 
-        appMutex = ctypes.windll.kernel32.CreateMutexA(
+        appMutex = kernel32.CreateMutexA(
             None,
             0,
             "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
