@@ -24,11 +24,13 @@ import ctypes
 import locale
 import os
 import sys
-import threading
-from os.path import abspath, dirname, join
+from os.path import abspath, join
 
-import PythonPaths
+import pip._internal
+
 import LoopbackSocket
+import PythonPaths
+
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -88,7 +90,30 @@ def restart():
         )
         sys.exit(1)
 
+    if '-update_certifi' in sys.argv:
+        update_certifi()
+
     return True
+
+
+def update_certifi():
+    data_dir = join(os.environ['ProgramData'], 'EventGhost')
+    pip._internal.main([
+        "install",
+        "--disable-pip-version-check",
+        "--no-cache-dir",
+        "--prefix", data_dir,
+        "--upgrade",
+        "--ignore-installed",
+        "--exists-action", "w",
+        "--quiet",
+        "certifi"
+    ])
+    try:
+        import certifi
+        os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+    except ImportError:
+        pass
 
 
 def send_message(msg, *msg_args):

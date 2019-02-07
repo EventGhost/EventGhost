@@ -38,14 +38,27 @@ sitePackagesDir = os.path.join(
     "site-packages"
 )
 
-sys.path.insert(0, mainDir.encode('mbcs'))
-sys.path.insert(1, sitePackagesDir.encode('mbcs'))
-
-os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
-    sitePackagesDir,
-    'requests',
-    'cacert.pem'
+data_dir = os.path.join(os.environ['ProgramData'], 'EventGhost')
+data_dir_site_packages = os.path.join(
+    data_dir,
+    'lib',
+    'site-packages'
 )
+try:
+    os.makedirs(data_dir_site_packages)
+except WindowsError:
+    pass
+
+sys.path.insert(0, data_dir_site_packages.decode('mbcs'))
+sys.path.insert(1, mainDir.decode('mbcs'))
+sys.path.insert(2, sitePackagesDir.decode('mbcs'))
+
+try:
+    # noinspection PyUnresolvedReferences
+    import certifi
+    os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+except ImportError:
+    pass
 
 try:
     if "PYTHONPATH" in os.environ:

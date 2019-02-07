@@ -58,6 +58,7 @@ class Config(Section):
     defaultThreadStartTimeout = 5.00
     hideOnClose = False
     hideOnStartup = False
+    lastCertifiCheck = None
     lastUpdateCheckDate = None
     lastUpdateCheckVersion = None
     limitMemory = False

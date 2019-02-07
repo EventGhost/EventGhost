@@ -205,12 +205,16 @@ class App(wx.App):
         self.firstQuery = True
         ShutdownBlockReasonDestroy(self.hwnd)
 
-    def Restart(self, asAdmin=False):
+    def Restart(self, asAdmin=False, update_certifi=False):
         def Do():
             from eg.WinApi.PipedProcess import RunAs
 
             args = self.GetArguments()
             args.append("-restart")
+
+            if update_certifi:
+                args.append('-update_certifi')
+
             RunAs(sys.executable, asAdmin, *args)
             return True
 
