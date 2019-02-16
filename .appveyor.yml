@@ -97,6 +97,7 @@ install:
         " "
         # Pinned sphinx to 1.8.0 because 1.8.1 has changes that will throw a warning when building the docs
         # https://github.com/sphinx-doc/sphinx/compare/v1.8.0...v1.8.1
+        PipInstall "agithub 2.2.0" "agithub==2.2.0"
         PipInstall "sphinx 1.8.0" "sphinx==1.8.0"
         PipInstall "wxPython 4.0.4" "wxPython==4.0.4"
         PipInstall "commonmark 0.8.1" "commonmark==0.8.1"
