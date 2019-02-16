@@ -102,6 +102,7 @@ install:
         PipInstall "qrcode 6.1" "qrcode==6.1"
         PipInstall "requests 2.21.0" "requests==2.21.0"
         PipInstall "sphinx 1.8.0" "sphinx==1.8.0"
+        PipInstall "websocket-client 0.54.0" "websocket-client==0.54.0"
         PipInstall "wxPython 4.0.4" "wxPython==4.0.4"
         PipInstall "commonmark 0.8.1" "commonmark==0.8.1"
         PipInstall "pillow 5.4.1" "pillow==5.4.1"
