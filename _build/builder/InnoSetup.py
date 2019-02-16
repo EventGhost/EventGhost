@@ -111,7 +111,7 @@ def GetInnoCompilerPath():
             _winreg.HKEY_LOCAL_MACHINE,
             (
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
-                "Uninstall\\Inno Setup 6_is1"
+                "Uninstall\\Inno Setup 5_is1"
             )
         )
         installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
