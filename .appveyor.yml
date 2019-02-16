@@ -90,9 +90,9 @@ install:
         Start-Process MsiExec.exe -Arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
         "    Done."
         " "
-        "--- pip 9.0.3"
+        "--- pip 19.0.2"
         "    Updating..."
-        python -m pip install --disable-pip-version-check --no-cache-dir -q -U "pip==9.0.3"
+        python -m pip install --disable-pip-version-check --no-cache-dir -q -U "pip==19.0.2"
         "    Done."
         " "
         # Pinned sphinx to 1.8.0 because 1.8.1 has changes that will throw a warning when building the docs
