@@ -23,9 +23,9 @@ from time import clock
 # Local imports
 from eg.Icons import GetInternalBitmap, GetInternalImage
 
-class AnimatedWindow(wx.PyWindow):
+class AnimatedWindow(wx.Window):
     def __init__(self, parent):
-        wx.PyWindow.__init__(self, parent)
+        wx.Window.__init__(self, parent)
         self.font = wx.Font(
             40, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD
         )
@@ -51,7 +51,6 @@ class AnimatedWindow(wx.PyWindow):
         return False
 
     def Draw(self, deviceContext):
-        deviceContext.BeginDrawing()
         deviceContext.DrawBitmap(self.backbuffer, 0, 0, False)
         t = clock() / 2.0
         y3 = self.y3
@@ -60,15 +59,13 @@ class AnimatedWindow(wx.PyWindow):
         x = (sin(t * 0.8) + sin(1.9 * t)) * x3 + x3 * 2.0
         alpha = sin(t) / 2.0 + 0.5
         image = self.image.AdjustChannels(1.0, 1.0, 1.0, alpha)
-        bmp = wx.BitmapFromImage(image, 24)
+        bmp = wx.Bitmap(image, 24)
         deviceContext.DrawBitmap(bmp, x, y, True)
-        deviceContext.EndDrawing()
 
     def MakeBackground(self):
-        self.backbuffer = wx.EmptyBitmap(self.width, self.height)
+        self.backbuffer = wx.Bitmap(self.width, self.height)
         deviceContext = wx.MemoryDC()
         deviceContext.SelectObject(self.backbuffer)
-        deviceContext.BeginDrawing()
         deviceContext.SetBackground(wx.Brush(self.GetBackgroundColour()))
         deviceContext.Clear()  # make sure you clear the bitmap!
         deviceContext.SetFont(self.font)
@@ -98,11 +95,10 @@ class AnimatedWindow(wx.PyWindow):
             (self.height - self.logo3.GetHeight()) // 3,
             True
         )
-        deviceContext.EndDrawing()
 
     def OnSize(self, dummyEvent):
-        self.width, self.height = self.GetClientSizeTuple()
-        self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
+        self.width, self.height = self.GetClientSize()
+        self.dcBuffer = wx.Bitmap(self.width, self.height)
         self.y3 = (self.height - self.bmpHeight) / 4.0
         self.x3 = (self.width - self.bmpWidth) / 4.0
         self.MakeBackground()

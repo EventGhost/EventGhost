@@ -20,7 +20,7 @@ import codecs
 import os
 import re
 import shutil
-import sphinx
+import sphinx.cmd.build
 from os.path import join
 
 # Local imports
@@ -66,7 +66,10 @@ class BuildChmDocs(builder.Task):
             self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
+
         tmpDir = join(self.buildSetup.tmpDir, "chm")
+        if not os.path.exists(tmpDir):
+            os.makedirs(tmpDir)
         call_sphinx('htmlhelp', self.buildSetup, tmpDir)
 
         print "calling HTML Help Workshop compiler"
@@ -91,32 +94,35 @@ class BuildHtmlDocs(builder.Task):
                              bool(self.buildSetup.args.websiteUrl)
 
     def DoTask(self):
-        call_sphinx('html', self.buildSetup, join(self.buildSetup.websiteDir, "docs"))
+        tmpDir = join(self.buildSetup.websiteDir, "docs")
+        if not os.path.exists(tmpDir):
+            os.makedirs(tmpDir)
+        call_sphinx('html', self.buildSetup, tmpDir)
 
 
 def call_sphinx(builder, build_setup, dest_dir):
     WritePluginList(join(build_setup.docsDir, "pluginlist.rst"))
     Prepare(build_setup.docsDir)
-    sphinx.build_main(
+    sphinx.cmd.build.build_main(
         [
-            None,
             "-D", "project=EventGhost",
-            "-D", "copyright=2005-2017 EventGhost Project",
+            "-D", "copyright=2005-2019 EventGhost Project",
+            "-D", "version=%s" % build_setup.appVersion,
+            "-D", "release=%s" % build_setup.appVersion,
             # "-D", "templates_path=[]",
-            '-q',    # be quiet
-            # "-a",  # always write all output files
-            # "-E",  # Don’t use a saved environment (the structure
+            "-E",    # Don’t use a saved environment (the structure
                      # caching all cross-references),
+            # "-a",  # always write all output files
+            '-q',    # be quiet
             # "-N",  # Prevent colored output.
             # "-P",  # (Useful for debugging only.) Run the Python debugger,
                      # pdb, if an unhandled exception occurs while building.
             # '-v',  # verbosity, can be given up to three times
             # '-v',
+            # '-v',
             # write warnings and errors to file:
             # '-w', join('output', 'sphinx_log_chm.txt'),
             "-b", builder,
-            "-D", "version=%s" % build_setup.appVersion,
-            "-D", "release=%s" % build_setup.appVersion,
             "-d", join(build_setup.tmpDir, ".doctree"),
             build_setup.docsDir,
             dest_dir,

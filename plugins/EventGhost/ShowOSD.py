@@ -270,7 +270,7 @@ class OSDFrame(wx.Frame):
             )
         )
         self.hwnd = self.GetHandle()
-        self.bitmap = wx.EmptyBitmap(0, 0)
+        self.bitmap = wx.Bitmap(0, 0)
         # we need a timer to possibly cancel it
         self.timer = threading.Timer(0.0, eg.DummyFunc)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -306,19 +306,19 @@ class OSDFrame(wx.Frame):
             option.xMargin = xMargin
             option.yMargin = yMargin
             option.transparentColour = transparentColour
-            bitmap = wx.EmptyBitmap(width, height)
+            bitmap = wx.Bitmap(width, height)
             option.bitmap = bitmap
             memoryDC.SelectObject(bitmap)
             return width, height
 
         def Copy(x, y, width, height, toX, toY):
-            bmp = wx.BitmapFromImage(image.GetSubImage((x, y, width, height)))
+            bmp = wx.Bitmap(image.GetSubImage((x, y, width, height)))
             memoryDC.DrawBitmap(bmp, toX, toY)
 
         def Scale(x, y, width, height, toX, toY, toWidth, toHeight):
             subImage = image.GetSubImage((x, y, width, height))
             subImage.Rescale(toWidth, toHeight, wx.IMAGE_QUALITY_HIGH)
-            bmp = wx.BitmapFromImage(subImage)
+            bmp = wx.Bitmap(subImage)
             memoryDC.DrawBitmap(bmp, toX, toY)
 
         scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
@@ -367,7 +367,7 @@ class OSDFrame(wx.Frame):
     ):
         self.timer.cancel()
         if osdText.strip() == "":
-            self.bitmap = wx.EmptyBitmap(0, 0)
+            self.bitmap = wx.Bitmap(0, 0)
             SetWindowPos(self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS | SWP_HIDEWINDOW)
             SetEvent(event)
             return
@@ -388,7 +388,7 @@ class OSDFrame(wx.Frame):
 
         if fontInfo is None:
             fontInfo = DEFAULT_FONT_INFO
-        font = wx.FontFromNativeInfoString(fontInfo)
+        font = wx.Font(fontInfo)
         memoryDC.SetFont(font)
 
         textLines = osdText.splitlines()
@@ -411,7 +411,7 @@ class OSDFrame(wx.Frame):
             width, height = bitmap.GetSize()
         elif outlineColour is None:
             width, height = textWidth, textHeight
-            bitmap = wx.EmptyBitmap(width, height)
+            bitmap = wx.Bitmap(width, height)
             memoryDC.SelectObject(bitmap)
 
             # fill the DC background with the maskColour
@@ -436,7 +436,7 @@ class OSDFrame(wx.Frame):
             memoryDC.SelectObject(wx.NullBitmap)
         else:
             width, height = textWidth + 5, textHeight + 5
-            outlineBitmap = wx.EmptyBitmap(width, height, 1)
+            outlineBitmap = wx.Bitmap(width, height, 1)
             outlineDC = wx.MemoryDC()
             outlineDC.SetFont(font)
             outlineDC.SelectObject(outlineBitmap)
@@ -447,7 +447,7 @@ class OSDFrame(wx.Frame):
             outlineBitmap.SetMask(wx.Mask(outlineBitmap))
             outlineDC.SelectObject(outlineBitmap)
 
-            bitmap = wx.EmptyBitmap(width, height)
+            bitmap = wx.Bitmap(width, height)
             memoryDC.SetTextForeground(outlineColour)
             memoryDC.SelectObject(bitmap)
             memoryDC.Clear()
@@ -465,7 +465,7 @@ class OSDFrame(wx.Frame):
             memoryDC.SelectObject(wx.NullBitmap)
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
 
-        region = wx.RegionFromBitmap(bitmap)
+        region = wx.Region(bitmap)
         self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()

@@ -87,7 +87,7 @@ FOCUS_PATTERN = b64decode(
     "7wDEgFt9VLehNwAAAABJRU5ErkJggg=="
 )
 
-FOCUS_IMAGE = wx.ImageFromStream(cStringIO.StringIO(FOCUS_PATTERN))
+FOCUS_IMAGE = wx.Image(cStringIO.StringIO(FOCUS_PATTERN))
 
 ASPECT_RATIOS = [
     # aspectRatio, isCCIR601
@@ -133,14 +133,14 @@ class DrawingFrame(wx.Frame):
     def SetDrawing(self, drawFunc, args):
         self.drawing = drawFunc
         d = GetMonitorDimensions()[self.displayNum]
-        self.SetDimensions(d.x, d.y, d.width, d.height)
-        self._buffer = wx.EmptyBitmap(d.width, d.height)
+        self.SetSize(d.x, d.y, d.width, d.height)
+        self._buffer = wx.Bitmap(d.width, d.height)
         dc = wx.BufferedDC(wx.ClientDC(self), self._buffer)
         self.drawing(dc, *args)
         #self.Refresh(eraseBackground=False)
         wx.Frame.Show(self, True)
         BringHwndToFront(self.GetHandle(), False)
-        self.SetCursor(wx.StockCursor(wx.CURSOR_BLANK))
+        self.SetCursor(wx.Cursor(wx.CURSOR_BLANK))
 
 
     def LeftDblClick(self, event):
@@ -157,7 +157,7 @@ class DrawingFrame(wx.Frame):
 
 
     def HideCursor(self):
-        wx.CallAfter(self.SetCursor, wx.StockCursor(wx.CURSOR_BLANK))
+        wx.CallAfter(self.SetCursor, wx.Cursor(wx.CURSOR_BLANK))
 
 
 
@@ -236,12 +236,12 @@ class Focus(TestPatternAction):
     ):
         image = FOCUS_IMAGE.Copy()
         image.ConvertToMono(255, 255, 255)
-        bmp = wx.BitmapFromImage(image, 1)
+        bmp = wx.Bitmap(image, 1)
         bmpWidth, bmpHeight = bmp.GetSize()
         #bmp.SetMask(None)
 
         mdc = wx.MemoryDC()
-        bmp2 = wx.EmptyBitmap(bmpWidth, bmpHeight, 1)
+        bmp2 = wx.Bitmap(bmpWidth, bmpHeight, 1)
         mdc.SelectObject(bmp2)
         mdc.SetTextForeground((255, 255, 255))
         mdc.SetTextBackground((0, 0, 0))
@@ -251,7 +251,7 @@ class Focus(TestPatternAction):
 
         dc.SetTextForeground(backgroundColour)
         dc.SetTextBackground(foregroundColour)
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         startX = (bmpWidth - (w % bmpWidth)) / 2
         startY = (bmpHeight - (h % bmpHeight)) / 2
         for x in range(-startX, w, bmpWidth):
@@ -304,7 +304,7 @@ class IreWindow(TestPatternAction):
         dc.SetBrush(wx.Brush(foregroundColour))
         dc.SetPen(wx.Pen(foregroundColour, 1))
         dc.SetBrush(wx.Brush(foregroundColour))
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         area = (w * h) * coverage / 100
         width = height = sqrt(area)
         dc.DrawRectangle((w - width) / 2, (h - height) / 2, width, height)
@@ -362,7 +362,7 @@ class Checkerboard(TestPatternAction):
         dc.Clear()
         dc.SetPen(wx.Pen(foregroundColour, 1))
         dc.SetBrush(wx.Brush(foregroundColour))
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         width = 1.0 * w / hCount
         height = 1.0 * h / vCount
         for x in range(0, hCount):
@@ -430,7 +430,7 @@ class Grid(TestPatternAction):
         dc.Clear()
         dc.SetPen(wx.Pen(foregroundColour, 1))
         dc.SetBrush(wx.Brush(foregroundColour))
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         width = 1.0 * w / hCount
         height = 1.0 * h / vCount
         for i in range(1, hCount):
@@ -509,7 +509,7 @@ class Dots(TestPatternAction):
             d = diameter + 2
         gc.SetPen(wx.Pen(backgroundColour, 0))
         gc.SetBrush(wx.Brush(foregroundColour))
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         if hCount == 1:
             xOffset = (w - diameter) / 2.0  - 1
             width = 0
@@ -575,14 +575,14 @@ class ZonePlate(TestPatternAction):
 
     def Draw(self, dc, scale=128):
         dc.Clear()
-        width, height = dc.GetSizeTuple()
+        width, height = dc.GetSize()
         sineTab = [
             int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5)
             for i in range(256)
         ]
         cx = width / 2
         cy = height / 2
-        bmp = wx.EmptyBitmap(width, height, 24)
+        bmp = wx.Bitmap(width, height, 24)
         pixelData = wx.NativePixelData(bmp)
         pixels = pixelData.GetPixels()
         y = -cy
@@ -624,7 +624,7 @@ class Lines(TestPatternAction):
         dc.Clear()
         dc.SetPen(wx.Pen(foregroundColour, lineSize))
         dc.SetBrush(wx.Brush(foregroundColour))
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         if orientation == 0:
             for y in range(0, h, lineSize * 2):
                 dc.DrawLine(0, y, w, y)
@@ -684,14 +684,14 @@ class Bars(TestPatternAction):
     ):
         dc.SetBackground(wx.Brush(firstColour))
         dc.Clear()
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         if orientation == 0:
             barSize = int(w * 1.0 / barCount)
         else:
             barSize = int(h * 1.0 / barCount)
         r1, g1, b1 = firstColour
         r2, g2, b2 = lastColour
-        dc.SetFont(wx.FontFromNativeInfoString(fontStr))
+        dc.SetFont(wx.Font(fontStr))
         if makeDoubleBars:
             w1 = w / 2
             h1 = h / 2
@@ -804,7 +804,7 @@ class SiemensStar(TestPatternAction):
     ):
         dc.SetBackground(wx.Brush(backgroundColour))
         dc.Clear()
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         gc = wx.GraphicsContext.Create(dc)
         gc.Translate(w / 2.0, h / 2.0)
         gc.Scale(1.0, 1.0)
@@ -818,11 +818,11 @@ class SiemensStar(TestPatternAction):
             phi1 = (n-0.25) * beamSize
             phi2 = (n+0.25) * beamSize
             path.MoveToPoint(0, 0)
-            path.AddArc(0, 0, r, phi1, phi2)
+            path.AddArc(0, 0, r, phi1, phi2, True)
             path.AddLineToPoint(0, 0)
             path.CloseSubpath()
         path2 = gc.CreatePath()
-        path2.AddArc(0, 0, r, 0, math.pi * 2.0)
+        path2.AddArc(0, 0, r, 0, math.pi * 2.0, True)
         gc.SetPen(wx.Pen("white", 1, style=wx.TRANSPARENT))
         gc.SetBrush(wx.Brush(firstColour))
         gc.FillPath(path2)
@@ -883,7 +883,7 @@ class Burst(TestPatternAction):
     ):
         dc.SetBackground(wx.Brush("black"))
         dc.Clear()
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         numBars = numBeams
         r1, g1, b1 = firstColour
         r2, g2, b2 = secondColour
@@ -936,7 +936,7 @@ class Geometry(TestPatternAction):
     ):
         dc.SetBackground(wx.Brush("black"))
         dc.Clear()
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         gc = wx.GraphicsContext.Create(dc)
         gc.PushState()
         gc.SetPen(wx.Pen("white", 3.0))
@@ -989,7 +989,7 @@ class PixelCropping(TestPatternAction):
         numLines = 40
         textColour = (255, 255, 255)
 
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
 
         xMax = w - 1
         yMax = h - 1
@@ -1120,13 +1120,13 @@ class Readability(TestPatternAction):
         dc.SetBackground(wx.Brush(backgroundColour))
         dc.Clear()
         dc.SetTextForeground(textColour)
-        dc.SetFont(wx.FontFromNativeInfoString(fontStr))
+        dc.SetFont(wx.Font(fontStr))
         tw, th, descent, externalLeading = dc.GetFullTextExtent(testText)
         if offsetLines:
             offset = -(tw / 2)
         else:
             offset = 0
-        w, h = dc.GetSizeTuple()
+        w, h = dc.GetSize()
         lineNum = 0
         y = 0
         while y < h:

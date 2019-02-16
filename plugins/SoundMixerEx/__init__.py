@@ -541,7 +541,7 @@ class SetSoundFader(eg.ActionClass):
         panel.sizer.Add(valueCtrl)
 
         while panel.Affirmed():
-            data = treeCtrl.GetPyData(treeCtrl.GetSelection())
+            data = treeCtrl.GetItemData(treeCtrl.GetSelection())
             if data is not None:
                 (deviceId, controlId, name) = data
                 relative = actionCtrl.GetValue()

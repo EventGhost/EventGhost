@@ -337,7 +337,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
             wx.StaticBox(panel, -1, text.uuInfo),
             wx.VERTICAL
         )
-        infoSizer = wx.FlexGridSizer(3, 2)
+        infoSizer = wx.FlexGridSizer(rows=3, cols=2, vgap=2, hgap=2)
         infoSizer.AddMany([
             (panel.StaticText(text.uuProtocol), 0, wx.EXPAND),
             (panel.StaticText(protocolVersion), 0, wx.EXPAND),

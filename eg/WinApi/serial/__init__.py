@@ -5,10 +5,10 @@
 # (C)2001-2002 Chris Liechti <cliechti@gmx.net>
 # this is distributed under a free software license, see license.txt
 
-import os  # NOQA
-import string  # NOQA
-import sys  # NOQA
+import os
+import string
+import sys
 
 VERSION = "947"
 
-from serialwin32 import *  # NOQA
+from serialwin32 import *

@@ -213,7 +213,7 @@ class Broadcast(eg.ActionWithStringParameter):
         UDPSock.close()
 
 
-    def Configure(self, command="", payload="", port=""):
+    def Configure(self, command="", payload="", port=65000):
         text = self.text
         panel = eg.ConfigPanel(self)
 

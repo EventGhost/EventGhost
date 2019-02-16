@@ -40,14 +40,14 @@ class StatusBar(wx.StatusBar):
 
         checkBox = wx.CheckBox(self, -1, eg.text.MainFrame.onlyLogAssigned)
         self.checkBox = checkBox
-        colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR)
+        colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR)
         checkBox.SetBackgroundColour(colour)
         self.checkBoxColour = checkBox.GetForegroundColour()
         checkBox.SetValue(eg.config.onlyLogAssigned)
         self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         checkBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
         checkBox.SetPosition((rect.x + 2, rect.y + 2))
-        checkBox.SetToolTipString(eg.text.MainFrame.onlyLogAssignedToolTip)
+        checkBox.SetToolTip(eg.text.MainFrame.onlyLogAssignedToolTip)
 
         eg.Bind("ProcessingChange", self.OnProcessingChange)
         self.Reposition()

@@ -16,8 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import pythoncom
 from win32com.shell import shell
+
 
 class Shortcut:
     @classmethod
@@ -69,7 +71,7 @@ class Shortcut:
             pythoncom.CLSCTX_INPROC_SERVER,
             shell.IID_IShellLink
         )
-        persist = sh.QueryInterface(pythoncom.IID_IPersistFile).Load(filename)  # NOQA
+        persist = sh.QueryInterface(pythoncom.IID_IPersistFile).Load(filename)
         self = cls()
         self.path = filename
         self.target = sh.GetPath(shell.SLGP_SHORTPATH)[0]

@@ -62,10 +62,12 @@ SUPPORTED_RECORDING_SERVICE_VERSIONS = '1.10.x (older versions might work but ar
 #        Some Eclipse (IDE) warnings fixed
 
 import eg
-from os.path import join, dirname, abspath, isfile
 import codecs
+from os.path import abspath, dirname, join
+
 
 HELPFILE = abspath(join(dirname(__file__.decode('mbcs')), "DVBViewer-Help.html"))
+
 
 def GetHelp():
     try:
@@ -79,11 +81,12 @@ def GetHelp():
         eg.PrintTraceback(msg)
         return msg
 
+
 HELP = GetHelp()
 
 eg.RegisterPlugin(
-    name = "DVBViewer",
-    author = (
+    name="DVBViewer",
+    author=(
         "Bitmonster",
         "Stefan Gollmer",
         "Nativityplay",
@@ -98,8 +101,8 @@ eg.RegisterPlugin(
         'Adds support functions to control <a href="http://www.dvbviewer.com/">'
         'DVBViewer Pro/GE and DVBViewerService</a> and returns events.'
     ),
-    help = HELP,
-    icon = (
+    help=HELP,
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADK0lEQVR42j2TXWgcVRTH"
         "f/fOzM5uNknJxvoRt6kaCwlBjFJRsIgasUFLH1KFCqIIBTHUh9aCRQTRPviSokiLFREh"
         "iCXRh5ZiH6TWj1KxUqG2xmKwSlsrtKFu0/2a2Ttzr2d2jXMZLveee875n//5H5XWz6C7"
@@ -119,6 +122,38 @@ eg.RegisterPlugin(
         "YGVlk+dkZ+kiztQgv0IyleVOLNmEesH/3ZEAJPEK/gVNWWvcNcmGsgAAAABJRU5ErkJg"
         "gg=="
     ),
+)
+
+
+import hashlib
+import inspect
+import os
+import random
+import sys
+from _winreg import CloseKey, HKEY_LOCAL_MACHINE, OpenKey, QueryValue
+from base64 import encodestring as encodestring64
+from copy import deepcopy as cpy
+from datetime import datetime as dt, timedelta as td
+from functools import partial
+from re import search as reSearch
+from threading import Event, Lock, Thread, Timer
+from time import asctime, localtime, mktime, sleep, strftime, strptime, time
+from urllib2 import (Request, urlopen)
+from xml.etree import cElementTree as ElementTree
+
+import wx
+import wx.adv
+import wx.lib.masked as masked
+from pythoncom import CLSCTX_INPROC_SERVER, CoCreateInstance, CoInitialize, CoUninitialize, IID_IPersistFile
+from pywintypes import Time as PyTime
+from win32com.client import DispatchWithEvents, GetObject
+from win32com.client.gencache import EnsureDispatch
+from win32com.taskscheduler import taskscheduler
+
+from eg.WinApi import SendMessageTimeout
+from eg.WinApi.Dynamic import (
+    CloseHandle, CREATE_NEW_CONSOLE, create_unicode_buffer, CreateProcess, PROCESS_INFORMATION, sizeof,
+    STARTF_USESHOWWINDOW, STARTUPINFO,
 )
 
 
@@ -434,42 +469,6 @@ RS_ACTIONS = (
     ("ServiceGetEPG",                    "Recording Service Get EPG",           None,  (8276,True )),
 )
 
-
-import wx
-import sys
-import os
-import random
-import hashlib
-import inspect
-from pythoncom import CoInitialize, CoUninitialize
-from pythoncom import CoCreateInstance, CLSCTX_INPROC_SERVER, IID_IPersistFile
-from pywintypes import Time as PyTime
-import wx.lib.masked as masked
-from functools import partial
-from copy import deepcopy as cpy
-from win32com.client import Dispatch, DispatchWithEvents
-from win32com.client.gencache import EnsureDispatch
-from win32com.client import GetObject
-from win32com.taskscheduler import taskscheduler
-from eg.WinApi import SendMessageTimeout
-from threading import Thread, Event, Timer, Lock
-from time import time, strptime, mktime, ctime, strftime, localtime, asctime, sleep
-from datetime import datetime as dt, timedelta as td
-from eg.WinApi.Dynamic import (
-    byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
-    CloseHandle, create_unicode_buffer,
-    STARTUPINFO, PROCESS_INFORMATION,
-    CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW
-)
-from urllib2 import ( HTTPPasswordMgrWithDefaultRealm, HTTPPasswordMgr, HTTPBasicAuthHandler,
-                      install_opener, urlopen, Request, build_opener
-                    )
-from urlparse import urlparse
-from re import search as reSearch
-from base64 import encodestring as encodestring64
-from xml.etree import cElementTree as ElementTree
-from tempfile import NamedTemporaryFile
-from _winreg import OpenKey, QueryValue, CloseKey, HKEY_LOCAL_MACHINE, KEY_READ
 
 
 class Text:
@@ -1234,28 +1233,29 @@ class DVBViewer(eg.PluginClass):
                 self.executionStatusChangeLock.release()
 
         channelNr = 0
-        for channel in rawlist[1] :
-            tv = not ( channel[CH_22_VIDEOPID] == 0 )
-            channelID = str(
-                int(tv) << 61
-                | channel[CH_15_ORBITALPOS] << 48
-                | channel[CH_23_TSID] << 32
-                | (channel[CH_4_TUNERTYPE] + 1) << 29
-                | channel[CH_20_AUDIOPID] << 16
-                | channel[CH_26_SID]
-            )
-            self.channelDetailsList[channelID] = channel
+        if rawlist:
+            for channel in rawlist[1] :
+                tv = not ( channel[CH_22_VIDEOPID] == 0 )
+                channelID = str(
+                    int(tv) << 61
+                    | channel[CH_15_ORBITALPOS] << 48
+                    | channel[CH_23_TSID] << 32
+                    | (channel[CH_4_TUNERTYPE] + 1) << 29
+                    | channel[CH_20_AUDIOPID] << 16
+                    | channel[CH_26_SID]
+                )
+                self.channelDetailsList[channelID] = channel
 
-            if tv :
-                tvChannels.append( ( channelID, channel[CH_1_NAME] ) )
-            else :
-                radioChannels.append( ( channelID, channel[CH_1_NAME] ) )
-            if ( channel[ CH_3_FLAGS ] & 2 ) == 0 : # encrypted?
-                if not self.frequencies.has_key( channel[CH_5_FREQUENCY] ) :
-                    self.frequencies[ channel[CH_5_FREQUENCY] ] = ( channelNr, tv )
-                elif not self.frequencies[ channel[CH_5_FREQUENCY] ][1] and tv :
-                    self.frequencies[ channel[CH_5_FREQUENCY] ] = ( channelNr, tv )
-            channelNr += 1
+                if tv :
+                    tvChannels.append( ( channelID, channel[CH_1_NAME] ) )
+                else :
+                    radioChannels.append( ( channelID, channel[CH_1_NAME] ) )
+                if ( channel[ CH_3_FLAGS ] & 2 ) == 0 : # encrypted?
+                    if not self.frequencies.has_key( channel[CH_5_FREQUENCY] ) :
+                        self.frequencies[ channel[CH_5_FREQUENCY] ] = ( channelNr, tv )
+                    elif not self.frequencies[ channel[CH_5_FREQUENCY] ][1] and tv :
+                        self.frequencies[ channel[CH_5_FREQUENCY] ] = ( channelNr, tv )
+                channelNr += 1
 
         radioChannels.sort( cmp=lambda x,y: cmp(x[CH_1_NAME].lower(), y[CH_1_NAME].lower()) )
         tvChannels.sort( cmp=lambda x,y: cmp(x[CH_1_NAME].lower(), y[CH_1_NAME].lower()) )
@@ -2366,9 +2366,11 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
     @eg.LogIt
-    def GetChannelList( self ) :
+    def GetChannelList(self):
+        if not self.dvbviewer:
+            return []
         channelManager = self.dvbviewer.ChannelManager
-        return channelManager.GetChannelList( )
+        return channelManager.GetChannelList()
 
 
     @eg.LogItWithReturn
@@ -3611,7 +3613,7 @@ class AddRecording( eg.ActionClass ) :
         wSize = channelChoiceCtrl.GetSize()
         channelChoiceCtrl.Clear()
         channelChoiceCtrl.SetItems( self.choices )
-        channelChoiceCtrl.SetSizeHintsSz( wSize )
+        channelChoiceCtrl.SetSizeHints( wSize )
         channelChoiceCtrl.SetSelection( ix )
 
         wxDate = wx.DateTime()
@@ -3619,7 +3621,11 @@ class AddRecording( eg.ActionClass ) :
             wxDate = wx.DateTime.Now()
         else :
             wxDate.ParseFormat( date, "%d.%m.%Y" )
-        dateCtrl = wx.DatePickerCtrl( panel, dt = wxDate, style=wx.DP_DEFAULT|wx.DP_DROPDOWN )#|wx.DP_ALLOWNONE )
+        dateCtrl = wx.adv.DatePickerCtrl(
+            parent=panel,
+            dt=wxDate,
+            style=wx.adv.DP_DEFAULT | wx.adv.DP_DROPDOWN  # | wx.DP_ALLOWNONE
+        )
 
         wxStartTime = wx.DateTime()
         if startTime == "" :
@@ -3722,7 +3728,10 @@ class AddRecording( eg.ActionClass ) :
         panel.sizer.Add(sBoxSizer, 0, flag = wx.EXPAND )
 
         while panel.Affirmed():
-            channelID       = plugin.channelIDbyIDList[ ( channelChoiceCtrl.GetValue(), self.tv ) ]
+            try:
+                channelID       = plugin.channelIDbyIDList[ ( channelChoiceCtrl.GetValue(), self.tv ) ]
+            except KeyError:
+                channelID = ""
             date            = dateCtrl.GetValue().Format( "%d.%m.%Y" )
             startTime       = startTimeCtrl.GetValue( as_wxDateTime=True ).Format( "%H:%M" )
             endTime         = endTimeCtrl.GetValue( as_wxDateTime=True ).Format( "%H:%M" )
@@ -4108,7 +4117,105 @@ The result is provided as a data dictionary in 'eg.result'."""
             panel.SetResult( enableDVBViewer, enableDVBService, updateDVBService )
 
 
-class DeleteRecordings( eg.ActionClass ) :
+# class holding the parameters for the delete query
+class DeleteQuery:
+    def __init__(
+        self, dry_mode=True,
+        delete_by_age=False, min_age_days=0,
+        delete_by_series=False, series_name='',
+        delete_by_name=False, title_name='',
+        delete_by_channel=False, channel_name='',
+        delete_by_playstatus=False, only_played=True,
+        keep_minimum=False, keep_at_least=0
+    ):
+        self.dry_mode = dry_mode
+        self.delete_by_age, self.min_age_days = self.check_int_arg(delete_by_age, min_age_days)
+        self.delete_by_series, self.series_name = self.check_string_arg(delete_by_series, series_name)
+        self.delete_by_name, self.title_name = self.check_string_arg(delete_by_name, title_name)
+        self.delete_by_channel, self.channel_name = self.check_string_arg(delete_by_channel, channel_name)
+        self.delete_by_playstatus, self.only_played = delete_by_playstatus, only_played
+        self.keep_minimum, self.keep_at_least = self.check_int_arg(keep_minimum, keep_at_least)
+
+    def to_tupel(self):
+        return (
+            self.dry_mode,
+            self.delete_by_age, self.min_age_days,
+            self.delete_by_series, self.series_name,
+            self.delete_by_name, self.title_name,
+            self.delete_by_channel, self.channel_name,
+            self.delete_by_playstatus, self.only_played,
+            self.keep_minimum, self.keep_at_least
+        )
+
+    # workaround since GetLabel() does not accept custom objects as argument (I guess it's a bug in EG framework?)
+    @classmethod
+    def from_tupel(cls, tpl):
+        return cls(*tpl)
+
+    # helper method: strips the string value and sets the flag to False if value is empty or None
+    @staticmethod
+    def check_int_arg(flag, value, default=0):
+        if value is None or value == 0:
+            return False, default
+        else:
+            return flag, value
+
+    # helper method: strips the string value and sets the flag to False if value is empty or None
+    @staticmethod
+    def check_string_arg(flag, value, default=''):
+        if value is not None:
+            value = value.strip()
+            if value == '':
+                value = None
+        if value is None:
+            return False, default
+        else:
+            return flag, value
+
+    # constructs a prosa text from the query
+    def query_as_text(self):
+        text = DeleteRecordings.Text
+
+        label = ''
+        if self.dry_mode:
+            label += text.dry_mode_t
+        else:
+            label += text.real_mode_t
+
+        label += text.delete_t
+
+        if self.delete_by_playstatus:
+            if self.only_played:
+                label += text.played_t
+            else:
+                label += text.unplayed_t
+        # elif not self.deleteByName:
+        #    label += text.any_t
+
+        label += text.recordings_t
+
+        if self.delete_by_name:
+            label += text.title_t % self.title_name
+
+        if self.delete_by_series:
+            label += text.fromSeries_t % self.series_name
+
+        if self.delete_by_channel:
+            label += text.onChannel_t % self.channel_name
+
+        if self.delete_by_age:
+            label += text.olderThan_t % self.min_age_days
+
+        if self.keep_minimum:
+            label += text.keepAtLeast_t % self.keep_at_least
+
+        label = label.strip() + '. '
+
+        return label
+
+
+# noinspection PyAttributeOutsideInit
+class DeleteRecordings(eg.ActionClass) :
     name = "Delete Recordings"
     description = u'''Delete Recordings according to search criteria and filters.
 May be used to implement an automated housekeeping, especially for recorded TV series.
@@ -4142,6 +4249,7 @@ If not, nothing bad will happen, it's just not working, but no recordings are de
 from the Recording Service. This is done transparently, you don't have to care for.
 </ul>
 '''
+    minwidth = 520
 
     class Text:
         filterTitle = "Filter criteria (all filters are AND combined)"
@@ -4184,8 +4292,8 @@ from the Recording Service. This is done transparently, you don't have to care f
         errorDelAllRec = "ERROR: Current settings would delete %s recordings, i.e. ALL OF YOUR RECORDINGS! Refine your query!"
         errorDelTooManyRec = "ERROR: Current settings would delete %s recordings, that's MORE THAN HALF of your recordings! Refine your query!"
 
-        dryMode_t = "[Dry Mode]: "
-        realMode_t = "[Really!]: "
+        dry_mode_t = "[Dry Mode]: "
+        real_mode_t = "[Really!]: "
         delete_t = 'Delete all '
         played_t = 'played '
         unplayed_t = 'unplayed '
@@ -4197,211 +4305,120 @@ from the Recording Service. This is done transparently, you don't have to care f
         olderThan_t = 'which are older than %s days '
         keepAtLeast_t = 'but keep at least the last %s recordings '
 
-    # class holding the parameters for the delete query
-    class DeleteQuery:
-        def __init__(self,
-            dryMode=True,
-            deleteByAge=False, minAgeDays=0,
-            deleteBySeries=False, seriesName='',
-            deleteByName=False, titleName='',
-            deleteByChannel=False, channelName='',
-            deleteByPlaystatus=False, onlyPlayed=True,
-            keepMinimum=False, keepAtLeast=0
-        ):
-            self.dryMode = dryMode
-            self.deleteByAge, self.minAgeDays = self.checkIntArg(deleteByAge, minAgeDays)
-            self.deleteBySeries, self.seriesName = self.checkStringArg(deleteBySeries, seriesName)
-            self.deleteByName, self.titleName = self.checkStringArg(deleteByName, titleName)
-            self.deleteByChannel, self.channelName = self.checkStringArg(deleteByChannel, channelName)
-            self.deleteByPlaystatus, self.onlyPlayed = deleteByPlaystatus, onlyPlayed
-            self.keepMinimum, self.keepAtLeast = self.checkIntArg(keepMinimum, keepAtLeast)
-
-        # workaround since GetLabel() does not accept custom objects as argument (I guess it's a bug in EG framework?)
-        def ToTupel(self):
-            return (self.dryMode,
-                self.deleteByAge, self.minAgeDays,
-                self.deleteBySeries, self.seriesName,
-                self.deleteByName, self.titleName,
-                self.deleteByChannel, self.channelName,
-                self.deleteByPlaystatus, self.onlyPlayed,
-                self.keepMinimum, self.keepAtLeast
-            )
-
-        # workaround since GetLabel() does not accept custom objects as argument (I guess it's a bug in EG framework?)
-        @classmethod
-        def FromTupel(cls, tpl):
-            return cls(tpl[0], tpl[1], tpl[2], tpl[3], tpl[4], tpl[5], tpl[6], tpl[7], tpl[8], tpl[9], tpl[10], tpl[11], tpl[12])
-
-
-        # helper method: strips the string value and sets the flag to False if value is empty or None
-        def checkIntArg(self, flag, value, default=0):
-            if value is None or value == 0:
-                return (False, default)
-            else:
-                return (flag, value)
-
-
-        # helper method: strips the string value and sets the flag to False if value is empty or None
-        def checkStringArg(self, flag, value, default=''):
-            if value is not None:
-                value = value.strip()
-                if value == '':
-                    value = None
-            if value is None:
-                return (False, default)
-            else:
-                return (flag, value)
-
-
-        # constructs a prosa text from the query
-        def QueryAsText(self):
-            text = DeleteRecordings.Text
-
-            label = ''
-            if self.dryMode:
-                label += text.dryMode_t
-            else:
-                label += text.realMode_t
-
-            label += text.delete_t
-
-            if self.deleteByPlaystatus:
-                if self.onlyPlayed:
-                    label += text.played_t
-                else:
-                    label += text.unplayed_t
-            #elif not self.deleteByName:
-            #    label += text.any_t
-
-            label += text.recordings_t
-
-            if self.deleteByName:
-                label += text.title_t % self.titleName
-
-            if self.deleteBySeries:
-                label += text.fromSeries_t % self.seriesName
-
-            if self.deleteByChannel:
-                label += text.onChannel_t % self.channelName
-
-            if self.deleteByAge:
-                label += text.olderThan_t % self.minAgeDays
-
-            if self.keepMinimum:
-                label += text.keepAtLeast_t % self.keepAtLeast
-
-            label = label.strip() + '. '
-
-            return label
-
-
     # convenience method
-    def LoadRecordingsData(self, deleteQueryTpl):
-        if deleteQueryTpl is None:
-            query = self.DeleteQuery() # new query with defaults
+    def load_recordings_data(self, delete_query_tpl):
+        if delete_query_tpl is None:
+            query = DeleteQuery() # new query with defaults
         else:
-            query = self.DeleteQuery.FromTupel(deleteQueryTpl) # convert tupel into DeleteQuery object
+            query = DeleteQuery.from_tupel(delete_query_tpl) # convert tupel into DeleteQuery object
 
         if self.plugin.workerThread is not None:
-            enableDVBViewer = True
+            enable_dvb_viewer = True
         else:
-            enableDVBViewer = False
+            enable_dvb_viewer = False
 
         # call action GetRecordingDetails
-        recDetails = eg.plugins.DVBViewer.GetRecordingDetails(enableDVBViewer, enableDVBService=True, updateDVBService=True)
+        rec_details = eg.plugins.DVBViewer.GetRecordingDetails(
+            enable_dvb_viewer, enableDVBService=True, updateDVBService=True
+        )
 
         recordings = {}
-        if recDetails is not None:
-            readoutSuccessful = recDetails[0]
-            if readoutSuccessful:
-                recordings = recDetails[1]
+        if rec_details is not None:
+            readout_successful = rec_details[0]
+            if readout_successful:
+                recordings = rec_details[1]
             else:
-                eg.PrintError("GetRecordingDetails failed")
+                self.PrintError("GetRecordingDetails failed")
 
-        return (recordings, query)
-
+        return recordings, query
 
     # computes the query result
     # This code was hard to write, so it's OK if it's hard to read :)
-    def ComputeQueryResult(self, recordings, deleteQuery, silent=False):
-        emptyResult = (0, [])
+    def compute_query_result(self, recordings, delete_query, silent=False):
+        empty_result = (0, [])
         if recordings is None or len(recordings) == 0:
-            return emptyResult
+            return empty_result
 
-        if deleteQuery is None:
-            return emptyResult
+        if delete_query is None:
+            return empty_result
         else:
-            q = deleteQuery
+            self.query = delete_query
 
-        numRecsBefore = len(recordings)
+        num_recs_before = len(recordings)
 
         dellist = recordings.values()
         dellist.sort(cmp=lambda x, y: cmp(y[RE_STARTDATE], x[RE_STARTDATE])) # sort by age in reverse order
 
-        if q.deleteByName and q.titleName is not None:
-            dellist = [ v for v in dellist if v[RE_TITLE].lower().find(q.titleName.lower()) >= 0 ]
+        if self.query.deleteByName and self.query.titleName is not None:
+            dellist = [ v for v in dellist if v[RE_TITLE].lower().find(self.query.titleName.lower()) >= 0 ]
 
-        if q.deleteBySeries and q.seriesName is not None:
-            dellist = [ v for v in dellist if v[RE_SERIES].lower().find(q.seriesName.lower()) >= 0 ]
+        if self.query.deleteBySeries and self.query.seriesName is not None:
+            dellist = [ v for v in dellist if v[RE_SERIES].lower().find(self.query.seriesName.lower()) >= 0 ]
 
-        if q.deleteByChannel and q.channelName is not None:
-            dellist = [ v for v in dellist if v[RE_CHANNEL].lower().find(q.channelName.lower()) >= 0 ]
+        if self.query.deleteByChannel and self.query.channelName is not None:
+            dellist = [ v for v in dellist if v[RE_CHANNEL].lower().find(self.query.channelName.lower()) >= 0 ]
 
-        if q.deleteByPlaystatus:
+        if self.query.deleteByPlaystatus:
             dellist = [ v for v in dellist
                           if v[RE_PLAYED] is not None
-                            and (v[RE_PLAYED] >= 0 and q.onlyPlayed or v[RE_PLAYED] < 0 and not q.onlyPlayed) ]
+                            and (v[RE_PLAYED] >= 0 and self.query.onlyPlayed or v[RE_PLAYED] < 0 and not self.query.onlyPlayed) ]
 
         # Note: the 'keepAtLeast' logic IS different if combined with name searches (as above)
         # than when combined with the 'deleteByAge' logic - it's different because
         # our natural expectation is different in these two situations.
         # Expl: "Delete name='denver clan' keepAtLeast=2"   -> keeps 2 records and deletes the rest
         #       "Delete older than (today+7) keepAtLeast=2" -> keeps *at least* 2 records and deletes the older ones.
-        if q.keepMinimum:
-            if len(dellist) > q.keepAtLeast:
-                dellist = dellist[q.keepAtLeast:] # remove 'keepAtLeast' elements from the beginning of the deletion list
+        if self.query.keepMinimum:
+            if len(dellist) > self.query.keepAtLeast:
+                dellist = dellist[self.query.keepAtLeast:] # remove 'keepAtLeast' elements from the beginning of the deletion list
             else:
-                return emptyResult
+                return empty_result
 
-        if q.deleteByAge:
-            maxDate = dt.now() - td(days=q.minAgeDays)
+        if self.query.deleteByAge:
+            maxDate = dt.now() - td(days=self.query.minAgeDays)
             dellist = [ v for v in dellist if v[RE_STARTDATE] < maxDate ] # records which are older than maxDays
 
         numRecsDelete = len(dellist)
 
-        if numRecsDelete == numRecsBefore:
+        if numRecsDelete == num_recs_before:
             if not silent:
-                eg.PrintError(self.Text.errorDelAllRec % numRecsDelete)
+                self.PrintError(self.Text.errorDelAllRec % numRecsDelete)
             dellist = []
-        elif float(numRecsDelete) / float(numRecsBefore) > 0.5:
+        elif float(numRecsDelete) / float(num_recs_before) > 0.5:
             if not silent:
-                eg.PrintError(self.Text.errorDelTooManyRec % numRecsDelete)
+                self.PrintError(self.Text.errorDelTooManyRec % numRecsDelete)
             dellist = []
 
-        return (numRecsDelete, dellist)
+        return numRecsDelete, dellist
 
 
     @eg.LogItWithReturn
-    def __call__( self,
-        deleteQueryTpl=None
-    ) :
-        def printRecord(rec, prefix=''):
-            delim  = ' | '
-            print prefix + str(rec[RE_STARTDATE])  + delim + rec[RE_TITLE] + delim + rec[RE_CHANNEL] + delim + rec[RE_SERIES] + delim + rec[RE_FILENAME] + delim + str(rec[RE_PLAYED]) + delim + ('From RS' if rec[RE_FROMRS] else 'From DVBViewer')
+    def __call__( self,deleteQueryTpl=None) :
+        def print_record(rec, prefix=''):
+            print u"{}{} | {} | {} | {} | {} | {} | {}".format(
+                prefix,
+                str(rec[RE_STARTDATE]),
+                rec[RE_TITLE],
+                rec[RE_CHANNEL] ,
+                rec[RE_SERIES],
+                rec[RE_FILENAME],
+                str(rec[RE_PLAYED]),
+                'From RS' if rec[RE_FROMRS] else 'From DVBViewer'
+            )
 
         plugin = self.plugin
         text = self.Text
 
-        recordings, q = self.LoadRecordingsData(deleteQueryTpl)
+        self.recordings, self.query = self.load_recordings_data(deleteQueryTpl)
 
-        dellist = self.ComputeQueryResult(recordings, q, False)[1]
+        dellist = self.compute_query_result(self.recordings, self.query, False)[1]
 
-        if q.dryMode:
+        if self.query.dry_mode:
             print text.deletePreview1
             if len(dellist) > 0:
                 print text.deletePreview2 % len(dellist)
                 for v in dellist:
-                    printRecord(v, text.dryPrefix)
+                    print_record(v, text.dryPrefix)
             else:
                 print text.deletePreview3
             return False
@@ -4409,7 +4426,7 @@ from the Recording Service. This is done transparently, you don't have to care f
         elif len(dellist) > 0:
             success = True
             for v in dellist:
-                printRecord(v, text.deletePrefix)
+                print_record(v, text.deletePrefix)
                 if v[RE_FROMRS]:
                     # recordings created by RS have to be deleted by the RS
                     success &= plugin.service.DeleteRecording(v[RE_RECID])
@@ -4432,349 +4449,314 @@ from the Recording Service. This is done transparently, you don't have to care f
         else:
             return False
 
+    def update_query_from_gui_settings(self):
+        self.query.delete_by_name, self.query.title_name = self.query.check_string_arg(
+            self.delete_by_name_cb.GetValue(),
+            self.title_name_combo_ctrl.GetValue()
+        )
+        self.query.delete_by_series, self.query.series_name = self.query.check_string_arg(
+            self.delete_by_series_cb.GetValue(),
+            self.series_name_combo_ctrl.GetValue()
+        )
+        self.query.delete_by_channel, self.query.channel_name = self.query.check_string_arg(
+            self.delete_by_channel_cb.GetValue(),
+            self.channel_name_combo_ctrl.GetValue()
+        )
+        self.query.delete_by_age, self.query.min_age_days = self.query.check_int_arg(
+            self.delete_by_age_cb.GetValue(),
+            self.min_age_num_ctrl.GetValue()
+        )
+        self.query.delete_by_playstatus = self.delete_by_playstatus_cb.GetValue()
+        self.query.only_played = self.only_played_ctrl.GetValue()
+        self.query.keep_minimum, self.query.keep_at_least = self.query.check_int_arg(
+            self.keep_minimum_cb.GetValue(),
+            self.keep_at_least_num_ctrl.GetValue()
+        )
+        self.query.dry_mode = self.dry_mode_cb.GetValue()
+
+    def on_gui_change(self, event=None):
+        if event:
+            event.Skip()
+        self.update_query_from_gui_settings()
+        label_txt = self.query.query_as_text()
+        self.prose_query_label.SetLabel(label_txt)
+        w = self.prose_query_label.GetContainingSizer().GetSize()[0] - 10
+        self.prose_query_label.SetMinSize((w, -1))
+        self.prose_query_label.Wrap(w - 10)
+        hits = self.compute_query_result(self.recordings, self.query, silent=True)[0]
+        self.num_deletions_label.SetLabel(str(hits))
+        self.num_deletions_label.SetMinSize(
+            self.num_deletions_label.GetFullTextExtent(
+                self.num_deletions_label.GetLabel()
+            )[:2]
+        )
+        self.panel.Layout()
+
+    def on_delete_by_name_cb(self, event):
+        self.title_name_combo_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_delete_by_series_cb(self, event):
+        self.series_name_combo_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_delete_by_channel_cb(self, event):
+        self.channel_name_combo_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_delete_by_age_cb(self, event):
+        self.min_age_num_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_delete_by_playstatus_cb(self, event):
+        self.only_played_ctrl.Enable(event.IsChecked())
+        self.only_unplayed_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_keep_minimum_cb(self, event):
+        self.keep_at_least_num_ctrl.Enable(event.IsChecked())
+        self.on_gui_change()
+
+    def on_dry_mode_cb(self, event):
+        if self.dry_mode_cb.GetValue():
+            self.prose_query_label.SetForegroundColour((0, 0, 0))
+            self.dry_mode_hint_label.Show()
+        else:
+            self.prose_query_label.SetForegroundColour((255, 0, 0))
+            self.dry_mode_hint_label.Hide()
+        self.on_gui_change()
 
     @eg.LogIt
-    def Configure(  self,
-        deleteQueryTpl=None
-    ) :
-        def UpdateQueryFromGuiSettings(q):
-            q.deleteByName, q.titleName = q.checkStringArg(deleteByNameCB.GetValue(), titleNameComboCtrl.GetValue())
-            q.deleteBySeries, q.seriesName = q.checkStringArg(deleteBySeriesCB.GetValue(), seriesNameComboCtrl.GetValue())
-            q.deleteByChannel, q.channelName = q.checkStringArg(deleteByChannelCB.GetValue(), channelNameComboCtrl.GetValue())
-            q.deleteByAge, q.minAgeDays = q.checkIntArg(deleteByAgeCB.GetValue(), minAgeNumCtrl.GetValue())
-            q.deleteByPlaystatus, q.onlyPlayed = deleteByPlaystatusCB.GetValue(), onlyPlayedCtrl.GetValue()
-            q.keepMinimum, q.keepAtLeast = q.checkIntArg(keepMinimumCB.GetValue(), keepAtLeastNumCtrl.GetValue())
-            q.dryMode = dryModeCB.GetValue()
-            return q
-
-        #plugin = self.plugin
+    def Configure(self, delete_query_tpl=None):
         text = self.Text
-        panel = eg.ConfigPanel()
-        dlgWindow = panel.GetTopLevelParent()
+        self.panel = panel = eg.ConfigPanel()
 
         # -------------- Get Data, Compute Query -------------------
-        recordings, q = self.LoadRecordingsData(deleteQueryTpl)
-
-        # -------------- Event Handlers -------------------
-        def onGuiChange(event):
-            def backupValues():
-                backup = eg.Bunch()
-                backup.titleNameStr = titleNameComboCtrl.GetValue()
-                backup.titleNamePos = titleNameComboCtrl.GetInsertionPoint()
-                backup.seriesNameStr = seriesNameComboCtrl.GetValue()
-                backup.seriesNamePos = seriesNameComboCtrl.GetInsertionPoint()
-                backup.channelNameStr = channelNameComboCtrl.GetValue()
-                backup.channelNamePos = channelNameComboCtrl.GetInsertionPoint()
-                return backup
-
-            def restoreValues(backup):
-                titleNameComboCtrl.SetValue(backup.titleNameStr)
-                titleNameComboCtrl.SetInsertionPoint(backup.titleNamePos)
-                seriesNameComboCtrl.SetValue(backup.seriesNameStr)
-                seriesNameComboCtrl.SetInsertionPoint(backup.seriesNamePos)
-                channelNameComboCtrl.SetValue(backup.channelNameStr)
-                channelNameComboCtrl.SetInsertionPoint(backup.channelNamePos)
-
-            # Workaround for an ugly behaviour of wx.ComboBox:
-            # When calling 'Layout()' on an arbitrary component in the same frame, the ComboBox
-            # performs some very strange autocomplete operation for which I didn't find a way
-            # to turn it off (I'd say it's a bug in wx framework?)
-            backup = backupValues()
-
-            labelTxt = UpdateQueryFromGuiSettings(q).QueryAsText()
-            proseQueryLabel.SetLabel(labelTxt)
-            proseQueryLabel.Wrap(minwidth-10)
-            hits = self.ComputeQueryResult(recordings, q, silent=True)[0]
-            numDeletionsLabel.SetLabel(str(hits))
-            numDeletionsLabel.SetInitialSize()
-            numDeletionsLabel.GetParent().Layout() # give numDeletionsLabel enough space to grow
-                # but this also causes improper autocomplete of wx.ComboBox
-            dlgWindow.SetInitialSize()
-            dlgWindow.Layout() # let the whole dialog dlgWindow shrink / enlarge
-
-            restoreValues(backup)
-
-
-        def onDeleteByNameCB(event):
-            titleNameComboCtrl.Enable(deleteByNameCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onDeleteBySeriesCB(event):
-            seriesNameComboCtrl.Enable(deleteBySeriesCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onDeleteByChannelCB(event):
-            channelNameComboCtrl.Enable(deleteByChannelCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onDeleteByAgeCB(event):
-            minAgeNumCtrl.Enable(deleteByAgeCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onDeleteByPlaystatusCB(event):
-            onlyPlayedCtrl.Enable(deleteByPlaystatusCB.GetValue())
-            onlyUnplayedCtrl.Enable(deleteByPlaystatusCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onKeepMinimumCB(event):
-            keepAtLeastNumCtrl.Enable(keepMinimumCB.GetValue())
-            if event is not None:
-                onGuiChange(event)
-
-        def onDryModeCB(event):
-            if dryModeCB.GetValue():
-                proseQueryLabel.SetForegroundColour((0,0,0))
-                dryModeHintLabel.Show()
-            else:
-                proseQueryLabel.SetForegroundColour((255,0,0))
-                dryModeHintLabel.Hide()
-            if event is not None:
-                onGuiChange(event)
-
+        self.recordings, self.query = self.load_recordings_data(delete_query_tpl)
 
         # -------------- GUI Components -------------------
         leftindent = 12
         blockgap = 5
-        minwidth = 520
 
-        deleteByNameCB = wx.CheckBox(panel, -1, text.deleteByName)
-        deleteByNameCB.SetValue(q.deleteByName)
-        deleteByNameCB.Bind(wx.EVT_CHECKBOX, onDeleteByNameCB)
-        titleNames = [v[RE_TITLE] for v in recordings.values()]
-        titleNames = list(set(titleNames)) # remove duplicates
-        titleNames.sort(lambda a,b: cmp(a.lower(), b.lower()))
-        titleNameComboCtrl = wx.ComboBox( panel, -1,
-            value=q.titleName,
-            choices=titleNames,
+        self.delete_by_name_cb = wx.CheckBox(panel, label=text.deleteByName)
+        self.delete_by_name_cb.SetValue(self.query.delete_by_name)
+        self.delete_by_name_cb.Bind(wx.EVT_CHECKBOX, self.on_delete_by_name_cb)
+        title_names = [v[RE_TITLE] for v in self.recordings.values()]
+        title_names = list(set(title_names)) # remove duplicates
+        title_names.sort(lambda a,b: cmp(a.lower(), b.lower()))
+        self.title_name_combo_ctrl = wx.ComboBox(
+            parent=panel,
+            value=self.query.title_name,
+            choices=title_names,
             size=(300,-1)
         )
-        titleNameComboCtrl.Bind(wx.EVT_TEXT, onGuiChange)
-        titleNameComboCtrl.Bind(wx.EVT_TEXT_ENTER, onGuiChange)
-        titleNameComboCtrl.Bind(wx.EVT_COMBOBOX, onGuiChange)
-        titleNameComboCtrl.Bind(wx.EVT_KILL_FOCUS, onGuiChange)
+        self.title_name_combo_ctrl.Enable(self.query.delete_by_name)
+        self.title_name_combo_ctrl.Bind(wx.EVT_COMBOBOX, self.on_gui_change)
 
-        deleteBySeriesCB = wx.CheckBox(panel, -1, text.deleteBySeries)
-        deleteBySeriesCB.SetValue(q.deleteBySeries)
-        deleteBySeriesCB.Bind(wx.EVT_CHECKBOX, onDeleteBySeriesCB)
-        seriesNames = [v[RE_SERIES] for v in recordings.values()]
-        seriesNames = list(set(seriesNames))
-        seriesNames.sort(lambda a,b: cmp(a.lower(), b.lower()))
-        seriesNameComboCtrl = wx.ComboBox( panel, -1,
-            value=q.seriesName,
-            choices=seriesNames,
+        self.delete_by_series_cb = wx.CheckBox(panel, label=text.deleteBySeries)
+        self.delete_by_series_cb.SetValue(self.query.delete_by_series)
+        self.delete_by_series_cb.Bind(wx.EVT_CHECKBOX, self.on_delete_by_series_cb)
+        series_names = [v[RE_SERIES] for v in self.recordings.values()]
+        series_names = list(set(series_names))
+        series_names.sort(lambda a,b: cmp(a.lower(), b.lower()))
+        self.series_name_combo_ctrl = wx.ComboBox(
+            parent=panel,
+            value=self.query.series_name,
+            choices=series_names,
             size=(300,-1)
         )
-        seriesNameComboCtrl.Bind(wx.EVT_TEXT, onGuiChange)
-        seriesNameComboCtrl.Bind(wx.EVT_TEXT_ENTER, onGuiChange)
-        seriesNameComboCtrl.Bind(wx.EVT_COMBOBOX, onGuiChange)
-        seriesNameComboCtrl.Bind(wx.EVT_KILL_FOCUS, onGuiChange)
+        self.series_name_combo_ctrl.Enable(self.query.delete_by_series)
+        self.series_name_combo_ctrl.Bind(wx.EVT_COMBOBOX, self.on_gui_change)
 
-        deleteByChannelCB = wx.CheckBox(panel, -1, text.deleteByChannel)
-        deleteByChannelCB.SetValue(q.deleteByChannel)
-        deleteByChannelCB.Bind(wx.EVT_CHECKBOX, onDeleteByChannelCB)
-        channelNames = [v[RE_CHANNEL] for v in recordings.values()]
-        channelNames = list(set(channelNames))
-        channelNames.sort(lambda a,b: cmp(a.lower(), b.lower()))
-        channelNameComboCtrl = wx.ComboBox( panel, -1,
-            value=q.channelName,
-            choices=channelNames,
-            size=(300,-1)
+        self.delete_by_channel_cb = wx.CheckBox(panel, label=text.deleteByChannel)
+        self.delete_by_channel_cb.SetValue(self.query.delete_by_channel)
+        self.delete_by_channel_cb.Bind(wx.EVT_CHECKBOX, self.on_delete_by_channel_cb)
+        channel_names = [v[RE_CHANNEL] for v in self.recordings.values()]
+        channel_names = list(set(channel_names))
+        channel_names.sort(lambda a,b: cmp(a.lower(), b.lower()))
+        self.channel_name_combo_ctrl = wx.ComboBox(
+            parent=panel,
+            value=self.query.channel_name,
+            choices=channel_names,
+            size=(300, -1)
         )
-        channelNameComboCtrl.Bind(wx.EVT_TEXT, onGuiChange)
-        channelNameComboCtrl.Bind(wx.EVT_TEXT_ENTER, onGuiChange)
-        channelNameComboCtrl.Bind(wx.EVT_COMBOBOX, onGuiChange)
-        channelNameComboCtrl.Bind(wx.EVT_KILL_FOCUS, onGuiChange)
+        self.channel_name_combo_ctrl.Enable(self.query.delete_by_channel)
+        self.channel_name_combo_ctrl.Bind(wx.EVT_COMBOBOX, self.on_gui_change)
 
-        deleteByAgeCB = wx.CheckBox(panel, -1, text.deleteByAge)
-        deleteByAgeCB.SetValue(q.deleteByAge)
-        deleteByAgeCB.Bind(wx.EVT_CHECKBOX, onDeleteByAgeCB)
-        minAgeNumCtrl = panel.SpinNumCtrl(q.minAgeDays, min=0, max=9999, fractionWidth=0, integerWidth=4)
-        minAgeNumCtrl.Bind(wx.EVT_TEXT, onGuiChange)
+        self.delete_by_age_cb = wx.CheckBox(panel, label=text.deleteByAge)
+        self.delete_by_age_cb.SetValue(self.query.delete_by_age)
+        self.delete_by_age_cb.Bind(wx.EVT_CHECKBOX, self.on_delete_by_age_cb)
+        self.min_age_num_ctrl = panel.SpinNumCtrl(self.query.min_age_days, min=0, max=9999, fractionWidth=0, integerWidth=4)
+        self.min_age_num_ctrl.Enable(self.query.delete_by_age)
+        self.min_age_num_ctrl.Bind(masked.EVT_NUM, self.on_gui_change)
 
-        deleteByPlaystatusCB = wx.CheckBox(panel, -1, text.deleteByPlaystatus)
-        deleteByPlaystatusCB.SetValue(q.deleteByPlaystatus)
-        deleteByPlaystatusCB.Bind(wx.EVT_CHECKBOX, onDeleteByPlaystatusCB)
+        self.delete_by_playstatus_cb = wx.CheckBox(panel, label=text.deleteByPlaystatus)
+        self.delete_by_playstatus_cb.SetValue(self.query.delete_by_playstatus)
+        self.delete_by_playstatus_cb.Bind(wx.EVT_CHECKBOX, self.on_delete_by_playstatus_cb)
 
-        onlyPlayedCtrl = wx.RadioButton( panel, -1, text.onlyPlayed, style = wx.RB_GROUP )
-        onlyPlayedCtrl.SetValue( q.onlyPlayed )
-        onlyPlayedCtrl.Bind(wx.EVT_RADIOBUTTON, onGuiChange)
+        self.only_played_ctrl = wx.RadioButton(panel, label=text.onlyPlayed, style=wx.RB_GROUP)
+        self.only_played_ctrl.SetValue(self.query.only_played)
+        self.only_played_ctrl.Enable(self.query.delete_by_playstatus)
+        self.only_played_ctrl.Bind(wx.EVT_RADIOBUTTON, self.on_gui_change)
 
-        onlyUnplayedCtrl = wx.RadioButton( panel, -1, text.onlyUnplayed )
-        onlyUnplayedCtrl.SetValue( not q.onlyPlayed )
-        onlyUnplayedCtrl.Bind(wx.EVT_RADIOBUTTON, onGuiChange)
+        self.only_unplayed_ctrl = wx.RadioButton(panel, label=text.onlyUnplayed)
+        self.only_unplayed_ctrl.SetValue(not self.query.only_played)
+        self.only_unplayed_ctrl.Enable(self.query.delete_by_playstatus)
+        self.only_unplayed_ctrl.Bind(wx.EVT_RADIOBUTTON, self.on_gui_change)
 
-        keepMinimumCB = wx.CheckBox(panel, -1, text.keepMinimum)
-        keepMinimumCB.SetValue(q.keepMinimum)
-        keepMinimumCB.Bind(wx.EVT_CHECKBOX, onKeepMinimumCB)
-        keepAtLeastNumCtrl = panel.SpinNumCtrl(q.keepAtLeast, min=0, max=9999, fractionWidth=0, integerWidth=4)
-        keepAtLeastNumCtrl.Bind(wx.EVT_TEXT, onGuiChange)
+        self.keep_minimum_cb = wx.CheckBox(panel, label=text.keepMinimum)
+        self.keep_minimum_cb.SetValue(self.query.keep_minimum)
+        self.keep_minimum_cb.Bind(wx.EVT_CHECKBOX, self.on_keep_minimum_cb)
+        self.keep_at_least_num_ctrl = panel.SpinNumCtrl(self.query.keep_at_least, min=0, max=9999, fractionWidth=0, integerWidth=4)
+        self.keep_at_least_num_ctrl.Enable(self.query.keep_minimum)
+        self.keep_at_least_num_ctrl.Bind(masked.EVT_NUM, self.on_gui_change)
 
-        dryModeCB = wx.CheckBox(panel, -1, text.dryMode)
-        dryModeCB.SetValue(q.dryMode)
-        dryModeCB.Bind(wx.EVT_CHECKBOX, onDryModeCB)
+        self.dry_mode_cb = wx.CheckBox(panel, label=text.dryMode)
+        self.dry_mode_cb.SetValue(self.query.dry_mode)
+        self.dry_mode_cb.Bind(wx.EVT_CHECKBOX, self.on_dry_mode_cb)
 
-        proseQueryLabel = wx.StaticText(panel, -1, "", style = wx.TE_READONLY | wx.TE_LEFT | wx.TE_LINEWRAP)
+        self.prose_query_label = wx.StaticText(panel, style=wx.TE_READONLY | wx.TE_LEFT)
 
-        numDeletionsLabel = wx.StaticText(panel, -1, "", style=wx.TE_READONLY | wx.TE_LEFT)
-        numDeletionsLabel.SetForegroundColour((255,0,0))
+        self.num_deletions_label = wx.StaticText(panel, style=wx.TE_READONLY | wx.TE_LEFT)
+        self.num_deletions_label.SetForegroundColour((255, 0, 0))
 
-        dryModeHintLabel = wx.StaticText(panel, -1, text.dryModeHint, style=wx.TE_READONLY | wx.TE_LEFT)
+        self.dry_mode_hint_label = wx.StaticText(panel, label=text.dryModeHint, style=wx.TE_READONLY | wx.TE_LEFT)
 
         # -------------- GUI Layout -------------------
-        filterGBSizer = wx.GridBagSizer(hgap=5, vgap=3)
-        filterGBrow = 0
-        filterGBSizer.Add(wx.Size(0, 5), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer = wx.GridBagSizer(hgap=5, vgap=3)
+        filter_g_brow = 0
+        filter_gb_sizer.Add(wx.Size(0, 5), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(deleteByNameCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(leftindent, 0), (filterGBrow, 0))
-        filterGBSizer.Add(wx.StaticText(panel, -1, text.titleName), (filterGBrow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(titleNameComboCtrl, (filterGBrow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.delete_by_name_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(leftindent, 0), (filter_g_brow, 0))
+        filter_gb_sizer.Add(wx.StaticText(panel, -1, text.titleName), (filter_g_brow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(self.title_name_combo_ctrl, (filter_g_brow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(deleteBySeriesCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(leftindent, 0), (filterGBrow, 0))
-        filterGBSizer.Add(wx.StaticText(panel, -1, text.seriesName), (filterGBrow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(seriesNameComboCtrl, (filterGBrow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.delete_by_series_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(leftindent, 0), (filter_g_brow, 0))
+        filter_gb_sizer.Add(wx.StaticText(panel, -1, text.seriesName), (filter_g_brow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(self.series_name_combo_ctrl, (filter_g_brow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(deleteByChannelCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(leftindent, 0), (filterGBrow, 0))
-        filterGBSizer.Add(wx.StaticText(panel, -1, text.channelName), (filterGBrow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(channelNameComboCtrl, (filterGBrow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.delete_by_channel_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(leftindent, 0), (filter_g_brow, 0))
+        filter_gb_sizer.Add(wx.StaticText(panel, -1, text.channelName), (filter_g_brow, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(self.channel_name_combo_ctrl, (filter_g_brow, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(deleteByPlaystatusCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        innerFGSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=5, vgap=5)
-        innerFGSizer.Add(wx.Size(leftindent, 0))
-        innerFGSizer.Add(onlyPlayedCtrl, flag = wx.ALIGN_CENTER_VERTICAL)
-        innerFGSizer.Add(wx.Size(leftindent, 0))
-        innerFGSizer.Add(onlyUnplayedCtrl, flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(innerFGSizer, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.delete_by_playstatus_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        inner_fg_sizer = wx.FlexGridSizer(rows=2, cols=2, hgap=5, vgap=5)
+        inner_fg_sizer.Add(wx.Size(leftindent, 0))
+        inner_fg_sizer.Add(self.only_played_ctrl, flag = wx.ALIGN_CENTER_VERTICAL)
+        inner_fg_sizer.Add(wx.Size(leftindent, 0))
+        inner_fg_sizer.Add(self.only_unplayed_ctrl, flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(inner_fg_sizer, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(deleteByAgeCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        innerFGSizer = wx.FlexGridSizer(rows=1, hgap=5, vgap=5)
-        innerFGSizer.Add(wx.Size(leftindent, 0))
-        innerFGSizer.Add(wx.StaticText(panel, -1, text.minAgeDays1), flag=wx.ALIGN_CENTER_VERTICAL)
-        innerFGSizer.Add(minAgeNumCtrl, flag=wx.ALIGN_CENTER_VERTICAL)
-        innerFGSizer.Add(wx.StaticText(panel, -1, text.minAgeDays2), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(innerFGSizer, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.delete_by_age_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        inner_fg_sizer = wx.FlexGridSizer(rows=1, cols=4, hgap=5, vgap=5)
+        inner_fg_sizer.Add(wx.Size(leftindent, 0))
+        inner_fg_sizer.Add(wx.StaticText(panel, -1, text.minAgeDays1), flag=wx.ALIGN_CENTER_VERTICAL)
+        inner_fg_sizer.Add(self.min_age_num_ctrl, flag=wx.ALIGN_CENTER_VERTICAL)
+        inner_fg_sizer.Add(wx.StaticText(panel, -1, text.minAgeDays2), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(inner_fg_sizer, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(keepMinimumCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        innerFGSizer = wx.FlexGridSizer(rows=1, hgap=5, vgap=5)
-        innerFGSizer.Add(wx.Size(leftindent, 0))
-        innerFGSizer.Add(wx.StaticText(panel, -1, text.keepAtLeast1), flag=wx.ALIGN_CENTER_VERTICAL)
-        innerFGSizer.Add(keepAtLeastNumCtrl, flag=wx.ALIGN_CENTER_VERTICAL)
-        innerFGSizer.Add(wx.StaticText(panel, -1, text.keepAtLeast2), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBSizer.Add(innerFGSizer, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.keep_minimum_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        inner_fg_sizer = wx.FlexGridSizer(rows=1, cols=4, hgap=5, vgap=5)
+        inner_fg_sizer.Add(wx.Size(leftindent, 0))
+        inner_fg_sizer.Add(wx.StaticText(panel, -1, text.keepAtLeast1), flag=wx.ALIGN_CENTER_VERTICAL)
+        inner_fg_sizer.Add(self.keep_at_least_num_ctrl, flag=wx.ALIGN_CENTER_VERTICAL)
+        inner_fg_sizer.Add(wx.StaticText(panel, -1, text.keepAtLeast2), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_gb_sizer.Add(inner_fg_sizer, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterGBSizer.Add(dryModeCB, (filterGBrow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
-        filterGBrow += 1
-        filterGBSizer.Add(wx.Size(0, blockgap), (filterGBrow, 0))
-        filterGBrow += 1
+        filter_gb_sizer.Add(self.dry_mode_cb, (filter_g_brow, 0), span=(1, 4), flag=wx.ALIGN_CENTER_VERTICAL)
+        filter_g_brow += 1
+        filter_gb_sizer.Add(wx.Size(0, blockgap), (filter_g_brow, 0))
+        filter_g_brow += 1
 
-        filterSBox = wx.StaticBox(panel, -1, text.filterTitle)
-        filterSBoxSizer = wx.StaticBoxSizer(filterSBox, wx.VERTICAL)
-        filterSBoxSizer.Add(filterGBSizer, proportion=1, flag=wx.EXPAND)
+        filter_s_box = wx.StaticBox(panel, -1, text.filterTitle)
+        filter_s_box_sizer = wx.StaticBoxSizer(filter_s_box, wx.VERTICAL)
+        filter_s_box_sizer.Add(filter_gb_sizer, proportion=1, flag=wx.EXPAND)
 
         # ---- Result Static Box
-        resultGBSizer = wx.GridBagSizer(hgap=5, vgap=5)
-        resultGBrow = 0
+        result_gb_sizer = wx.GridBagSizer(hgap=5, vgap=5)
+        result_g_brow = 0
 
-        resultGBSizer.Add(proseQueryLabel, (resultGBrow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        resultGBrow += 1
-        resultGBSizer.Add(wx.Size(0, blockgap), (resultGBrow, 0))
-        resultGBrow += 1
+        result_gb_sizer.Add(self.prose_query_label, (result_g_brow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        result_g_brow += 1
+        result_gb_sizer.Add(wx.Size(0, blockgap), (result_g_brow, 0))
+        result_g_brow += 1
 
-        resultFGSizer = wx.FlexGridSizer(rows=1, hgap=5, vgap=5)
-        resultFGSizer.Add(wx.StaticText(panel, -1, text.queryResult1), flag=wx.ALIGN_CENTER_VERTICAL)
-        resultFGSizer.Add(numDeletionsLabel, flag=wx.ALIGN_CENTER_VERTICAL)
-        resultFGSizer.Add(wx.StaticText(panel, -1, text.queryResult2), flag=wx.ALIGN_CENTER_VERTICAL)
+        result_fg_sizer = wx.FlexGridSizer(rows=1, cols=3, hgap=5, vgap=5)
+        result_fg_sizer.Add(wx.StaticText(panel, label=text.queryResult1), flag=wx.ALIGN_CENTER_VERTICAL)
+        result_fg_sizer.Add(self.num_deletions_label, flag=wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        result_fg_sizer.Add(wx.StaticText(panel, label=text.queryResult2), flag=wx.ALIGN_CENTER_VERTICAL)
 
-        resultGBSizer.Add(resultFGSizer, (resultGBrow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        resultGBrow += 1
-        resultGBSizer.Add(wx.Size(0, blockgap), (resultGBrow, 0))
-        resultGBrow += 1
+        result_gb_sizer.Add(result_fg_sizer, (result_g_brow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        result_g_brow += 1
+        result_gb_sizer.Add(wx.Size(0, blockgap), (result_g_brow, 0))
+        result_g_brow += 1
 
-        resultGBSizer.Add(dryModeHintLabel, (resultGBrow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        resultGBrow += 1
+        result_gb_sizer.Add(self.dry_mode_hint_label, (result_g_brow, 0), span=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        result_g_brow += 1
 
-        resultSBox = wx.StaticBox(panel, -1, text.resultTitle)
-        resultSBoxSizer = wx.StaticBoxSizer(resultSBox, wx.VERTICAL)
-        resultSBoxSizer.Add(resultGBSizer, proportion=1, flag=wx.EXPAND)
+        result_s_box = wx.StaticBox(panel, -1, text.resultTitle)
+        result_s_box_sizer = wx.StaticBoxSizer(result_s_box, wx.VERTICAL)
+        result_s_box_sizer.Add(result_gb_sizer, proportion=1, flag=wx.EXPAND)
 
-        mainGBSizer = wx.GridBagSizer(hgap=5, vgap=5)
-        mainGBrow = 0
-        mainGBSizer.Add(wx.Size(minwidth, blockgap), (mainGBrow, 0))
-        mainGBrow += 1
+        main_gb_sizer = wx.GridBagSizer(hgap=5, vgap=5)
+        main_g_brow = 0
+        main_gb_sizer.Add(wx.Size(self.minwidth, blockgap), (main_g_brow, 0))
+        main_g_brow += 1
 
-        mainGBSizer.Add(filterSBoxSizer, (mainGBrow, 0), span=(1, 1), flag=wx.EXPAND)
-        mainGBrow += 1
-        mainGBSizer.Add(wx.Size(0, blockgap), (mainGBrow, 0))
-        mainGBrow += 1
+        main_gb_sizer.Add(filter_s_box_sizer, (main_g_brow, 0), span=(1, 1), flag=wx.EXPAND)
+        main_g_brow += 1
+        main_gb_sizer.Add(wx.Size(0, blockgap), (main_g_brow, 0))
+        main_g_brow += 1
 
-        mainGBSizer.Add(resultSBoxSizer, (mainGBrow, 0), span=(1, 1), flag=wx.EXPAND)
-        mainGBrow += 1
-        mainGBSizer.Add(wx.Size(0, blockgap), (mainGBrow, 0))
-        mainGBrow += 1
+        main_gb_sizer.Add(result_s_box_sizer, (main_g_brow, 0), span=(1, 1), flag=wx.EXPAND)
+        main_g_brow += 1
+        main_gb_sizer.Add(wx.Size(0, blockgap), (main_g_brow, 0))
+        main_g_brow += 1
 
         # -------------- Run & show -------------------
-        panel.sizer.Add(mainGBSizer, proportion=1, flag=wx.EXPAND)
-
-        onDeleteByNameCB(None)
-        onDeleteBySeriesCB(None)
-        onDeleteByChannelCB(None)
-        onDeleteByAgeCB(None)
-        onDeleteByPlaystatusCB(None)
-        onKeepMinimumCB(None)
-        onDryModeCB(None)
-        onGuiChange(None)
-
+        panel.sizer.Add(main_gb_sizer, proportion=1, flag=wx.EXPAND)
+        wx.CallAfter(self.on_gui_change)
         while panel.Affirmed():
-            deleteQueryTpl = UpdateQueryFromGuiSettings(q).ToTupel()
-
+            self.update_query_from_gui_settings()
             panel.SetResult(
-                deleteQueryTpl
+                self.query.to_tupel()
             )
 
-
-    def GetLabel(self,
-        deleteQueryTpl,
-        *dummyArgs
-    ):
-        if deleteQueryTpl is None:
-            q = self.DeleteQuery() # new query with defaults
+    def GetLabel(self, delete_query_tpl=None):
+        if delete_query_tpl is None:
+            self.query = DeleteQuery() # new query with defaults
         else:
-            q = self.DeleteQuery.FromTupel(deleteQueryTpl) # convert tupel into DeleteQuery object
+            self.query = DeleteQuery.from_tupel(delete_query_tpl) # convert tupel into DeleteQuery object
 
-        return q.QueryAsText()
-
+        return self.query.query_as_text()
 
 
 class TuneChannel( eg.ActionClass ) :
@@ -4791,7 +4773,7 @@ class TuneChannel( eg.ActionClass ) :
             channelID = eval(variableName)
 
         if channelID is None or channelID == '':
-            eg.PrintError("Invalid arguments: missing channelID")
+            self.PrintError("Invalid arguments: missing channelID")
             return False
 
         plugin.executionStatusChangeLock.acquire()
@@ -4845,8 +4827,11 @@ class TuneChannel( eg.ActionClass ) :
         def OnChannelChoice(event):
             ix = channelChoiceCtrl.GetSelection()
             key = (ix, self.tv)
-            channelID = plugin.channelIDbyIDList[key]
-            channelIDTextCtrl.SetValue( channelID )
+            try:
+                channelID = plugin.channelIDbyIDList[key]
+                channelIDTextCtrl.SetValue( channelID )
+            except KeyError:
+                channelIDTextCtrl.SetValue('')
             event.Skip()
 
         self.panel = eg.ConfigPanel()
@@ -4871,7 +4856,7 @@ class TuneChannel( eg.ActionClass ) :
         wSize = channelChoiceCtrl.GetSize()
         channelChoiceCtrl.Clear()
         channelChoiceCtrl.SetItems( self.choices )
-        channelChoiceCtrl.SetSizeHintsSz( wSize )
+        channelChoiceCtrl.SetSizeHints( wSize )
         channelChoiceCtrl.SetSelection( ix )
         channelChoiceCtrl.Bind(wx.EVT_CHOICE, OnChannelChoice)
 
@@ -4965,11 +4950,11 @@ class GetChannelDetails( eg.ActionClass ) :
             channelID = eval(variableName)
 
         if not allChannels and not currentChannel and (channelID is None or channelID == ""):
-            eg.PrintError("Illegal argument combination: One of the arguments 'allChannels', 'currentChannel', 'fromVariable' or 'channelID' must be set.")
+            self.PrintError("Illegal argument combination: One of the arguments 'allChannels', 'currentChannel', 'fromVariable' or 'channelID' must be set.")
             return None
 
         if allChannels and currentChannel or allChannels and fromVariable or currentChannel and fromVariable:
-            eg.PrintError("Illegal argument combination: Just one of the arguments 'allChannels', 'currentChannel' and 'fromVariable' must be True.")
+            self.PrintError("Illegal argument combination: Just one of the arguments 'allChannels', 'currentChannel' and 'fromVariable' must be True.")
             return None
 
         plugin.executionStatusChangeLock.acquire()
@@ -5027,8 +5012,11 @@ class GetChannelDetails( eg.ActionClass ) :
         def OnChannelChoice(event):
             ix = channelChoiceCtrl.GetSelection()
             key = (ix, self.tv)
-            channelID = plugin.channelIDbyIDList[key]
-            channelIDTextCtrl.SetValue( channelID )
+            try:
+                channelID = plugin.channelIDbyIDList[key]
+                channelIDTextCtrl.SetValue( channelID )
+            except KeyError:
+                channelIDTextCtrl.SetValue('')
             event.Skip()
 
         self.panel = eg.ConfigPanel()
@@ -5053,7 +5041,7 @@ class GetChannelDetails( eg.ActionClass ) :
         wSize = channelChoiceCtrl.GetSize()
         channelChoiceCtrl.Clear()
         channelChoiceCtrl.SetItems( self.choices )
-        channelChoiceCtrl.SetSizeHintsSz( wSize )
+        channelChoiceCtrl.SetSizeHints( wSize )
         channelChoiceCtrl.SetSelection( ix )
         channelChoiceCtrl.Bind(wx.EVT_CHOICE, OnChannelChoice)
 
@@ -5231,7 +5219,7 @@ class TaskScheduler( eg.ActionClass ) :
                                                     updateDVBService = updateDVBService )
 
         if not timerDates[0] :
-            eg.PrintError( "dates not valid" )
+            self.PrintError( "dates not valid" )
             return False
 
         dates = []
@@ -5338,7 +5326,7 @@ class TaskScheduler( eg.ActionClass ) :
                 #print "Save"
                 persistFile.Save( None, True )
             except Exception, exc:
-                eg.PrintError( 'Error on adding a task scheduler entry:', unicode(exc) )
+                self.PrintError( 'Error on adding a task scheduler entry:', unicode(exc) )
                 try :
                     ts.Delete( taskName )
                 except :
@@ -5497,9 +5485,9 @@ class DVBViewerService() :
                     return None
                 else :
                     print "DVBViewer Service errno: ", e.errno, ", http code: ", e.code,
-                    raise
+                    raise e
             else :
-                raise
+                raise e
             return
 
         theurl = 'http://' + self.serviceAddress + '/api/' + interface.lower() + '.html'

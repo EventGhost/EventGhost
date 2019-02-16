@@ -146,7 +146,7 @@ class AddPluginDialog(eg.TaskletDialog):
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             if not info.valid:
                 treeCtrl.SetItemTextColour(treeId, eg.colour.pluginError)
-            treeCtrl.SetPyData(treeId, info)
+            treeCtrl.SetItemData(treeId, info)
             if info.path == Config.lastSelection:
                 itemToSelect = treeId
 
@@ -159,11 +159,11 @@ class AddPluginDialog(eg.TaskletDialog):
         treeCtrl.ScrollTo(itemToSelect)
 
         def OnCmdExport(dummyEvent=None):
-            info = self.treeCtrl.GetPyData(self.treeCtrl.GetSelection())
+            info = self.treeCtrl.GetItemData(self.treeCtrl.GetSelection())
             if info:
                 eg.PluginInstall.Export(info)
         menu = wx.Menu()
-        menuId = wx.NewId()
+        menuId = wx.NewIdRef()
         menu.Append(menuId, eg.text.MainFrame.Menu.Export)
         self.Bind(wx.EVT_MENU, OnCmdExport, id=menuId)
         self.contextMenu = menu
@@ -177,7 +177,7 @@ class AddPluginDialog(eg.TaskletDialog):
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
         rightSizer.Add(nameText, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 5)
 
-        subSizer = wx.FlexGridSizer(2, 2)
+        subSizer = wx.FlexGridSizer(rows=2, cols=2, vgap=0, hgap=0)
         self.authorLabel = wx.StaticText(rightPanel, label=Text.author)
         subSizer.Add(self.authorLabel)
         self.authorText = wx.StaticText(rightPanel)
@@ -288,8 +288,8 @@ class AddPluginDialog(eg.TaskletDialog):
         while self.Affirmed():
             if self.CheckMultiload():
                 self.SetResult(self.resultData)
-        Config.size = self.GetSizeTuple()
-        Config.position = self.GetPositionTuple()
+        Config.size = self.GetSize()
+        Config.position = self.GetPosition()
         Config.splitPosition = splitterWindow.GetSashPosition()
         Config.collapsed = set(
             kind for kind, treeId in typeIds.iteritems()
@@ -299,7 +299,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
     def OnItemActivated(self, event):
         item = self.treeCtrl.GetSelection()
-        info = self.treeCtrl.GetPyData(item)
+        info = self.treeCtrl.GetItemData(item)
         if info is not None:
             #self.SetResult("huhu")
             self.OnOK(wx.CommandEvent())
@@ -312,7 +312,7 @@ class AddPluginDialog(eg.TaskletDialog):
         """
         item = event.GetItem()
         self.treeCtrl.SelectItem(item)
-        info = self.treeCtrl.GetPyData(item)
+        info = self.treeCtrl.GetItemData(item)
         if info:
             self.PopupMenu(self.contextMenu)
 
@@ -320,8 +320,10 @@ class AddPluginDialog(eg.TaskletDialog):
         """
         Handle the wx.EVT_TREE_SEL_CHANGED events.
         """
+        if not self.treeCtrl:
+            return
         item = event.GetItem()
-        self.resultData = info = self.treeCtrl.GetPyData(item)
+        self.resultData = info = self.treeCtrl.GetItemData(item)
         if info is None:
             name = self.treeCtrl.GetItemText(item)
             description = Text.noInfo

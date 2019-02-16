@@ -41,6 +41,7 @@ class PluginInstanceInfo(PluginModuleInfo):
     isStarted = False
     lastEvent = eg.EventGhostEvent()
     eventList = None
+    expanded = True
 
     def __init__(self):
         pass

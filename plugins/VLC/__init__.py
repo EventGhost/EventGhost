@@ -68,6 +68,7 @@ eg.RegisterPlugin(
 import eg
 import wx
 import os
+import os.path
 import asynchat
 import socket
 import _winreg
@@ -97,8 +98,12 @@ def GetVlcPath():
             
 
 def GetChoices():
-    f = codecs.open(eg.folderPath.RoamingAppData+"\\vlc\\vlcrc",'r','utf-8')
     tmpLst = []
+    path = os.path.join(eg.folderPath.RoamingAppData, 'vlc', 'vlcrc')
+    if not os.path.exists(path):
+        return tmpLst
+    f = codecs.open(path, 'r', 'utf-8')
+
     for line in f:
         if line[:4] == "#key" and "=" in line:
             i = line.find("=")
@@ -457,7 +462,7 @@ class MyCommand(eg.ActionBase):
 
     def Configure(self, text="marq-marquee EventGhost"):
         panel = eg.ConfigPanel()
-        mySizer = wx.FlexGridSizer(rows=3)
+        mySizer = wx.FlexGridSizer(rows=3, cols=1, vgap=0, hgap=0)
         staticText = panel.StaticText(self.text.label)
         textCtrl = panel.TextCtrl(text)
         mySizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)

@@ -32,7 +32,7 @@ from eg.WinApi.Dynamic import (
 )
 
 try:
-    import stackless  # NOQA
+    import stackless
     is_stackless = True
 except ImportError:
     is_stackless = False
@@ -53,7 +53,7 @@ class AboutDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
-    def Configure(self, parent):  #IGNORE:W0221
+    def Configure(self, parent):
         if AboutDialog.instance:
             AboutDialog.instance.Raise()
             return

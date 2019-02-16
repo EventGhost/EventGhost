@@ -120,8 +120,8 @@ class PythonScript(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(editCtrl.GetValue())
         if not panel.dialog.IsMaximized():
-            Config.size = panel.dialog.GetSizeTuple()
-            Config.position = panel.dialog.GetPositionTuple()
+            Config.size = panel.dialog.GetSize()
+            Config.position = panel.dialog.GetPosition()
 
     def GetLabel(self, dummySourceCode=""):
         return self.name

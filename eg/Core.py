@@ -57,7 +57,7 @@ eg.CORE_PLUGIN_GUIDS = (
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",  # "Mouse"
 )
 
-eg.ID_TEST = wx.NewId()
+eg.ID_TEST = wx.NewIdRef()
 eg.mainDir = eg.Cli.mainDir
 
 eg.revision = 2000  # Deprecated
@@ -105,6 +105,9 @@ def _CommandEvent():
         def SetValue(self, value):
             self.value = value
 
+        def Clone(self):
+            return _Event(id=self.GetId(), value=self.GetValue())
+
     return _Event, wx.PyEventBinder(evttype, 1)
 
 eg.CommandEvent = _CommandEvent
@@ -113,9 +116,8 @@ eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = eg.CommandEvent()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
-from eg.WinApi.Dynamic import GetCurrentProcessId  # NOQA
+from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
-Init.InitPil()
 
 class Exception(Exception):
     def __unicode__(self):
@@ -195,7 +197,7 @@ def Notify(notification, value=None):
         for listener in eg.notificationHandlers[notification].listeners:
             listener(value)
 
-# pylint: disable-msg=W0613
+
 def RegisterPlugin(
     name = None,
     description = None,
@@ -243,7 +245,7 @@ def RegisterPlugin(
        backward compatible.
     """
     pass
-# pylint: enable-msg=W0613
+
 
 def RestartAsyncore():
     """
@@ -330,7 +332,7 @@ eg.messageReceiver = eg.MainMessageReceiver()
 eg.app = eg.App()
 
 # we can't import the Icons module earlier, because wx.App must exist
-import Icons  # NOQA
+import Icons
 eg.Icons = Icons
 
 eg.log = eg.Log()
@@ -362,7 +364,7 @@ eg.scheduler = eg.Scheduler()
 eg.TriggerEvent = eg.eventThread.TriggerEvent
 eg.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
 
-from eg.WinApi.SendKeys import SendKeysParser  # NOQA
+from eg.WinApi.SendKeys import SendKeysParser
 eg.SendKeys = SendKeysParser()
 
 setattr(eg, "PluginClass", eg.PluginBase)

@@ -93,9 +93,9 @@ class ImageButton(wx.Button):
         self.value = value
         if value and self.view:
             stream = StringIO(b64decode(value))
-            image = wx.ImageFromStream(stream)
+            image = wx.Image(stream)
             stream.close()
-            boxWidth, boxHeight = self.view.GetClientSizeTuple()
+            boxWidth, boxHeight = self.view.GetClientSize()
             width, height = image.GetSize()
             if width > boxWidth:
                 height *= 1.0 * boxWidth / width
@@ -104,7 +104,7 @@ class ImageButton(wx.Button):
                 width *= 1.0 * boxHeight / height
                 height = boxHeight
             image.Rescale(width, height)
-            bmp = wx.BitmapFromImage(image)
+            bmp = wx.Bitmap(image)
             self.view.SetBitmap(bmp)
             self.view.SetClientSize((boxWidth, boxHeight))
 
@@ -471,11 +471,11 @@ class RemotePanel(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
 
         self.menu = menu = wx.Menu()
-        item = wx.MenuItem(menu, wx.NewId(), "Hide")
-        menu.AppendItem(item)
+        item = wx.MenuItem(menu, wx.NewIdRef(), "Hide")
+        menu.Append(item)
         menu.Bind(wx.EVT_MENU, self.OnCmdIconize, item)
-        item = wx.MenuItem(menu, wx.NewId(),"Close")
-        menu.AppendItem(item)
+        item = wx.MenuItem(menu, wx.NewIdRef(), "Close")
+        menu.Append(item)
         menu.Bind(wx.EVT_MENU, self.OnCmdClose, item)
 
 
@@ -588,14 +588,14 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
             else:
                 if image:
                     stream = StringIO(b64decode(image))
-                    bmp = wx.BitmapFromImage(wx.ImageFromStream(stream))
+                    bmp = wx.Bitmap(wx.Image(stream))
                     stream.close()
                     button = GenBitmapButton(panel, -1, bmp, size=size)
                     button.SetLabel(label)
                 else:
                     button = GenButton(panel, -1, label, size=size)
                 button.SetFont(
-                    wx.FontFromNativeInfoString(GetOption("fontInfo"))
+                    wx.Font(GetOption("fontInfo"))
                 )
 
                 button.SetBezelWidth(3)

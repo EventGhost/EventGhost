@@ -224,9 +224,9 @@ class HID(eg.PluginClass):
         devices = {}
         idx = 0
         for item in deviceList:
-            idx = hidList.InsertStringItem(sys.maxint, item.productString)
-            hidList.SetStringItem(idx, 1, item.vendorString)
-            hidList.SetStringItem(idx, 2, Text.yes)
+            idx = hidList.InsertItem(sys.maxint, item.productString)
+            hidList.SetItem(idx, 1, item.vendorString)
+            hidList.SetItem(idx, 2, Text.yes)
             if item.devicePath == path:
                 hidList.Select(idx)
             devices[idx] = item
@@ -240,9 +240,9 @@ class HID(eg.PluginClass):
                 productID,
                 productString,
                 versionNumber)
-            idx = hidList.InsertStringItem(sys.maxint, item.productString)
-            hidList.SetStringItem(idx, 1, item.vendorString)
-            hidList.SetStringItem(idx, 2, Text.no)
+            idx = hidList.InsertItem(sys.maxint, item.productString)
+            hidList.SetItem(idx, 1, item.vendorString)
+            hidList.SetItem(idx, 2, Text.no)
             hidList.Select(idx)
             devices[idx] = item
 
@@ -336,7 +336,10 @@ class HID(eg.PluginClass):
         hidList.Bind(wx.EVT_LIST_ITEM_DESELECTED, OnHidListSelect)
 
         while panel.Affirmed():
-            device = devices[hidList.GetFirstSelected()]
+            dev = hidList.GetFirstSelected()
+            if dev == -1:
+                continue
+            device = devices[dev]
             panel.SetResult(
                 eventNameCtrl.GetValue(),
                 enduringEventsCtrl.GetValue(),

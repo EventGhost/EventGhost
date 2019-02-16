@@ -282,7 +282,7 @@ class Server(asyncore.dispatcher):
         self.handler = handler
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(('', port))
         self.add_channel()
         eg.RestartAsyncore()

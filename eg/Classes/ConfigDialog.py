@@ -92,11 +92,17 @@ class ConfigDialog(eg.TaskletDialog):
 
         def ShowHelp(dummyEvent):
             self.treeItem.ShowHelp(self)
-        wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
+        self.Bind(wx.EVT_MENU, ShowHelp, id=wx.ID_HELP)
 
         self.SetAcceleratorTable(
             wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1, wx.ID_HELP), ])
         )
+
+    def OnApply(self, event):
+        if self.treeItem.isFirstConfigure:
+            self.buttonRow.okButton.Enable(True)
+
+        self.DispatchEvent(event, wx.ID_APPLY)
 
     @eg.LogItWithReturn
     def Configure(self, treeItem, *args):

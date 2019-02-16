@@ -281,8 +281,8 @@ class Timer(eg.PluginClass):
 
         #setting column width to fit label
         #insert date to get size
-        timerListCtrl.InsertStringItem(0, "Test EventName")
-        timerListCtrl.SetStringItem(0, 1, time.strftime("%c"))
+        timerListCtrl.InsertItem(0, "Test EventName")
+        timerListCtrl.SetItem(0, 1, time.strftime("%c"))
 
         size = 0
         for i in range(7):
@@ -320,19 +320,19 @@ class Timer(eg.PluginClass):
             row = 0
             for timer in self.timerObjects.itervalues():
                 if timer.IsActive():
-                    timerListCtrl.InsertStringItem(row, timer.name)
+                    timerListCtrl.InsertItem(row, timer.name)
                     #print "Timer", t.name, t.eventName, t.loopCounter
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                         1, time.strftime("%c",  time.localtime(timer.startedAt)))
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                         2, time.strftime("%X",  time.localtime(timer.nextEventAt)))
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                         3, timer.eventName)
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                         4, str(timer.loopCounter))
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                         5, str(timer.loops))
-                    timerListCtrl.SetStringItem(row,
+                    timerListCtrl.SetItem(row,
                     6, str(timer.interval) + " sec")
                     row += 1
             ListSelection(wx.CommandEvent())

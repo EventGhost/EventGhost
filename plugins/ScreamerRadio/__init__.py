@@ -707,8 +707,8 @@ class ShowMenu(eg.ActionClass):
         def SetValue(self, value):
             self.value = value
             w, h = self.GetSize()
-            image = wx.EmptyImage(w-10, h-10)
-            image.SetRGBRect((1, 1, w-12, h-12), *value)
+            image = wx.Image(w-10, h-10)
+            image.SetRGB((1, 1, w-12, h-12), *value)
             self.SetBitmapLabel(image.ConvertToBitmap())
 
 #===============================================================================
@@ -743,7 +743,7 @@ class ShowMenu(eg.ActionClass):
         def OnButton(self, event):
             data = wx.FontData()
             if self.fontInfo is not None:
-                font = wx.FontFromNativeInfoString(self.fontInfo)
+                font = wx.Font(self.fontInfo)
                 data.SetInitialFont(font)
             else:
                 data.SetInitialFont(
@@ -758,7 +758,7 @@ class ShowMenu(eg.ActionClass):
                 for n in range(10,20):
                     font.SetPointSize(n)
                     listBoxCtrl.SetFont(font)
-                    if listBoxCtrl.GetTextExtent('X')[1]>20:
+                    if listBoxCtrl.GetFullTextExtent('X')[1]>20:
                         break
                 self.fontInfo = data.GetChosenFont().GetNativeFontInfo().\
                     ToString()
@@ -818,7 +818,7 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         favChoiceCtrl.SetFont(font)
         # menu height calculation:
         h=favChoiceCtrl.GetCharHeight()
@@ -828,13 +828,13 @@ class ShowMenu(eg.ActionClass):
         # menu width calculation:
         width_lst=[]
         for item in choices:
-            width_lst.append(favChoiceCtrl.GetTextExtent(item+' ')[0])
+            width_lst.append(favChoiceCtrl.GetFullTextExtent(item+' ')[0])
         width = max(width_lst)+8
         if height<height0:
             width += 20 #for vertical scrollbar
         width = min((width,GetSystemMetrics (0)-50))
         self.plugin.menuDlg.SetSize((width+6,height+6))
-        favChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
+        favChoiceCtrl.SetSize(2, 2, width, height, wx.SIZE_AUTO)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
         self.plugin.menuDlg.SetSizer(mainSizer)
         favChoiceCtrl.SetSelection(self.plugin.fav_num)
@@ -920,11 +920,11 @@ class ShowMenu(eg.ActionClass):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             listBoxCtrl.SetFont(font)
-            if listBoxCtrl.GetTextExtent('X')[1]>20:
+            if listBoxCtrl.GetFullTextExtent('X')[1]>20:
                 break
         mainSizer.Add(listBoxCtrl,0,wx.TOP,5)
 

@@ -56,7 +56,7 @@ class ActionThread(eg.ThreadWorker):
             if plugin.info.isStarted:
                 try:
                     plugin.OnComputerResume(None)
-                except:  # pylint: disable-msg=W0702
+                except:
                     eg.PrintTraceback()
 
     @staticmethod
@@ -68,7 +68,7 @@ class ActionThread(eg.ThreadWorker):
             if plugin.info.isStarted:
                 try:
                     plugin.OnComputerSuspend(None)
-                except:  # pylint: disable-msg=W0702
+                except:
                     eg.PrintTraceback()
 
     @eg.LogItWithReturn
@@ -81,7 +81,7 @@ class ActionThread(eg.ThreadWorker):
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
                 self.corePluginInfos.append(pluginInfo)
-            except:  # pylint: disable-msg=W0702
+            except:
                 eg.PrintTraceback()
         start = clock()
         eg.document.Load(filename)
@@ -92,7 +92,7 @@ class ActionThread(eg.ThreadWorker):
             set(pluginInfo.info.hardwareId for pluginInfo in eg.pluginList)
         )
         missingPlugins = [
-            pluginInfo for pluginInfo in eg.pluginManager.database.itervalues()  # NOQA
+            pluginInfo for pluginInfo in eg.pluginManager.database.itervalues()
             if pluginInfo.hardwareId in missingHardwareIds
         ]
         if missingPlugins:
@@ -127,5 +127,5 @@ class ActionThread(eg.ThreadWorker):
             try:
                 pluginInfo.Close()
                 pluginInfo.RemovePluginInstance()
-            except:  # pylint: disable-msg=W0702
+            except:
                 eg.PrintTraceback()

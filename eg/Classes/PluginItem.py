@@ -53,7 +53,6 @@ class PluginItem(ActionItem):
         self.name = eg.text.General.pluginLabel % info.label
         if info.icon != self.icon:
             self.icon = eg.Icons.PluginSubIcon(info.icon)
-        #self.icon = info.icon
         self.url = info.url
         self.executable = info.instance
 
@@ -110,7 +109,7 @@ class PluginItem(ActionItem):
 
     # The Find function calls this from MainThread, so we can't restrict this
     # to the ActionThread
-    #@eg.AssertInActionThread
+    # @eg.AssertInActionThread
     def GetArguments(self):
         return self.info.args
 
@@ -187,14 +186,17 @@ class PluginItem(ActionItem):
         if label != info.label:
             info.label = label
             self.name = eg.text.General.pluginLabel % label
-            #eg.Notify("NodeChanged", self)
         self.RefreshAllVisibleActions()
         if self.isEnabled:
             eg.actionThread.Call(self.info.Stop)
             eg.actionThread.Call(self.info.Start)
 
     def SetAttributes(self, tree, itemId):
-        if self.info.lastException or self.info.initFailed:
+        if (
+            self.info is None or
+            self.info.lastException or
+            self.info.initFailed
+        ):
             tree.SetItemTextColour(itemId, eg.colour.pluginError)
 
     @eg.AssertInActionThread

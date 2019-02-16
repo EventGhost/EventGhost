@@ -55,7 +55,7 @@ class MonitorsCtrl(wx.Panel):
 
 class MonsListCtrl(wx.ListCtrl):
     def __init__(self, parent, pos, size = wx.DefaultSize):
-        ID = wx.NewId()
+        ID = wx.NewIdRef()
         style = wx.LC_REPORT | wx.LC_VRULES | wx.LC_HRULES | wx.LC_SINGLE_SEL
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
         mons = [(i[0], i[1], i[2] - i[0], i[3] - i[1]) for i in [j[2] for j in Edm()]]
@@ -63,11 +63,11 @@ class MonsListCtrl(wx.ListCtrl):
             self.InsertColumn(j, header, wx.LIST_FORMAT_RIGHT)
             self.SetColumnWidth(j, wx.LIST_AUTOSIZE_USEHEADER)
         for i, mon in enumerate(mons):
-            self.InsertStringItem(i, str(i + 1))
-            self.SetStringItem(i, 1, str(mon[0]))
-            self.SetStringItem(i, 2, str(mon[1]))
-            self.SetStringItem(i, 3, str(mon[2]))
-            self.SetStringItem(i, 4, str(mon[3]))
+            self.InsertItem(i, str(i + 1))
+            self.SetItem(i, 1, str(mon[0]))
+            self.SetItem(i, 2, str(mon[1]))
+            self.SetItem(i, 3, str(mon[2]))
+            self.SetItem(i, 4, str(mon[3]))
         rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         self.hh = rect[1]  #header height
         self.ih = rect[3]  #item height

@@ -98,7 +98,7 @@ class TransferDialog(wx.Dialog):
         sizer4.Add(self.overallFileCtrl, 1, wx.EXPAND)
         sizer4.Add(self.overallProgressCtrl, 0, wx.ALIGN_RIGHT)
 
-        sizer5 = wx.FlexGridSizer(4, 5, 5, 5)
+        sizer5 = wx.FlexGridSizer(cols=4, rows=5, hgap=5, vgap=5)
         sizer5.Add(SText("Elapsed time:"), 0, wx.ALIGN_RIGHT)
         sizer5.Add(self.elapsedCtrl)
         sizer5.Add((10, 0), 1, wx.EXPAND)
@@ -200,10 +200,7 @@ class TransferDialog(wx.Dialog):
 
     def SftpUpload(self, src, dest, size):
         log = self.messageCtrl.SetLabel
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            import paramiko
+        import paramiko
 
         testFile = open(src, "rb")
         infile = ProgressFile(testFile, size, self.SetProgress)
@@ -230,7 +227,7 @@ class TransferDialog(wx.Dialog):
             client = sshClient.open_sftp()
         except:
             exit("Error: Can't create SFTP client")
-        destPath = urlParts.path  #IGNORE:E1101
+        destPath = urlParts.path
         destDir = dirname(destPath)
 #        log("Changing path to: %s" % destDir)
 #        client.chdir(destDir)
@@ -357,14 +354,14 @@ class ProgressFile(object):
         if self.rate < 0:
             self.rate = 0
 
-    def close(self):  #IGNORE:C0103 Invalid name "read"
+    def close(self):
         """
         Implements a file-like close()
         """
         self.fileObject.close()
-        elapsed = (clock() - self.startTime)  # NOQA
+        elapsed = (clock() - self.startTime)
 
-    def read(self, size):  #IGNORE:C0103 Invalid name "read"
+    def read(self, size):
         """
         Implements a file-like read() but also updates the progress variables.
         """

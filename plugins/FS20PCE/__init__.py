@@ -311,18 +311,18 @@ class FS20PCE(eg.PluginClass):
             event.Skip()
 
         def OnAddButton(event):
-            idx = mappingsList.InsertStringItem(sys.maxint, houseCodeTextCtrl.GetValue())
-            mappingsList.SetStringItem(idx, 1, deviceAddressTextCtrl.GetValue())
-            mappingsList.SetStringItem(idx, 2, groupNameCtrl.GetValue())
+            idx = mappingsList.InsertItem(sys.maxint, houseCodeTextCtrl.GetValue())
+            mappingsList.SetItem(idx, 1, deviceAddressTextCtrl.GetValue())
+            mappingsList.SetItem(idx, 2, groupNameCtrl.GetValue())
             mappingsList.Select(idx)
             EnableButtons(event)
             event.Skip()
 
         def OnUpdateButton(event):
             idx = mappingsList.GetFirstSelected()
-            mappingsList.SetStringItem(idx, 0, houseCodeTextCtrl.GetValue())
-            mappingsList.SetStringItem(idx, 1, deviceAddressTextCtrl.GetValue())
-            mappingsList.SetStringItem(idx, 2, groupNameCtrl.GetValue())
+            mappingsList.SetItem(idx, 0, houseCodeTextCtrl.GetValue())
+            mappingsList.SetItem(idx, 1, deviceAddressTextCtrl.GetValue())
+            mappingsList.SetItem(idx, 2, groupNameCtrl.GetValue())
             EnableButtons(event)
             event.Skip()
 
@@ -346,9 +346,9 @@ class FS20PCE(eg.PluginClass):
         #add items
         if mappings:
             for item in mappings:
-                idx = mappingsList.InsertStringItem(sys.maxint, item[0])
-                mappingsList.SetStringItem(idx, 1, item[1])
-                mappingsList.SetStringItem(idx, 2, item[2])
+                idx = mappingsList.InsertItem(sys.maxint, item[0])
+                mappingsList.SetItem(idx, 1, item[1])
+                mappingsList.SetItem(idx, 2, item[2])
 
         #layout
         for i in range(mappingsList.GetColumnCount()):
@@ -377,7 +377,7 @@ class FS20PCE(eg.PluginClass):
 
         groupNameCtrl = wx.TextCtrl(panel)
 
-        editSizer = wx.GridSizer(3, 2)
+        editSizer = wx.GridSizer(rows=3, cols=2, vgap=2, hgap=2)
         editSizer.Add(wx.StaticText(panel, -1, Text.houseCode + ":"), wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(houseCodeTextCtrl, 0)
         editSizer.Add(wx.StaticText(panel, -1, Text.deviceAddress + ":"), wx.ALIGN_CENTER_VERTICAL)
@@ -390,7 +390,7 @@ class FS20PCE(eg.PluginClass):
         updateButton = wx.Button(panel, -1, Text.update)
         deleteButton = wx.Button(panel, -1, Text.delete)
 
-        buttonsSizer = wx.GridSizer(1, 3)
+        buttonsSizer = wx.GridSizer(rows=1, cols=3, vgap=2, hgap=2)
         buttonsSizer.Add(addButton)
         buttonsSizer.Add(deleteButton)
         buttonsSizer.Add(updateButton)

@@ -107,12 +107,12 @@ def CalcChecksum(data):
     return chr(checksum)
 
 
-class HexValidator(wx.PyValidator):
+class HexValidator(wx.Validator):
 
     def __init__(self, maxLength=100, allowRaw=False):
         self.maxLength = maxLength
         self.allowRaw = allowRaw
-        wx.PyValidator.__init__(self)
+        wx.Validator.__init__(self)
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
 

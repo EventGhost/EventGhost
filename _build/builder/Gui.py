@@ -17,11 +17,9 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import threading
-import wx
 
-# Local imports
 import builder
+import wx
 from builder.Utils import GetVersion, ParseVersion
 
 
@@ -140,9 +138,9 @@ class MainDialog(wx.Dialog):
             parent=sb,
             label=url_txt
         )
-        lbl_url.SetToolTipString(url_txt)
+        lbl_url.SetToolTip(url_txt)
         self.url = wx.TextCtrl(sb, value=self.buildSetup.args.websiteUrl)
-        self.url.SetToolTipString(url_txt)
+        self.url.SetToolTip(url_txt)
         web_szr.Add(lbl_url)
         web_szr.Add(self.url, 0, wx.EXPAND)
 
@@ -157,23 +155,16 @@ class MainDialog(wx.Dialog):
         self.Center()
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
-    def DoMain(self):
-        builder.Tasks.Main(self.buildSetup)
-        wx.CallAfter(self.OnExit)
-
     def OnCancel(self, event):
         event.Skip()
         self.Destroy()
         wx.GetApp().ExitMainLoop()
 
-    def OnClose(self, event):
-        event.Skip()
+    def OnClose(self, event=None):
+        if event:
+            event.Skip()
         self.Destroy()
         wx.GetApp().ExitMainLoop()
-
-    def OnExit(self):
-        self.Destroy()
-        sys.exit(0)
 
     def OnInstallerCheck(self, event):
         # We don't want releases going out without a current changelog (which
@@ -183,7 +174,7 @@ class MainDialog(wx.Dialog):
             self.ctrls["builder.BuildChangelog.BuildChangelog"],
             self.ctrls["builder.BuildDocs.BuildChmDocs"],
         ):
-            if event is True or event.Checked():
+            if event is True or event.IsChecked():
                 ctrl.Enable(False)
                 ctrl.SetValue(True)
             else:
@@ -228,8 +219,8 @@ class MainDialog(wx.Dialog):
         self.buildSetup.args.websiteUrl = self.url.GetValue()
 
         self.buildSetup.config.SaveSettings()
-        thread = threading.Thread(target=self.DoMain)
-        thread.start()
+        builder.Tasks.Main(self.buildSetup)
+        wx.CallAfter(self.OnClose)
 
     def OnRefreshVersion(self, event):
         GetVersion(self.buildSetup)

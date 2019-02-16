@@ -76,9 +76,8 @@ def ImportAll():
     Traverse(eg.corePluginDir, "eg.CorePluginModule")
 
 def Init():
-    import WinApi.pywin32_patches # NOQA
-    import WinApi.wx_patches # NOQA
-    import WinApi.GenPaths  # NOQA
+    import WinApi.pywin32_patches
+    import WinApi.GenPaths
 
 
 def InitGui():
@@ -119,9 +118,13 @@ def InitGui():
         startupFile
     )
 
+    today = gmtime()[:3]
+    if config.lastCertifiCheck != today:
+        config.lastCertifiCheck = today
+        wx.CallAfter(eg.CheckCertifiUpdate.start)
+
     if config.checkUpdate:
         # avoid more than one check per day
-        today = gmtime()[:3]
         if config.lastUpdateCheckDate != today:
             config.lastUpdateCheckDate = today
             wx.CallAfter(eg.CheckUpdate.Start)
@@ -183,16 +186,6 @@ def InitPathsAndBuiltins():
     eg.CorePluginModule = corePluginPackage
     eg.UserPluginModule = userPluginPackage
 
-def InitPil():
-    """
-    Initialize PIL's Image module.
-    """
-    import PIL.Image
-    import PIL.PngImagePlugin
-    import PIL.JpegImagePlugin
-    import PIL.BmpImagePlugin
-    import PIL.GifImagePlugin
-    PIL.Image._initialized = 2
 
 # replace builtin input() with a small dialog
 def Input(prompt=None):

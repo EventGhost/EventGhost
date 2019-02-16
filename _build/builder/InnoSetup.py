@@ -17,6 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import _winreg
+import os
 from os.path import abspath, exists, join
 
 # Local imports
@@ -33,6 +34,7 @@ class InnoInstaller(object):
     def __init__(self, buildSetup):
         self.innoSections = {}
         self.buildSetup = buildSetup
+        self.add_languages()
 
     def Add(self, section, line):
         """
@@ -54,6 +56,26 @@ class InnoInstaller(object):
         if ignoreversion:
             line += '; Flags: ignoreversion'
         self.Add("Files", line)
+
+    def add_languages(self):
+        '''
+        [Languages]
+        Name: English; MessagesFile: "compiler:Default.isl"
+        Name: Armenian; MessagesFile: "compiler:Languages\Armenian.islu"
+        Name: BrazilianPortuguese; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+        '''
+        pass
+        self.Add('Languages', 'Name: English; MessagesFile: "compiler:Default.isl"')
+        langs = os.listdir(
+            os.path.join(
+                os.path.dirname(GetInnoCompilerPath()), 'Languages'))
+        for lang in langs:
+            self.Add(
+                'Languages',
+                r'Name: {}; MessagesFile: "compiler:Languages\{}"'.format(
+                    lang.rsplit('.')[0], lang
+                )
+            )
 
     def ExecuteInnoSetup(self):
         """
@@ -79,7 +101,7 @@ class InnoInstaller(object):
                 issFile.write("%s\n" % line)
         issFile.close()
 
-        if not (StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q") == 0):
+        if not (StartProcess(GetInnoCompiler(), innoScriptPath, "/Q") == 0):
             raise InnoSetupError
 
 
@@ -96,7 +118,12 @@ def GetInnoCompilerPath():
         _winreg.CloseKey(key)
     except WindowsError:
         return None
-    installPath = join(installPath, "ISCC.exe")
+    if not exists(installPath):
+        return None
+    return installPath
+
+def GetInnoCompiler():
+    installPath = join(GetInnoCompilerPath(), "ISCC.exe")
     if not exists(installPath):
         return None
     return installPath

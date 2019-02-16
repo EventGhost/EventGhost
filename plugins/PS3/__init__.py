@@ -476,9 +476,9 @@ class HIDPS3(eg.PluginClass):
                 ( ( item.vendorId == 0x054C or item.vendorId == 0x609 ) and item.productId == 0x0306 ) or
                 item.devicePath == path
             ):
-                idx = hidList.InsertStringItem(sys.maxint, item.productString)
-                hidList.SetStringItem(idx, 1, item.vendorString)
-                hidList.SetStringItem(idx, 2, self.text.yes)
+                idx = hidList.InsertItem(sys.maxint, item.productString)
+                hidList.SetItem(idx, 1, item.vendorString)
+                hidList.SetItem(idx, 2, self.text.yes)
                 if item.devicePath == path:
                     hidList.Select(idx)
                 devices[idx] = item
@@ -492,9 +492,9 @@ class HIDPS3(eg.PluginClass):
                 productID,
                 productString,
                 versionNumber)
-            idx = hidList.InsertStringItem(sys.maxint, item.productString)
-            hidList.SetStringItem(idx, 1, item.vendorString)
-            hidList.SetStringItem(idx, 2, self.text.no)
+            idx = hidList.InsertItem(sys.maxint, item.productString)
+            hidList.SetItem(idx, 1, item.vendorString)
+            hidList.SetItem(idx, 2, self.text.no)
             hidList.Select(idx)
             devices[idx] = item
 
@@ -627,7 +627,10 @@ class HIDPS3(eg.PluginClass):
         ######################################################################
 
         while panel.Affirmed():
-            device = devices[hidList.GetFirstSelected()]
+            dev = hidList.GetFirstSelected()
+            if dev == -1:
+                continue
+            device = devices[dev]
             panel.SetResult(
                 eventNameCtrl.GetValue(),
                 enduringEventsCtrl.GetValue(),

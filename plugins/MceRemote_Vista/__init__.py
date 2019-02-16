@@ -227,16 +227,16 @@ class IRLearnDialog(wx.Dialog):
             if self.tryes==0:
                 self.firstLength=len(self.code1[self.tryes])
                 self.tryes+=1
-                print "IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!"
+                eg.Print("IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!")
             elif len(self.code1[self.tryes])==self.firstLength:
                 self.tryes+=1
-                print "IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!"
+                eg.Print("IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!")
             else:
                 del self.code1[-1]
-                print "IR ERROR: Length of the latest IR code is not equal to the length of the first IR code, please try again!"
+                eg.Print("IR ERROR: Length of the latest IR code is not equal to the length of the first IR code, please try again!")
             if self.tryes==self.maxTryes:
                 self.tryes=0
-                print "IR: calculating..."
+                eg.Print("IR: calculating...")
                 time.sleep(1)
                 for i in range(self.maxTryes):
                     if i==0:
@@ -259,16 +259,16 @@ class IRLearnDialog(wx.Dialog):
             if self.tryes==0:
                 self.firstLength=len(self.code1[self.tryes])
                 self.tryes+=1
-                print "IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!"
+                eg.Print("IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!")
             elif len(self.code1[self.tryes])==self.firstLength:
                 self.tryes+=1
-                print "IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!"
+                eg.Print("IR: "+str(self.tryes)+"/"+str(self.maxTryes)+" IR codes received successfully!")
             else:
-                print "IR ERROR: Length of the latest IR code is not equal to the length of the first IR code, aborting Learn!"
+                eg.Print("IR ERROR: Length of the latest IR code is not equal to the length of the first IR code, aborting Learn!")
                 self.exit = 1
             if self.tryes==self.maxTryes and self.exit==0:
                 self.tryes=0
-                print "IR: calculating..."
+                eg.Print("IR: calculating...")
                 for i in range(self.maxTryes):
                     if i==0:
                         finalList1=self.code1[i].split(" ")
@@ -493,7 +493,7 @@ class MceMessageReceiver(object):
         self.freqs = [0]
         self.result = []
         self.learnDialog = IRLearnDialog(correctnessCount, dialog)
-        print "IR: Starting to learn code"
+        eg.Print("IR: Starting to learn code")
         if dialog:
             self.learnDialog.ShowModal()
         else:
@@ -501,7 +501,7 @@ class MceMessageReceiver(object):
                 time.sleep(1)
         if self.learnDialog.exit == 1:
             code = self.learnDialog.code
-            print "IR: Done!"
+            eg.Print("IR: Done!")
         #self.learnDialog.Destroy()
         self.ChangeReceiveMode("n".encode("ascii"))
         #reset some variables for normal processing

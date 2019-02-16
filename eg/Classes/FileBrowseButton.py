@@ -34,7 +34,7 @@ class FileBrowseButton(_FileBrowseButton):
         button = wx.BitmapButton(self, -1, GetInternalBitmap("searchFolder"))
         width, height = button.GetSize()
         button.SetMinSize((width + 8, height))
-        button.SetToolTipString(self.toolTip)
+        button.SetToolTip(self.toolTip)
         button.Bind(wx.EVT_BUTTON, self.OnBrowse)
         return button
 
@@ -58,7 +58,7 @@ class FileBrowseButton(_FileBrowseButton):
         self.Layout()
         if isinstance(size, tuple):
             size = apply(wx.Size, size)
-        self.SetDimensions(
+        self.SetSize(
             -1, -1, size.width, size.height, wx.SIZE_USE_EXISTING
         )
 

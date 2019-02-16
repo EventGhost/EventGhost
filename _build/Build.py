@@ -34,30 +34,37 @@ class MyBuilder(builder.Builder):
     name = "EventGhost"
     description = "EventGhost Automation Tool"
     companyName = "EventGhost Project"
-    copyright = u"Copyright © 2005-2016 EventGhost Project"
+    copyright = u"Copyright © 2005-2019 EventGhost Project"
     mainScript = "EventGhost.pyw"
 
     includeModules = [
-        "CommonMark",
+        "agithub",
+        "commonmark",
         "comtypes",
-        "Crypto",
         "docutils",
         "isapi",
         "jinja2",
         "PIL",
+        "pip",
         "pkg_resources",
+        "pycurl",
         "pythoncom",
         "pywin32",
+        "qrcode",
+        "requests",
         "six",
+        "websocket",
         "win32com",
         "wx",
     ]
 
     excludeModules = [
         "eg",
+        "Crypto",  # needs to be added manually because of strange import mechanism used in package
         "_imagingtk",
         "_tkinter",
         "cffi",  # bundled for no reason
+        "certifi",
         "comtypes.gen",
         #"ctypes.macholib",  # seems to be for Apple
         "curses",

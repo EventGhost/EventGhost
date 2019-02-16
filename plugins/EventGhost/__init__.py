@@ -31,6 +31,7 @@ from NewJumpIf import NewJumpIf
 from PythonScript import PythonScript
 from ShowMessageBox import ShowMessageBox
 from ShowOSD import ShowOSD
+from TriggerEventIf import TriggerEventIf
 
 eg.RegisterPlugin(
     name = "EventGhost",
@@ -65,6 +66,7 @@ class EventGhost(eg.PluginBase):
         self.AddAction(ShowOSD)
         self.AddAction(StopProcessing)
         self.AddAction(TriggerEvent)
+        self.AddAction(TriggerEventIf)
         self.AddAction(Wait)
 
 
@@ -108,7 +110,7 @@ class EnableItem(eg.ActionBase):
         while panel.Affirmed():
             treeItem = tree.GetSelection()
             if treeItem.IsOk():
-                obj = tree.GetPyData(treeItem)
+                obj = tree.GetItemData(treeItem)
                 if self.IsSelectableItem(obj):
                     link.SetTarget(obj)
                     panel.SetResult(link)

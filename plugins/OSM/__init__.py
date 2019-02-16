@@ -401,11 +401,11 @@ class ShowMenu(eg.ActionBase):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             btnUP.SetFont(font)
-            hght = btnUP.GetTextExtent('X')[1]
+            hght = btnUP.GetFullTextExtent('X')[1]
             if hght > 20:
                 break
         listBoxCtrl.SetDefaultCellFont(font)
@@ -448,8 +448,8 @@ class ShowMenu(eg.ActionBase):
         topMiddleSizer.Add(btnUP)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,5)
         #Buttons 'Delete' and 'Insert new'
-        w1 = panel.GetTextExtent(self.text.delete)[0]
-        w2 = panel.GetTextExtent(self.text.insert)[0]
+        w1 = panel.GetFullTextExtent(self.text.delete)[0]
+        w2 = panel.GetFullTextExtent(self.text.insert)[0]
         if w1 > w2:
             btnDEL=wx.Button(panel,-1,self.text.delete)
             btnApp=wx.Button(panel,-1,self.text.insert,size=btnDEL.GetSize())
@@ -514,11 +514,11 @@ class ShowMenu(eg.ActionBase):
 
         def OnFontBtn(evt):
             value = evt.GetValue()
-            font = wx.FontFromNativeInfoString(value)
+            font = wx.Font(value)
             for n in range(10,20):
                 font.SetPointSize(n)
                 btnUP.SetFont(font)
-                hght = btnUP.GetTextExtent('X')[1]
+                hght = btnUP.GetFullTextExtent('X')[1]
                 if hght > 20:
                     break
             listBoxCtrl.SetDefaultCellFont(font)
@@ -850,11 +850,11 @@ class CreateMenuFromList(eg.ActionBase):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             fontButton.SetFont(font)
-            hght = fontButton.GetTextExtent('X')[1]
+            hght = fontButton.GetFullTextExtent('X')[1]
             if hght > 20:
                 break
         listBoxCtrl.SetDefaultCellFont(font)
@@ -914,11 +914,11 @@ class CreateMenuFromList(eg.ActionBase):
 
         def OnFontBtn(evt):
             value = evt.GetValue()
-            font = wx.FontFromNativeInfoString(value)
+            font = wx.Font(value)
             for n in range(10,20):
                 font.SetPointSize(n)
                 fontButton.SetFont(font)
-                hght = fontButton.GetTextExtent('X')[1]
+                hght = fontButton.GetFullTextExtent('X')[1]
                 if hght > 20:
                     break
             listBoxCtrl.SetDefaultCellFont(font)
@@ -1230,7 +1230,7 @@ class Menu(wx.Frame):
             font.SetPointSize(36)
             fontInfo = font.GetNativeFontInfoDesc()
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.Font(fontInfo)
         self.eventChoiceCtrl.SetFont(font)
         self.SetFont(font)
         # menu height calculation:
@@ -1244,7 +1244,7 @@ class Menu(wx.Frame):
         # menu width calculation:
         width_lst=[]
         for item in choices:
-            width_lst.append(self.GetTextExtent(item+' ')[0])
+            width_lst.append(self.GetFullTextExtent(item+' ')[0])
         width = max(width_lst) + 8
         self.eventChoiceCtrl.SetColSize(0,width)
         if height1 < height0:
@@ -1252,8 +1252,8 @@ class Menu(wx.Frame):
         width = min((width,ws-50))+6
         x_pos = x+(ws-width)/2
         y_pos = y + (hs-height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
+        self.SetSize(x_pos, y_pos, width, height)
+        self.eventChoiceCtrl.SetSize(2, 2, width-6, height-6, wx.SIZE_AUTO)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(mainSizer)
         mainSizer.Add(self.eventChoiceCtrl, 0, wx.EXPAND)
@@ -1271,7 +1271,7 @@ class Menu(wx.Frame):
         else:
             self.Show(True)
             self.Raise()
-        wx.Yield()
+        wx.GetApp().Yield()
         SetEvent(event)
 
 

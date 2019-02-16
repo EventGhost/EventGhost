@@ -19,9 +19,9 @@
 import string
 import wx
 
-class DigitOnlyValidator(wx.PyValidator):
+class DigitOnlyValidator(wx.Validator):
     def __init__(self, choices=None):
-        wx.PyValidator.__init__(self)
+        wx.Validator.__init__(self)
         self.choices = choices
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
@@ -39,7 +39,7 @@ class DigitOnlyValidator(wx.PyValidator):
             event.Skip()
             return
 
-        if not wx.Validator_IsSilent():
+        if not wx.Validator.IsSilent():
             wx.Bell()
 
         # Returning without calling event.Skip eats the event before it

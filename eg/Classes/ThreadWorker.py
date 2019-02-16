@@ -32,7 +32,7 @@ from eg.WinApi.Dynamic import (
     WM_QUIT
 )
 
-class ThreadWorker(object):
+class ThreadWorker:
     """
     General purpose message pumping thread, that is used in many places.
     """

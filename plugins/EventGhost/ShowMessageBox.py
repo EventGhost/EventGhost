@@ -150,7 +150,7 @@ class ShowMessageBox(eg.ActionBase):
         mbType = 0,
         autoClose = 0
     ):
-        ids = (wx.NewId(), wx.NewId(), wx.NewId())
+        ids = (wx.NewIdRef(), wx.NewIdRef(), wx.NewIdRef())
 
         def getOptions(mbt):
             result = buttonsArr[buttonsCtrl.GetSelection()]
@@ -259,7 +259,7 @@ class ShowMessageBox(eg.ActionBase):
                 optionSizer.Add(box1, 1, wx.EXPAND)
                 ctrl0 = wx.CheckBox(panel, ids[0], text.modal)
                 ctrl0.SetValue(val & 1)
-                wx.EVT_CHECKBOX(ctrl0, ids[0], onCheckBox)
+                ctrl0.Bind(wx.EVT_CHECKBOX, onCheckBox, id=ids[0])
                 ctrl1 = wx.CheckBox(panel, ids[1], text.aot)
                 ctrl1.SetValue(val & 2)
                 ctrl2 = wx.CheckBox(panel, ids[2], text.play)
@@ -281,7 +281,7 @@ class ShowMessageBox(eg.ActionBase):
                     choices=text.radioBoxOptions,
                     style=wx.RA_SPECIFY_ROWS
                 )
-                wx.EVT_RADIOBOX(optionCtrl, ids[0], onRadioBox)
+                optionCtrl.Bind(wx.EVT_RADIOBOX, onRadioBox, id=ids[0])
                 optionCtrl.SetSelection(val)
                 if val == 1:
                     waitCtrl.Enable(False)
@@ -434,7 +434,7 @@ class MessageBoxDialog(wx.Dialog):
             dialogStyle |= wx.STAY_ON_TOP
         wx.Dialog.__init__(self, parent, -1, "", wx.DefaultPosition, style=dialogStyle)
         self.SetTitle(title)
-        icon = wx.EmptyIcon()
+        icon = wx.Icon()
         icon.LoadFile(join(eg.imagesDir, "icon32x32.png"), wx.BITMAP_TYPE_PNG)
         self.SetIcon(icon)
         art = self.ARTS[iconFlag]
@@ -499,7 +499,7 @@ class MessageBoxDialog(wx.Dialog):
             self.SetReturnCode(evt.GetId())
             self.Close()
             evt.Skip()
-        wx.EVT_BUTTON(self, -1, OnButton)
+        self.Bind(wx.EVT_BUTTON, OnButton)
 
     def onClose(self, evt):
         retCode = self.GetReturnCode()

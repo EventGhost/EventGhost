@@ -20,7 +20,7 @@ import os
 import wx
 from os.path import exists, join
 from time import localtime, strftime
-from wx.combo import BitmapComboBox
+from wx.adv import BitmapComboBox
 
 # Local imports
 import eg
@@ -155,9 +155,9 @@ class OptionsDialog(eg.TaskletDialog):
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
         datestampCtrl = page1.TextCtrl(config.datestamp)
-        datestampCtrl.SetToolTipString(text.DatestampHelp)
+        datestampCtrl.SetToolTip(text.DatestampHelp)
         datestampLabel = page1.StaticText(text.Datestamp)
-        datestampLabel.SetToolTipString(text.DatestampHelp)
+        datestampLabel.SetToolTip(text.DatestampHelp)
         datestampSzr = wx.BoxSizer(wx.HORIZONTAL)
         datestampSzr.AddMany((
             (datestampLabel, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5),
@@ -175,7 +175,7 @@ class OptionsDialog(eg.TaskletDialog):
                 wx.CallAfter(datestampCtrl.SetFocus)
             else:
                 datestampCtrl.SetBackgroundColour(
-                    wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+                    wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
                 )
                 datestampCtrl.Refresh()
 

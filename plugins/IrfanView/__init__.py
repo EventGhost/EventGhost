@@ -684,11 +684,11 @@ class RunSlideshow(eg.ActionClass):
         maskSizer.Add(maskCtrl,0,wx.RIGHT|wx.TOP,1)
         maskSizer.Add(hlpbtnPatternCtrl,0,wx.TOP)
         #
-        maskMonLblSizer=wx.GridSizer(1,2)
+        maskMonLblSizer=wx.GridSizer(cols=1, rows=2, vgap=0, hgap=0)
         maskMonLblSizer.Add(maskSizer,0,wx.TOP,5)
         maskMonLblSizer.Add(monLblSizer,0,wx.EXPAND)
         #
-        delaySizer= wx.FlexGridSizer(2,1,vgap=1)
+        delaySizer= wx.FlexGridSizer(cols=2, rows=1,vgap=1, hgap=0)
         delaySizer.Add(delayLbl, 0,wx.LEFT,30)
         delaySizer.Add(delayCtrl, 0,wx.LEFT,30)
         #
@@ -709,7 +709,7 @@ class RunSlideshow(eg.ActionClass):
         radioSizer.Add(boxSizer,0,wx.EXPAND)
         radioSizer.Add(delaySizer,0,wx.TOP,17)
         #
-        checkBoxSizer = wx.FlexGridSizer(rows=4, cols=2, hgap=8,vgap=6)
+        checkBoxSizer = wx.FlexGridSizer(rows=5, cols=2, hgap=8,vgap=6)
         checkBoxSizer.Add(loopCtrl, 0)
         checkBoxSizer.Add(noRepeatCtrl, 0)
         checkBoxSizer.Add(suppressCtrl, 0)
@@ -718,7 +718,6 @@ class RunSlideshow(eg.ActionClass):
         checkBoxSizer.Add(resampleCtrl, 0)
         checkBoxSizer.Add(hideCursorCtrl, 0)
         checkBoxSizer.Add(alphaCtrl, 0)
-        checkBoxSizer.Add((1,1))
         checkBoxSizer.Add(closeCtrl, 0)
         #
         dynSizer = wx.BoxSizer(wx.VERTICAL)

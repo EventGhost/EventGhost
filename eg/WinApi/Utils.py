@@ -245,7 +245,8 @@ def GetHwndIcon(hWnd):
         if value & 0x80000000:
             value = -((value ^ 0xffffffff) + 1)
         icon.SetHandle(value)
-        icon.SetSize((16, 16))
+        icon.SetWidth(16)
+        icon.SetHeight(16)
         return icon
     else:
         return None

@@ -16,20 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
-import Clipboard  # NOQA
-from cFunctions import (  # NOQA
+
+import Clipboard
+from cFunctions import (
     GetClassName,
     GetProcessName,
     GetTopLevelWindowList as _GetTopLevelWindowList,
     GetWindowChildsList,
     GetWindowText,
 )
-from Dynamic import (  # NOQA
+from Dynamic import (
     WM_COMMAND,
     WM_USER,
 )
-from Utils import (  # NOQA
+from Utils import (
     BestWindowFromPoint,
     HighlightWindow,
     IsWin64,
@@ -39,6 +39,7 @@ from Utils import (  # NOQA
     PyGetWindowThreadProcessId as GetWindowThreadProcessId,
     PySendMessageTimeout as SendMessageTimeout,
 )
+
 
 def GetTopLevelWindowList(includeInvisible):
     """

@@ -19,415 +19,481 @@
 import eg
 
 eg.RegisterPlugin(
-    name = "System Tray Menu",
-    description = (
-        "Allows you to add custom menu entries to the tray menu of EventGhost."
-    ),
-    author = "Bitmonster",
-    version = "1.0",
-    guid = "{842BFFE8-DCB9-4C72-9877-AB2EF49794C5}",
+    name=u'System Tray Menu',
+    description=u'Allows you to add custom menu entries '
+                u'to the tray menu of EventGhost.',
+    author=u'Bitmonster',
+    version=u'1.1',
+    guid=u'{842BFFE8-DCB9-4C72-9877-AB2EF49794C5}',
 )
 
-
-class Text:
-    labelHeader = "Label"
-    eventHeader = "Event"
-    editLabel = "Label:"
-    editEvent = "Event:"
-    addBox = "Append:"
-    addItemButton = "Menu Item"
-    addSeparatorButton = "Separator"
-    deleteButton = "Delete"
-    unnamedLabel = "New Menu Item %s"
-    unnamedEvent = "Event%s"
-
-
 import wx
-import wx.gizmos
-import types
+import wx.dataview
 
 
-class MenuItemData:
-    pass
+KIND_SEPARATOR = u'separator'
+KIND_ITEM = u'item'
 
-class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
 
-    def __init__(self, parent, text, menuData, selectedItem=None):
-        self.highestMenuId = 0
-        wx.gizmos.TreeListCtrl.__init__(
+# noinspection PyClassHasNoInit
+class Text:
+    labelHeader = u'Label'
+    eventHeader = u'Event'
+    editLabel = u'Label:'
+    editEvent = u'Event:'
+    addBox = u'Append:'
+    addItemButton = u'Menu Item'
+    add_separator_button = u'Separator'
+    deleteButton = u'Delete'
+    invalid_menu = u'INVALID menu entry'
+    unnamed_label = u'New Menu Item'
+    unnamed_event = u'MenuItem_'
+
+
+class MenuTreeListCtrl(wx.dataview.TreeListCtrl):
+
+    def __init__(self, parent, text, menu_data, selected_item=None):
+        wx.dataview.TreeListCtrl.__init__(
             self,
             parent,
-            style = wx.TR_FULL_ROW_HIGHLIGHT
-                |wx.TR_DEFAULT_STYLE
-                |wx.VSCROLL
-                |wx.ALWAYS_SHOW_SB
-                |wx.CLIP_CHILDREN
+            style=wx.dataview.TL_SINGLE
         )
         self.SetMinSize((10, 150))
-        self.AddColumn(text.labelHeader)
-        self.AddColumn(text.eventHeader)
-        root = self.AddRoot(text.name)
-        for data in menuData:
-            name, kind, eventName, menuId = data
-            if menuId > self.highestMenuId:
-                self.highestMenuId = menuId
-            eventName = data[2]
+        self.AppendColumn(text.labelHeader)
+        self.AppendColumn(text.eventHeader)
+        root = self.GetRootItem()
+        for data in menu_data:
+            name, kind, event_string, menu_id = data
+            event_string = data[2]
             item = self.AppendItem(root, name)
-            self.SetItemText(item, eventName, 1)
-            self.SetPyData(item, data)
-            if menuId == selectedItem:
-                self.SelectItem(item)
+            self.SetItemText(item, col=1, text=event_string)
+            self.SetItemData(item, data)
+            if menu_id == selected_item:
+                self.Select(item)
 
         self.SetColumnWidth(0, 200)
-        self.ExpandAll(root)
+        self.Expand(root)
 
-        self.__inSizing = False
-        self.GetMainWindow().Bind(wx.EVT_SIZE, self.OnSize)
+    def ensure_visible(self):
+        dv = self.GetDataView()
+        item = dv.GetSelection()
+        if item.IsOk():
+            dv.EnsureVisible(item)
 
+    def move_item_down(self, item):
+        if not item.IsOk():
+            return item
+        next_item = self.GetNextItem(item)
+        if not next_item.IsOk():
+            return item
+        data = self.GetItemData(item)
+        cols_texts = []
+        cnt = self.GetColumnCount()
+        for col in range(cnt):
+            cols_texts.append(self.GetItemText(item, col))
+        self.Freeze()
+        self.DeleteItem(item)
+        item = self.InsertItem(
+            parent=self.GetRootItem(),
+            previous=next_item,
+            text=cols_texts[0],
+            data=data
+        )
+        for col in range(1, cnt):
+            self.SetItemText(item, col, cols_texts[col])
+        self.Select(item)
+        self.Thaw()
 
-    def GetNewMenuId(self):
-        newMenuId = self.highestMenuId + 1
-        self.highestMenuId = newMenuId
-        return newMenuId
-
-
-    def OnSize(self, event):
-        event.Skip()
-        if not self.__inSizing:
-            self.__inSizing = True
-            wx.CallAfter(self.OnSize2)
-
-
-    def OnSize2(self):
-        w, h = self.GetMainWindow().GetClientSize()
-        newWidth = w - self.GetColumnWidth(0)
-        if self.GetColumnWidth(1) != newWidth:
-            self.SetColumnWidth(1, newWidth)
-        self.__inSizing = False
-
-
-    def GetPrevious(self, item):
-        previous = self.GetPrevSibling(item)
-        if previous.IsOk():
-            return previous
-        previous = self.GetItemParent(item)
-        if not self.HasChildren(previous):
-            return previous
-        return self.GetLastChild(previous)[0]
-
-
-    def GetNext(self, item):
-        if self.HasChildren(item):
-            return self.GetFirstChild()
-        while 1:
-            next = self.GetNextSibling(item)
-            if next.IsOk():
-                return next
-            item = self.GetItemParent(item)
-            if item == self.GetRootItem():
-                return None
-
-
-    def CopyItem(self, item, parent, prev=None):
-        text = self.GetItemText(item)
-        img = self.GetItemImage(item, wx.TreeItemIcon_Normal)
-        selImg = self.GetItemImage(item, wx.TreeItemIcon_Selected)
-        data = self.GetPyData(item)
-        if prev is None:
-            id = self.InsertItemBefore(parent, 0, text, img, selImg)
+    def move_item_up(self, item):
+        if not item.IsOk():
+            return item
+        prev_item = self.get_previous_item(item)
+        if not prev_item.IsOk():
+            return item
+        data = self.GetItemData(item)
+        cols_texts = []
+        cnt = self.GetColumnCount()
+        for col in range(cnt):
+            cols_texts.append(self.GetItemText(item, col))
+        self.Freeze()
+        self.DeleteItem(item)
+        prev_item = self.get_previous_item(prev_item)
+        if prev_item.IsOk():
+            item = self.InsertItem(
+                parent=self.GetRootItem(),
+                previous=prev_item,
+                text=cols_texts[0],
+                data=data
+            )
         else:
-            id = self.InsertItem(parent, prev, text, img, selImg)
-        self.SetPyData(id, data)
-        self.SetItemText(id, self.GetItemText(item, 1), 1)
-        return id
+            item = self.PrependItem(
+                parent=self.GetRootItem(),
+                text=cols_texts[0],
+                data=data
+            )
+        for col in range(1, cnt):
+            self.SetItemText(item, col, cols_texts[col])
+        self.Select(item)
+        self.Thaw()
 
+    def get_item_count(self):
+        cnt = 0
+        item = self.GetFirstChild(self.GetRootItem())
+        while item.IsOk():
+            cnt += 1
+            item = self.GetNextItem(item)
+        return cnt
 
-    def GetSelectedId(self):
-        selectedId = self.GetSelection()
-        data = self.GetPyData(selectedId)
-        if data is not None:
-            return data[3]
+    def get_previous_item(self, item):
+        prev_child = self.GetFirstItem()
+        if item == prev_child:
+            return wx.dataview.TreeListItem()
+        next_child = self.GetNextItem(prev_child)
+        while next_child.IsOk():
+            if item == next_child:
+                return prev_child
+            prev_child = next_child
+            next_child = self.GetNextItem(prev_child)
+        return wx.dataview.TreeListItem()
 
+    def get_selected_id(self):
+        item = self.GetSelection()
+        if item.IsOk():
+            data = self.GetItemData(item)
+            if data:
+                return data[3]
+        return None
 
 
 class SysTrayMenu(eg.PluginBase):
     text = Text
 
     def __init__(self):
+        super(SysTrayMenu, self).__init__()
         self.AddAction(Enable)
         self.AddAction(Disable)
+        self.menu_data = None
+        self.tree = None
 
+    def convert_data(self, menu_data=None):
+        """ convert data from older format versions to actual format """
+        if not menu_data:
+            return None
 
-    def Compile(self, menuData=[]):
-        self.menuIdToData = {}
-        # convert menuData to the new format
-        newData = []
-        i = 0
-        for data in menuData:
-            if len(data) < 4:
-                name, kind, eventName  = data
-                i += 1
-                data = (name, kind, eventName, i)
-            newData.append(data)
-            self.menuIdToData[data[3]] = data
-        self.menuData = newData
-        return newData
-
-
-    def __start__(self, dummy=None):
-        self.wxIdToData = {}
-        self.menuIdToWxItem = {}
-        self.menuIdToData = {}
-        if len(self.menuData) == 0:
-            return
-        menu =  eg.taskBarIcon.menu
-        self.menuIdToWxItem[-1] = menu.PrependSeparator()
-        for data in reversed(self.menuData):
-            name, kind, eventName, menuId = data
-            if kind == "item":
-                wxId = wx.NewId()
-                wxItem = menu.Prepend(wxId, name)
-                wx.EVT_MENU(menu, wxId, self.OnMenuItem)
-                self.wxIdToData[wxId] = data
-            elif kind == "separator":
-                wxItem = menu.PrependSeparator()
-            self.menuIdToWxItem[menuId] = wxItem
-            self.menuIdToData[menuId] = data
-
-
-    def __stop__(self):
-        for item in self.menuIdToWxItem.values():
-            eg.taskBarIcon.menu.RemoveItem(item)
-        self.menuIdToWxItem.clear()
-        self.wxIdToData.clear()
-
+        new_data = []
+        for data in menu_data:
+            if isinstance(data, tuple):
+                data = list(data)
+            if len(data) < 4 or not isinstance(data[3], str):
+                # noinspection PyCallByClass,PyArgumentList
+                data.append(str(eg.GUID.NewId(self)))
+            new_data.append(data)
+        return new_data
 
     @eg.LogIt
-    def OnMenuItem(self, event):
-        data = self.wxIdToData[event.GetId()]
-        self.TriggerEvent(data[2])
+    def __start__(self, menu_data=None):
+        self.menu_items = {}
 
+        self.menu_data = menu_data = self.convert_data(menu_data)
+        if not menu_data:
+            return
+        menu = eg.taskBarIcon.menu
+        self.menu_items.update(
+            {wx.NewIdRef(): [menu.PrependSeparator(), None]}
+        )
+        for data in reversed(menu_data):
+            name, kind, event_string, menu_id = data
+            if kind == KIND_ITEM:
+                wx_id = wx.NewIdRef()
+                self.menu_items.update(
+                    {wx_id: [menu.Prepend(wx_id, name), data]}
+                )
+                menu.Bind(wx.EVT_MENU, self.on_menu_item, id=wx_id)
+            elif kind == KIND_SEPARATOR:
+                self.menu_items.update(
+                    {wx.NewIdRef(): [menu.PrependSeparator(), None]}
+                )
 
-    def Configure(self, menuData=[]):
-        menuData = self.Compile(menuData)
-        panel = eg.ConfigPanel(resizable=True)
+    def __stop__(self):
+        for item in self.menu_items.itervalues():
+            eg.taskBarIcon.menu.Unbind(wx.EVT_MENU, item[0])
+            eg.taskBarIcon.menu.Remove(item[0])
+            del item
+        del self.menu_items
+
+    @eg.LogIt
+    def on_menu_item(self, event):
+        self.TriggerEvent(self.menu_items[event.GetId()][1][2])
+
+    def enable_menu(self, menu_id):
+        for key, value in self.menu_items.iteritems():
+            menu_item, data = value
+            if not data:
+                continue
+            if menu_id == data[3]:
+                menu_item.Enable()
+
+    def disable_menu(self, menu_id):
+        for key, value in self.menu_items.iteritems():
+            menu_item, data = value
+            if not data:
+                continue
+            if menu_id == data[3]:
+                menu_item.Enable(False)
+
+    # noinspection PyAttributeOutsideInit
+    def Configure(self, menu_data=None):
+        if menu_data is None:
+            menu_data = []
+        self.menu_data = menu_data = self.convert_data(menu_data)
+        self.panel = panel = eg.ConfigPanel(resizable=True)
         text = self.text
 
-        tree = MenuTreeListCtrl(panel, text, menuData)
-        root = tree.GetRootItem()
+        self.tree = tree = MenuTreeListCtrl(panel, text, menu_data)
+        self.label_box = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
+        self.label_box.Disable()
+        self.event_box = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
+        self.event_box.Disable()
+        add_item_button = wx.Button(panel, wx.ID_ANY, text.addItemButton)
+        add_separator_button = wx.Button(panel, wx.ID_ANY, text.add_separator_button)
+        self.delete_button = wx.Button(panel, wx.ID_ANY, text.deleteButton)
+        self.delete_button.Disable()
 
-        @eg.LogIt
-        def OnSelectionChanged(dummyEvent):
-            itemType = 0
-            item = tree.GetSelection()
-            if item == root:
-                enableMoveFlag = False
-                enableEditFlag = False
-            elif tree.GetPyData(item)[1] == "separator":
-                enableMoveFlag = True
-                enableEditFlag = False
-                itemType = 2
-            else:
-                enableMoveFlag = True
-                enableEditFlag = True
-            upButton.Enable(enableMoveFlag)
-            downButton.Enable(enableMoveFlag)
-            deleteButton.Enable(enableMoveFlag)
-            labelBox.Enable(enableEditFlag)
-            eventBox.Enable(enableEditFlag)
-            labelBox.SetLabel(tree.GetItemText(item, 0))
-            eventBox.SetLabel(tree.GetItemText(item, 1))
-            #itemTypeCtrl.SetSelection(itemType)
-            #event.Skip()
-        tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
-
-        # Delete button
-        deleteButton = wx.Button(panel, -1, text.deleteButton)
-        deleteButton.Enable(False)
-        def OnDelete(dummyEvent):
-            item = tree.GetSelection()
-            next = tree.GetNextSibling(item)
-            if not next.IsOk():
-                next = tree.GetPrevSibling(item)
-                if not next.IsOk():
-                    next = tree.GetItemParent(item)
-            tree.SelectItem(next)
-            tree.Delete(item)
-            tree.EnsureVisible(next)
-        deleteButton.Bind(wx.EVT_BUTTON, OnDelete)
-
-        # Up button
-        bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
-        upButton = wx.BitmapButton(panel, -1, bmp)
-        upButton.Enable(False)
-        def OnUp(dummyEvent):
-            item = tree.GetSelection()
-            previous = tree.GetPrevSibling(item)
-            if previous.IsOk():
-                id = tree.GetPrevSibling(previous)
-                if not id.IsOk():
-                    id = None
-                newId = tree.CopyItem(item, tree.GetItemParent(previous), id)
-                tree.SelectItem(newId)
-                tree.EnsureVisible(newId)
-                tree.Delete(item)
-        upButton.Bind(wx.EVT_BUTTON, OnUp)
-
-        # Down button
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
-        downButton = wx.BitmapButton(panel, -1, bmp)
-        downButton.Enable(False)
-        def OnDown(dummyEvent):
-            item = tree.GetSelection()
-            nextId = tree.GetNext(item)
-            if nextId is not None:
-                newId = tree.CopyItem(item, tree.GetItemParent(nextId), nextId)
-                tree.Delete(item)
-                tree.SelectItem(newId)
-                tree.EnsureVisible(newId)
-        downButton.Bind(wx.EVT_BUTTON, OnDown)
+        self.down_button = wx.BitmapButton(panel, wx.ID_ANY, bmp)
+        self.down_button.Enable(False)
 
-        # Add menu item button
-        addItemButton = wx.Button(panel, -1, text.addItemButton)
-        @eg.LogIt
-        def OnAddItem(dummyEvent):
-            numStr = str(tree.GetCount() + 1)
-            item = tree.AppendItem(root, text.unnamedLabel % numStr)
-            data = ("", "item", "", tree.GetNewMenuId())
-            tree.SetPyData(item, data)
-            tree.SetItemText(item, text.unnamedEvent % numStr, 1)
-            tree.Expand(tree.GetItemParent(item))
-            tree.SelectItem(item)
-            tree.EnsureVisible(item)
-            tree.Update()
-        addItemButton.Bind(wx.EVT_BUTTON, OnAddItem)
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
+        self.up_button = wx.BitmapButton(panel, wx.ID_ANY, bmp)
+        self.up_button.Disable()
 
-        # Add separator button
-        addSeparatorButton = wx.Button(panel, -1, text.addSeparatorButton)
-        def OnAddSeparator(dummyEvent):
-            item = tree.AppendItem(root, "---------")
-            tree.SetPyData(item, ("", "separator", "", tree.GetNewMenuId()))
-            tree.Expand(tree.GetItemParent(item))
-            tree.SelectItem(item)
-            tree.EnsureVisible(item)
-            tree.Update()
-        addSeparatorButton.Bind(wx.EVT_BUTTON, OnAddSeparator)
+        tree.Bind(wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.on_selection_changed)
+        self.delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
+        self.up_button.Bind(wx.EVT_BUTTON, self.on_up)
+        self.down_button.Bind(wx.EVT_BUTTON, self.on_down)
+        add_item_button.Bind(wx.EVT_BUTTON, self.on_add_item)
+        add_separator_button.Bind(wx.EVT_BUTTON, self.on_add_separator)
+        self.label_box.Bind(wx.EVT_TEXT, self.on_label_text_change)
+        self.event_box.Bind(wx.EVT_TEXT, self.on_event_text_change)
 
-        # Label edit box
-        labelBox = wx.TextCtrl(panel, -1)
-        def OnLabelTextChange(event):
-            item = tree.GetSelection()
-            tree.SetItemText(item, labelBox.GetValue(), 0)
-            event.Skip()
-        labelBox.Bind(wx.EVT_TEXT, OnLabelTextChange)
+        static_box = wx.StaticBox(panel, wx.ID_ANY, text.addBox)
+        add_sizer = wx.StaticBoxSizer(static_box, wx.VERTICAL)
+        add_sizer.Add(add_item_button, 0, wx.EXPAND)
+        add_sizer.Add((5, 5))
+        add_sizer.Add(add_separator_button, 0, wx.EXPAND)
 
-        # Event edit box
-        eventBox = wx.TextCtrl(panel, -1)
-        def OnEventTextChange(event):
-            item = tree.GetSelection()
-            tree.SetItemText(item, eventBox.GetValue(), 1)
-            event.Skip()
-        eventBox.Bind(wx.EVT_TEXT, OnEventTextChange)
-
-        # Item type control
-        #choices = ["Menu item", "Check menu item", "Separator"]
-        #itemTypeCtrl = wx.Choice(dialog, choices=choices)
-
-        # construction of the dialog with sizers
-        staticBox = wx.StaticBox(panel, -1, text.addBox)
-        addSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        addSizer.Add(addItemButton, 0, wx.EXPAND)
-        addSizer.Add((5, 5))
-        addSizer.Add(addSeparatorButton, 0, wx.EXPAND)
-
-        editSizer = wx.FlexGridSizer(2, 2, 5, 5)
-        editSizer.AddGrowableCol(1)
-        editSizer.AddMany((
+        edit_sizer = wx.FlexGridSizer(2, 2, 5, 5)
+        edit_sizer.AddMany((
             (panel.StaticText(text.editLabel), 0, wx.ALIGN_CENTER_VERTICAL),
-            (labelBox, 0, wx.EXPAND),
+            (self.label_box, 0, wx.EXPAND),
             (panel.StaticText(text.editEvent), 0, wx.ALIGN_CENTER_VERTICAL),
-            (eventBox, 0, wx.EXPAND),
+            (self.event_box, 0, wx.EXPAND),
         ))
+        edit_sizer.AddGrowableCol(1)
 
-        mainSizer = eg.HBoxSizer(
+        main_sizer = eg.HBoxSizer(
             (
                 eg.VBoxSizer(
                     (tree, 1, wx.EXPAND),
-                    (editSizer, 0, wx.EXPAND|wx.TOP, 5),
+                    (edit_sizer, 0, wx.EXPAND | wx.TOP, 5),
                 ), 1, wx.EXPAND
             ),
-            ((5, 5)),
+            (wx.Size((5, 5))),
             (
                 eg.VBoxSizer(
-                    (deleteButton, 0, wx.EXPAND),
+                    (self.delete_button, 0, wx.EXPAND),
                     ((5, 5), 1, wx.EXPAND),
-                    (upButton),
-                    (downButton, 0, wx.TOP, 5),
+                    (self.up_button, 0),
+                    (self.down_button, 0, wx.TOP, 5),
                     ((5, 5), 1, wx.EXPAND),
-                    (addSizer, 0, wx.EXPAND),
+                    (add_sizer, 0, wx.EXPAND),
                 ), 0, wx.EXPAND
             ),
         )
-        panel.sizer.Add(mainSizer, 1, wx.EXPAND)
+        panel.sizer.Add(main_sizer, 1, wx.EXPAND)
 
-        nextId = tree.GetFirstChild(root)[0]
-        if nextId.IsOk():
-            tree.SelectItem(nextId)
-        else:
-            tree.SelectItem(root)
-
+        self.on_selection_changed()
         while panel.Affirmed():
-            resultList = []
-            def Traverse(item):
-                child, cookie = tree.GetFirstChild(item)
-                while child.IsOk():
-                    name, kind, eventString, menuId = tree.GetPyData(child)
-                    name = tree.GetItemText(child, 0)
-                    eventString = tree.GetItemText(child, 1)
-                    resultList.append((name, kind, eventString, menuId))
-                    if tree.HasChildren(child):
-                        Traverse(child)
-                    child, cookie = tree.GetNextChild(item, cookie)
-            Traverse(root)
-            self.Compile(resultList)
-            panel.SetResult(resultList)
+            data = self.get_menu_data()
+            panel.SetResult(data)
 
+    def get_menu_data(self):
+        tree = self.tree
+        result_list = []
+        item = tree.GetFirstChild(tree.GetRootItem())
+        while item.IsOk():
+            _, kind, _, menu_id = tree.GetItemData(item)
+            name = tree.GetItemText(item, 0)
+            event_string = tree.GetItemText(item, 1)
+            result_list.append([name, kind, event_string, menu_id])
+            item = tree.GetNextItem(item)
+        self.menu_data = result_list
+        return result_list
+
+    # noinspection PyUnusedLocal
+    @eg.LogIt
+    def on_add_item(self, evt):
+        tree = self.tree
+        num_str = str(self.get_unnamed_count() + 1)
+        # noinspection PyCallByClass,PyArgumentList
+        data = (
+            self.text.unnamed_label + num_str,
+            KIND_ITEM,
+            self.text.unnamed_event + num_str,
+            str(eg.GUID.NewId(self))
+        )
+        item = tree.AppendItem(tree.GetRootItem(), data[0])
+        tree.SetItemText(item, col=1, text=data[2])
+        tree.SetItemData(item, data)
+        tree.Select(item)
+        tree.ensure_visible()
+        self.panel.SetIsDirty()
+        self.on_selection_changed()
+
+    # noinspection PyUnusedLocal
+    def on_add_separator(self, evt):
+        tree = self.tree
+        item = tree.AppendItem(tree.GetRootItem(), '---------')
+        # noinspection PyCallByClass,PyArgumentList
+        tree.SetItemData(
+            item,
+            ['', KIND_SEPARATOR, '', str(eg.GUID.NewId(self))]
+        )
+        tree.Select(item)
+        tree.ensure_visible()
+        self.panel.SetIsDirty()
+        self.on_selection_changed()
+
+    def get_unnamed_count(self):
+        tree = self.tree
+        child = tree.GetFirstChild(tree.GetRootItem())
+        cnt = 0
+        while child.IsOk():
+            if tree.GetItemText(child).startswith(self.text.unnamed_label):
+                cnt += 1
+            child = tree.GetNextItem(child)
+        return cnt
+
+    def get_label_for_id(self, menu_id):
+        for data in self.menu_data:
+            if menu_id == data[3]:
+                return data[0]
+        return self.text.invalid_menu
+
+    # noinspection PyUnusedLocal
+    def on_down(self, evt):
+        tree = self.tree
+        item = tree.GetSelection()
+        tree.move_item_down(item)
+        tree.ensure_visible()
+
+    # noinspection PyUnusedLocal
+    def on_up(self, evt):
+        tree = self.tree
+        item = tree.GetSelection()
+        tree.move_item_up(item)
+        tree.ensure_visible()
+
+    # noinspection PyUnusedLocal
+    def on_delete(self, evt):
+        tree = self.tree
+        item = tree.GetSelection()
+        if not item.IsOk():
+            return
+        next_item = tree.GetNextItem(item)
+        if not next_item.IsOk():
+            next_item = tree.get_previous_item(item)
+        if item.IsOk():
+            tree.Select(next_item)
+        tree.DeleteItem(item)
+        tree.ensure_visible()
+        self.on_selection_changed()
+
+    # noinspection PyUnusedLocal
+    @eg.LogIt
+    def on_selection_changed(self, evt=None):
+        tree = self.tree
+        item = tree.GetSelection()
+        flag = item.IsOk()
+        self.up_button.Enable(flag)
+        self.down_button.Enable(flag)
+        self.delete_button.Enable(flag)
+        self.panel.EnableButtons(bool(tree.get_item_count()))
+        if not flag or tree.GetItemData(item)[1] == KIND_SEPARATOR:
+            # separator
+            self.label_box.ChangeValue('')
+            self.event_box.ChangeValue('')
+            self.label_box.Disable()
+            self.event_box.Disable()
+        elif flag:
+            # menu item
+            self.label_box.ChangeValue(tree.GetItemText(item, 0))
+            self.event_box.ChangeValue(tree.GetItemText(item, 1))
+            self.label_box.Enable()
+            self.event_box.Enable()
+
+    def on_label_text_change(self, evt):
+        item = self.tree.GetSelection()
+        if item.IsOk():
+            self.tree.SetItemText(item, col=0, text=evt.GetString())
+        evt.Skip()
+
+    def on_event_text_change(self, evt):
+        item = self.tree.GetSelection()
+        if item.IsOk():
+            self.tree.SetItemText(item, col=1, text=evt.GetString())
+        evt.Skip()
 
 
 class Enable(eg.ActionBase):
-
+    # noinspection PyClassHasNoInit,PyPep8Naming
     class text:
-        name = "Enable Item"
-        description = "Enables a menu item."
+        name = u'Enable Item'
+        description = u'Enables a menu item.'
 
-    def __call__(self, menuId):
-        item = self.plugin.menuIdToWxItem.get(menuId, None)
-        if item is not None:
-            item.Enable(True)
+    def __call__(self, menu_id):
+        self.plugin.enable_menu(menu_id)
 
+    def GetLabel(self, menu_id):
+        return self.name + u': ' + self.plugin.get_label_for_id(menu_id)
 
-    def GetLabel(self, menuId):
-        return self.name + ": " + self.plugin.menuIdToData[menuId][0]
-
-
-    def Configure(self, menuId=None):
+    def Configure(self, menu_id=None):
         plugin = self.plugin
-        panel = eg.ConfigPanel()
-        tree = MenuTreeListCtrl(panel, plugin.text, plugin.menuData, menuId)
+        # noinspection PyAttributeOutsideInit
+        self.panel = panel = eg.ConfigPanel()
+        tree = MenuTreeListCtrl(panel, plugin.text, plugin.menu_data, menu_id)
+        tree.Bind(wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.on_selection_changed)
         panel.sizer.Add(tree, 1, wx.EXPAND)
         while panel.Affirmed():
-            panel.SetResult(tree.GetSelectedId())
+            panel.SetResult(tree.get_selected_id())
+
+    # noinspection PyUnusedLocal
+    def on_selection_changed(self, evt):
+        self.panel.SetIsDirty()
 
 
-
-class Disable(Enable):
-
+class Disable(eg.ActionBase):
+    # noinspection PyClassHasNoInit,PyPep8Naming
     class text:
-        name = "Disable Item"
-        description = "Disables a menu item."
+        name = u'Disable Item'
+        description = u'Disables a menu item.'
 
-    def __call__(self, menuId):
-        item = self.plugin.menuIdToWxItem.get(menuId, None)
-        if item is not None:
-            item.Enable(False)
+    def __call__(self, menu_id):
+        self.plugin.disable_menu(menu_id)
 
+    def GetLabel(self, menu_id):
+        return self.name + u': ' + self.plugin.get_label_for_id(menu_id)
+
+    def Configure(self, menu_id=None):
+        plugin = self.plugin
+        # noinspection PyAttributeOutsideInit
+        self.panel = panel = eg.ConfigPanel()
+        tree = MenuTreeListCtrl(panel, plugin.text, plugin.menu_data, menu_id)
+        tree.Bind(wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.on_selection_changed)
+        panel.sizer.Add(tree, 1, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(tree.get_selected_id())
+
+    # noinspection PyUnusedLocal
+    def on_selection_changed(self, evt):
+        self.panel.SetIsDirty()

@@ -52,9 +52,9 @@ Functions
 .. autofunction:: eg.StopMacro
     :noindex:
 
-.. autofunction:: eg.TriggerEvent
+.. automethod:: eg.EventThread.TriggerEvent
     :noindex:
 
 .. autofunction:: eg.RegisterPlugin
 
-.. autofunction:: eg.PrintError
+.. automethod:: eg.Log.PrintError

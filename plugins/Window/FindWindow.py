@@ -179,9 +179,9 @@ class FindWindow(eg.ActionBase):
         cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnIncludeInvisibleCheckbox)
 
         # the stop-macro choice
-        id_1 = wx.NewId()
+        id_1 = wx.NewIdRef()
         stopMacroCtrl_1 = wx.CheckBox(panel, id_1, text.stopMacro[0])
-        id_2 = wx.NewId()
+        id_2 = wx.NewIdRef()
         stopMacroCtrl_2 = wx.CheckBox(panel, id_2, text.stopMacro[1])
 
         if stop == STOP_IF_NOT_FOUND:
@@ -424,7 +424,7 @@ class FindWindow(eg.ActionBase):
         item = tree.GetSelection()
         if not item.IsOk():
             return
-        hwnd = tree.GetPyData(item)
+        hwnd = tree.GetItemData(item)
         eg.PrintDebugNotice("HWND:", hwnd)
         if tree.GetItemParent(item) == tree.root:
             # only selected a program

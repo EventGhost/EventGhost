@@ -33,7 +33,12 @@ class RadioButtonGrid(wx.Panel):
     ):
         wx.Panel.__init__(self, parent, id, pos, size)
         biggestWidth = 0
-        sizer = wx.FlexGridSizer(len(rows) + 2, len(columns) + 1)
+        sizer = wx.FlexGridSizer(
+            rows=len(rows) + 2,
+            cols=len(columns) + 1,
+            vgap=2,
+            hgap=2
+        )
         sizer.Add((0, 0))
         for column in columns:
             staticText = wx.StaticText(self, -1, column)

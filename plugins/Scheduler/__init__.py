@@ -727,8 +727,8 @@ class Scheduler(eg.PluginClass):
             schedulerListCtrl.InsertColumn(i, colLabel)
 
         #setting col width to fit label
-        schedulerListCtrl.InsertStringItem(0, "Test Scheduler Name")
-        schedulerListCtrl.SetStringItem(0, 1, "Test EventName On")
+        schedulerListCtrl.InsertItem(0, "Test Scheduler Name")
+        schedulerListCtrl.SetItem(0, 1, "Test EventName On")
 
         size = 0
         for i in range(2):
@@ -811,10 +811,10 @@ class Scheduler(eg.PluginClass):
             for i, item in enumerate(self.schedulerThreads):
                 t = self.schedulerThreads[item]
                 if t.isAlive():
-                    schedulerListCtrl.InsertStringItem(row, t.name)
-                    schedulerListCtrl.SetStringItem(row,
+                    schedulerListCtrl.InsertItem(row, t.name)
+                    schedulerListCtrl.SetItem(row,
                         1, t.eventNameOn)
-                    schedulerListCtrl.SetStringItem(row,
+                    schedulerListCtrl.SetItem(row,
                         2, t.eventNameOff)
                     row += 1
             ListSelection(wx.CommandEvent())

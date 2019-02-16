@@ -16,10 +16,14 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-from .. import Cli
 
 import platform
+import sys
 from collections import OrderedDict
+
+import winreg
+
+import eg
 
 
 WINDOWS_VERSIONS = OrderedDict()
@@ -209,6 +213,9 @@ class WindowsVersion:
             platform.version()
         )
 
+    def __call__(self):
+        return self.__str__()
+
     @staticmethod
     def GetVersion():
         # type: () -> list
@@ -354,5 +361,58 @@ class WindowsVersion:
         """
         return _compare('==', "10")
 
-if Cli.args.isMain:
+    @staticmethod
+    def GetReleaseId():
+        key = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+        val = r"ReleaseID"
+
+        sam = winreg.KEY_READ
+        if eg.Utils.Is64BitOS():
+            sam = sam | winreg.KEY_WOW64_64KEY
+
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key, 0, sam) as k:
+                return int(winreg.QueryValueEx(k, val)[0])
+        except WindowsError:
+            return None
+
+    @staticmethod
+    def GetEdition():
+        key = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+        val = r"EditionID"
+
+        sam = winreg.KEY_READ
+        if eg.Utils.Is64BitOS():
+            sam = sam | winreg.KEY_WOW64_64KEY
+
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key, 0, sam) as k:
+                return winreg.QueryValueEx(k, val)[0]
+        except WindowsError:
+            return None
+
+    def GetLongVersion(self):
+        edition = eg.WindowsVersion.GetEdition()
+        ver = eg.WindowsVersion.GetReleaseId()
+        build = platform.version().split('.')[2]
+        sp = sys.getwindowsversion().service_pack_major
+
+        res = '{} {}'.format(
+            platform.system(),
+            platform.release(),
+        )
+        res += ' %s' % edition if edition else ''
+        res += [' 32-bit', ' 64-bit'][eg.Is64BitOS()]
+        if ver or build:
+            res += ' ('
+            res += 'Version: %s' % ver if ver else ''
+            res += ', ' if ver and build else ''
+            res += 'Build: %s' % build if build else ''
+            res += ')'
+        res += ' SP %d' % sp if sp else ''
+
+        return res
+
+
+if eg.Cli.args.isMain:
     WindowsVersion = WindowsVersion()

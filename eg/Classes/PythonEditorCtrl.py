@@ -19,7 +19,7 @@
 import keyword
 import re
 import wx
-from wx.stc import *  #pylint: disable-msg=W0614,W0401
+from wx.stc import *
 
 # Local imports
 import eg
@@ -44,7 +44,7 @@ class PythonEditorCtrl(StyledTextCtrl):
     ):
         StyledTextCtrl.__init__(self, parent, -1, pos, size, style)
         self.SetCodePage(STC_CP_UTF8)
-        StyleSetSpec = self.StyleSetSpec  #IGNORE:C0103
+        StyleSetSpec = self.StyleSetSpec
 
         self.CmdKeyAssign(ord('B'), STC_SCMOD_CTRL, STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), STC_SCMOD_CTRL, STC_CMD_ZOOMOUT)
@@ -123,7 +123,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetMarginWidth(2, 12)
 
         # and now set up the fold markers
-        MarkerDefine = self.MarkerDefine  #IGNORE:C0103
+        MarkerDefine = self.MarkerDefine
         MarkerDefine(
             STC_MARKNUM_FOLDEREND, STC_MARK_BOXPLUSCONNECTED, "white", "black"
         )
@@ -204,11 +204,11 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         self.SetSelBackground(
             True,
-            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
         )
         self.SetSelForeground(
             True,
-            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
         )
         self.UsePopUp(False)
 

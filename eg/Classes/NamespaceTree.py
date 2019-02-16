@@ -17,15 +17,15 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-import wx.gizmos
+import wx.dataview
 
 # Local imports
 import eg
 
-class NamespaceTree(wx.gizmos.TreeListCtrl):
+class NamespaceTree(wx.dataview.TreeListCtrl):
     def __init__(self, parent, namespace):
         self.namespace = namespace
-        wx.gizmos.TreeListCtrl.__init__(
+        wx.dataview.TreeListCtrl.__init__(
             self,
             parent,
             style=(
@@ -52,7 +52,7 @@ class NamespaceTree(wx.gizmos.TreeListCtrl):
             self.SetItemText(item, typeStr, 1)
             valueStr = repr(value)
             self.SetItemText(item, valueStr, 2)
-            self.SetPyData(item, value)
+            self.SetItemData(item, value)
         self.Expand(root)
 
     @classmethod

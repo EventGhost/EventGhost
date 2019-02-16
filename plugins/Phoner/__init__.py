@@ -719,7 +719,7 @@ class SendSMSService(eg.ActionBase):
         textControl1 = wx.TextCtrl(panel, -1, number)
         textControl2 = wx.TextCtrl(panel, -1, msg)
         textControl3 = wx.TextCtrl(panel, -1, service)
-        topSizer = wx.GridSizer(rows=2, cols=2)
+        topSizer = wx.GridSizer(rows=2, cols=2, vgap=0, hgap=0)
         topSizer.Add(label1Text,0,wx.ALIGN_BOTTOM,0)
         topSizer.Add(label3Text,0,wx.ALIGN_BOTTOM,0)
         topSizer.Add(textControl1,0,wx.TOP,3)

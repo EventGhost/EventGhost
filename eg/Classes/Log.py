@@ -70,7 +70,7 @@ def _build_notice(icon, args):
     try:
         oldStdErr.write(std_msg)
     except:
-        oldStdErr.write(std_msg.decode("mbcs"))
+        oldStdErr.write(std_msg)
 
     return msg
 
@@ -118,15 +118,12 @@ class Log(object):
                 _oldStdErr._displayMessage = False
         if eg.debugLevel:
             import platform
-            import warnings
-            warnings.simplefilter('error', UnicodeWarning)
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice("        {0} started".format(eg.APP_NAME))
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice(eg.APP_NAME, "Version:", eg.Version.string)
-            self.PrintDebugNotice("Machine type:", platform.machine())
             self.PrintDebugNotice("Processor:", platform.processor())
-            self.PrintDebugNotice("Architecture:", platform.architecture())
+            self.PrintDebugNotice('Operating System:', eg.WindowsVersion.GetLongVersion())
             self.PrintDebugNotice(
                 "Python:",
                 platform.python_branch(),
@@ -138,7 +135,7 @@ class Log(object):
             self.PrintDebugNotice("----------------------------------------")
 
         # redirect all wxPython error messages to our log
-        class MyLog(wx.PyLog):
+        class MyLog(wx.Log):
             def DoLog(self, level, msg, dummyTimestamp):
                 if (level >= 6):
                     return
@@ -235,8 +232,8 @@ class Log(object):
         slist = [
             'Traceback (most recent call last) (%s):\n' % eg.Version.string
         ]
+        decode = codecs.getdecoder('mbcs')
         if tbTraceback:
-            decode = codecs.getdecoder('mbcs')
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
                     u'  File "%s", line %d, in %s\n' % (

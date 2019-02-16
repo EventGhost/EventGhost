@@ -1428,7 +1428,7 @@ class MediaMonkey(eg.PluginBase):
         for i in range(len(events2)):
             events2Ctrl.Check(i, events2[i])
 
-        Sizer = wx.FlexGridSizer(2, 2, 1, 10)
+        Sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=1, hgap=10)
         Sizer.AddGrowableRow(1)
         Sizer.AddGrowableCol(0)
         Sizer.AddGrowableCol(1)
@@ -2346,7 +2346,7 @@ class GetSongInfo(eg.ActionBase):
         line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer=wx.FlexGridSizer(2,2)
+        mainSizer=wx.FlexGridSizer(rows=2, cols=2, vgap=0, hgap=0)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
 
@@ -2496,7 +2496,7 @@ class GetDetailSongInfo(eg.ActionBase):
 
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer=wx.FlexGridSizer(2,2)
+        mainSizer=wx.FlexGridSizer(rows=2, cols=2, vgap=0, hgap=0)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
 
@@ -2619,7 +2619,7 @@ class GetClassificationInfo(eg.ActionBase):
         line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer=wx.FlexGridSizer(2,2)
+        mainSizer=wx.FlexGridSizer(rows=2, cols=2, vgap=0, hgap=0)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
 
@@ -2746,7 +2746,7 @@ class GetTechnicalSongInfo(eg.ActionBase):
 #        originalCtrl.SetValue(original)
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer=wx.FlexGridSizer(2,2)
+        mainSizer=wx.FlexGridSizer(rows=2, cols=2, vgap=0, hgap=0)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         rightSizer=wx.BoxSizer(wx.VERTICAL)
         bottomSizer.Add(sepLabel,0,wx.TOP,4)
@@ -3942,8 +3942,8 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
 
         Sizer = panel.sizer
         sizes = []
-        sizes.append(panel.GetTextExtent(txt.saveButton)[0])
-        sizes.append(panel.GetTextExtent(txt.openButton)[0])
+        sizes.append(panel.GetFullTextExtent(txt.saveButton)[0])
+        sizes.append(panel.GetFullTextExtent(txt.openButton)[0])
         w=max(sizes)+24
         exportButton = wx.Button(panel, -1, txt.saveButton, size = ((w,-1)))
         exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn[0]))
@@ -4079,8 +4079,8 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             filePathCtrl.SetValue(filePath)
         Sizer = panel.sizer
         sizes = []
-        sizes.append(panel.GetTextExtent(txt.saveButton)[0])
-        sizes.append(panel.GetTextExtent(txt.openButton)[0])
+        sizes.append(panel.GetFullTextExtent(txt.saveButton)[0])
+        sizes.append(panel.GetFullTextExtent(txt.openButton)[0])
         w=max(sizes)+24
         exportButton = wx.Button(panel, -1, txt.saveButton, size=((w,-1)))
         exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn[0]))
@@ -4244,8 +4244,6 @@ class JukeboxFrame(wx.Frame):
         self.text = self.plugin.text
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         centralSizer = wx.GridBagSizer(10, 10)
-        centralSizer.AddGrowableRow(0)
-        centralSizer.AddGrowableCol(1)
         if case == 'Album':
             cols = self.text.labelsA
         else:
@@ -4264,6 +4262,8 @@ class JukeboxFrame(wx.Frame):
         centralSizer.Add(self.playButton,(1,0), flag = wx.ALIGN_LEFT)
         self.closeButton = wx.Button(self, -1, self.text.close)
         centralSizer.Add(self.closeButton,(1,2), flag = wx.ALIGN_RIGHT)
+        centralSizer.AddGrowableRow(0)
+        centralSizer.AddGrowableCol(1)
 
         self.itemListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
@@ -4282,7 +4282,6 @@ class JukeboxFrame(wx.Frame):
         def OnCloseWindow(event):
             eg.Unbind("MediaMonkey.jukebox",self.CompleteForm)
             self.Show(False)
-            self.MakeModal(False)
             self.Destroy()
             event.Skip()
 
@@ -4295,9 +4294,8 @@ class JukeboxFrame(wx.Frame):
         sizes = (55,200,200)
         for i in range(3):
             self.itemListCtrl.SetColumnWidth(i, sizes[i])
-        self.SetDimensions(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
+        self.SetSize(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
         self.Bind(wx.EVT_SIZE, OnSize)
-        self.MakeModal(True)
         self.Show(True)
         self.RefreshList()
 
@@ -4322,9 +4320,9 @@ class JukeboxFrame(wx.Frame):
         albums = file.readlines()
         for album in albums:
             item = album.split('\t')
-            self.itemListCtrl.InsertStringItem(row,item[0])
-            self.itemListCtrl.SetStringItem(row, 1,item[1])
-            self.itemListCtrl.SetStringItem(row, 2, item[2][:-1])
+            self.itemListCtrl.InsertItem(row,item[0])
+            self.itemListCtrl.SetItem(row, 1,item[1])
+            self.itemListCtrl.SetItem(row, 2, item[2][:-1])
             row += 1
         file.close()
         if self.patientFrame:
@@ -4360,7 +4358,7 @@ class JukeboxFrame(wx.Frame):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
-            self.popupID1 = wx.NewId()
+            self.popupID1 = wx.NewIdRef()
 
             self.Bind(wx.EVT_MENU, self.onPlayButton, id=self.popupID1)
 
@@ -4402,9 +4400,6 @@ class UnaccessibleTracksFrame(wx.Frame):
         self.text = self.plugin.text
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         centralSizer = wx.GridBagSizer(10, 10)
-        centralSizer.AddGrowableRow(0)
-        centralSizer.AddGrowableCol(1)
-        centralSizer.AddGrowableCol(3)
         cols = self.text.labelsU
         self.itemListCtrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
         for i, label in enumerate(cols):
@@ -4422,6 +4417,9 @@ class UnaccessibleTracksFrame(wx.Frame):
         centralSizer.Add(self.refreshButton,(1,2), flag = wx.ALIGN_CENTER)
         self.closeButton = wx.Button(self, -1, self.text.close)
         centralSizer.Add(self.closeButton,(1,4), flag = wx.ALIGN_RIGHT)
+        centralSizer.AddGrowableRow(0)
+        centralSizer.AddGrowableCol(1)
+        centralSizer.AddGrowableCol(3)
 
         self.itemListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
         self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
@@ -4440,7 +4438,6 @@ class UnaccessibleTracksFrame(wx.Frame):
         def OnCloseWindow(event):
             eg.Unbind("MediaMonkey.unaccessible",self.CompleteForm)
             self.Show(False)
-            self.MakeModal(False)
             self.Destroy()
             self.parent.frameIsOpen = False
 
@@ -4455,9 +4452,8 @@ class UnaccessibleTracksFrame(wx.Frame):
         sizes = (55,100,300)
         for i in range(2):
             self.itemListCtrl.SetColumnWidth(i, sizes[i])
-        self.SetDimensions(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
+        self.SetSize(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
         self.Bind(wx.EVT_SIZE, OnSize)
-        self.MakeModal(True)
         self.Show(True)
         self.onRefreshButton()
 
@@ -4513,16 +4509,15 @@ class UnaccessibleTracksFrame(wx.Frame):
             evt.Skip()
 
     def CompleteForm(self,evt=None):
-#        self.MakeModal(True)
         if isfile(self.filePath):
             file = codecs.open(self.filePath,encoding='utf-8', mode='r',errors='replace')
             tracks = file.readlines()
             row = 0
             for track in tracks:
                 item = track.split('\t')
-                self.itemListCtrl.InsertStringItem(row,item[0])
-                self.itemListCtrl.SetStringItem(row, 1,item[1])
-                self.itemListCtrl.SetStringItem(row, 2,item[2][:-1])
+                self.itemListCtrl.InsertItem(row,item[0])
+                self.itemListCtrl.SetItem(row, 1,item[1])
+                self.itemListCtrl.SetItem(row, 2,item[2][:-1])
                 row += 1
             file.close()
         if self.patientFrame:
@@ -4532,7 +4527,7 @@ class UnaccessibleTracksFrame(wx.Frame):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
-            self.popupID1 = wx.NewId()
+            self.popupID1 = wx.NewIdRef()
 
             self.Bind(wx.EVT_MENU, self.onDeleteButton, id=self.popupID1)
 

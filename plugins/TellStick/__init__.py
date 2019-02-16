@@ -81,10 +81,12 @@ class DeviceBase(object):
                     selected = index
                 indexToIdMap[index] = id
                 deviceList.append(name)
-        if (len(deviceList) == 0):
-            print "There is no devices supporting '" + self.name + "'"
-            return
         panel = eg.ConfigPanel(self)
+        if (len(deviceList) == 0):
+            panel.StaticText("There are no devices supporting '" + self.name + "'", )
+            while panel.Affirmed():
+                pass
+            return
         deviceCtrl = wx.Choice(panel, -1, choices=deviceList)
         deviceCtrl.Select(selected)
         panel.sizer.Add(
@@ -172,10 +174,12 @@ class Dim(eg.ActionClass):
                     selected = index
                 indexToIdMap[index] = id
                 deviceList.append(name)
-        if (len(deviceList) == 0):
-            print "There is no devices supporting '" + self.name + "'"
-            return
         panel = eg.ConfigPanel(self)
+        if (len(deviceList) == 0):
+            panel.StaticText("There are no devices supporting '" + self.name + "'")
+            while panel.Affirmed():
+                pass
+            return
         deviceCtrl = wx.Choice(panel, -1, choices=deviceList)
         deviceCtrl.Select(selected)
         levelCtrl = wx.Slider(panel, -1, level, 1, 254)

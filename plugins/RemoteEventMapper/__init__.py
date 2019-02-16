@@ -231,7 +231,7 @@ class RemoteEventMapper(eg.PluginBase):
         self.selBack = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
         self.selFore = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
         suffText = wx.TextCtrl(panel, -1, "", style = wx.TE_READONLY )
-        suffText.SetToolTipString(text.suffToolTip)
+        suffText.SetToolTip(text.suffToolTip)
         labelText = wx.TextCtrl(panel, -1, "")
         suffChoice = wx.Choice(panel, -1, choices = panel.suffixes)
 
@@ -325,9 +325,9 @@ class RemoteEventMapper(eg.PluginBase):
         def FillButtonsList(item):
             buttonsListCtrl.DeleteAllItems()
             for row in range(len(item[2])):
-                buttonsListCtrl.InsertStringItem(row, item[2][row][0])
-                buttonsListCtrl.SetStringItem(row, 1, item[2][row][1])
-                buttonsListCtrl.SetStringItem(row, 2, item[2][row][2])
+                buttonsListCtrl.InsertItem(row, item[2][row][0])
+                buttonsListCtrl.SetItem(row, 1, item[2][row][1])
+                buttonsListCtrl.SetItem(row, 2, item[2][row][2])
 
 
         def FillRemoteForm(item):
@@ -656,9 +656,9 @@ class RemoteEventMapper(eg.PluginBase):
                 self.oldSel = buttonsListCtrl.GetItemCount() - 1
             row = self.oldSel + 1
             self.remotes[listBoxCtrl.GetSelection()][2].insert(row,["", "", ""])
-            buttonsListCtrl.InsertStringItem(row, "")
-            buttonsListCtrl.SetStringItem(row, 1, "")
-            buttonsListCtrl.SetStringItem(row, 2, "")
+            buttonsListCtrl.InsertItem(row, "")
+            buttonsListCtrl.SetItem(row, 1, "")
+            buttonsListCtrl.SetItem(row, 2, "")
             buttonsListCtrl.EnsureVisible(row)
             SelRow(row)
             EnableCtrls(True)
@@ -683,9 +683,9 @@ class RemoteEventMapper(eg.PluginBase):
             strng2 = suffChoice.GetStringSelection()
             row = self.oldSel + 1
             self.remotes[listBoxCtrl.GetSelection()][2].insert(row, ["", strng1, strng2])
-            buttonsListCtrl.InsertStringItem(row, "")
-            buttonsListCtrl.SetStringItem(row, 1, strng1)
-            buttonsListCtrl.SetStringItem(row, 2, strng2)
+            buttonsListCtrl.InsertItem(row, "")
+            buttonsListCtrl.SetItem(row, 1, strng1)
+            buttonsListCtrl.SetItem(row, 2, strng2)
             SelRow(row)
             buttonsListCtrl.EnsureVisible(row)
             evt.Skip()
@@ -695,7 +695,7 @@ class RemoteEventMapper(eg.PluginBase):
         def OnSuffText(evt):
             strng = evt.GetString()
             self.remotes[listBoxCtrl.GetSelection()][2][self.oldSel][0] = strng
-            buttonsListCtrl.SetStringItem(self.oldSel, 0, strng)
+            buttonsListCtrl.SetItem(self.oldSel, 0, strng)
             Validation()
             evt.Skip()
         suffText.Bind(wx.EVT_TEXT, OnSuffText)
@@ -704,7 +704,7 @@ class RemoteEventMapper(eg.PluginBase):
         def OnLabelText(evt):
             strng = labelText.GetValue()
             self.remotes[listBoxCtrl.GetSelection()][2][self.oldSel][1] = strng
-            buttonsListCtrl.SetStringItem(self.oldSel, 1, strng)
+            buttonsListCtrl.SetItem(self.oldSel, 1, strng)
             Validation()
             evt.Skip()
         labelText.Bind(wx.EVT_TEXT, OnLabelText)
@@ -713,7 +713,7 @@ class RemoteEventMapper(eg.PluginBase):
         def OnSuffChoice(evt):
             strng = suffChoice.GetStringSelection()
             self.remotes[listBoxCtrl.GetSelection()][2][self.oldSel][2] = strng
-            buttonsListCtrl.SetStringItem(self.oldSel, 2, strng)
+            buttonsListCtrl.SetItem(self.oldSel, 2, strng)
             duplEvent.Enable(True)
             Validation()
             evt.Skip()
@@ -1048,7 +1048,7 @@ class SuffixesFrame(wx.Dialog):
         btnDOWN = wx.BitmapButton(self, -1, bmp)
         btnDOWN.Enable(False)
         #Buttons 'Delete' and 'Insert new'
-        lenLst = [self.panel.GetTextExtent(item)[0] for item in text.buttons3]
+        lenLst = [self.panel.GetFullTextExtent(item)[0] for item in text.buttons3]
         dummBttn = wx.Button(self,-1,text.buttons3[(lenLst).index(max(lenLst))])
         sz = dummBttn.GetSize()
         dummBttn.Destroy()
@@ -1105,7 +1105,6 @@ class SuffixesFrame(wx.Dialog):
             btn1.Enable(False)
 
         def onClose(evt):
-            self.MakeModal(False)
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
@@ -1238,7 +1237,6 @@ class SuffixesFrame(wx.Dialog):
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
 
         sizer.Layout()
-        self.MakeModal(True)
         self.SetFocus()
         self.Show()
 #===============================================================================
@@ -1321,13 +1319,11 @@ class MessageBox(wx.Dialog):
             if self.timer:
                 self.timer.Stop()
                 del self.timer
-            self.MakeModal(False)
             self.GetParent().Raise()
             self.Destroy()
 
         self.Bind(wx.EVT_CLOSE, onClose)
         self.SetSizer(mainSizer)
         self.Fit()
-        self.MakeModal(True)
         self.Show()
 #===============================================================================

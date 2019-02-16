@@ -20,6 +20,7 @@ import codecs
 import os
 import types
 import wx
+import wx.adv
 from os.path import join
 
 # Local imports
@@ -61,13 +62,13 @@ class LanguageEditor(wx.Frame):
             join(eg.imagesDir, "new.png"),
         ):
             imageList.Add(
-                wx.BitmapFromImage(wx.Image(pathName, wx.BITMAP_TYPE_PNG))
+                wx.Bitmap(wx.Image(pathName, wx.BITMAP_TYPE_PNG))
             )
 
         self.tree = tree = wx.TreeCtrl(splitter, -1, style=wx.TR_HAS_BUTTONS)
         tree.AssignImageList(imageList)
         self.rootId = tree.AddRoot("Language Strings", 3)
-        tree.SetPyData(self.rootId, ["", None, None])
+        tree.SetItemData(self.rootId, ["", None, None])
 
         eg.Init.ImportAll()
         eg.actionThread.Start()
@@ -196,7 +197,7 @@ class LanguageEditor(wx.Frame):
             if type(value) in (types.ClassType, types.InstanceType):
                 newId = tree.AppendItem(treeId, ExpandKeyname(key), 2)
                 value = getattr(node, key)
-                tree.SetPyData(newId, [newEvalPath, value, None])
+                tree.SetItemData(newId, [newEvalPath, value, None])
                 self.FillTree(newId, value, newEvalPath)
                 #tree.Expand(newId)
             elif type(value) in (types.TupleType, types.ListType):
@@ -210,8 +211,8 @@ class LanguageEditor(wx.Frame):
                         transValue = UnassignedValue
                         icon = 0
                     tmpId = tree.AppendItem(newId, "[%i]" % i, icon)
-                    tree.SetPyData(tmpId, [tmp, item, transValue])
-                tree.SetPyData(newId, [newEvalPath, value, None])
+                    tree.SetItemData(tmpId, [tmp, item, transValue])
+                tree.SetItemData(newId, [newEvalPath, value, None])
                 #tree.Expand(newId)
             else:
                 try:
@@ -221,7 +222,7 @@ class LanguageEditor(wx.Frame):
                     transValue = UnassignedValue
                     icon = 0
                 newId = tree.AppendItem(treeId, ExpandKeyname(key), icon)
-                tree.SetPyData(newId, [newEvalPath, value, transValue])
+                tree.SetItemData(newId, [newEvalPath, value, transValue])
 
     def LoadLanguage(self, language):
         Config.language = language
@@ -257,7 +258,7 @@ class LanguageEditor(wx.Frame):
         ):
             newId = tree.AppendItem(self.rootId, name, 2)
             value = getattr(eg.text, name)
-            tree.SetPyData(newId, [name, value, None])
+            tree.SetItemData(newId, [name, value, None])
             self.FillTree(newId, value, name)
             #tree.Expand(newId)
 
@@ -274,12 +275,12 @@ class LanguageEditor(wx.Frame):
                 plugins.append(name)
 
         pluginId = tree.AppendItem(self.rootId, "Plugins", 2)
-        tree.SetPyData(pluginId, ["Plugin", eg.text.Plugin, None])
+        tree.SetItemData(pluginId, ["Plugin", eg.text.Plugin, None])
         for name in plugins:
             newId = tree.AppendItem(pluginId, name, 2)
             value = getattr(eg.text.Plugin, name)
             evalPath = "Plugin." + name
-            tree.SetPyData(newId, [evalPath, value, None])
+            tree.SetItemData(newId, [evalPath, value, None])
             self.FillTree(newId, value, evalPath)
 
         tree.Bind(wx.EVT_TREE_SEL_CHANGING, self.OnSelectionChanging)
@@ -292,22 +293,22 @@ class LanguageEditor(wx.Frame):
         if self.CheckNeedsSave():
             event.Veto()
             return
-        Config.position = self.GetPositionTuple()
-        Config.size = self.GetSizeTuple()
-        Config.splitPosition = self.tree.GetSizeTuple()[0]
+        Config.position = self.GetPosition()
+        Config.size = self.GetSize()
+        Config.splitPosition = self.tree.GetSize()[0]
         eg.config.Save()
         eg.actionThread.Stop()
         wx.GetApp().ExitMainLoop()
 
     @staticmethod
     def OnCmdAbout(dummyEvent):
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
         info.Name = "EventGhost Language Editor"
         info.Version = "1.0.2"
         info.Copyright = "© 2005-2016 EventGhost Project"
         info.Developers = ["Bitmonster", ]
-        info.WebSite = ("http://www.eventghost.net", "EventGhost home page")
-        wx.AboutBox(info)
+        info.WebSite = ("http://www.eventghost.org", "EventGhost home page")
+        wx.adv.AboutBox(info)
 
     def OnCmdCopy(self, dummyEvent):
         self.newValueCtrl.Copy()
@@ -386,7 +387,7 @@ class LanguageEditor(wx.Frame):
             append = res.append
             item, cookie = tree.GetFirstChild(treeId)
             while item.IsOk():
-                evalPath, value, transValue = tree.GetPyData(item)
+                evalPath, value, transValue = tree.GetItemData(item)
                 key = evalPath.split(".")[-1]
                 if hasattr(value, "__bases__"):
                     tmp = Traverse(item, indent + 1)
@@ -448,7 +449,7 @@ class LanguageEditor(wx.Frame):
             return
         tree = self.tree
         newValueCtrl = self.newValueCtrl
-        evalPath, value, transValue = tree.GetPyData(treeId)
+        evalPath, value, transValue = tree.GetItemData(treeId)
         self.SetStatusText(evalPath)
 
         if type(value) not in types.StringTypes:
@@ -541,10 +542,10 @@ class LanguageEditor(wx.Frame):
             item = tree.GetSelection()
             text = newValueCtrl.GetValue()
             if text == "":
-                tree.GetPyData(item)[2] = UnassignedValue
+                tree.GetItemData(item)[2] = UnassignedValue
                 tree.SetItemImage(item, 0)
             else:
-                tree.GetPyData(item)[2] = newValueCtrl.GetValue()
+                tree.GetItemData(item)[2] = newValueCtrl.GetValue()
                 tree.SetItemImage(item, 1)
             newValueCtrl.SetModified(False)
 

@@ -308,7 +308,7 @@ class X10(eg.PluginBase):
         remoteTypeCtrl = panel.Choice(selection, fbtypes)
         prefixCtrl = panel.TextCtrl(prefix)
 
-        btnsizer = wx.FlexGridSizer(4, 4)
+        btnsizer = wx.FlexGridSizer(rows=4, cols=4, gap=(0, 0))
         idBtns = []
         for i in xrange(16):
             btn = wx.ToggleButton(panel, -1, size=(35, 35), label=str(i + 1))

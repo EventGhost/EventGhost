@@ -65,6 +65,6 @@ class HtmlDialog(eg.Dialog):
         self.SetSize(Config.size)
 
     def Destroy(self):
-        Config.size = self.GetSizeTuple()
-        Config.position = self.GetPositionTuple()
+        Config.size = self.GetSize()
+        Config.position = self.GetPosition()
         eg.Dialog.Destroy(self)

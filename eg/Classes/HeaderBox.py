@@ -26,7 +26,7 @@ import eg
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
 
-class HeaderBox(wx.PyWindow):
+class HeaderBox(wx.Window):
     """
     The top description box of every tree item configuration dialog.
     """
@@ -36,7 +36,7 @@ class HeaderBox(wx.PyWindow):
         if text == name:
             text = ""
         self.parent = parent
-        wx.PyWindow.__init__(self, parent, -1)
+        wx.Window.__init__(self, parent, -1)
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )

@@ -1,0 +1,556 @@
+<p>Synthesize speech for the specified text. By default this
+action is asynchronous -- it returns as soon as possible while
+the sound data are played by eSpeak.</p>
+
+
+<h2>TEXT MARKUP</h2>
+
+<h3>SSML: Speech Synthesis Markup Language</h3>
+
+<p>The following markup tags and their attributes are
+recognised:</p>
+
+<dl>
+  <dt><b>&lt;speak&gt;</b></dt>
+
+  <dd>xml:base</dd>
+
+  <dd>xml:lang</dd>
+
+  <dt><b>&lt;voice&gt;</b></dt>
+
+  <dd>xml:lang</dd>
+
+  <dd>name</dd>
+
+  <dd>age</dd>
+
+  <dd>variant</dd>
+
+  <dd>gender</dd>
+
+  <dt><b>&lt;prosody&gt;</b></dt>
+
+  <dd>rate</dd>
+
+  <dd>volume</dd>
+
+  <dd>pitch</dd>
+
+  <dd>range</dd>
+
+  <dt><b>&lt;say-as&gt;</b></dt>
+
+  <dd>interpret-as="characters"</dd>
+
+  <dd>interpret-as="characters" &nbsp;format="glyphs"</dd>
+
+  <dd>interpret-as="tts:key"</dd>
+
+  <dd>interpret-as="tts:char"</dd>
+
+  <dd>interpret-as="tts:digits"</dd>
+
+  <dt><b>&lt;mark&gt;</b></dt>
+
+  <dd>name</dd>
+
+  <dt><b>&lt;s&gt;</b></dt>
+
+  <dd>xml:lang</dd>
+
+  <dt><b>&lt;p&gt;</b></dt>
+
+  <dd>xml:lang</dd>
+
+  <dt><b>&lt;sub&gt;</b></dt>
+
+  <dd>alias</dd>
+
+  <dt><b>&lt;tts:style&gt;</b></dt>
+
+  <dd>field="punctuation" &nbsp; mode=none,all,some</dd>
+
+  <dd>field="capital_letters" &nbsp; mode=no,spelling,icon,pitch</dd>
+
+  <dt><b>&lt;audio&gt;</b></dt>
+
+  <dd>src</dd>
+
+  <dt><b>&lt;emphasis&gt;</b></dt>
+
+  <dd>level</dd>
+
+  <dt><b>&lt;break&gt;</b></dt>
+
+  <dd>strength</dd>
+
+  <dd>time</dd>
+</dl>
+
+<h3>HTML</h3>
+
+<p>eSpeak can speak HTML text directly, or text containing both
+SSML and HTML markup. Any unrecognised tags are ignored. The
+following tags cause a sentence break:</p>
+
+<p><b>&lt;br&gt; &nbsp; &lt;dd&gt; &nbsp; &lt;li&gt; &nbsp;
+&lt;img&gt; &nbsp; &lt;td&gt; &nbsp;</b></p>
+
+<p>The following tags cause a paragraph break:</p>
+
+<p><b>&lt;h1&gt; &nbsp; &lt;h2&gt; &nbsp; &lt;h3&gt; &nbsp;
+&lt;h4&gt; &nbsp; &lt;hr&gt; &nbsp;</b></p>
+
+<p>Text marked by the following tags is ignored:</p>
+
+<p><b>&lt;script&gt; &nbsp; ... &nbsp; &lt;/script&gt;
+&nbsp;<br />
+&lt;style&gt; &nbsp; ... &nbsp; &lt;/style&gt;
+&nbsp;<br /></b></p>
+
+<h2>PHONEMES</h2>
+
+<p>In general a different set of phonemes can be defined for each
+language.</p>
+
+<p>In most cases different languages inherit the same basic set
+of consonants. They can add to these or modify them as
+needed.</p>
+
+<p>The phoneme mnemonics are based on <a href="http://en.wikipedia.org/wiki/Kirshenbaum">the scheme by Kirshenbaum</a>
+which represents International Phonetic Alphabet symbols using
+ASCII characters (ASCII-IPA).</p>
+
+<p>Phoneme mnemonics can be used directly in the text input to
+eSpeak. They are enclosed within double square brackets. Spaces
+are used to separate words, and all stressed syllables must be
+marked explicitly, eg:<br />
+<code>[[D,Is Iz sVm f@n'EtIk t'Ekst 'InpUt]]</code></p>
+
+<h3>English Consonants</h3>
+
+<table>
+  <tbody valign="top">
+    <tr>
+      <td><code>[p]</code></td>
+
+      <td></td>
+
+      <td><code>[b]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[t]</code></td>
+
+      <td></td>
+
+      <td><code>[d]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[tS]</code></td>
+
+      <td><b>ch</b>urch</td>
+
+      <td><code>[dZ]</code></td>
+
+      <td><b>j</b>udge</td>
+    </tr>
+
+    <tr>
+      <td><code>[k]</code></td>
+
+      <td></td>
+
+      <td><code>[g]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[f]</code></td>
+
+      <td></td>
+
+      <td><code>[v]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[T]</code></td>
+
+      <td><b>th</b>in</td>
+
+      <td><code>[D]</code></td>
+
+      <td><b>th</b>is</td>
+    </tr>
+
+    <tr>
+      <td><code>[s]</code></td>
+
+      <td></td>
+
+      <td><code>[z]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[S]</code></td>
+
+      <td><b>sh</b>op</td>
+
+      <td><code>[Z]</code></td>
+
+      <td>plea<b>s</b>ure</td>
+    </tr>
+
+    <tr>
+      <td><code>[h]</code></td>
+
+      <td colspan="3"></td>
+    </tr>
+
+    <tr>
+      <td><code>[m]</code></td>
+
+      <td></td>
+
+      <td><code>[n]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td><code>[N]</code></td>
+
+      <td colspan="3">si<b>ng</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[l]</code></td>
+
+      <td></td>
+
+      <td><code>[r]</code></td>
+
+      <td><b>r</b>ed (omitted if not immediately followed by a
+      vowel)</td>
+    </tr>
+
+    <tr>
+      <td><code>[j]</code></td>
+
+      <td><b>y</b>es</td>
+
+      <td><code>[w]</code></td>
+
+      <td></td>
+    </tr>
+
+    <tr>
+      <td colspan="4">
+        <p><strong>Some Additional Consonants</strong></p>
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>[C]</code></td>
+
+      <td>German i<b>ch</b></td>
+
+      <td><code>[x]</code></td>
+
+      <td>German bu<b>ch</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[l^]</code></td>
+
+      <td>Italian <b>gl</b>i</td>
+
+      <td><code>[n^]</code></td>
+
+      <td>Spanish <b>ñ</b></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>English Vowels</h3>
+
+<p>These are the phonemes which are used by the English
+spelling-to-phoneme translations (en_rules and en_list). In some
+varieties of English different phonemes may have the same sound,
+but they are kept separate because they may differ in another
+variety.</p>
+
+<p>In rhotic accents, such as General American, the phonemes
+<code>[3:], [A@], [e@], [i@], [O@], [U@]</code> include the "r"
+sound.</p>
+
+<table>
+  <tbody valign="top">
+    <tr>
+      <td><code>[@]</code></td>
+
+      <td>alph<b>a</b></td>
+
+      <td>schwa</td>
+    </tr>
+
+    <tr>
+      <td><code>[3]</code></td>
+
+      <td>bett<b>er</b></td>
+
+      <td>rhotic schwa. In British English this is the same as
+      <code>[@]</code>, but it includes 'r' colouring in American
+      and other rhotic accents. In these cases a separate
+      <code>[r]</code> should not be included unless it is
+      followed immediately by another vowel.</td>
+    </tr>
+
+    <tr>
+      <td><code>[3:]</code></td>
+
+      <td>n<b>ur</b>se</td>
+    </tr>
+
+    <tr>
+      <td><code>[@L]</code></td>
+
+      <td>simp<b>le</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[@2]</code></td>
+
+      <td>the</td>
+
+      <td>Used only for "the".</td>
+    </tr>
+
+    <tr>
+      <td><code>[@5]</code></td>
+
+      <td>to</td>
+
+      <td>Used only for "to".</td>
+    </tr>
+
+    <tr>
+      <td><code>[a]</code></td>
+
+      <td>tr<b>a</b>p</td>
+    </tr>
+
+    <tr>
+      <td><code>[aa]</code></td>
+
+      <td>b<b>a</b>th</td>
+
+      <td>This is <code>[a]</code> in some accents,
+      <code>[A:]</code> in others.</td>
+    </tr>
+
+    <tr>
+      <td><code>[a#]</code></td>
+
+      <td><b>a</b>bout</td>
+
+      <td>This may be <code>[@]</code> or may be a more open
+      schwa.</td>
+    </tr>
+
+    <tr>
+      <td><code>[A:]</code></td>
+
+      <td>p<b>al</b>m</td>
+    </tr>
+
+    <tr>
+      <td><code>[A@]</code></td>
+
+      <td>st<b>ar</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[E]</code></td>
+
+      <td>dr<b>e</b>ss</td>
+    </tr>
+
+    <tr>
+      <td><code>[e@]</code></td>
+
+      <td>squ<b>are</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[I]</code></td>
+
+      <td>k<b>i</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[I2]</code></td>
+
+      <td><b>i</b>ntend</td>
+
+      <td>As <code>[I]</code>, but also indicates an unstressed
+      syllable.</td>
+    </tr>
+
+    <tr>
+      <td><code>[i]</code></td>
+
+      <td>happ<b>y</b></td>
+
+      <td>An unstressed "i" sound at the end of a word.</td>
+    </tr>
+
+    <tr>
+      <td><code>[i:]</code></td>
+
+      <td>fl<b>ee</b>ce</td>
+    </tr>
+
+    <tr>
+      <td><code>[i@]</code></td>
+
+      <td>n<b>ear</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[0]</code></td>
+
+      <td>l<b>o</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[V]</code></td>
+
+      <td>str<b>u</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[u:]</code></td>
+
+      <td>g<b>oo</b>se</td>
+    </tr>
+
+    <tr>
+      <td><code>[U]</code></td>
+
+      <td>f<b>oo</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[U@]</code></td>
+
+      <td>c<b>ure</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[O:]</code></td>
+
+      <td>th<b>ou</b>ght</td>
+    </tr>
+
+    <tr>
+      <td><code>[O@]</code></td>
+
+      <td>n<b>or</b>th</td>
+    </tr>
+
+    <tr>
+      <td><code>[o@]</code></td>
+
+      <td>f<b>or</b>ce</td>
+    </tr>
+
+    <tr>
+      <td><code>[aI]</code></td>
+
+      <td>pr<b>i</b>ce</td>
+    </tr>
+
+    <tr>
+      <td><code>[eI]</code></td>
+
+      <td>f<b>a</b>ce</td>
+    </tr>
+
+    <tr>
+      <td><code>[OI]</code></td>
+
+      <td>ch<b>oi</b>ce</td>
+    </tr>
+
+    <tr>
+      <td><code>[aU]</code></td>
+
+      <td>m<b>ou</b>th</td>
+    </tr>
+
+    <tr>
+      <td><code>[oU]</code></td>
+
+      <td>g<b>oa</b>t</td>
+    </tr>
+
+    <tr>
+      <td><code>[aI@]</code></td>
+
+      <td>sc<b>ie</b>nce</td>
+    </tr>
+
+    <tr>
+      <td><code>[aU@]</code></td>
+
+      <td>h<b>our</b></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Some Additional Vowels</h3>
+
+<p>Other languages will have their own vowel definitions, eg:</p>
+
+<table>
+  <tbody valign="top">
+    <tr>
+      <td><code>[e]</code></td>
+
+      <td>German <b>eh</b>, French <b>é</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[o]</code></td>
+
+      <td>German <b>oo</b>, French <b>o</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[y]</code></td>
+
+      <td>German <b>ü</b>, French <b>u</b></td>
+    </tr>
+
+    <tr>
+      <td><code>[Y]</code></td>
+
+      <td>German <b>ö</b>, French <b>oe</b></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code>[:]</code> can be used to lengthen a vowel, eg.
+<code>[e:]</code></p>

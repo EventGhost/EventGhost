@@ -46,9 +46,9 @@ class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 GetWindowProcessName(hwnd),
                 imageIdx
             )
-            self.SetStringItem(idx, 1, GetWindowText(hwnd))
-            self.SetStringItem(idx, 2, GetClassName(hwnd))
-            self.SetStringItem(idx, 3, str(hwnd))
+            self.SetItem(idx, 1, GetWindowText(hwnd))
+            self.SetItem(idx, 2, GetClassName(hwnd))
+            self.SetItem(idx, 3, str(hwnd))
         for i in range(4):
             self.SetColumnWidth(i, -2)
             headerSize = self.GetColumnWidth(i)

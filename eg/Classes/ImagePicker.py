@@ -72,7 +72,7 @@ class ImagePicker(wx.Window):
         self.imageString = imageString
         if imageString:
             stream = StringIO(b64decode(imageString))
-            image = wx.ImageFromStream(stream)
+            image = wx.Image(stream)
             stream.close()
             boxWidth, boxHeight = (10, 10)
             width, height = image.GetSize()
@@ -83,6 +83,6 @@ class ImagePicker(wx.Window):
                 width *= 1.0 * boxHeight / height
                 height = boxHeight
             image.Rescale(width, height)
-            bmp = wx.BitmapFromImage(image)
+            bmp = wx.Bitmap(image)
             self.imageBox.SetBitmap(bmp)
             self.imageBox.SetSize((30, 30))

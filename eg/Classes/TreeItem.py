@@ -167,7 +167,8 @@ class TreeItem(object):
             del TreeLink.sessionId2target[self.xmlId]
         if self.xmlId in TreeLink.id2target:
             del TreeLink.id2target[self.xmlId]
-        self.parent.RemoveChild(self)
+        if self.parent:
+            self.parent.RemoveChild(self)
         self.parent = None
 
     def DropTest(self, dropNode):

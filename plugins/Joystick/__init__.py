@@ -35,74 +35,263 @@ ZTtBNpvFdV12UkqpLYNIJNJEAqhWqwDUarWOBo7jeEbtRnkHNfsfqMAAn2HmrMwAAAAASUVORK5CYI
 I="""
 
 eg.RegisterPlugin(
-    name = "Joystick",
-    author = "Bitmonster",
-    version = "1.0.1175",
-    kind = "remote",
-    guid = "{615F3B89-FB7E-4FD9-B7D5-9F07FEF0BED9}",
-    description = (
-        "Use joysticks and gamepads as input devices for EventGhost."
+    name="Joystick",
+    author="K",
+    version="2.0.0",
+    kind="remote",
+    guid="{615F3B89-FB7E-4FD9-B7D5-9F07FEF0BED9}",
+    description=(
+        "Use joysticks and game pads as input devices for EventGhost."
     ),
-    icon = ICON,
+    icon=ICON,
 )
 
+import ctypes # NOQA
+from copy import deepcopy # NOQA
+import threading # NOQA
+from ctypes.wintypes import UINT # NOQA
+import joystickapi_h # NOQA
 
-EVT_DIRECTION = 0
-EVT_BTN_RELEASED = 1
-EVT_BTN_PUSHED = 2
-EVT_X_AXIS = 3
-EVT_Y_AXIS = 4
-EVT_Z_AXIS = 5
-
+UINT_PTR = ctypes.c_uint32
 
 
 class Joystick(eg.PluginBase):
 
     def __init__(self):
-        self.AddEvents()
-
+        super(Joystick, self).__init__()
+        self._event = threading.Event()
+        self._thread = None
+        self.last_joy_states = {}
 
     def __start__(self):
-        self.x = 0
-        self.y = 0
-        import _dxJoystick
-        self._dxJoystick = _dxJoystick
-        self._dxJoystick.RegisterEventFunc(self.EventFunc)
+        while self._event.isSet():
+            pass
 
+        self._thread = threading.Thread(target=self.loop)
+        self._thread.daemon = True
+        self._thread.start()
+
+    def get_joy_data(self, joy_id):
+        joy_caps = joystickapi_h.JOYCAPS()
+        res = joystickapi_h.joyGetDevCaps(
+            UINT_PTR(joy_id),
+            ctypes.byref(joy_caps),
+            ctypes.sizeof(joystickapi_h.JOYCAPS)
+        )
+
+        if res != joystickapi_h.MMSYSERR_NODRIVER:
+            joy_info = joystickapi_h.JOYINFOEX()
+            joy_info.dwSize = ctypes.sizeof(joystickapi_h.JOYINFOEX)
+
+            joystickapi_h.joyGetPosEx(
+                UINT_PTR(joy_id),
+                ctypes.byref(joy_info)
+            )
+
+            if joystickapi_h.JOY_RETURNBUTTONS & joy_info.dwFlags:
+                buttons = ['Released'] * joy_caps.wNumButtons
+                for i in range(1, joy_caps.wNumButtons):
+                    button = getattr(joystickapi_h, 'JOY_BUTTON' + str(i))
+                    if joy_info.dwButtons & button:
+                        buttons[i - 1] = 'Pressed'
+            else:
+                buttons = []
+
+            if joystickapi_h.JOY_RETURNX & joy_info.dwFlags:
+                first_axis_x = joy_info.dwXpos
+            else:
+                first_axis_x = None
+
+            first_axis_x = dict(
+                axis='x',
+                position=first_axis_x,
+                max=joy_caps.wXmax,
+                min=joy_caps.wXmin
+
+            )
+
+            if joystickapi_h.JOY_RETURNY & joy_info.dwFlags:
+                second_axis_y = joy_info.dwYpos
+            else:
+                second_axis_y = None
+
+            second_axis_y = dict(
+                axis='y',
+                position=second_axis_y,
+                max=joy_caps.wYmax,
+                min=joy_caps.wYmin
+
+            )
+
+            res = dict(
+                id=joy_id,
+                name=joy_caps.szPname,
+                num_axis=joy_caps.wNumAxes,
+                buttons=buttons,
+                first_axis=first_axis_x,
+                second_axis=second_axis_y
+            )
+
+            if joystickapi_h.JOYCAPS_HASZ & joy_caps.wCaps:
+                if joystickapi_h.JOY_RETURNZ & joy_info.dwFlags:
+                    third_axis_z = joy_info.dwZpos
+                else:
+                    third_axis_z = None
+
+                res['third_axis'] = dict(
+                    axis='z',
+                    position=third_axis_z,
+                    max=joy_caps.wZmax,
+                    min=joy_caps.wZmin
+                )
+
+            if joystickapi_h.JOYCAPS_HASR & joy_caps.wCaps:
+                if joystickapi_h.JOY_RETURNR & joy_info.dwFlags:
+                    fourth_axis_r = joy_info.dwRpos
+                else:
+                    fourth_axis_r = None
+
+                res['fourth_axis'] = dict(
+                    axis='r',
+                    position=fourth_axis_r,
+                    max=joy_caps.wRmax,
+                    min=joy_caps.wRmin
+                )
+
+            if joystickapi_h.JOYCAPS_HASU & joy_caps.wCaps:
+                if joystickapi_h.JOY_RETURNU & joy_info.dwFlags:
+                    fifth_axis_u = joy_info.dwUpos
+                else:
+                    fifth_axis_u = None
+
+                res['fifth_axis'] = dict(
+                    axis='u',
+                    position=fifth_axis_u,
+                    max=joy_caps.wUmax,
+                    min=joy_caps.wUmin
+                )
+
+            if joystickapi_h.JOYCAPS_HASV & joy_caps.wCaps:
+                if joystickapi_h.JOY_RETURNV & joy_info.dwFlags:
+                    sixth_axis_v = joy_info.dwVpos
+                else:
+                    sixth_axis_v = None
+
+                res['sixth_axis'] = dict(
+                    axis='v',
+                    position=sixth_axis_v,
+                    max=joy_caps.wVmax,
+                    min=joy_caps.wVmin
+
+                )
+
+            if joystickapi_h.JOYCAPS_HASPOV & joy_caps.wCaps:
+
+                if joystickapi_h.JOY_RETURNPOV & joy_info.dwFlags:
+                    degrees = joy_info.dwPOV
+                    if degrees != -1:
+                        degrees /= 100.0
+                else:
+                    degrees = None
+
+                res['pov'] = dict(degrees=degrees)
+
+            return res
+
+    def loop(self):
+        for joy_id in range(joystickapi_h.joyGetNumDevs()):
+            joy_data = self.get_joy_data(joy_id)
+            if joy_data is not None:
+                self.last_joy_states[(joy_data['id'], joy_data['name'])] = (
+                    joy_data
+                )
+
+        while not self._event.isSet():
+            new_data = {}
+            for joy_id in range(joystickapi_h.joyGetNumDevs()):
+                joy_data = self.get_joy_data(joy_id)
+                if joy_data is not None:
+                    new_data[(joy_data['id'], joy_data['name'])] = joy_data
+
+            for key in sorted(new_data.keys()):
+                new_value = new_data[key]
+
+                if key not in self.last_joy_states:
+                    self.TriggerEvent('Device.Added', deepcopy(new_value))
+                else:
+                    old_value = self.last_joy_states.pop(key)
+                    if new_value != old_value:
+                        def iter_dicts(old, new, event=''):
+                            for k in new.keys():
+                                if old[k] != new[k]:
+                                    if isinstance(old[k], dict):
+                                        evt = k.replace('_', '').title()
+                                        evt = evt.replace(' ', '')
+                                        if event:
+                                            iter_dicts(
+                                                old[k],
+                                                new[k],
+                                                event + '.' + evt
+                                            )
+                                        else:
+                                            iter_dicts(
+                                                old[k],
+                                                new[k],
+                                                evt
+                                            )
+                                    elif isinstance(old[k], list):
+                                        for num, o_state in enumerate(old[k]):
+                                            n_state = new[k][num]
+                                            if o_state != n_state:
+                                                evt = (
+                                                    new_value['name'] +
+                                                    '-' +
+                                                    str(new_value['id']) +
+                                                    '.' +
+                                                    'Button' +
+                                                    str(num) +
+                                                    '.' +
+                                                    n_state
+                                                )
+                                                self.TriggerEvent(
+                                                    evt,
+                                                    deepcopy(new_value)
+                                                )
+                                    else:
+                                        evt = k.replace('_', '').title()
+                                        evt = evt.replace(' ', '')
+                                        if event:
+                                            evt = event + '.' + evt
+                                        evt = (
+                                            new_value['name'] +
+                                            '-' +
+                                            str(new_value['id']) +
+                                            '.' +
+                                            evt
+                                        )
+
+                                        self.TriggerEvent(
+                                            evt,
+                                            deepcopy(new_value)
+                                        )
+
+                        iter_dicts(old_value, new_value)
+
+            for key in sorted(self.last_joy_states.keys()):
+                self.TriggerEvent(
+                    'Device.Removed',
+                    deepcopy(self.last_joy_states[key])
+                )
+
+            self.last_joy_states.clear()
+            self.last_joy_states = deepcopy(new_data)
+            self._event.wait(0.15)
+
+        self.last_joy_states.clear()
+        self._thread = None
+        self._event.clear()
 
     def __stop__(self):
-        self._dxJoystick.RegisterEventFunc(None)
-
-
-    def EventFunc(self, joynum, eventtype, value):
-        if eventtype == EVT_BTN_PUSHED:
-            self.TriggerEnduringEvent("Button" + str(value + 1))
-        elif eventtype == EVT_BTN_RELEASED:
-            self.EndLastEvent()
-        elif eventtype == EVT_X_AXIS:
-            self.x = value
-            if value == 0:
-                if self.y == 0:
-                    self.EndLastEvent()
-                elif self.y == 1:
-                    self.TriggerEnduringEvent("Down")
-                else:
-                    self.TriggerEnduringEvent("Up")
-            elif value == 1:
-                self.TriggerEnduringEvent("Right")
-            elif value == -1:
-                self.TriggerEnduringEvent("Left")
-        elif eventtype == EVT_Y_AXIS:
-            self.y = value
-            if value == 0:
-                if self.x == 0:
-                    self.EndLastEvent()
-                elif self.x == 1:
-                    self.TriggerEnduringEvent("Right")
-                else:
-                    self.TriggerEnduringEvent("Left")
-            elif value == 1:
-                self.TriggerEnduringEvent("Down")
-            elif value == -1:
-                self.TriggerEnduringEvent("Up")
-
+        if self._thread is not None:
+            self._event.set()
+            self._thread.join(3.0)
