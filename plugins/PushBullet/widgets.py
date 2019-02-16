@@ -256,7 +256,7 @@ class PushGroupDialog(wx.Frame):
         btn2.Bind(wx.EVT_BUTTON, on_cancel)
 
         def on_ok(evt):
-            self.panel.pushGroups = self.groups
+            self.panel.push_groups = self.groups
             self.Close()
             evt.Skip()
 
@@ -633,7 +633,7 @@ class SmsGroupDialog(wx.Frame):
         btn2.Bind(wx.EVT_BUTTON, on_cancel)
 
         def on_ok(evt):
-            self.panel.smsGroups = self.groups
+            self.panel.sms_groups = self.groups
             self.Close()
             evt.Skip()
 
@@ -1598,7 +1598,7 @@ class MirrorNote(wx.Frame):
             sbuf = StringIO(b64decode(icon))
         else:
             sbuf = StringIO(b64decode(AVATAR))
-        wximg = wx.ImageFromStream(sbuf)
+        wximg = wx.Image(sbuf)
         w = wximg.GetWidth()
         h = wximg.GetHeight()
         k = 96
@@ -1613,7 +1613,7 @@ class MirrorNote(wx.Frame):
         if repl and w == h:
             mask = fluffy_circle_mask(wximg.GetWidth())
             wximg.SetAlphaData(mask)
-        img = wx.BitmapFromImage(wximg)
+        img = wx.Bitmap(wximg)
 
         if w < 72 and h < 72:
             w, h = (72, 72)
@@ -1819,7 +1819,7 @@ class MirrorNote(wx.Frame):
         win = evt.GetEventObject()
         if isinstance(win, (
             wx.StaticText,
-            eg.CorePluginModule.PushBullet.StaticBitmap
+            StaticBitmap
         )):
             child_x, child_y = win.GetPosition()
             x += child_x

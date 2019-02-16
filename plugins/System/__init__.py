@@ -16,72 +16,23 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import ctypes
-import os
-import socket
-import struct
-import thread
-import time
-import wx
-import wx.adv
-import _winreg
-import win32con
-import win32gui
-from base64 import b64decode, b64encode
-from PIL import Image
-from qrcode import QRCode, constants as QRconstants
-from StringIO import StringIO
-from threading import Timer, Thread
 
-# Local imports
 import eg
-import eg.WinApi.SoundMixer as SoundMixer
-from eg.cFunctions import (
-    ResetIdleTimer as HookResetIdleTimer,
-    SetIdleTime as HookSetIdleTime,
-    StartHooks,
-    StopHooks,
-)
-from eg.WinApi import GetWindowThreadProcessId
-from eg.WinApi.Dynamic import (
-    # functions:
-    AdjustTokenPrivileges, byref, CloseHandle, create_unicode_buffer,
-    CreateFile, DeviceIoControl, ExitWindowsEx, GetClipboardOwner,
-    GetCurrentProcess, GetDriveType, GetForegroundWindow,
-    InitiateSystemShutdown, LookupPrivilegeValue, OpenProcessToken,
-    SendMessage, SetThreadExecutionState, sizeof, SystemParametersInfo,
-
-    # types:
-    DWORD, HANDLE, LUID, TOKEN_PRIVILEGES,
-
-    # constants:
-    EWX_LOGOFF, FILE_SHARE_READ, GENERIC_READ, OPEN_EXISTING, SC_MONITORPOWER,
-    SC_SCREENSAVE, SE_PRIVILEGE_ENABLED, SE_SHUTDOWN_NAME,
-    SPI_SETDESKWALLPAPER, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE,
-    TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, WM_SYSCOMMAND,
-)
-from eg.WinApi.Utils import BringHwndToFront, GetMonitorDimensions
-import Registry
-from ChangeDisplaySettings import ChangeDisplaySettings
-from Command import Command
-from DeviceChangeNotifier import DeviceChangeNotifier
-from Execute import Execute
-from PowerBroadcastNotifier import PowerBroadcastNotifier
 
 eg.RegisterPlugin(
-    name = "System",
-    author = (
+    name="System",
+    author=(
         "Bitmonster",
         "blackwind",
     ),
-    version = "1.1.10",
-    description = (
+    version="1.1.10",
+    description=(
         "Actions to control various aspects of your system, including "
         "audio, display, power, and registry."
     ),
-    kind = "core",
-    guid = "{A21F443B-221D-44E4-8596-E1ED7100E0A4}",
-    icon = (
+    kind="core",
+    guid="{A21F443B-221D-44E4-8596-E1ED7100E0A4}",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1QsEFTMTHK3EDwAAAUhJREFUOMul"
         "k0FLAlEQx39vd/VLeJSV7hH0ASLqLBEU3u0UQUGHUBJvfYAkukWiKV2DvkHUNeiyxCai"
@@ -94,13 +45,56 @@ eg.RegisterPlugin(
     ),
 )
 
+import _winreg
+import ctypes
+import os
+import socket
+import struct
+import thread
+import time
+import win32gui
+from base64 import b64decode, b64encode
+from StringIO import StringIO
+from threading import Thread, Timer
+
+import win32con
+import wx
+import wx.adv
+from eg.cFunctions import ResetIdleTimer as HookResetIdleTimer, SetIdleTime as HookSetIdleTime, StartHooks, StopHooks
+from PIL import Image
+from qrcode import constants as QRconstants, QRCode
+
+import eg.WinApi.SoundMixer as SoundMixer
+import Registry
+from ChangeDisplaySettings import ChangeDisplaySettings
+from Command import Command
+from DeviceChangeNotifier import DeviceChangeNotifier
+from eg.WinApi import GetWindowThreadProcessId
+from eg.WinApi.Dynamic import (
+    AdjustTokenPrivileges, byref, CloseHandle, create_unicode_buffer, CreateFile,
+    DeviceIoControl, DWORD, EWX_LOGOFF, ExitWindowsEx, FILE_SHARE_READ, GENERIC_READ, GetClipboardOwner,
+    GetCurrentProcess, GetDriveType, GetForegroundWindow, HANDLE, InitiateSystemShutdown, LookupPrivilegeValue, LUID,
+    OPEN_EXISTING, OpenProcessToken, SC_MONITORPOWER, SC_SCREENSAVE, SE_PRIVILEGE_ENABLED, SE_SHUTDOWN_NAME,
+    SendMessage, SetThreadExecutionState, sizeof, SPI_SETDESKWALLPAPER, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE,
+    SystemParametersInfo, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_QUERY,
+    WM_SYSCOMMAND,  # functions:; types:; constants:
+)
+from eg.WinApi.Utils import BringHwndToFront, GetMonitorDimensions
+from Execute import Execute
+from PowerBroadcastNotifier import PowerBroadcastNotifier
+
+
 ACV = wx.ALIGN_CENTER_VERTICAL
 MOUSEEVENTF_MOVE = 0x0001
 
 oldGetDeviceId = SoundMixer.GetDeviceId
+
+
 def GetDeviceId_(*args, **kwargs):
     id = oldGetDeviceId(*args, **kwargs)
     return id.encode(eg.systemEncoding) if not isinstance(id, int) else id
+
+
 SoundMixer.GetDeviceId = GetDeviceId_
 
 EVENT_LIST = (
@@ -117,6 +111,7 @@ MONITOR_STATES = dict(
     STANDBY=1,
     ON=-1
 )
+
 
 def MonitorState(state):
     if state == 'ON':
@@ -140,10 +135,10 @@ class Text:
     class SoundGroup:
         name = description = "Audio"
 
-    forced        = "Forced: %s"
-    forcedCB      = "Force close of all programs"
+    forced = "Forced: %s"
+    forcedCB = "Force close of all programs"
     primaryDevice = "Primary Sound Driver"
-    device        = "Device:"
+    device = "Device:"
 
     RegistryGroup = Registry.Text
 
@@ -163,6 +158,7 @@ class System(eg.PluginBase):
         self.AddAction(SetClipboard)
         self.AddAction(GetBootTimestamp)
         self.AddAction(GetUpTime)
+        self.AddAction(GetSpecialFolderDir)
         self.AddAction(OpenDriveTray)
         self.AddAction(RefreshEnvironment)
         self.AddAction(ResetIdleTimer)
@@ -222,8 +218,8 @@ class System(eg.PluginBase):
 
     def __start__(self):
         eg.Bind("ClipboardChange", self.OnClipboardChange)
-        #Assign all available cd drives to self.drives. If CdRom.drive
-        #is not already set, the first drive returned becomes the default.
+        # Assign all available cd drives to self.drives. If CdRom.drive
+        # is not already set, the first drive returned becomes the default.
         cdDrives = []
         letters = [l + ':' for l in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
         for drive in letters:
@@ -332,10 +328,10 @@ class GetBootTimestamp(eg.ActionBase):
         """
         timestamp = "Return result as an UNIX timestamp"
 
-    def __call__(self, timestamp = True):
-        return eg.Utils.GetBootTimestamp(unix_timestamp = timestamp)
+    def __call__(self, timestamp=True):
+        return eg.Utils.GetBootTimestamp(unix_timestamp=timestamp)
 
-    def Configure(self, timestamp = True):
+    def Configure(self, timestamp=True):
         panel = eg.ConfigPanel()
         checkbox = panel.CheckBox(timestamp, self.text.timestamp)
         panel.sizer.Add(checkbox, 0, wx.ALL, 10)
@@ -353,15 +349,116 @@ class GetUpTime(eg.ActionBase):
         """
         ticks = "Return result as the number of seconds (ticks)"
 
-    def __call__(self, ticks = True):
-        return eg.Utils.GetUpTime(seconds = ticks)
+    def __call__(self, ticks=True):
+        return eg.Utils.GetUpTime(seconds=ticks)
 
-    def Configure(self, ticks = True):
+    def Configure(self, ticks=True):
         panel = eg.ConfigPanel()
         checkbox = panel.CheckBox(ticks, self.text.ticks)
         panel.sizer.Add(checkbox, 0, wx.ALL, 10)
         while panel.Affirmed():
             panel.SetResult(checkbox.GetValue())
+
+
+class GetSpecialFolderDir(eg.ActionBase):
+
+    class text:
+        name = "Get Special Folder Dir"
+        description = """
+            Returns the path to a special folder.
+        """
+        CommonOEMLinks = "Unknown"
+        TemporaryFiles = "Unknown"
+        # descriptions from https://installmate.com/support/im9/using/symbols/functions/csidls.htm
+        AdminTools = "The file system directory that is used to store administrative tools for an individual user."
+        AltStartup = "The file system directory that corresponds to the user's nonlocalized Startup program group."
+        RoamingAppData = "The file system directory that serves as a common repository for application-specific data."
+        RecycleBin = "The virtual folder containing the objects in the user's Recycle Bin."
+        CDBurning = "The file system directory acting as a staging area for files waiting to be written to CD."
+        CommonAdminTools = "The file system directory containing administrative tools for all users of the computer."
+        CommonAltStartup = "The file system directory that corresponds to the nonlocalized Startup program group for all users."
+        ProgramData = "The file system directory containing application data for all users."
+        PublicDesktop = "The file system directory that contains files and folders that appear on the desktop for all users."
+        PublicDocuments = "The file system directory that contains documents that are common to all users."
+        PublicFavorites = "The file system directory that serves as a common repository for favorite items common to all users."
+        PublicMusic = "The file system directory that serves as a repository for music files common to all users."
+        PublicPictures = "The file system directory that serves as a repository for image files common to all users."
+        CommonPrograms = "The file system directory that contains the directories for the common program groups that appear on the Start menu for all users."
+        CommonStartMenu = "The file system directory that contains the programs and folders that appear on the Start menu for all users."
+        CommonStartup = "The file system directory that contains the programs that appear in the Startup folder for all users."
+        CommonTemplates = "The file system directory that contains the templates that are available to all users."
+        PublicVideos = "The file system directory that serves as a repository for video files common to all users."
+        ComputersNearMe = "The folder representing other machines in your workgroup."
+        Connections = "The virtual folder representing Network Connections, containing network and dial-up connections."
+        ControlPanel = "The virtual folder containing icons for the Control Panel applications."
+        Cookies = "The file system directory that serves as a common repository for Internet cookies."
+        Desktop = "The virtual folder representing the Windows desktop, the root of the shell namespace."
+        DesktopRoot = "The file system directory used to physically store file objects on the desktop."
+        MyComputer = "The virtual folder representing My Computer, containing everything on the local computer: storage devices, printers, and Control Panel. The folder may also contain mapped network drives."
+        Favorites = "The file system directory that serves as a common repository for the user's favorite items."
+        Fonts = "A virtual folder containing fonts."
+        History = "The file system directory that serves as a common repository for Internet history items."
+        Internet = "A viritual folder for Internet Explorer."
+        InternetCache = "The file system directory that serves as a common repository for temporary Internet files."
+        LocalAppData = "The file system directory that serves as a data repository for local (nonroaming) applications."
+        Documents2 = "The virtual folder representing the My Documents desktop item."
+        Music = "The file system directory that serves as a common repository for music files."
+        Pictures = "The file system directory that serves as a common repository for image files."
+        Videos = "The file system directory that serves as a common repository for video files."
+        NetHood = "A file system directory containing the link objects that may exist in the My Network Places virtual folder."
+        Network = "A virtual folder representing Network Neighborhood, the root of the network namespace hierarchy."
+        Documents = "The file system directory used to physically store a user's common repository of documents. (From shell version 6.0 onwards, CSIDL_PERSONAL is equivalent to CSIDL_MYDOCUMENTS, which is a virtual folder.)"
+        PhotoAlbums = "The virtual folder used to store photo albums."
+        Playlists = "The virtual folder used to store play albums."
+        Printers = "The virtual folder containing installed printers."
+        PrintHood = "The file system directory that contains the link objects that can exist in the Printers virtual folder."
+        Profile = "The user's profile folder."
+        ProgramFiles = "The Program Files folder."
+        ProgramFilesX86 = "The Program Files folder for 32-bit programs on 64-bit systems."
+        ProgramFilesCommon = "A folder for components that are shared across applications."
+        ProgramFilesCommonX86 = "A folder for 32-bit components that are shared across applications on 64-bit systems."
+        Programs = "The file system directory that contains the user's program groups (which are themselves file system directories)."
+        Recent = "The file system directory that contains shortcuts to the user's most recently used documents."
+        ResourceDir = "The file system directory that contains resource data."
+        ResourceDirLocalized = "The file system directory that contains localized resource data."
+        SampleMusic = "The file system directory that contains sample music."
+        SamplePlaylists = "The file system directory that contains sample playlists."
+        SamplePictures = "The file system directory that contains sample pictures."
+        SampleVideos = "The file system directory that contains sample videos."
+        SendTo = "The file system directory that contains Send To menu items."
+        StartMenu = "The file system directory containing Start menu items."
+        Startup = "The file system directory that corresponds to the user's Startup program group."
+        System = "The Windows System folder."
+        SystemX86 = "The Windows 32-bit System folder on 64-bit systems."
+        Templates = "The file system directory that serves as a common repository for document templates."
+        Windows = "The Windows directory or SYSROOT."
+
+    def __init__(self):
+        super(GetSpecialFolderDir, self).__init__()
+        self.path = None
+        self.descr = None
+
+    def __call__(self, name='Desktop'):
+        return getattr(eg.folderPath, name)
+
+    def Configure(self, name='Desktop'):
+        panel = eg.ConfigPanel()
+        choice = panel.Choice(eg.folderPath.__ALL__.index(name), eg.folderPath.__ALL__)
+        choice.Bind(wx.EVT_CHOICE, self.on_choice)
+        self.path = panel.StaticText(getattr(eg.folderPath, name), style=wx.ST_ELLIPSIZE_MIDDLE)
+        self.descr = panel.StaticWrapText(label=getattr(self.text, name), size=(400, 100))
+        panel.sizer.Add(choice, 0, wx.ALL, 10)
+        panel.sizer.Add(self.path, 0, wx.EXPAND | wx.ALL, 10)
+        panel.sizer.Add(self.descr, 1, wx.EXPAND | wx.ALL, 10)
+
+        while panel.Affirmed():
+            name = choice.GetStringSelection()
+            panel.SetResult(name)
+
+    def on_choice(self, evt):
+        name = evt.GetString()
+        self.descr.SetLabel(getattr(self.text, name))
+        self.path.SetLabel(getattr(eg.folderPath, name))
 
 
 class OpenDriveTray(eg.ActionBase):
@@ -406,13 +503,13 @@ class OpenDriveTray(eg.ActionBase):
             bytesReturned = DWORD()
             DeviceIoControl(
                 hDevice,  # handle to the device
-                code,     # control code for the operation
-                None,     # pointer to the input buffer
-                0,        # size of the input buffer
-                None,     # pointer to the output buffer
-                0,        # size of the output buffer
+                code,  # control code for the operation
+                None,  # pointer to the input buffer
+                0,  # size of the input buffer
+                None,  # pointer to the output buffer
+                0,  # size of the output buffer
                 byref(bytesReturned),
-                None      # pointer to an OVERLAPPED structure
+                None  # pointer to an OVERLAPPED structure
             )
             CloseHandle(hDevice)
 
@@ -426,9 +523,9 @@ class OpenDriveTray(eg.ActionBase):
         if action is 0:
             thread.start_new_thread(ToggleMedia, ())
         elif action is 1:
-            thread.start_new_thread(SendCodeToDrive, (2967560, ))
+            thread.start_new_thread(SendCodeToDrive, (2967560,))
         elif action is 2:
-            thread.start_new_thread(SendCodeToDrive, (2967564, ))
+            thread.start_new_thread(SendCodeToDrive, (2967564,))
 
     def Configure(self, drive=None, action=0):
         panel = eg.ConfigPanel()
@@ -441,8 +538,8 @@ class OpenDriveTray(eg.ActionBase):
             majorDimension=1
         )
         radiobox.SetSelection(action)
-        #Assign all available cd drives to self.drives. If CdRom.drive
-        #is not already set the first drive returned becomes the default.
+        # Assign all available cd drives to self.drives. If CdRom.drive
+        # is not already set the first drive returned becomes the default.
         cdDrives = []
         letters = [letter + ':' for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
         for driveLetter in letters:
@@ -479,7 +576,7 @@ class OpenDriveTray(eg.ActionBase):
 class RefreshEnvironment(eg.ActionBase):
     class text:
         name = "Refresh Environment"
-        description  = """<rst>
+        description = """<rst>
             Refreshes environment variables by reading their current
             values from the registry.
 
@@ -532,6 +629,7 @@ class SetClipboard(eg.ActionWithStringParameter):
                 wx.TheClipboard.Flush()
             else:
                 self.PrintError(self.text.error)
+
         # We call the hot stuff in the main thread. Otherwise we get
         # a "CoInitialize not called" error form wxPython (even though we
         # surely have called CoInitialize for this thread.
@@ -595,22 +693,22 @@ class WakeOnLan(eg.ActionBase):
     def Configure(self, macAddress=""):
         from wx.lib.masked import TextCtrl
         panel = eg.ConfigPanel()
-        macCtrl  = TextCtrl(
+        macCtrl = TextCtrl(
             panel,
-            mask = "##-##-##-##-##-##",
-            includeChars = "ABCDEF",
-            choiceRequired = True,
-            defaultValue = macAddress.upper(),
-            formatcodes = "F!",
+            mask="##-##-##-##-##-##",
+            includeChars="ABCDEF",
+            choiceRequired=True,
+            defaultValue=macAddress.upper(),
+            formatcodes="F!",
         )
         panel.AddLine(self.text.parameterDescription, macCtrl)
         while panel.Affirmed():
             panel.SetResult(macCtrl.GetValue())
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Display actions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class MonitorPowerOff(eg.ActionBase):
     name = "Turn Off Monitor"
@@ -687,6 +785,7 @@ class SetDisplayPreset(eg.ActionBase):
                 listCtrl.InsertItem(i, "")
                 for col, arg in enumerate(argLine):
                     listCtrl.SetItem(i, col, str(arg))
+
         FillList(args)
 
         for i in range(1, len(fields)):
@@ -762,11 +861,11 @@ class SetWallpaper(eg.ActionWithStringParameter):
         text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel,
-            size = (340, -1),
-            initialValue = imageFileName,
-            labelText = "",
-            fileMask = text.fileMask,
-            buttonText = eg.text.General.browse,
+            size=(340, -1),
+            initialValue=imageFileName,
+            labelText="",
+            fileMask=text.fileMask,
+            buttonText=eg.text.General.browse,
         )
         choice = wx.Choice(panel, -1, choices=text.choices)
         choice.SetSelection(style)
@@ -789,9 +888,9 @@ class StartScreenSaver(eg.ActionBase):
         SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0)
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Image actions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class ShapedFrame(wx.Frame):
     timer = None
@@ -819,7 +918,7 @@ class ShapedFrame(wx.Frame):
         noFocus,
         name,
         plugin,
-        data = None
+        data=None
     ):
         if data is None:
             try:
@@ -851,7 +950,7 @@ class ShapedFrame(wx.Frame):
             wx.BORDER_DOUBLE,
             wx.BORDER_SUNKEN,
             wx.BORDER_RAISED)[border] if sizeMode != 3 else wx.NO_BORDER
-        wx.Frame.__init__(self, None, -1, u"EG.System.DisplayImage.%s" % name, style = style)
+        wx.Frame.__init__(self, None, -1, u"EG.System.DisplayImage.%s" % name, style=style)
         self.SetBackgroundColour(back)
 
         self.hasShape = False
@@ -884,12 +983,12 @@ class ShapedFrame(wx.Frame):
         if sizeMode == 0:
             width_ = w
             height_ = h
-        elif sizeMode == 3:  #FULLSCREEN
+        elif sizeMode == 3:  # FULLSCREEN
             width_ = monDim[display][2]
             height_ = monDim[display][3]
             x = 0
             y = 0
-        if sizeMode > 0:  #SEMI/FIX SIZE or FULLSCREEN
+        if sizeMode > 0:  # SEMI/FIX SIZE or FULLSCREEN
             if (width_, height_) == (w, h):
                 pass
             elif stretch and fit:
@@ -898,20 +997,20 @@ class ShapedFrame(wx.Frame):
                 if stretch and w <= width_ and h <= height_:
                     res = True
 
-                #elif fit and w >= width_ and h >= height_:
+                # elif fit and w >= width_ and h >= height_:
                 elif fit and w >= width_ or h >= height_:
                     res = True
-        if res:  #resize !
-            if fitMode == 0:  #ignore aspect
+        if res:  # resize !
+            if fitMode == 0:  # ignore aspect
                 w = width_
                 h = height_
-            elif fitMode == 1:  #width AND height AND aspect
-                w, h = Resize(w, h, width_, height_, force = True)
-            elif fitMode == 2:  #width
+            elif fitMode == 1:  # width AND height AND aspect
+                w, h = Resize(w, h, width_, height_, force=True)
+            elif fitMode == 2:  # width
                 wpercent = (width_ / float(w))
                 w = width_
                 h = int((float(h) * wpercent))
-            else:  #height
+            else:  # height
                 wpercent = (height_ / float(h))
                 h = height_
                 w = int((float(w) * wpercent))
@@ -952,7 +1051,7 @@ class ShapedFrame(wx.Frame):
         self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
         if name:
             self.plugin.images[name] = self
-            self.plugin.TriggerEvent("ImageDisplayed", payload = name)
+            self.plugin.TriggerEvent("ImageDisplayed", payload=name)
         if noFocus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:
@@ -961,8 +1060,8 @@ class ShapedFrame(wx.Frame):
     def OnDoubleClick(self, evt):
         eg.TriggerEvent(
             "DoubleClick",
-            prefix = "System.DisplayImage",
-            payload = self.imageFile
+            prefix="System.DisplayImage",
+            payload=self.imageFile
         )
         if self.hasAlpha:
             if self.hasShape:
@@ -1004,8 +1103,8 @@ class ShapedFrame(wx.Frame):
     def OnRightUp(self, evt):
         eg.TriggerEvent(
             "RightClick",
-            prefix = "System.DisplayImage",
-            payload = self.imageFile
+            prefix="System.DisplayImage",
+            payload=self.imageFile
         )
         wx.CallAfter(self.OnExit)
 
@@ -1020,7 +1119,7 @@ class ShowPictureFrame(wx.Frame):
             None,
             -1,
             "ShowPictureFrame",
-            style=wx.NO_BORDER | wx.FRAME_NO_TASKBAR  #| wx.STAY_ON_TOP
+            style=wx.NO_BORDER | wx.FRAME_NO_TASKBAR  # | wx.STAY_ON_TOP
         )
         self.SetBackgroundColour(wx.Colour(0, 0, 0))
         self.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
@@ -1050,7 +1149,7 @@ class ShowPictureFrame(wx.Frame):
         self.Update()
         self.staticBitmap.SetCursor(wx.Cursor(wx.CURSOR_BLANK))
 
-    def SetPicture(self, picturePath = None, display = 0):
+    def SetPicture(self, picturePath=None, display=0):
         if not picturePath:
             return
         width_ = GetMonitorDimensions()[display][2]
@@ -1141,25 +1240,25 @@ class DisplayImage(eg.ActionBase):
 
     def __call__(
         self,
-        imageFile = '',
-        winSize = 0,
-        fitMode = 1,
-        fit = True,
-        stretch = False,
-        resample = 0,
-        onTop = True,
-        border = 4,
-        timeout = 10,
-        display = 0,
-        x = 0,
-        y = 0,
-        width_ = 640,
-        height_ = 360,
-        back = (0, 0, 0),
-        shaped = True,
-        center = False,
-        noFocus = True,
-        title = ""
+        imageFile='',
+        winSize=0,
+        fitMode=1,
+        fit=True,
+        stretch=False,
+        resample=0,
+        onTop=True,
+        border=4,
+        timeout=10,
+        display=0,
+        x=0,
+        y=0,
+        width_=640,
+        height_=360,
+        back=(0, 0, 0),
+        shaped=True,
+        center=False,
+        noFocus=True,
+        title=""
     ):
         def parseArgument(arg):
             if not arg:
@@ -1171,6 +1270,7 @@ class DisplayImage(eg.ActionBase):
                 decimal_point = localeconv()['decimal_point']
                 arg = eg.ParseString(arg).replace(decimal_point, ".")
                 return int(float(arg))
+
         imageFile = eg.ParseString(imageFile)
         x = parseArgument(x)
         y = parseArgument(y)
@@ -1208,25 +1308,25 @@ class DisplayImage(eg.ActionBase):
 
     def Configure(
         self,
-        imageFile = '',
-        winSize = 0,
-        fitMode = 1,
-        fit = True,
-        stretch = False,
-        resample = 0,
-        onTop = True,
-        border = 4,
-        timeout = 10,
-        display = 0,
-        x = 0,
-        y = 0,
-        width_ = 640,
-        height_ = 360,
-        back = (0, 0, 0),
-        shaped = True,
-        center = False,
-        noFocus = True,
-        title = ""
+        imageFile='',
+        winSize=0,
+        fitMode=1,
+        fit=True,
+        stretch=False,
+        resample=0,
+        onTop=True,
+        border=4,
+        timeout=10,
+        display=0,
+        x=0,
+        y=0,
+        width_=640,
+        height_=360,
+        back=(0, 0, 0),
+        shaped=True,
+        center=False,
+        noFocus=True,
+        title=""
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -1278,27 +1378,27 @@ class DisplayImage(eg.ActionBase):
         rb2.SetValue(fitMode == 2)
         rb3 = wx.RadioButton(panel, -1, text.fitModes[3])
         rb3.SetValue(fitMode == 3)
-        resampleCtrl = wx.Choice(panel, -1, choices = text.resampleMethods)
+        resampleCtrl = wx.Choice(panel, -1, choices=text.resampleMethods)
         resampleCtrl.SetSelection(resample)
-        backColourButton = eg.ColourSelectButton(panel, back, name = text.bckgrndColour)
+        backColourButton = eg.ColourSelectButton(panel, back, name=text.bckgrndColour)
         shapedCtrl = wx.CheckBox(panel, -1, text.shaped)
         shapedCtrl.SetValue(shaped)
         onTopCtrl = wx.CheckBox(panel, -1, text.onTop)
         onTopCtrl.SetValue(onTop)
         noFocusCtrl = wx.CheckBox(panel, -1, text.noFocus)
         noFocusCtrl.SetValue(noFocus)
-        borderCtrl = wx.Choice(panel, -1, choices = text.borders)
+        borderCtrl = wx.Choice(panel, -1, choices=text.borders)
         borderCtrl.SetSelection(border)
         centerCtrl = wx.CheckBox(panel, -1, text.center)
         centerCtrl.SetValue(center)
 
-        xCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, x, size = wx.Size(88, -1), textWidth = 105)
-        yCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, y, size = ((88, -1)), textWidth = 105)
-        widthCtrl = eg.SmartSpinIntCtrl(panel, -1, width_, textWidth = 105)
-        heightCtrl = eg.SmartSpinIntCtrl(panel, -1, height_, textWidth = 105)
-        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth = 105)
+        xCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, x, size=wx.Size(88, -1), textWidth=105)
+        yCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, y, size=((88, -1)), textWidth=105)
+        widthCtrl = eg.SmartSpinIntCtrl(panel, -1, width_, textWidth=105)
+        heightCtrl = eg.SmartSpinIntCtrl(panel, -1, height_, textWidth=105)
+        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth=105)
 
-        def onCenter(evt = None):
+        def onCenter(evt=None):
             flag = radioBoxWinSizes.GetSelection() != 3 and not centerCtrl.GetValue()
             xCoordCtrl.Enable(flag)
             xCoordLbl.Enable(flag)
@@ -1306,9 +1406,10 @@ class DisplayImage(eg.ActionBase):
             yCoordLbl.Enable(flag)
             if evt:
                 evt.Skip()
+
         centerCtrl.Bind(wx.EVT_CHECKBOX, onCenter)
 
-        def enableCtrls_B(evt = None):
+        def enableCtrls_B(evt=None):
             mode = radioBoxWinSizes.GetSelection()
             wFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb2.GetValue()))
             hFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb3.GetValue()))
@@ -1318,12 +1419,13 @@ class DisplayImage(eg.ActionBase):
             heightLbl.Enable(hFlag)
             if evt:
                 evt.Skip()
+
         rb0.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
         rb1.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
         rb2.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
         rb3.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
 
-        def enableCtrls_A(evt = None):
+        def enableCtrls_A(evt=None):
             mode = radioBoxWinSizes.GetSelection()
             flag = mode != 3
             centerCtrl.Enable(flag)
@@ -1354,12 +1456,13 @@ class DisplayImage(eg.ActionBase):
                 evt.Skip()
             enableCtrls_B()
             onCenter()
+
         radioBoxWinSizes.Bind(wx.EVT_RADIOBOX, enableCtrls_A)
         fitCtrl.Bind(wx.EVT_CHECKBOX, enableCtrls_A)
         stretchCtrl.Bind(wx.EVT_CHECKBOX, enableCtrls_A)
         enableCtrls_A()
 
-        #Sizers
+        # Sizers
         borderSizer = wx.BoxSizer(wx.HORIZONTAL)
         borderSizer.Add(borderLbl, 0, wx.TOP, 3)
         borderSizer.Add(borderCtrl, 0, wx.LEFT, 5)
@@ -1552,13 +1655,13 @@ class ShowQRcode(eg.ActionBase):
 
     def __call__(
         self,
-        data = '',
-        display = 0,
-        timeout = 0,
-        box = 12,
-        border = 4,
-        title = 'QRcode',
-        sizeMode = 0
+        data='',
+        display=0,
+        timeout=0,
+        box=12,
+        border=4,
+        title='QRcode',
+        sizeMode=0
     ):
         data = eg.ParseString(data)
         title = eg.ParseString(title)
@@ -1573,19 +1676,20 @@ class ShowQRcode(eg.ActionBase):
                 decimal_point = localeconv()['decimal_point']
                 arg = eg.ParseString(arg).replace(decimal_point, ".")
                 return int(float(arg))
+
         timeout = parseArgument(timeout)
         box = parseArgument(box)
         border = parseArgument(border)
 
         if data:
             qr = QRCode(
-                version = None,
-                border = border,
-                error_correction = QRconstants.ERROR_CORRECT_M,
-                box_size = box,
+                version=None,
+                border=border,
+                error_correction=QRconstants.ERROR_CORRECT_M,
+                box_size=box,
             )
             qr.add_data(data)
-            qr.make(fit = True)
+            qr.make(fit=True)
             img = qr.make_image()
             buff = StringIO()
             img.save(buff)
@@ -1622,11 +1726,11 @@ class ShowQRcode(eg.ActionBase):
         self,
         data='',
         display=0,
-        timeout = 0,
-        box = 12,
-        border = 4,
-        title = 'QRcode',
-        sizeMode = 0
+        timeout=0,
+        box=12,
+        border=4,
+        title='QRcode',
+        sizeMode=0
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -1634,7 +1738,7 @@ class ShowQRcode(eg.ActionBase):
         displayChoice = eg.DisplayChoice(panel, display)
         timeoutLbl_1 = wx.StaticText(panel, -1, text.timeout1)
         timeoutLbl_2 = wx.StaticText(panel, -1, text.timeout2)
-        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth = 105)
+        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth=105)
         boxLbl = wx.StaticText(panel, -1, text.box)
         borderLbl = wx.StaticText(panel, -1, text.border)
         titleLbl = wx.StaticText(panel, -1, text.title)
@@ -1642,17 +1746,17 @@ class ShowQRcode(eg.ActionBase):
             panel,
             -1,
             box,
-            min = 5,
-            max = 50,
-            textWidth = 105
+            min=5,
+            max=50,
+            textWidth=105
         )
         borderCtrl = eg.SmartSpinIntCtrl(
             panel,
             -1,
             border,
-            min = 1,
-            max = 20,
-            textWidth = 105
+            min=1,
+            max=20,
+            textWidth=105
         )
         titleCtrl = wx.TextCtrl(panel, -1, title)
         titleLbl.SetToolTip(self.text.titleTool)
@@ -1704,9 +1808,9 @@ class ShowQRcode(eg.ActionBase):
             )
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Power actions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class __ComputerPowerAction(eg.ActionBase):
     iconFile = "icons/Shutdown"
@@ -1764,9 +1868,9 @@ class LogOff(eg.ActionBase):
     iconFile = "icons/LogOff"
 
     def __call__(self):
-        #SHTDN_REASON_MAJOR_OPERATINGSYSTEM = 0x00020000
-        #SHTDN_REASON_MINOR_UPGRADE         = 0x00000003
-        #SHTDN_REASON_FLAG_PLANNED          = 0x80000000
+        # SHTDN_REASON_MAJOR_OPERATINGSYSTEM = 0x00020000
+        # SHTDN_REASON_MINOR_UPGRADE         = 0x00000003
+        # SHTDN_REASON_FLAG_PLANNED          = 0x80000000
         #                                     ----------
         #                                     0x80020003
         ExitWindowsEx(EWX_LOGOFF, 0x80020003)
@@ -1851,9 +1955,9 @@ class Standby(__ComputerPowerAction):
         )
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Soundcard actions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class ChangeMasterVolumeBy(eg.ActionBase):
     name = "Change Master Volume"
@@ -1874,7 +1978,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-        #if eg.WindowsVersion >= 'Vista':
+        # if eg.WindowsVersion >= 'Vista':
         #    deviceCtrl.SetValue(0)
         #    deviceCtrl.Enable(False)
 
@@ -1885,7 +1989,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
 
-        #panel.AddLine("Device:", deviceCtrl)
+        # panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.plugin.text.device, deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
@@ -1927,7 +2031,7 @@ class GetMute(eg.ActionBase):
         """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        #panel.AddLine("Device:", deviceCtrl)
+        # panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
@@ -1954,7 +2058,7 @@ class MuteOff(eg.ActionBase):
         """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        #panel.AddLine("Device:", deviceCtrl)
+        # panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
@@ -1981,7 +2085,7 @@ class MuteOn(eg.ActionBase):
         """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        #panel.AddLine("Device:", deviceCtrl)
+        # panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
@@ -2011,9 +2115,9 @@ class PlaySound(eg.ActionWithStringParameter):
 
         def run(self):
             self.sound.Play(wx.adv.SOUND_SYNC)
-            eg.TriggerEvent(self.suffix, prefix = self.prefix)
+            eg.TriggerEvent(self.suffix, prefix=self.prefix)
 
-    def __call__(self, wavfile, flags=wx.adv.SOUND_ASYNC, evt = False):
+    def __call__(self, wavfile, flags=wx.adv.SOUND_ASYNC, evt=False):
         self.sound = wx.adv.Sound(wavfile)
         suffix = "%s.%s" % (
             "%s.%s" % (self.name.replace(' ', ''), self.text.eventSuffix),
@@ -2023,14 +2127,14 @@ class PlaySound(eg.ActionWithStringParameter):
         if flags == wx.adv.SOUND_SYNC:
             self.sound.Play(flags)
             if evt:
-                eg.TriggerEvent(suffix, prefix = prefix)
+                eg.TriggerEvent(suffix, prefix=prefix)
         elif evt:
             te = self.TriggerEvent(self.sound, suffix, prefix)
             te.start()
         else:
             self.sound.Play(flags)
 
-    def Configure(self, wavfile='', flags=wx.adv.SOUND_ASYNC, evt = False):
+    def Configure(self, wavfile='', flags=wx.adv.SOUND_ASYNC, evt=False):
         panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = panel.FileBrowseButton(wavfile, fileMask=text.fileMask)
@@ -2073,7 +2177,7 @@ class SetMasterVolume(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId + 1, choices=SoundMixer.GetMixerDevices(True)
         )
-#        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
+        #        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
@@ -2136,7 +2240,7 @@ class ToggleMute(eg.ActionBase):
         """if eg.WindowsVersion >= 'Vista':
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        #panel.AddLine("Device:", deviceCtrl)
+        # panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
@@ -2147,7 +2251,10 @@ class ToggleMute(eg.ActionBase):
 
 def _CreateShowPictureFrame():
     ShowPicture.pictureFrame = ShowPictureFrame()
+
+
 wx.CallAfter(_CreateShowPictureFrame)
+
 
 def AdjustPrivileges():
     """
@@ -2166,19 +2273,21 @@ def AdjustPrivileges():
     newState.Privileges[0].Luid = luid
     newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED
     AdjustTokenPrivileges(
-        hToken,            # TokenHandle
-        0,                 # DisableAllPrivileges
-        newState,          # NewState
+        hToken,  # TokenHandle
+        0,  # DisableAllPrivileges
+        newState,  # NewState
         sizeof(newState),  # BufferLength
-        None,              # PreviousState
-        None               # ReturnLength
+        None,  # PreviousState
+        None  # ReturnLength
     )
+
 
 def getDeviceHandle(drive):
     """
     Returns a properly formatted device handle for DeviceIOControl call.
     """
     return "\\\\.\\%s:" % drive[:1].upper()
+
 
 def piltoimage(pil, hasAlpha):
     """
@@ -2195,7 +2304,8 @@ def piltoimage(pil, hasAlpha):
         image.SetData(data)
     return image
 
-def Resize(w, h, width_, height_, force = False):
+
+def Resize(w, h, width_, height_, force=False):
     if force or (w > width_) or (h > height_):
         xfactor = (w * 1.0 / width_)
         yfactor = (h * 1.0 / height_)

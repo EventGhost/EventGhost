@@ -18,13 +18,13 @@
 
 import glob
 import os
-import pip
+from pip._internal.utils.misc import get_installed_distributions
 import platform
 import re
 import sys
 import warnings
 from os.path import basename, exists, expandvars, join
-from pip._vendor import requests
+import requests
 from shutil import copy2
 from string import digits
 
@@ -160,7 +160,7 @@ class ModuleDependency(DependencyBase):
         else:
             result = [
                 p.version
-                for p in pip.get_installed_distributions()
+                for p in get_installed_distributions()
                 if str(p).startswith(self.name + " ")
             ]
             if result:

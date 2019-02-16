@@ -34,17 +34,19 @@ SHGFP_TYPE_CURRENT = 0
 MAX_PATH = 260
 CSIDL_FLAG_DONT_VERIFY = 16384
 
+# id's from https://installmate.com/support/im9/using/symbols/functions/csidls.htm
 CSIDL = {
     'AdminTools': 48,
-    'Startup': 29,
+    'AltStartup': 29,
     'RoamingAppData': 26,
+    'RecycleBin': 10,
     'CDBurning': 59,
     'CommonAdminTools': 47,
-    'CommonStartup': 30,
+    'CommonAltStartup': 30,
     'ProgramData': 35,
     'PublicDesktop': 25,
     'PublicDocuments': 46,
-    'Favorites': 31,
+    'PublicFavorites': 31,
     'PublicMusic': 53,
     'CommonOEMLinks': 58,
     'PublicPictures': 54,
@@ -53,30 +55,48 @@ CSIDL = {
     'CommonStartup': 24,
     'CommonTemplates': 45,
     'PublicVideos': 55,
+    'ComputersNearMe': 61,
+    'Connections': 49,
+    'ControlPanel': 3,
     'Cookies': 33,
     'Desktop': 16,
+    'DesktopRoot': 0,
+    'MyComputer': 17,
     'Favorites': 6,
     'Fonts': 20,
     'History': 34,
+    'Internet': 1,
     'InternetCache': 32,
     'LocalAppData': 28,
-    'Documents': 12,
+    'Documents2': 12,
     'Music': 13,
     'Pictures': 39,
     'Videos': 14,
     'NetHood': 19,
+    'Network': 18,
     'Documents': 5,
+    'PhotoAlbums': 69,
+    'Playlists': 63,
+    'Printers': 4,
     'PrintHood': 27,
     'Profile': 40,
     'ProgramFiles': 38,
+    'ProgramFilesX86': 42,
     'ProgramFilesCommon': 43,
+    'ProgramFilesCommonX86': 44,
     'Programs': 2,
     'Recent': 8,
     'ResourceDir': 56,
+    'ResourceDirLocalized': 57,
+    'SampleMusic': 64,
+    'SamplePlaylists': 65,
+    'SamplePictures': 66,
+    'SampleVideos': 67,
     'SendTo': 9,
     'StartMenu': 11,
     'Startup': 7,
     'System': 37,
+    'SystemX86': 41,
     'Templates': 21,
     'Windows': 36,
 }
@@ -85,11 +105,20 @@ BUFFER = create_unicode_buffer(MAX_PATH)
 GetTempPathW(MAX_PATH, BUFFER)
 temporaryFiles = BUFFER.value[:-1]
 
+
 class FolderPath(object):
-    __ALL__ = CSIDL.keys() + ["TemporaryFiles"]
-    TemporaryFiles = temporaryFiles
+
     __repr__ = object.__repr__
 
+    def __init__(self):
+        for name in CSIDL.keys():
+            try:
+                _ = self.__getattr__(name)
+            except WindowsError:
+                CSIDL.pop(name)
+
+        self.__ALL__ = CSIDL.keys() + ["TemporaryFiles"]
+        self.TemporaryFiles = temporaryFiles
 
     @property
     def mainDir(self):

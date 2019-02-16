@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import locale
 import socket
 from hashlib import md5
+import locale
 
-ENCODING = locale.getdefaultlocale()[1]
+
+systemEncoding = locale.getdefaultlocale()[1]
 
 
 def ShowError(msg):
@@ -90,10 +91,10 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # now just pipe those commands to the server
         if (payload is not None) and (len(payload) > 0):
             for pld in payload:
-                sock.sendall("payload " + pld.encode(ENCODING) + "\n")
+                sock.sendall("payload " + pld.encode(systemEncoding) + "\n")
 
         # send the eventstring
-        sock.sendall(eventString.encode(ENCODING) + "\n")
+        sock.sendall(eventString.encode(systemEncoding) + "\n")
 
         # tell the server that we are done nicely.
         sock.sendall("close\n")

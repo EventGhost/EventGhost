@@ -537,7 +537,7 @@ class CalendarPopup(wx.PopupWindow):
         wx.PopupWindow.__init__(self, parent)
         startDate = wx.DateTime()
         startDate.Set(1, 0)
-        self.cal = wxCal.GenericCalendarCtrl(
+        self.cal = wxCal.CalendarCtrl(
             self,
             -1,
             startDate,
@@ -546,7 +546,8 @@ class CalendarPopup(wx.PopupWindow):
                 | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
                 | wxCal.CAL_SHOW_SURROUNDING_WEEKS
         )
-        self.cal.EnableYearChange(yearChange)
+        if not yearChange:
+            self.cal.SetDateRange(wx.DateTime(1, 0, wx.DateTime.Today().GetYear()))
         sz = self.cal.GetBestSize()
         self.SetSize(sz)
         self.cal.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)

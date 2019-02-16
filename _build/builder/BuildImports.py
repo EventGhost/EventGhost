@@ -180,6 +180,9 @@ def FindModulesInPath(path, prefix="", includeDeprecated=False):
                 if not eType == "DeprecationWarning":
                     print "       ", moduleName, eType, eMesg
                 continue
+            if "-" in moduleName:
+                print "Module name contains invalid character: ", repr(moduleName)
+                continue
             modules.append(moduleName)
     return modules
 

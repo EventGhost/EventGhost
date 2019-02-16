@@ -76,8 +76,8 @@ def ImportAll():
     Traverse(eg.corePluginDir, "eg.CorePluginModule")
 
 def Init():
-    import WinApi.pywin32_patches # NOQA
-    import WinApi.GenPaths  # NOQA
+    import WinApi.pywin32_patches
+    import WinApi.GenPaths
 
 
 def InitGui():
@@ -118,9 +118,13 @@ def InitGui():
         startupFile
     )
 
+    today = gmtime()[:3]
+    if config.lastCertifiCheck != today:
+        config.lastCertifiCheck = today
+        wx.CallAfter(eg.CheckCertifiUpdate.start)
+
     if config.checkUpdate:
         # avoid more than one check per day
-        today = gmtime()[:3]
         if config.lastUpdateCheckDate != today:
             config.lastUpdateCheckDate = today
             wx.CallAfter(eg.CheckUpdate.Start)

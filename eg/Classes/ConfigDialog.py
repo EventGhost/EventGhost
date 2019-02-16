@@ -98,6 +98,12 @@ class ConfigDialog(eg.TaskletDialog):
             wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1, wx.ID_HELP), ])
         )
 
+    def OnApply(self, event):
+        if self.treeItem.isFirstConfigure:
+            self.buttonRow.okButton.Enable(True)
+
+        self.DispatchEvent(event, wx.ID_APPLY)
+
     @eg.LogItWithReturn
     def Configure(self, treeItem, *args):
         self.__class__.currentDialog = self

@@ -17,11 +17,13 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import types
+from inspect import currentframe, getargvalues, getouterframes
+
 import wx
 import wx.adv
 
-# Local imports
 import eg
+
 
 class ConfigPanel(wx.Panel, eg.ControlProviderMixin):
     """
@@ -33,8 +35,6 @@ class ConfigPanel(wx.Panel, eg.ControlProviderMixin):
         resizable=True,
         showLine=True
     ):
-        #if resizable is None:
-        #    resizable = bool(eg.debugLevel)
         dialog = eg.ConfigDialog.currentDialog
         dialog.panel = self
         dialog.__init__(resizable, showLine)
@@ -52,9 +52,14 @@ class ConfigPanel(wx.Panel, eg.ControlProviderMixin):
         self.isDirty = False
         self.resultCode = None
         self.buttonsEnabled = True
-        self.dialog.buttonRow.applyButton.Enable(False)
+        outer = getouterframes(currentframe())
+        has_args = len(getargvalues(outer[1][0]).args) > 1
+        self.dialog.buttonRow.applyButton.Enable(
+            has_args and self.dialog.treeItem.isFirstConfigure
+        )
         self.dialog.buttonRow.okButton.Enable(
-            not self.dialog.treeItem.isFirstConfigure
+            not has_args or
+            not (has_args and self.dialog.treeItem.isFirstConfigure)
         )
 
     def AddCtrl(self, ctrl):

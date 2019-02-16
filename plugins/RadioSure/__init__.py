@@ -879,8 +879,8 @@ class CalendarPopup(wx.PopupWindow):
                 | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
                 | wxCal.CAL_SHOW_SURROUNDING_WEEKS
         )
-        # (topic2k) YearChange isn't supported anymore. Use other calendar control?
-        # self.cal.EnableYearChange(yearChange)
+        if not yearChange:
+            self.cal.SetDateRange(wx.DateTime(1, 0, wx.DateTime.Today().GetYear()))
         sz = self.cal.GetBestSize()
         self.SetSize(sz)
         self.cal.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)

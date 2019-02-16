@@ -24,13 +24,12 @@ from time import clock
 import eg
 
 # some shortcuts to speed things up
-#pylint: disable-msg=C0103
 actionThread = eg.actionThread
 LogEvent = eg.log.LogEvent
 RunProgram = eg.RunProgram
 GetItemPath = eg.EventItem.GetPath
 config = eg.config
-#pylint: enable-msg=C0103
+
 
 class EventGhostEvent(object):
     """

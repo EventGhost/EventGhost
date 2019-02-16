@@ -66,6 +66,7 @@ class BuildChmDocs(builder.Task):
             self.activated = bool(self.buildSetup.args.package)
 
     def DoTask(self):
+
         tmpDir = join(self.buildSetup.tmpDir, "chm")
         if not os.path.exists(tmpDir):
             os.makedirs(tmpDir)
@@ -106,11 +107,13 @@ def call_sphinx(builder, build_setup, dest_dir):
         [
             "-D", "project=EventGhost",
             "-D", "copyright=2005-2019 EventGhost Project",
+            "-D", "version=%s" % build_setup.appVersion,
+            "-D", "release=%s" % build_setup.appVersion,
             # "-D", "templates_path=[]",
-            '-q',    # be quiet
-            # "-a",  # always write all output files
             "-E",    # Don’t use a saved environment (the structure
                      # caching all cross-references),
+            # "-a",  # always write all output files
+            '-q',    # be quiet
             # "-N",  # Prevent colored output.
             # "-P",  # (Useful for debugging only.) Run the Python debugger,
                      # pdb, if an unhandled exception occurs while building.
@@ -120,8 +123,6 @@ def call_sphinx(builder, build_setup, dest_dir):
             # write warnings and errors to file:
             # '-w', join('output', 'sphinx_log_chm.txt'),
             "-b", builder,
-            "-D", "version=%s" % build_setup.appVersion,
-            "-D", "release=%s" % build_setup.appVersion,
             "-d", join(build_setup.tmpDir, ".doctree"),
             build_setup.docsDir,
             dest_dir,

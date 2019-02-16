@@ -14,15 +14,11 @@ from os.path import join, splitext
 from threading import Thread
 
 import wx
+from PIL.ImageGrab import grab, grabclipboard
 
 import eg
 from .utils import check, get_nm_nr, grayed, SEP
 from .widgets import ICON_DIR, PhonebookChoice, Table
-
-try:
-    from ImageGrab import grab, grabclipboard
-except ImportError:
-    from PIL.ImageGrab import grab, grabclipboard
 
 
 class Push(eg.ActionBase):
@@ -86,10 +82,10 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
             trgts = self.plugin.get_targets(eg.event.payload[-2])
             trgts = trgts if trgts else [['Everything', None, 'everything', True]]
         elif self.value == "Gr":
-            tmp = [itm[0] for itm in self.plugin.pushGroups]
+            tmp = [itm[0] for itm in self.plugin.push_groups]
             if trgts in tmp:
                 ix = tmp.index(trgts)
-                trgts = self.plugin.pushGroups[ix][1]
+                trgts = self.plugin.push_groups[ix][1]
             else:
                 return  # no targets
         elif self.value == "Single":
@@ -118,7 +114,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
     def GetLabel(self, kind, trgts, data, suff):
         k = self.plugin.text.kinds[kind]
         if self.value == "Everything":
-            ts = self.text.ever
+            ts = self.Text.ever
         elif self.value == "Reply":
             return "%s: %s" % (self.name, k)
         elif self.value in ("Gr", "Single"):
@@ -134,18 +130,19 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
             data = ["", ""]
         if trgts is None:
             trgts = []
-        text = self.text
+        text = self.Text
         self.kind = kind
         panel = eg.ConfigPanel(self)
         self.ts = []
         ts_label = wx.Size(1, 1)
         ts_ctrl = wx.Size(1, 1)
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
         if self.value == "Gr":
-            ts_label = wx.StaticText(panel, -1, self.text.grLabel)
+            ts_label = wx.StaticText(panel, -1, self.Text.grLabel)
             ts_ctrl = wx.Choice(
                 panel,
                 -1,
-                choices=[itm[0] for itm in self.plugin.pushGroups],
+                choices=[itm[0] for itm in self.plugin.push_groups],
                 size=(-1, 200),
             )
             if isinstance(trgts, (str, unicode)):
@@ -153,7 +150,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
         elif self.value == "Single":
             if not isinstance(trgts, (str, unicode)):
                 trgts = ""
-            ts_label = wx.StaticText(panel, -1, self.text.target)
+            ts_label = wx.StaticText(panel, -1, self.Text.target)
             ts_ctrl = wx.TextCtrl(panel, -1, trgts, size=(200, -1))
             ts_label.SetToolTip(text.toolTipSingle)
             ts_ctrl.SetToolTip(text.toolTipSingle)
@@ -259,7 +256,6 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
             b.Bind(wx.EVT_BUTTON, on_click, id=btn_id)
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        left_sizer = wx.BoxSizer(wx.VERTICAL)
         if not self.value or self.value in ("Gr", "Single"):
             left_sizer.Add(ts_label)
             left_sizer.Add(ts_ctrl, 0, wx.TOP | wx.EXPAND, 2)
@@ -297,7 +293,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
                 self.ids[0],
                 dat[0] if dat and (knd != 2 or len(dat) == 2) else ""
             )  # for backward compatibility ^^^^^^^^^^^^^^
-            lbl1 = wx.StaticText(panel, self.ids[2], self.text.lbls1[knd])
+            lbl1 = wx.StaticText(panel, self.ids[2], self.Text.lbls1[knd])
             if knd == 2:
                 if dat and len(dat) == 1:  # for backward compatibility
                     dat.insert(0, "")
@@ -318,7 +314,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
                     dat[1] if dat is not None else "",
                     style=wx.TE_MULTILINE if knd != 1 else 0
                 )
-            lbl2 = wx.StaticText(panel, self.ids[3], self.text.lbls2[knd])
+            lbl2 = wx.StaticText(panel, self.ids[3], self.Text.lbls2[knd])
             right_sizer.Add(lbl1, 0, wx.TOP, 10)
             right_sizer.Add(cntrl1, 0, style, 1)
             right_sizer.Add(lbl2, 0, wx.TOP, 10)
@@ -326,14 +322,14 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
 
             if knd in (1, 3):
                 if knd == 1:
-                    lbl3 = wx.StaticText(panel, self.ids[4], self.text.lbls2[0])
+                    lbl3 = wx.StaticText(panel, self.ids[4], self.Text.lbls2[0])
                     cntrl3 = wx.TextCtrl(
                         panel,
                         self.ids[5],
                         dat[2] if dat and len(dat) > 2 else ""
                     )
                 else:
-                    lbl3 = wx.StaticText(panel, self.ids[4], self.text.lbl3)
+                    lbl3 = wx.StaticText(panel, self.ids[4], self.Text.lbl3)
                     cntrl3 = eg.FileBrowseButton(
                         panel,
                         self.ids[5],
@@ -362,7 +358,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
         main_sizer.Add(r_sizer, 1, wx.EXPAND)
         panel.sizer.Add(main_sizer, 1, wx.ALL | wx.EXPAND, 5)
 
-        if not self.plugin.wsC:
+        if not self.plugin.ws_c:
             panel.Enable(False)
 
         smart_button = wx.Button(panel.dialog, -1, text.smartLabel)
@@ -375,7 +371,7 @@ You can also use variables - for example {eg.result} or {eg.event.payload} ."""
 
         smart_button.Bind(wx.EVT_BUTTON, on_smart_button)
 
-        set_dyn_ctrls(data=("", "", ""), knd=1)  # dialog - size adjustment
+        set_dyn_ctrls(dat=("", "", ""), knd=1)  # dialog - size adjustment
         panel.GetParent().GetParent().Show()
         wx.CallAfter(set_dyn_ctrls, data)
 
@@ -447,7 +443,7 @@ If the field is left blank, the event will not be triggered.'''
             filename % self.plugin.nickname
         )
         if not im:
-            eg.PrintError(self.text.noData)
+            eg.PrintError(self.Text.noData)
             return
         im.save(file_path)
         descr = eg.ParseString(descr)
@@ -460,7 +456,7 @@ If the field is left blank, the event will not be triggered.'''
 
     def GetLabel(self, trgts, region, descr, suff, src):
         src = int(region != (0, 0, 0, 0)) if src is None else src
-        type_ = self.text.types[src]
+        type_ = self.Text.types[src]
         if self.value:
             return "%s: %s: %s" % (self.name, descr, type_)
         elif trgts:
@@ -478,7 +474,7 @@ If the field is left blank, the event will not be triggered.'''
     ):
         if trgts is None:
             trgts = []
-        text = self.text
+        text = self.Text
         panel = eg.ConfigPanel(self)
         ts_label = wx.Size(1, 1)
         ts_ctrl = wx.Size(1, 1)
@@ -641,7 +637,7 @@ If the field is left blank, the event will not be triggered.'''
         main_sizer.Add(r_sizer, 1, wx.EXPAND)
         panel.sizer.Add(main_sizer, 1, wx.ALL | wx.EXPAND, 5)
 
-        if not self.plugin.wsC:
+        if not self.plugin.ws_c:
             panel.Enable(False)
 
         smart_button = wx.Button(panel.dialog, -1, text.smartLabel)
@@ -681,7 +677,7 @@ class DeletePush(eg.ActionBase):
 
     def Configure(self, iden=""):
         panel = eg.ConfigPanel()
-        lbl = wx.StaticText(panel, -1, self.text.lbl)
+        lbl = wx.StaticText(panel, -1, self.Text.lbl)
         push_ctrl = wx.TextCtrl(panel, -1, iden)
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
         main_sizer.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -711,8 +707,8 @@ class SendReply(eg.ActionBase):
 
     def Configure(self, push="{eg.event.payload[3]}", msg=""):
         panel = eg.ConfigPanel()
-        lbl_push = wx.StaticText(panel, -1, self.text.lblPush)
-        lbl_msg = wx.StaticText(panel, -1, self.text.lblMsg)
+        lbl_push = wx.StaticText(panel, -1, self.Text.lblPush)
+        lbl_msg = wx.StaticText(panel, -1, self.Text.lblMsg)
         push_ctrl = wx.TextCtrl(panel, -1, push)
         msg_ctrl = wx.TextCtrl(panel, -1, msg, style=wx.TE_MULTILINE)
         main_sizer = wx.FlexGridSizer(2, 2, 10, 10)
@@ -747,7 +743,7 @@ class Dismiss(eg.ActionBase):
 
     def Configure(self, pushDict="{eg.event.payload[-1]}"):
         panel = eg.ConfigPanel()
-        lbl_push = wx.StaticText(panel, -1, self.text.lblPush)
+        lbl_push = wx.StaticText(panel, -1, self.Text.lblPush)
         push_ctrl = wx.TextCtrl(panel, -1, pushDict)
         main_sizer = wx.FlexGridSizer(1, 2, 10, 10)
 
@@ -788,9 +784,9 @@ class SendSMS(eg.ActionBase):
 
     def Configure(self, dev="", recip="", msg=""):
         panel = eg.ConfigPanel()
-        lbl_dev = wx.StaticText(panel, -1, self.text.device)
-        lbl_rec = wx.StaticText(panel, -1, self.text.recip)
-        lbl_msg = wx.StaticText(panel, -1, self.text.message)
+        lbl_dev = wx.StaticText(panel, -1, self.Text.device)
+        lbl_rec = wx.StaticText(panel, -1, self.Text.recip)
+        lbl_msg = wx.StaticText(panel, -1, self.Text.message)
         try:
             choices = list(self.plugin.get_sm_sdevices().iterkeys())
         except ValueError:
@@ -823,8 +819,8 @@ class SendSMS(eg.ActionBase):
         ctrl_dev.Bind(wx.EVT_CHOICE, on_dev)
         on_dev()
 
-        smart_button = wx.Button(panel.dialog, -1, self.text.smartLabel)
-        smart_button.SetToolTip(self.text.smartTip)
+        smart_button = wx.Button(panel.dialog, -1, self.Text.smartLabel)
+        smart_button.SetToolTip(self.Text.smartTip)
         panel.dialog.buttonRow.Add(smart_button)
 
         def on_smart_button(event):
@@ -898,7 +894,7 @@ class SendSMS2list(eg.ActionBase):
     def Configure(self, dev="", filepath="", msg="", src=1, enc=""):
         self.enc = enc
         panel = eg.ConfigPanel()
-        text = self.text
+        text = self.Text
         ctrls = [wx.NewIdRef(), wx.NewIdRef()]
         lbl_dev = wx.StaticText(panel, -1, text.device)
         lbl_path = wx.StaticText(panel, -1, text.filepath)
@@ -921,8 +917,8 @@ class SendSMS2list(eg.ActionBase):
             fileMask=text.fileMask
         )
         src_label = wx.StaticText(panel, -1, text.src)
-        rb0 = panel.RadioButton(src == 0, self.text.srcs[0], style=wx.RB_GROUP)
-        rb1 = panel.RadioButton(src == 1, self.text.srcs[1])
+        rb0 = panel.RadioButton(src == 0, self.Text.srcs[0], style=wx.RB_GROUP)
+        rb1 = panel.RadioButton(src == 1, self.Text.srcs[1])
 
         src_sizer = wx.BoxSizer(wx.HORIZONTAL)
         src_sizer.Add(rb0)
@@ -1050,7 +1046,7 @@ class SendSMSmulti(eg.ActionBase):
     def Configure(self, dev="", recips2=None, msg=""):
         if recips2 is None:
             recips2 = []
-        text = self.text
+        text = self.Text
         ptext = self.plugin.text
 
         recips = recips2
@@ -1216,10 +1212,10 @@ class SendSMSgroup(eg.ActionBase):
     def __call__(self, group="", msg=""):
         group = eg.ParseString(group)
         msg = eg.ParseString(msg)
-        tmp = [itm[0] for itm in self.plugin.smsGroups]
+        tmp = [itm[0] for itm in self.plugin.sms_groups]
         if group in tmp:
             ix = tmp.index(group)
-            self.plugin.send_sm_smulti(self.plugin.smsGroups[ix][1], msg, None)
+            self.plugin.send_sm_smulti(self.plugin.sms_groups[ix][1], msg, None)
 
     def GetLabel(self, group, msg):
         msg = msg.replace("\n", "<LF>")
@@ -1231,12 +1227,12 @@ class SendSMSgroup(eg.ActionBase):
 
     def Configure(self, group="", msg=""):
         panel = eg.ConfigPanel()
-        lbl_grp = wx.StaticText(panel, -1, self.text.group)
-        lbl_msg = wx.StaticText(panel, -1, self.text.message)
+        lbl_grp = wx.StaticText(panel, -1, self.Text.group)
+        lbl_msg = wx.StaticText(panel, -1, self.Text.message)
         ctrl_group = wx.Choice(
             panel,
             -1,
-            choices=[itm[0] for itm in self.plugin.smsGroups],
+            choices=[itm[0] for itm in self.plugin.sms_groups],
         )
         ctrl_group.SetStringSelection(group)
         ctrl_msg = wx.TextCtrl(panel, -1, msg, style=wx.TE_MULTILINE)
@@ -1248,8 +1244,8 @@ class SendSMSgroup(eg.ActionBase):
         main_sizer.Add(ctrl_msg, 1, wx.EXPAND)
         panel.sizer.Add(main_sizer, 1, wx.EXPAND | wx.ALL, 10)
 
-        smart_button = wx.Button(panel.dialog, -1, self.text.smartLabel)
-        smart_button.SetToolTip(self.text.smartTip)
+        smart_button = wx.Button(panel.dialog, -1, self.Text.smartLabel)
+        smart_button.SetToolTip(self.Text.smartTip)
         main_sizer.AddGrowableRow(1)
         main_sizer.AddGrowableCol(1)
 
@@ -1296,7 +1292,7 @@ class JumpIf(eg.ActionBase):
 
     def GetLabel(self, link, kind, fl, exts):
         return "%s %s %s%s %s (%s)" % (
-            self.text.text2,
+            self.Text.text2,
             link.target.name,
             self.plugin.text.ifExt,
             ("", self.plugin.text.notLbl)[kind],
@@ -1305,7 +1301,7 @@ class JumpIf(eg.ActionBase):
         )
 
     def Configure(self, link=None, kind=0, fl="", exts=""):
-        text = self.text
+        text = self.Text
         panel = eg.ConfigPanel()
         lbl1 = wx.StaticText(panel, -1, self.plugin.text.file)
         lbl2 = wx.StaticText(panel, -1, self.plugin.text.ext)
@@ -1366,7 +1362,7 @@ class OpenFile(eg.ActionBase):
             ("", self.plugin.text.notLbl)[kind],
             self.plugin.text.inLbl,
             exts,
-            ("", self.text.stop)[int(stop)]
+            ("", self.Text.stop)[int(stop)]
         )
 
     def __call__(
@@ -1383,7 +1379,7 @@ class OpenFile(eg.ActionBase):
         if flinexts:
             try:
                 startfile(fl)
-            except ValueError:
+            except WindowsError:
                 pass
         if (kind == 1 and flinexts) or (kind == 2 and not flinexts):
             eg.programCounter = None
@@ -1396,7 +1392,7 @@ class OpenFile(eg.ActionBase):
         kind=0,
         stop=True
     ):
-        text = self.text
+        text = self.Text
         panel = eg.ConfigPanel(self)
         lbl1 = wx.StaticText(panel, -1, self.plugin.text.file)
         lbl2 = wx.StaticText(panel, -1, self.plugin.text.ext)
@@ -1449,7 +1445,7 @@ class EnableDisablePopups(eg.ActionBase):
         self.plugin.enable_disable_popups(pic, mirr, save)
 
     def GetLabel(self, pic, mirr, save):
-        return "%s: %i, %i (%s)" % (self.name, pic, mirr, self.text.labels[save])
+        return "%s: %i, %i (%s)" % (self.name, pic, mirr, self.Text.labels[save])
 
     def Configure(
         self,
@@ -1458,7 +1454,7 @@ class EnableDisablePopups(eg.ActionBase):
         save=1
     ):
         panel = eg.ConfigPanel(self)
-        text = self.text
+        text = self.Text
         pic_ctrl = wx.RadioBox(
             panel,
             -1,

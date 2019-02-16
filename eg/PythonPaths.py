@@ -19,13 +19,12 @@
 
 import sys
 import os
-import site
-import winreg
-from types import ModuleType
+from ctypes import c_int, create_unicode_buffer, HRESULT, windll
+from ctypes.wintypes import DWORD, HANDLE, HWND, LPWSTR
 
 
 version = sys.version_info[:2]
-currentDir = os.path.dirname(__file__.decode('mbcs'))
+currentDir = os.path.dirname(__file__)
 install_directory, folder_name = os.path.split(currentDir)
 
 while not folder_name:
@@ -38,30 +37,41 @@ sitePackagesDir = os.path.join(
     "site-packages"
 )
 
-sys.path.insert(0, mainDir.encode('mbcs'))
-sys.path.insert(1, sitePackagesDir.encode('mbcs'))
+SHGFP_TYPE_CURRENT = 0
+MAX_PATH = 260
+CSIDL_FLAG_DONT_VERIFY = 16384
 
-os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
-    sitePackagesDir,
-    'requests',
-    'cacert.pem'
+SHGetFolderPathW = windll.shell32.SHGetFolderPathW
+SHGetFolderPathW.restype = HRESULT
+SHGetFolderPathW.argtypes = [HWND, c_int, HANDLE, DWORD, LPWSTR]
+BUFFER = create_unicode_buffer(MAX_PATH)
+
+SHGetFolderPathW(
+    0,
+    35 | CSIDL_FLAG_DONT_VERIFY,
+    0,
+    SHGFP_TYPE_CURRENT,
+    BUFFER
 )
 
+data_dir = os.path.join(BUFFER.value, 'EventGhost')
+data_dir_site_packages = os.path.join(
+    data_dir,
+    'lib',
+    'site-packages'
+)
 try:
-    if "PYTHONPATH" in os.environ:
-        for path in os.environ.get("PYTHONPATH").split(os.pathsep):
-            site.addsitedir(path)
+    os.makedirs(data_dir_site_packages)
+except WindowsError:
+    pass
 
-    key = winreg.HKEY_LOCAL_MACHINE
+sys.path.insert(0, data_dir_site_packages)
+sys.path.insert(1, mainDir)
+sys.path.insert(2, sitePackagesDir)
 
-    subkey = r"SOFTWARE\Python\PythonCore\%d.%d\InstallPath" % version
-    with winreg.OpenKey(key, subkey) as hand:
-        site.addsitedir(
-            os.path.join(
-                winreg.QueryValue(hand, None),
-                "Lib",
-                "site-packages",
-            )
-        )
-except:
+try:
+    # noinspection PyUnresolvedReferences
+    import certifi
+    os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+except ImportError:
     pass

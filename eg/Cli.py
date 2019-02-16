@@ -24,21 +24,33 @@ import ctypes
 import locale
 import os
 import sys
-import threading
-from os.path import abspath, dirname, join
+from os.path import abspath, join
 
-import PythonPaths
+import pip
+import wx
+
 import LoopbackSocket
+import PythonPaths
+from .Classes.Translation import LCID_TO_WX
+
+
+kernel32 = ctypes.windll.kernel32
+
+lang_id = LCID_TO_WX.get(kernel32.GetUserDefaultUILanguage(), 0)
+wx_loc = wx.Locale(lang_id, wx.LOCALE_DONT_LOAD_DEFAULT)
+li = wx_loc.FindLanguageInfo(locale.getdefaultlocale()[0].split('_')[0])
+locale.setlocale(locale.LC_ALL, li.GetLocaleName())
+del li
+del wx_loc
 
 ENCODING = locale.getdefaultlocale()[1]
-locale.setlocale(locale.LC_ALL, '')
 argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
 mainDir = PythonPaths.mainDir
 
 # determine the commandline parameters
-import __main__  # NOQA
+import __main__
 
 
 class args:
@@ -88,7 +100,30 @@ def restart():
         )
         sys.exit(1)
 
+    if '-update_certifi' in sys.argv:
+        update_certifi()
+
     return True
+
+
+def update_certifi():
+    data_dir = join(os.environ['ProgramData'], 'EventGhost')
+    pip.main([
+        "install",
+        "--disable-pip-version-check",
+        "--no-cache-dir",
+        "--prefix", data_dir,
+        "--upgrade",
+        "--ignore-installed",
+        "--exists-action", "w",
+        "--quiet",
+        "certifi"
+    ])
+    try:
+        import certifi
+        os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+    except ImportError:
+        pass
 
 
 def send_message(msg, *msg_args):
@@ -161,10 +196,8 @@ if args.isMain:
     if (
         not args.allowMultiLoad and
         not args.translate and
-        args.isMain # and
-        # not args.pluginFile
+        args.isMain
     ):
-
         no_count = 0
 
         if LoopbackSocket.is_eg_running():

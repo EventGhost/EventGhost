@@ -7,29 +7,37 @@
 
 
 import eg
-from .lib.websocket__0440 import WebSocketApp
+# from .lib.websocket__0440 import WebSocketApp
+from websocket import WebSocketApp
 
 
 class WebSocketClient(WebSocketApp):
     def __init__(self, url, plugin):
         self.plugin = plugin
         self.watchdog = None
+
+        def on_open(arg):
+            self.plugin.on_open(arg)
+
+        def on_message(arg1, arg2):
+            self.plugin.on_message(arg1, arg2)
+
+        def on_error(_, error):
+            eg.PrintError(self.plugin.text.wsError % error)
+            self.plugin.stop_watchdog()
+            self.watchdog = eg.scheduler.AddTask(5.0, self.plugin.watcher)
+
+        def on_close(_):
+            self.plugin.TriggerEvent(self.plugin.text.wsClosedEvt)
+
         WebSocketApp.__init__(
             self,
             url,
-            on_open=plugin.on_open,
-            on_message=plugin.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close
+            on_open=on_open,
+            on_message=on_message,
+            on_error=on_error,
+            on_close=on_close
         )
-
-    def on_error(self, _, error):
-        eg.PrintError(self.plugin.text.wsError % error)
-        self.plugin.stop_watchdog()
-        self.watchdog = eg.scheduler.AddTask(5.0, self.plugin.watcher)
-
-    def on_close(self, _):
-        self.plugin.TriggerEvent(self.plugin.text.wsClosedEvt)
 
     def start(self):
         auth = None

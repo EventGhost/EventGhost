@@ -70,7 +70,7 @@ def _build_notice(icon, args):
     try:
         oldStdErr.write(std_msg)
     except:
-        oldStdErr.write(std_msg.decode("mbcs"))
+        oldStdErr.write(std_msg)
 
     return msg
 
@@ -118,15 +118,12 @@ class Log(object):
                 _oldStdErr._displayMessage = False
         if eg.debugLevel:
             import platform
-            import warnings
-            warnings.simplefilter('error', UnicodeWarning)
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice("        {0} started".format(eg.APP_NAME))
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice(eg.APP_NAME, "Version:", eg.Version.string)
-            self.PrintDebugNotice("Machine type:", platform.machine())
             self.PrintDebugNotice("Processor:", platform.processor())
-            self.PrintDebugNotice("Architecture:", platform.architecture())
+            self.PrintDebugNotice('Operating System:', eg.WindowsVersion.GetLongVersion())
             self.PrintDebugNotice(
                 "Python:",
                 platform.python_branch(),

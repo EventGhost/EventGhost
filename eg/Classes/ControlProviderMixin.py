@@ -18,8 +18,8 @@
 
 import wx
 
-# Local imports
 import eg
+
 
 class ControlProviderMixin:
     def BoxedGroup(self, *args, **kwargs):
@@ -123,6 +123,9 @@ class ControlProviderMixin:
         Returns a wx.StaticText control.
         """
         return wx.StaticText(self, -1, label, *args, **kwargs)
+
+    def StaticWrapText(self, label, *args, **kwargs):
+        return eg.StaticWrapText(self, wx.ID_ANY, label, *args, **kwargs)
 
     def TextCtrl(
         self,

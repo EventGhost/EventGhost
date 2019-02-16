@@ -171,10 +171,8 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import ThreadingMixIn
 from os.path import getmtime, isfile, isdir, join, exists, splitdrive, split
 from wx.lib.mixins.listctrl import TextEditMixin
-try:
-    from websocket import WebSocketApp
-except ImportError:
-    from websocket import WebSocket as WebSocketApp
+from websocket import WebSocketApp
+
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 ACV = wx.ALIGN_CENTER_VERTICAL
 

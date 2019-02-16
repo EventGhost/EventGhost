@@ -16,20 +16,19 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import stackless
-import sys
 
 # the following three import are needed if we are running from source and the
 # Python distribution was not installed by the installer. See the following
 # link for details:
 # http://www.voidspace.org.uk/python/movpy/reference/win32ext.html#id10
-import pywintypes  # NOQA
-import pythoncom  # NOQA
-import win32api  # NOQA
+import pywintypes
+import pythoncom
+import win32api
 
-# Local imports
+import stackless
+import sys
 import Cli
-from Utils import *  # NOQA
+from Utils import *
 from Classes.WindowsVersion import WindowsVersion
 
 
@@ -47,7 +46,10 @@ class DynamicModule(object):
         __builtin__.eg = self
 
     def __getattr__(self, name):
-        mod = __import__("eg.Classes." + name, None, None, [name], 0)
+        try:
+            mod = __import__("eg.Classes." + name, None, None, [name], 0)
+        except ImportError:
+            raise ImportError("No module named eg.Classes." + name)
         self.__dict__[name] = attr = getattr(mod, name)
         return attr
 
@@ -95,7 +97,7 @@ class DynamicModule(object):
 
 eg = DynamicModule()
 
-# This is only here to make pylint happy. It is never really imported
+# This is only here to make pylint and IDE's happy. It is never really imported
 if "pylint" in sys.modules:
     def RaiseAssignments():
         pass

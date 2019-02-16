@@ -223,7 +223,7 @@ eg.RegisterPlugin(
     version=version,
     kind="other",
     guid="{C92AD47A-B959-44D5-A849-9FCCCAAC9572}",
-    createMacrosOnAdd=False,
+    createMacrosOnAdd=True,
     canMultiLoad=True,
     icon=(
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACyUlEQVRYw+1XPUxUQRD+"
@@ -305,7 +305,6 @@ from .actions import (
     SendSMSgroup,
     SendSMSmulti,
 )
-from .lib.websocket__0440 import WebSocketApp
 from .texts import Text
 from .utils import (
     gcm_decrypt,
@@ -615,7 +614,7 @@ class PushBullet(eg.PluginClass):
             curl.perform()
             status_code = curl.getinfo(pycurl.RESPONSE_CODE)
             curl.close()
-        except ValueError:
+        except:
             eg.PrintTraceback()
             status_code = None
         return status_code in (200, 302)
@@ -676,11 +675,11 @@ class PushBullet(eg.PluginClass):
     def parse_argument(arg):
         try:
             arg = eg.ParseString(arg)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
         try:
             arg = eval(arg)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
         return arg
 
@@ -1425,7 +1424,6 @@ class PushBullet(eg.PluginClass):
             "Content-type:application/json",
         ] if 'headers' not in kwargs else kwargs['headers']
 
-        import certifi
         curl = pycurl.Curl()
         curl.setopt(pycurl.CAINFO, certifi.where())
         if 'params' in kwargs:

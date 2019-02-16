@@ -1098,16 +1098,16 @@ class MainFrame(wx.Frame):
                 value = unicode(obj)
             except:
                 value = ''
-            if otype is types.StringType or otype is types.UnicodeType:  # NOQA
+            if otype is types.StringType or otype is types.UnicodeType:
                 value = repr(obj)
             text += '\n\nValue: ' + value
-            if otype not in SIMPLETYPES:  # NOQA
+            if otype not in SIMPLETYPES:
                 try:
                     text += '\n\nDocstring:\n\n"""' + \
                             inspect.getdoc(obj).strip() + '"""'
                 except:
                     pass
-            if otype is types.InstanceType:  # NOQA
+            if otype is types.InstanceType:
                 try:
                     text += '\n\nClass Definition:\n\n' + \
                             inspect.getsource(obj.__class__)

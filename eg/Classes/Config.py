@@ -58,6 +58,7 @@ class Config(Section):
     defaultThreadStartTimeout = 5.00
     hideOnClose = False
     hideOnStartup = False
+    lastCertifiCheck = None
     lastUpdateCheckDate = None
     lastUpdateCheckVersion = None
     limitMemory = False
@@ -71,7 +72,7 @@ class Config(Section):
     showTrayIcon = True
     useFixedFont = False
 
-    class plugins:  #pylint: disable-msg=C0103
+    class plugins:
         pass
 
     def __init__(self):

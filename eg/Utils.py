@@ -16,42 +16,52 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+
 import inspect
 import os
 import sys
 import threading
 import time
-import warnings
-import wx
 import traceback
-from locale import windows_locale
-from commonmark import commonmark
 from ctypes import c_ulonglong, windll
 from datetime import datetime as dt, timedelta as td
-from docutils.core import publish_parts as ReSTPublishParts
-from docutils.writers.html4css1 import Writer
 from functools import update_wrapper
-from os.path import abspath, dirname, exists, join
+from locale import windows_locale
+from os.path import exists, join
 from types import ClassType
 
-# Local imports
-import eg
+import wx
+from commonmark import commonmark
+from docutils.core import publish_parts as publish_rest_parts
+from docutils.writers.html4css1 import Writer
 
-# Make sure our deprecation warnings will be shown
-warnings.filterwarnings(
-    action="always",
-    category=DeprecationWarning,
-    module='^eg\..*'
-)
+import eg
+import PythonPaths
 
 __all__ = [
-    "Bunch", "NotificationHandler", "LogIt", "LogItWithReturn", "TimeIt",
-    "AssertInMainThread", "AssertInActionThread", "ParseString", "SetDefault",
-    "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths", "AsTasklet",
-    "ExecFile", "GetTopLevelWindow", "GetClosestLanguage"
+    "AssertInActionThread",
+    "AssertInMainThread",
+    "AsTasklet",
+    "Bunch",
+    "EnsureVisible",
+    "EqualizeWidths",
+    "ExecFile",
+    "GetClosestLanguage",
+    "GetTopLevelWindow",
+    "HBoxSizer",
+    "Is64bitInterpreter",
+    "Is64BitOS",
+    "LogIt",
+    "LogItWithReturn",
+    "NotificationHandler",
+    "ParseString",
+    "SetDefault",
+    "TimeIt",
+    "VBoxSizer",
 ]
 
 USER_CLASSES = (type, ClassType)
+
 
 class Bunch(object):
     """
@@ -80,7 +90,7 @@ class Bunch(object):
         self.__dict__.update(kwargs)
 
 
-class HBoxSizer(wx.BoxSizer):  #IGNORE:R0904
+class HBoxSizer(wx.BoxSizer):
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
         self.AddMany(items)
@@ -99,6 +109,7 @@ class MyHtmlDocWriter(Writer):
 %(body_suffix)s
 """ % self.interpolation_dict()
 
+
 HTML_DOC_WRITER = MyHtmlDocWriter()
 
 
@@ -109,7 +120,7 @@ class NotificationHandler(object):
         self.listeners = []
 
 
-class VBoxSizer(wx.BoxSizer):  #IGNORE:R0904
+class VBoxSizer(wx.BoxSizer):
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.VERTICAL)
         self.AddMany(items)
@@ -198,7 +209,7 @@ def DecodeMarkdown(source):
 
 def DecodeReST(source):
     #print repr(source)
-    res = ReSTPublishParts(
+    res = publish_rest_parts(
         source=PrepareDocstring(source),
         writer=HTML_DOC_WRITER,
         settings_overrides={"stylesheet_path": ""}
@@ -300,7 +311,7 @@ def GetClosestLanguage():
     """
     Returns the language file closest to system locale.
     """
-    langDir = join(dirname(abspath(sys.executable)), "languages")
+    langDir = join(PythonPaths.install_directory, "languages")
     if exists(langDir):
         uiLang = windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
 
@@ -402,29 +413,6 @@ def GetUpTime(seconds = True):
         return delta if "." not in delta else delta[:delta.index(".")]
     return ticks
 
-def IsVista():
-    """
-    Determine if we're running Vista or higher.
-    """
-    warnings.warn(
-        "eg.Utils.IsVista() is deprecated. "
-        "Use eg.WindowsVersion >= 'Vista' instead",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return eg.WindowsVersion >= 'Vista'
-
-def IsXP():
-    """
-    Determine if we're running XP or higher.
-    """
-    warnings.warn(
-        "eg.Utils.IsXP() is deprecated. "
-        "Use eg.WindowsVersion >= 'XP' instead",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return eg.WindowsVersion >= 'XP'
 
 def LogIt(func):
     """
@@ -586,6 +574,7 @@ def TimeIt(func):
 
     return update_wrapper(TimeItWrapper, func)
 
+
 def UpdateStartupShortcut(create):
     from eg import Shortcut
 
@@ -607,3 +596,19 @@ def UpdateStartupShortcut(create):
             arguments="-h -e OnInitAfterBoot",
             startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
+
+
+def Is64bitInterpreter():
+    """
+    Determine whether or not we're running a 64-bit interpreter.
+    """
+    return sys.maxsize > 2**32
+
+
+def Is64BitOS():
+    if (
+        os.environ.get("PROCESSOR_ARCHITECTURE") == "AMD64"
+        or os.environ.get("PROCESSOR_ARCHITEW6432") == "AMD64"
+    ):
+        return True
+    return False

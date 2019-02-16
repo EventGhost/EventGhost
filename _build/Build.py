@@ -38,17 +38,22 @@ class MyBuilder(builder.Builder):
     mainScript = "EventGhost.pyw"
 
     includeModules = [
+        "agithub",
         "commonmark",
         "comtypes",
-        "Crypto",
         "docutils",
         "isapi",
         "jinja2",
         "PIL",
+        "pip",
         "pkg_resources",
+        "pycurl",
         "pythoncom",
         "pywin32",
+        "qrcode",
+        "requests",
         "six",
+        "websocket",
         "win32com",
         "wx",
     ]
@@ -59,6 +64,7 @@ class MyBuilder(builder.Builder):
         "_imagingtk",
         "_tkinter",
         "cffi",  # bundled for no reason
+        "certifi",
         "comtypes.gen",
         #"ctypes.macholib",  # seems to be for Apple
         "curses",

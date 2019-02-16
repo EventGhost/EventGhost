@@ -19,13 +19,17 @@
 import webbrowser
 import wx
 from threading import Thread
-from wx.html import HtmlWindow as wxHtmlWindow
 from wx.html import (
-    EVT_HTML_LINK_CLICKED, HTML_OPEN, HTML_URL_IMAGE, HW_DEFAULT_STYLE
+    EVT_HTML_LINK_CLICKED,
+    HTML_OPEN,
+    HTML_REDIRECT,
+    HTML_URL_IMAGE,
+    HtmlWindow as wxHtmlWindow,
+    HW_DEFAULT_STYLE,
 )
 
-# Local imports
 from eg.Utils import DecodeMarkdown, DecodeReST
+
 
 class HtmlWindow(wxHtmlWindow):
     basePath = None
@@ -43,11 +47,6 @@ class HtmlWindow(wxHtmlWindow):
         self.SetForegroundColour(parent.GetForegroundColour())
         self.SetBackgroundColour(parent.GetBackgroundColour())
 
-        #if wx.html.HW_NO_SELECTION & style:
-        #    self.Bind(wx.EVT_MOTION, self.OnIdle)
-        #    self.handCursor = wx.StockCursor(wx.CURSOR_HAND)
-        #    self.x1, self.y1 = self.GetScrollPixelsPerUnit()
-        #    self.isSet = False
         self.Bind(EVT_HTML_LINK_CLICKED, self.OnHtmlLinkClicked)
 
     def OnHtmlLinkClicked(self, event):
@@ -56,33 +55,15 @@ class HtmlWindow(wxHtmlWindow):
             args=(event.GetLinkInfo().GetHref(), 0)
         ).start()
 
-#    def OnIdle(self, event):
-#        x2, y2 = self.GetViewStart()
-#        x3, y3 = event.GetPosition()
-#        x = self.x1 * x2 + x3
-#        y = self.y1 * y2 + y3
-#        cell = self.GetInternalRepresentation().FindCellByPos(x, y)
-#        if cell:
-#            if cell.GetLink(x, y):
-#                if not self.isSet:
-#                    self.SetCursor(self.handCursor)
-#                    self.isSet = True
-#            elif self.isSet:
-#                self.SetCursor(wx.STANDARD_CURSOR)
-#                self.isSet = False
-#        elif self.isSet:
-#            self.SetCursor(wx.STANDARD_CURSOR)
-#            self.isSet = False
-
-    def OnOpeningURL(self, htmlUrlType, url):
+    def OnOpeningURL(self, htmlUrlType, url, redirect=None):
         if (
             htmlUrlType == HTML_URL_IMAGE and
             (self.basePath is not None) and
             not url.startswith(self.basePath)
         ):
-            return self.basePath + "/" + url
+            return HTML_REDIRECT, self.basePath + '/' + url
         else:
-            return HTML_OPEN
+            return HTML_OPEN, ''
 
     def SetBasePath(self, basePath):
         self.basePath = basePath

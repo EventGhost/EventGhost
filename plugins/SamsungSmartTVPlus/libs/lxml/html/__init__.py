@@ -653,7 +653,7 @@ class _MethodFunc(object):
     def __init__(self, name, copy=False, source_class=HtmlMixin):
         self.name = name
         self.copy = copy
-        self.__doc__ = getattr(source_class, self.name).__doc__
+        self.__doc__ = __doc__
     def __call__(self, doc, *args, **kw):
         result_type = type(doc)
         if isinstance(doc, basestring):

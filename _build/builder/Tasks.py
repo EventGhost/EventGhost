@@ -17,6 +17,7 @@
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import shutil
 import time
 from os.path import join
 from shutil import copy2
@@ -153,4 +154,5 @@ def Main(buildSetup):
             logger.log(22, "--- {0}".format(task.description))
             task.DoTask()
             logger.log(22, "")
+    shutil.rmtree(buildSetup.tmpDir, ignore_errors=True)
     logger.log(22, "--- All done!")

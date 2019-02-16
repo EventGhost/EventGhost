@@ -20,7 +20,7 @@ import wx
 from math import sqrt
 from cStringIO import StringIO
 import eg
-
+import requests
 
 SEP = "   <#>   "
 
@@ -60,8 +60,8 @@ def wrap(txt, width):
 
 
 def pil_to_bitmap(pil):
-    img = wx.EmptyImage(pil.size[0], pil.size[1])
-    img.set_data(pil.convert("RGB").tobytes())
+    img = wx.Image(pil.size[0], pil.size[1])
+    img.SetData(pil.convert("RGB").tobytes())
     if (
         pil.mode in ('RGBA', 'LA') or
         (pil.mode == 'P' and 'transparency' in pil.info)
@@ -97,7 +97,7 @@ def resize(pil, new_size):
 def grayed(bmp):
     img = bmp.ConvertToImage()
     pil_img = Image.new('RGB', (img.GetWidth(), img.GetHeight()))
-    pil_img.frombytes(img.get_data())
+    pil_img.frombytes(str(img.GetData()))
     pil_img = pil_img.convert("L")
     m = pil_img.load()
     s = pil_img.size
@@ -160,8 +160,8 @@ def get_icon(err, icon=None):
         image.paste(pil, ((96 - size[0]) / 2, (96 - size[1]) / 2))
         pil = image
     io_file = StringIO()
-    # pil.save(io_file, format = 'PNG')
-    pil.save(io_file, format='JPEG')
+    pil.save(io_file, format = 'PNG')
+    #pil.save(io_file, format='JPEG')
     io_file.seek(0)
     data = io_file.read()
     return b64encode(data)

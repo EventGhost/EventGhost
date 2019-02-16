@@ -16,13 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-#pylint: disable-msg=C0103,C0301,C0302
 
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
 
-from ctypes import *  #pylint: disable-msg=W0401,W0614
-from ctypes.wintypes import *  #pylint: disable-msg=W0401,W0614
+from ctypes import *
+from ctypes.wintypes import *
 import sys
 
 _user32 = WinDLL("user32")

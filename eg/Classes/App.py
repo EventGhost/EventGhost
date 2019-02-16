@@ -22,10 +22,9 @@ import time
 import wx
 import ctypes
 
-# Local imports
 import eg
 from eg.WinApi.Dynamic import ExitProcess, SetProcessShutdownParameters
-from Translation import LCID_TO_WX
+
 
 IS_VISTA = eg.WindowsVersion >= 'Vista'
 
@@ -43,14 +42,13 @@ else:
     ShutdownBlockReasonCreate = lambda hwnd, msg: None
     ShutdownBlockReasonDestroy = lambda hwnd: None
 
+
 class App(wx.App):
     def __init__(self):
         self.onExitFuncs = []
         wx.App.__init__(self, 0)
-        lang_id = LCID_TO_WX.get(kernel32.GetUserDefaultUILanguage(), None)
 
-        if lang_id is not None:
-            self.locale = wx.Locale(lang_id)
+        self.locale = wx.Locale(eg.Cli.lang_id)
 
         self.shouldVeto = False
         self.firstQuery = True
@@ -205,12 +203,16 @@ class App(wx.App):
         self.firstQuery = True
         ShutdownBlockReasonDestroy(self.hwnd)
 
-    def Restart(self, asAdmin=False):
+    def Restart(self, asAdmin=False, update_certifi=False):
         def Do():
             from eg.WinApi.PipedProcess import RunAs
 
             args = self.GetArguments()
             args.append("-restart")
+
+            if update_certifi:
+                args.append('-update_certifi')
+
             RunAs(sys.executable, asAdmin, *args)
             return True
 
