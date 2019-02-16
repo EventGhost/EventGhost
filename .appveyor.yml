@@ -76,7 +76,7 @@ install:
           " "
           "--- " + $msg
           "    Installing..."
-          pip install -q --disable-pip-version-check $mod
+          pip install -q -q --disable-pip-version-check $mod
           "    Done."
         }
         " "
@@ -92,7 +92,7 @@ install:
         " "
         "--- pip 19.0.2"
         "    Updating..."
-        python -m pip install --disable-pip-version-check --no-cache-dir -q -U "pip==19.0.2"
+        python -m pip install --disable-pip-version-check --no-cache-dir -q -q -U "pip==19.0.2"
         "    Done."
         " "
         # Pinned sphinx to 1.8.0 because 1.8.1 has changes that will throw a warning when building the docs
