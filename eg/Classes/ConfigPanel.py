@@ -51,7 +51,9 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.isDirty = False
         self.resultCode = None
         self.buttonsEnabled = True
-        self.dialog.buttonRow.applyButton.Enable(False)
+        self.dialog.buttonRow.applyButton.Enable(
+            self.dialog.treeItem.isFirstConfigure
+        )
         self.dialog.buttonRow.okButton.Enable(
             not self.dialog.treeItem.isFirstConfigure
         )
