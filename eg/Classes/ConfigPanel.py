@@ -18,6 +18,7 @@
 
 import types
 import wx
+from inspect import currentframe, getargvalues, getouterframes
 
 # Local imports
 import eg
@@ -51,11 +52,14 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.isDirty = False
         self.resultCode = None
         self.buttonsEnabled = True
+        outer = getouterframes(currentframe())
+        has_args = len(getargvalues(outer[1][0]).args) > 1
         self.dialog.buttonRow.applyButton.Enable(
-            self.dialog.treeItem.isFirstConfigure
+            has_args and self.dialog.treeItem.isFirstConfigure
         )
         self.dialog.buttonRow.okButton.Enable(
-            not self.dialog.treeItem.isFirstConfigure
+            not has_args or
+            not (has_args and self.dialog.treeItem.isFirstConfigure)
         )
 
     def AddCtrl(self, ctrl):
