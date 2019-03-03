@@ -31,7 +31,18 @@ import PythonPaths
 import LoopbackSocket
 
 ENCODING = locale.getdefaultlocale()[1]
-locale.setlocale(locale.LC_ALL, '')
+
+# Starting with Windows 10 build 1809 (I think) the behavior of setlocal has
+# changed. I believe they may have fixed a bug in setlocale that required the
+# passing of an empty string instead of NULL. So now we have to try both ways.
+
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except locale.Error:
+    # Windows 10 build >= 1809
+    locale.setlocale(locale.LC_ALL, None)
+
+
 argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
