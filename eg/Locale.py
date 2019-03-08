@@ -1795,17 +1795,17 @@ class Language(object):
     @property
     def iso_code(self):
         if self._iso_code is None and self.ISO639_3 is not None:
-            iso_code = self.ISO639_3 + '-' + self.locale.locale_iso_code
+            iso_code = self.ISO639_3 + '-' + self.locale.iso_code
             if locale_name_to_lcid(iso_code) is not None:
                 self._iso_code = iso_code
 
         if self._iso_code is None and self.ISO639_2 is not None:
-            iso_code = self.ISO639_2 + '-' + self.locale.locale_iso_code
+            iso_code = self.ISO639_2 + '-' + self.locale.iso_code
             if locale_name_to_lcid(iso_code) is not None:
                 self._iso_code = iso_code
 
         if self._iso_code is None and self.ISO639_1 is not None:
-            iso_code = self.ISO639_1 + '-' + self.locale.locale_iso_code
+            iso_code = self.ISO639_1 + '-' + self.locale.iso_code
             if locale_name_to_lcid(iso_code) is not None:
                 self._iso_code = iso_code
 
@@ -2772,32 +2772,36 @@ class Locale(object):
     # noinspection PyUnresolvedReferences
     def __eq__(self, other):
         if isinstance(other, Locale):
-            return other.locale_iso_code == self.locale_iso_code
+            return other.iso_code == self.iso_code
 
         if PY3:
             if isinstance(other, bytes):
                 other = other.decode('utf-8')
 
             if isinstance(other, str):
-                return other == self.locale_iso_code
+                return other == self.iso_code
 
         elif isinstance(other, (str, unicode)):
-            return other == self.locale_iso_code
+            return other == self.iso_code
 
         return False
 
     @property
-    def locale_iso_code(self):
+    def iso_code(self):
         return self._iso_code
 
     @property
     def flag(self):
         if self._flag:
-            return wx.Bitmap(
+            image = wx.Image(
                 os.path.abspath(
                     os.path.join(BASE_PATH, '..', 'images', self._flag)
                 )
             )
+            image.Resize((24, 24), (0, 3))
+            bmp = image.ConvertToBitmap()
+            return bmp
+
         else:
             return wx.EmptyBitmapRGBA(24, 24, 0, 0, 0, 0)
 
@@ -7633,7 +7637,7 @@ if __name__ == '__main__':
         return '0x' + lcd
 
     for locl in locales:
-        print(locl.english_name, '-', locl.locale_iso_code)
+        print(locl.english_name, '-', locl.iso_code)
         for lng in locl:
             print('    English language name:', lng.english_name)
             print('    English locale name:', lng.english_locale_name)
@@ -7656,7 +7660,7 @@ if __name__ == '__main__':
         'Current Windows user locale:',
         lng.locale_name,
         '-',
-        lng.locale.locale_iso_code
+        lng.locale.iso_code
     )
     print('Current Windows user language:', lng.name, '-', lng.lang_iso_code)
     print('Locale native name:', lng.native_locale_name)
