@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import stackless
-import sys
+import stackless # NOQA
+import sys # NOQA
 
 # the following three import are needed if we are running from source and the
 # Python distribution was not installed by the installer. See the following
@@ -28,15 +28,19 @@ import pythoncom  # NOQA
 import win32api  # NOQA
 
 # Local imports
-import Cli
-from Utils import *  # NOQA
-from Classes.WindowsVersion import WindowsVersion
+import Locale
+Locale.get_windows_user_language().set_locale()
+
+import Cli # NOQA
+from Utils import * # NOQA
+from Classes.WindowsVersion import WindowsVersion # NOQA
 
 
 APP_NAME = "EventGhost"
 
 
 class DynamicModule(object):
+
     def __init__(self):
         mod = sys.modules[__name__]
         self.__dict__ = mod.__dict__
@@ -45,6 +49,8 @@ class DynamicModule(object):
 
         import __builtin__
         __builtin__.eg = self
+
+        self.__dict__['language'] = None
 
     def __getattr__(self, name):
         mod = __import__("eg.Classes." + name, None, None, [name], 0)
@@ -75,6 +81,39 @@ class DynamicModule(object):
         self.__class__.__setattr__ = __setattr__
 
     def Main(self):
+        for lcl in Locale.locales:
+            for lng in lcl:
+                if lng == eg.config.language.replace('_', '-'):
+                    break
+            else:
+                continue
+
+            break
+        else:
+            eg.PrintDebugNotice(
+                'Unable to locate a Windows locale for {0}... '
+                'Using Windows user locale.'.format(eg.config.language)
+            )
+            lng = Locale.get_windows_user_language()
+
+        res = lng.set_locale()
+
+        if not res:
+            eg.PrintDebugNotice(
+                'Locale failed... Using Windows user locale.'
+            )
+            lng = Locale.get_windows_user_language()
+            res = lng.set_locale()
+
+        self.__dict__['language'] = lng
+
+        lng.set_wx_locale()
+
+        if res:
+            eg.PrintDebugNotice('Locale  ' + res)
+        else:
+            eg.PrintDebugNotice('Locale failed')
+
         if Cli.args.install:
             return
         if Cli.args.translate:
@@ -89,6 +128,7 @@ class DynamicModule(object):
                 eg.Init.ImportAll()
             except:
                 eg.PrintDebugNotice(sys.exc_info()[1])
+
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
 
@@ -103,6 +143,8 @@ if "pylint" in sys.modules:
     from Init import ImportAll
     ImportAll()
 
+    import Icons
+
     from StaticImports import *  # NOQA
     import Core
 
@@ -111,6 +153,7 @@ if "pylint" in sys.modules:
 
     import LoopbackSocket
 
+    language = None
     socketSever = LoopbackSocket.Start()
     ID_TEST = Core.eg.ID_TEST
     revision = Core.eg.revision

@@ -79,15 +79,27 @@ class OptionsDialog(eg.TaskletDialog):
             parent=parent,
             title=text.Title,
         )
+        languageList = []
 
-        languageNames = eg.Translation.languageNames
-        languageList = ["en_EN"]
+        def get_language(iso_code):
+            for locale in eg.Locale.locales:
+                for language in locale:
+                    if language == iso_code:
+                        return language
+
+        en_lang = get_language('en-US')
+        languageList += [en_lang]
+
         for item in os.listdir(eg.languagesDir):
             name, ext = os.path.splitext(item)
-            if ext == ".py" and name in languageNames:
-                languageList.append(name)
-        languageList.sort()
-        languageNameList = [languageNames[x] for x in languageList]
+            if ext == ".py":
+                name = name.replace('_', '-')
+                lang = get_language(name)
+                if lang is not None:
+                    languageList += [lang]
+
+        languageList.sort(key=lambda x: x.locale.english_name)
+
         notebook = wx.Notebook(self, -1)
         page1 = eg.Panel(notebook)
         notebook.AddPage(page1, text.Tab1)
@@ -182,21 +194,17 @@ class OptionsDialog(eg.TaskletDialog):
         datestampCtrl.Bind(wx.EVT_KILL_FOCUS, OnDatestampKillFocus)
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
-        for name, code in zip(languageNameList, languageList):
-            filename = os.path.join(eg.imagesDir, "flags", "%s.png" % code)
-            if os.path.exists(filename):
-                image = wx.Image(filename)
-                image.Resize((16, 16), (0, 3))
-                bmp = image.ConvertToBitmap()
-                languageChoice.Append(name, bmp)
-            else:
-                languageChoice.Append(name)
-        
-        if config.language not in languageList:
-            config.language='en_EN'
-        
-        languageChoice.SetSelection(languageList.index(config.language))
+        for lang in languageList:
+            languageChoice.Append(lang.native_label, lang.locale.flag)
+
+        eg_lang = get_language(config.language.replace('_', '-'))
+        if eg_lang not in languageList:
+            config.language = 'en_EN'
+            eg_lang = en_lang
+
+        languageChoice.SetSelection(languageList.index(eg_lang))
         languageChoice.SetMinSize((150, -1))
+        languageChoice.SetToolTipString(Text.confirmRestart.split('\n')[0])
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
 
@@ -228,7 +236,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         langGroupSizer = page1.VStaticBoxSizer(
             text.LanguageGroup,
-            (languageChoice, 0, wx.LEFT | wx.RIGHT, INDENT_WIDTH),
+            (languageChoice, 1, wx.EXPAND | wx.ALL, 10),
         )
 
         page1Sizer = eg.VBoxSizer(
@@ -251,6 +259,11 @@ class OptionsDialog(eg.TaskletDialog):
         oldLanguage = config.language
 
         while self.Affirmed():
+
+            lang_iso_code = (
+                languageList[languageChoice.GetSelection()].iso_code
+            )
+
             config.checkUpdate = checkUpdateCtrl.GetValue()
             config.checkPreRelease = checkPreReleaseCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
@@ -262,7 +275,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.propResize = propResizeCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
             config.datestamp = datestampCtrl.GetValue()
-            config.language = languageList[languageChoice.GetSelection()]
+            config.language = lang_iso_code.replace('-', '_')
             config.Save()
             self.SetResult()
 

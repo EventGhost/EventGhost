@@ -31,7 +31,6 @@ import PythonPaths
 import LoopbackSocket
 
 ENCODING = locale.getdefaultlocale()[1]
-locale.setlocale(locale.LC_ALL, '')
 argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 

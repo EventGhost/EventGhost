@@ -25,7 +25,6 @@ import ctypes
 # Local imports
 import eg
 from eg.WinApi.Dynamic import ExitProcess, SetProcessShutdownParameters
-from Translation import LCID_TO_WX
 
 IS_VISTA = eg.WindowsVersion >= 'Vista'
 
@@ -47,11 +46,8 @@ class App(wx.App):
     def __init__(self):
         self.onExitFuncs = []
         wx.App.__init__(self, 0)
-        lang_id = LCID_TO_WX.get(kernel32.GetUserDefaultUILanguage(), None)
 
-        if lang_id is not None:
-            self.locale = wx.Locale(lang_id)
-
+        self.locale = None
         self.shouldVeto = False
         self.firstQuery = True
         self.endSession = False
