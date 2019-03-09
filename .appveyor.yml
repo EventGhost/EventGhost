@@ -105,14 +105,14 @@ install:
       $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
       Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
       "    Done."
-      #" "
-      #"--- Inno Setup 5.5.9"
-      #$InnoInstaller = $InstallersFolder + "innosetup-5.5.9-unicode.exe"
-      #$InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.5.9-unicode.exe"
-      #Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
-      #"    Installing..."
-      #Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
-      #"    Done."
+      " "
+      "--- Inno Setup 5.6.1"
+      $InnoInstaller = $InstallersFolder + "innosetup-5.6.1-unicode.exe"
+      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.6.1-unicode.exe"
+      Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
+      "    Installing..."
+      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
+      "    Done."
       " "
       " "
       "=============== start the EventGhost build ==============="
