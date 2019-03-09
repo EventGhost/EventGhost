@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -304,7 +304,7 @@ class LanguageEditor(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = "EventGhost Language Editor"
         info.Version = "1.0.2"
-        info.Copyright = "© 2005-2016 EventGhost Project"
+        info.Copyright = "© 2005-2019 EventGhost Project"
         info.Developers = ["Bitmonster", ]
         info.WebSite = ("http://www.eventghost.net", "EventGhost home page")
         wx.AboutBox(info)

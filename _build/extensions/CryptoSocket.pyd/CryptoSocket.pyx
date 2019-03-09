@@ -2,7 +2,7 @@
 # cython: language_level=2
 
 # This file is part of EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://eventghost.net/>
+# Copyright © 2005-2019 EventGhost Project <http://eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free

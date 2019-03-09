@@ -3,7 +3,7 @@
 # plugins/MceRemote_Vista/__init__.py
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -425,7 +425,7 @@ class MceMessageReceiver(object):
         self.receiving = False
         self.sentMessageOnce = True
         self.receivingTimeout = None
-        
+
         try:
             scmanager = win32service.OpenSCManager(None, None, win32service.SC_MANAGER_CONNECT)
             self.service = win32service.OpenService(scmanager, MCE_SERVICE_NAME, win32service.SERVICE_START | win32service.SERVICE_QUERY_STATUS)
@@ -592,7 +592,7 @@ class MceMessageReceiver(object):
         except:
             pass
         self.receiving = targetValue
-                
+
     def HandleData(self):
         """
         This runs once a connection to the named pipe is made.  It receives the ir data and passes it to the plugins IRDecoder.
