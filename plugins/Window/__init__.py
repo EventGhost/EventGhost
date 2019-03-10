@@ -38,7 +38,7 @@ from eg.WinApi.Dynamic import (
     _kernel32,
     # functions:
     byref, GetAncestor, GetForegroundWindow, GetWindowRect, IsWindow,
-    MoveWindow, PostMessage as WinApiPostMessage,
+    IsIconic, IsZoomed, MoveWindow, PostMessage as WinApiPostMessage,
     SendMessage as WinApiSendMessage, SetWindowPos, ShowWindow,
     # types:
     RECT,
@@ -116,6 +116,9 @@ class Window(eg.PluginBase):
         self.AddAction(Close)
         self.AddAction(DockWindow)
         self.AddAction(GrabText)
+        self.AddAction(IsIconized)
+        self.AddAction(IsMaximized)
+        self.AddAction(IsMinimized)
         self.AddAction(Maximize)
         self.AddAction(Minimize)
         self.AddAction(MinimizeToTray)
@@ -368,6 +371,31 @@ class GrabText(eg.ActionBase):
                 _kernel32.VirtualFreeEx(process, remBuf, 0, MEM_RELEASE)
                 CloseHandle(process)
         return res_val
+
+
+class IsIconized(eg.ActionBase):
+    name = "IsIconicized"
+    description = "Determines if the target window is iconic."
+
+    def __call__(self):
+        return bool(IsIconic(GetTopLevelOfTargetWindows()[0]))
+
+
+class IsMaximized(eg.ActionBase):
+    name = "IsMaximized"
+    description = "Determines if the target window is maximized."
+
+    def __call__(self):
+        return bool(IsZoomed(GetTopLevelOfTargetWindows()[0]))
+
+
+class IsMinimized(eg.ActionBase):
+    name = "IsMinimized"
+    description = "Determines if the target window is not maximized and not iconic."
+
+    def __call__(self):
+        win = GetTopLevelOfTargetWindows()[0]
+        return not bool(IsZoomed(win)) and not bool(IsIconic(win))
 
 
 class Maximize(eg.ActionBase):
