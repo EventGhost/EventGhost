@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>LogMonitor</title>
+</head>
+<body>
+<h3>The Log Monitor action</h3>
+<p>The <i>Log Monitor&nbsp;</i>action surveils
+the screen log for a given search pattern. When the search pattern
+occurs, it fires an event. Optionally the captured log message
+can&nbsp;be parsed, e.g. numbers, or other variables might be extracted from the
+string.</p><p><b>Important</b>: Make sure when naming the event, and/or global variable, that is <i>different</i>
+to the sought after log message; otherwise infinite loops will occur! e.g. if you capture the string&nbsp;<tt>Error</tt>, don't call your event&nbsp;<tt>Error</tt>
+as well!</p>
+<h4>Usage</h4>
+<p>The action has two main usages:</p>
+<ol><li>A plugin prints useful information to the log,
+unfortunately not as events, but as common information messages. You
+want to get notified and evaluate this information and perhaps feed another plugin with the information found.</li><li>An unstable plugin crashes quite often. You might want to
+capture the error when it occurs, and automatically
+restart the EventGhost application. This can be perfectly done with the
+<i>EG App Control</i> plugin.</li></ol><ol>
+</ol><h4>Parsing log messages / grabbing data</h4>
+<p>Once the monitored message has been captured, it can be parsed
+for the data you're interested in. The action supports a couple of
+different parsing&nbsp;modes. All of them aim to extract variable
+data from the log message. A typical example might be: You've got a log
+message&nbsp;<tt>HTTP.Volume['80']</tt> and you want to extract <tt>80</tt>, and fire an
+event with this data as the payload and set the value of a global variable.</p>
+<p>The configuration in this case might look like:</p>
+<p><img alt="" src="grab_data.png" height="874" width="533"></p>
+<p>Now you can implement an event handler for the event&nbsp;<tt>EGAppControl.VolumeChanged</tt> to get notified when the volume has changed:</p><img alt="" src="grab_data2.png" height="450" width="837"><p>As
+configured before, the data is available in&nbsp;<tt>eg.event.payload</tt> as well
+as your own defined variable&nbsp;<tt>eg.globals.CurrentVolume</tt>.</p><h5>Regular expressions</h5>
+<p>The
+parsing mode&nbsp;<i>Apply a regular expression</i> allows to parse the string
+with a regex. This mode provides the highest flexibility of parsing the
+input data.If you're new to regex syntax, you may find many tutorials
+and other ressources about regular expressions in the internet. The
+plugin uses Python's <tt>re.findall(searchPattern, logMsg)</tt>
+method to parse. Results are always returned as a Python list (which
+might be empty, if the search pattern didn't match the log message). </p><h4>Capturing errors</h4>
+<p>For capturing errors the following settings might be
+appropriate:</p>
+<p><img alt="" src="catching_errors.png" height="874" width="533"></p>
+<p>In this example the string&nbsp;<tt>Traceback (most recent call last)</tt>
+is captured. If you're looking for another error, change the search string
+accordingly.</p>
+<p>When the error occurs, an event&nbsp;<tt>EGAppCtrl.UnexpectedErrorOccurred</tt> is fired and you can use this event to trigger saving
+the configuration and restarting the application.</p>
+<p><img alt="" src="error_handling.png" height="485" width="837"></p><p>(Action&nbsp;<tt>RestartProgram</tt> has been
+disabled in this example in order to be able to take a screenshot)</p>
+</body></html>

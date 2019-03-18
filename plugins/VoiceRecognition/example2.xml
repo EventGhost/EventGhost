@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EventGhost Version="1694" Guid="{9C00FFCC-B00D-4099-B893-06F0CCE64161}" Time="1424886074.31">
+    <Autostart Name="Autostart" Expanded="True">
+        <Plugin Identifier="VoiceRecognition" Guid="VoiceRecognition" File="VoiceRecognition">
+            gAIoWEIAAAByb2dlcixub3RlcGFkLGNvbW1hbmQsc3lzdGVtLGhlbHAsbG9jayxzaHV0ZG93bixyZWJvb3QsY2FuY2VsLHNhdmVxAEtaWDUAAAByb2dlciBwbGF5IG1vdmllLHJvZ2VyIHN0b3AgbW92aWUscm9nZXIgc3RhcnQgbm90ZXBhZHEBS1BYgAEAAGFnYWluLGJlc3QsY2F0LGRyYWluLGVkZ2UsZm9yZWlnbixncmVhdCxob3csaW1hZ2luZSxqdW1wLGtpdGUsbGFtcCxtYW4sbmF1Z2h0LG9yZGVyLHF1aWNrLHJlYm9vdCxzb2xlLHRlbix1bmNsZSx2ZWxvY2l0eSx5ZWxsb3csQXJlIHlvdSBva2F5LEJlIGNhcmVmdWwsRG8geW91IGZlZWwgYmV0dGVyLGV2ZXJ5ZGF5LGZvbGxvdyBtZSxHaXZlIG1lIGEgY2FsbCxIYXZlIGEgZ29vZCB0cmlwLEkgRG9uJ3QgQ2FyZSxKdXN0IGEgbGl0dGxlLExldCdzIGdvLE15IHNvbixObyBQcm9ibGVtLG92ZXIgaGVyZSxQbGVhc2Ugc2l0IGRvd24sUmlnaHQgaGVyZSxTZWUgeW91IGxhdGVyLFRoYW5rIHlvdSxWZXJ5IGdvb2QsV2hhdCBhcmUgeW91IGRvaW5nLHllcyB5b3UgbG9vayB0aXJlZHECiXRxAy4=
+        </Plugin>
+    </Autostart>
+    <Folder Name="Commands" Expanded="True">
+        <Folder Name="Actions" id="11" Enabled="False" Expanded="True">
+            <Macro Name="Start Program: notepad.exe" Expanded="True">
+                <Event Name="VoiceRecognition.notepad" />
+                <Action>
+                    System.Execute(u'notepad.exe', u'', 0, False, 2, u'', False, False, u'', False, False, False)
+                </Action>
+            </Macro>
+            <Macro Name="Start Program: cmd.exe" Expanded="True">
+                <Event Name="VoiceRecognition.command" />
+                <Action>
+                    System.Execute(u'cmd.exe', u'', 0, False, 2, u'', False, False, u'', False, False, False)
+                </Action>
+            </Macro>
+        </Folder>
+        <Macro Name="Enable: Actions" Expanded="True">
+            <Event Name="VoiceRecognition.roger" />
+            <Action>
+                EventGhost.EnableItem(XmlIdLink(11))
+            </Action>
+        </Macro>
+        <Macro Name="Disable: Actions" Expanded="True">
+            <Event Name="VoiceRecognition.DIE" />
+            <Action>
+                EventGhost.DisableItem(XmlIdLink(11))
+            </Action>
+        </Macro>
+    </Folder>
+</EventGhost>

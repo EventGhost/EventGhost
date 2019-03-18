@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>StandbyControl-help</title>
+
+<style type="text/css"> body { font-family: Arial,Helvetica,sans-serif; } </style></head>
+<body>
+<h2>StandbyControl Plugin</h2>
+<h3>Contents</h3>
+<ul>
+<li><a href="#Introduction_">Introduction</a></li>
+<ul>
+<li><a href="#1._Timer">Timer</a></li>
+<li><a href="#2._Standby_blocking_counters">Standby
+blocking counters</a></li>
+<li><a href="#3._Monitored_processes">Monitored
+processes</a></li>
+<li><a href="#4._Keep_Alive_Schedule">Keep alive
+schedule</a></li>
+<li><a href="#5._OSD_Countdown__Cancel_OSD">OSD
+Countdown</a></li>
+</ul>
+<li><a href="#Function_overview">Function overview</a></li>
+<ul>
+<li><a href="#Plugin_Configuration">Plugin
+configuration</a></li>
+<li><a href="#Action:_Inhibit_Standby">Action:
+Inhibit Standby</a></li>
+<li><a href="#Action:_Enable_Standby">Action:
+Enable Standby</a></li>
+<li><a href="#Action:_Trigger_Standby_Timer">Action:
+Trigger Standby Timer</a></li>
+<li><a href="#Action:_Was_triggered">Action: Was
+triggered</a></li>
+<li><a href="#Action:_OSD_Count_Down">Action:
+OSD Count Down</a></li>
+<li><a href="#Action:_Cancel_OSD_Count_Down">Action:
+Cancel OSD Count Down</a></li>
+<li><a href="#Action:_Is_Monitored_Process_Running">Action:
+Is Monitored Process Running</a></li>
+<li><a href="#Action:_Is_Keep_Alive">Action: Is
+Keep Alive</a><br>
+</li>
+</ul>
+</ul>
+<h3><a name="Introduction_"></a>Introduction </h3>
+StandbyControl&nbsp;provides several EventGhost actions and events
+in
+order to build a sophisticated standby control environment, primarily
+intended for media center computers.<br>
+<br>
+StandbyControl's functionality can be grouped as follows:<br>
+<ol>
+<li>Timer</li>
+<li>Standby blocking counters</li>
+<li>Monitored processes</li>
+<li>Keep Alive schedule</li>
+<li>OSD Countdown</li>
+</ol>
+<h4><a name="1._Timer"></a>1. Timer</h4>
+StandbyControl runs an
+internal timer which is started when the plugin
+starts. At the end of it's configured time, let's say after 10 minutes,
+the timer fires an event "StandbyControl.Trigger". This event is
+intended to run an action like "Stand By" or "Hibernate computer" or
+even "Turn off Computer". So
+in a first step you could create a macro on event
+"StandbyControl.Trigger" with the action "Stand By" or "Hibernate". All
+right? That's
+already&nbsp;the magic of StandbyControl - almost&nbsp;;)<br>
+<br>
+Are we happy now? No! Because&nbsp;the media center shuts down
+every 10
+minutes after start. That's unusable. We want to add conditions. We
+want to say, "Yes, shut down the machine, <i>but not while</i>
+..." - and that's the rest of the magic of StandbyControl plugin. It
+provides a&nbsp;set of conditions and helpers to decide when to
+shut
+down the machine and when not.<br>
+<h4><a name="2._Standby_blocking_counters"></a>2.
+Standby blocking counters</h4>
+Let's assume you have a media player like DVBViewer. The plugin for
+this application&nbsp;fires events on every state change of the
+application. For example, we get events "DVBViewer.Play" when playback
+starts and "DVBViewer.Stop" when playback stops. While DVBViewer is
+playing, we want to inhibit standby, but when DVBViewer playback
+stops, we'd like to suspend the machine after a while. Two actions,
+"Enable Standby" and "Inhibit Standby", are intended for this purpose.
+Just create two macros:&nbsp;on event "DVBViewer.Play" run the
+action
+"Inhibit Standby" and on event "DVBViewer.Stop" run action "Enable
+Standby". The rest will be done by StandbyControl. <br>
+<br>
+Another&nbsp;source of such events is the system itself. If we
+don't
+move the mouse nor use the keyboard for a while, the event
+"System.Idle" is fired. If the mouse is moved again, "System.Unidle" is
+fired. So just pack the "System.Idle" event together with the "Inhibit
+Standby" action into a new macro and "System.Unidle" together with
+"Enable Standby" into another one. Now&nbsp;your first running
+version
+of a standby control environment (along with the first macro mentioned
+in the previous section) is ready!<br>
+<h4><a name="3._Monitored_processes"></a>3.
+Monitored processes</h4>
+Unfortunately, only few applications fire events on state changes as we
+saw that with DVBViewer before. Let's take a wide-spread music player
+like WinAmp, and we don't get&nbsp;events when the player starts or
+stops. StandbyControl can help again. In the plugin configuration, you
+can define a list of "Monitored processes". Just add winamp.exe to this
+list. As soon as WinAmp gets started, an event
+'StandbyControl.Create.winamp' is fired and when it gets terminated,
+event 'StandbyControl.Terminate.winamp' is fired. These events can be
+used to set and control a Standby Blocking Counter as described above.
+Alternatively, in the macro that contains the "Stand By Computer"
+action,
+call first the action "IsMonitoredProcessRunning". The result of that
+action (provided in eg.result) tells if at least one program as defined
+before is currently running, allowing you to implement further logic
+based on it.<br>
+<h4><a name="4._Keep_Alive_Schedule"></a>4.
+Keep Alive Schedule</h4>
+Some people like to have fixed times when the media center shall be
+available, i.e. up and running. The Keep Alive Schedule is intended for
+this purpose and can be configured in the plugin configuration as well.
+Let's say you want to avoid standby every Saturday evening from 6pm
+till 11pm. First of all,&nbsp;define such an entry in the plugin
+configuration. On Saturday evening at 6pm, the event
+'StandbyControl.KeepAlivePeriodStarted' is fired and at 11pm, the event
+'StandbyControl.KeepAlivePeriodEnded' is fired. Again, these events can
+be used to set and control Standby Blocking Counters. Alternatively, in
+the macro that contains the "Stand By Computer"
+action, call first the action "IsKeepAlive". It will return
+"True" on Saturday evenings and "False" otherwise. You can define and
+combine as many schedule entries as you need.<br>
+<h4><a name="5._OSD_Countdown__Cancel_OSD"></a>5.
+OSD Countdown / Cancel OSD</h4>
+As friendly people, we want to notify the user before executing Stand
+By and give him the choice to cancel. The actions "OSD Countdown" and
+"Cancel OSD" are intended for this purpose. They are similar to the
+"ShowOSD" action
+provided by EG itself, but with some useful
+extensions:&nbsp;As
+the name says, "OSD Countdown" implements a countdown, i.e. it can be
+configured how
+long the message shall be displayed. The current timer
+value can be part of the message, like "Your media center will explode
+in 5,4,3,2,1 secs.". At the end of the countdown, a configurable event
+is triggered. Your macro can catch that event and do the next actions.
+Another notable difference to EG's "Show OSD" action is the fact that
+"OSD Countdown" doesn't block the execution of further macros, it runs
+asynchronously. <br><br>Finally, there's&nbsp;a "Cancel OSD" action. You could extend the
+message from before with "Press ESC to cancel" and while your countdown is being
+displayed, you might have a macro listening on the ESC key (or any
+other) and the action immediately stops the current OSD Countdown,
+preventing&nbsp;the media center from exploding ;-)<br><br>
+<h3><a name="Function_overview"></a>Function
+overview</h3>
+The plugin and its actions have many and some powerful options - but
+some of them are not&nbsp;self-explaining, therefore some more
+details here. However, only&nbsp;the important and hard to
+understand ones are documented.
+<h4><a name="Plugin_Configuration"></a>Plugin
+Configuration</h4>
+<table border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td><b>Group</b></td>
+<td><b>Name</b></td>
+<td><b>Type</b></td>
+<td><b>Description</b></td>
+</tr>
+<tr>
+<td colspan="1" rowspan="4"><b>Standby trigger times</b></td>
+<td>Standby default time [s]</td>
+<td>Field</td>
+<td>Time in seconds after "StandbyControl.Trigger" event
+will be fired</td>
+</tr>
+<tr>
+<td>Next&nbsp;trigger / force release in</td>
+<td>Label</td>
+<td>Informs when the next trigger events are scheduled.Two
+values &lt;A&gt; / &lt;B&gt; are displayed. <br>
+&lt;A&gt; displays the time when the next trigger will be fired
+or
+"Pending", if&nbsp;Standby blocking counters are
+active.&nbsp;The value "None" indicates that the timer has not been
+started yet. <br>
+&lt;B&gt; is the time until the next force release or "None" if
+none of
+the current&nbsp; blocking counters has a release time set.</td>
+</tr>
+<tr>
+<td>Standby default time if standby was pending [s]</td>
+<td>Field</td>
+<td>Complicated, don't read further. Still reading? Ok, ok,
+I'll try to explain...<br>
+This timeout applies after "Pending" state.<br>
+If the standby trigger was "Pending", i.e. if a Standby
+blocking counter was active (see "Inhibit Standby" action) and then
+released (see "Enable Standby" action) or the force release time is
+reached, then the next
+trigger event is scheduled with this "default pending time".<br>
+The action "Enable Standby" makes also use of it when option "Trigger
+standby timer with default pending time" is chosen.</td>
+</tr>
+<tr>
+<td>Standby time after system resume</td>
+<td>Field</td>
+<td>Same as "Standby default time" but applies to the
+initial state after a system resume.&nbsp;</td>
+</tr>
+<tr>
+<td colspan="1" rowspan="5"><b>Standby blocking counters</b></td>
+<td>Blocking counter name </td>
+<td>Column</td>
+<td>The name of the Standby&nbsp;blocking counter as
+defined in "Inhibit / Enable Standby"</td>
+</tr>
+<tr>
+<td>Counter value </td>
+<td>Column</td>
+<td>The current counter value, i.e. how many times "Inhibit
+Standby"
+has been called. A value bigger than zero means that the blocker is
+active. Trigger events will only be fired if all counters are
+zero.&nbsp;"Inhibit Standby" action increases the counter while
+"Enable
+Standby" action decreases the value again.</td>
+</tr>
+<tr>
+<td>Reset after resume </td>
+<td>Column</td>
+<td>If the counter shall be reset to zero after system
+resume</td>
+</tr>
+<tr>
+<td>Release time</td>
+<td>Column</td>
+<td>Time when a force release will happen as defined in
+"Inhibit standby" action.<br>
+</td>
+</tr>
+<tr>
+<td>Clear / Clear all</td>
+<td>Button</td>
+<td>Resets the&nbsp;counter value and the release time
+for one or all
+entries in the table. Thought as an emergency exit and for testing.
+Same effect as if one calls "Enable Standby" action on the blocking
+counter.</td>
+</tr>
+<tr>
+<td colspan="1" rowspan="2"><b>Monitored processes</b></td>
+<td>Process name</td>
+<td>Column</td>
+<td>Name of the application (program executable) to monitor.<br>
+Hint: To add a new application, launch that application first, then
+press "Refresh" and you'll find the process in the dropdown list.
+Select it and press "Add".<br>
+</td>
+</tr>
+<tr>
+<td>Process status</td>
+<td>Column</td>
+<td>Indicates if the monitored process is currently running
+or not.<br>
+Note: The entries don't block standby by themselves. But your macro,
+deciding to shut down or not, can query the current status by calling
+the action "IsMonitoredProcessRunning". Alternatively, the events
+'StandbyControl.Created.*' and
+'StandbyControl.AllMonitoredProcessesTerminated' can be catched and
+used to control a Standby blocking counter.</td>
+</tr>
+<tr>
+<td><b>Keep Alive Schedule</b></td>
+<td>Keep Alive Schedule</td>
+<td>Table</td>
+<td>This table defines time periods when the system shall
+remain running.<br>
+Note: The entries don't block standby by themselves. But your macro,
+deciding to shut down or not, can query the current status by calling
+the action "IsKeepAlive".&nbsp;Alternatively, the events
+'StandbyControl.KeepAlivePeriodStarted' and
+'StandbyControl.AllKeepAlivePeriodsEnded' can be catched and used to
+control a Standby blocking counter.</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h4><a name="Action:_Inhibit_Standby"></a>Action:
+Inhibit Standby</h4>
+Increments the counter for a standby blocking application. Optionally,
+the number of inhibits can be counted.
+<table border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td><b>Name</b></td>
+<td><b>Type</b></td>
+<td><b>Description</b></td>
+</tr>
+<tr>
+<td>Blocking counter name</td>
+<td>Field</td>
+<td>The name of the Standby blocking counter.&nbsp;This
+might be an application name, for example.</td>
+</tr>
+<tr>
+<td>Set release time [min]</td>
+<td>Option + Field</td>
+<td>If checked, the Standby blocking counter is force released after
+the specified time (in minutes) and the counter set to 0. <br>
+After a&nbsp;blocking counter has been force released, the next Trigger event is
+scheduled with the 'Default pending time'&nbsp;as configured in the
+plugin configuration.</td>
+</tr>
+<tr>
+<td>Increment&nbsp;counter</td>
+<td>Option</td>
+<td>If checked, the counter is incremented as many times as
+"Inhibit
+Standby" is called (and decremented again as many times as "Enable
+Standby" is called).<br>
+If unchecked, the counter will only reach value 1 or 0, regardless how
+often "Inhibit Standby" has been called on it.</td>
+</tr>
+<tr>
+<td>Reset counter after resume</td>
+<td>Option</td>
+<td>If checked, the counter is set to 0 after system
+resume. <br>
+If unchecked, the counter value after resume remains the same before
+suspend.</td>
+</tr>
+<tr>
+<td>Trigger standby timer</td>
+<td>Option</td>
+<td>Leave default: "Don't trigger". Other options rarely
+used.<br>
+</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h4><a name="Action:_Enable_Standby"></a>Action:
+Enable Standby</h4>
+Decrements or resets the counter for a standby blocking application.
+<table border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td><b>Name</b></td>
+<td><b>Type</b></td>
+<td><b>Description</b></td>
+</tr>
+<tr>
+<td>Blocking counter&nbsp;name</td>
+<td>Field</td>
+<td>The name of the Standby blocking counter. This might be
+an application name, for example.</td>
+</tr>
+<tr>
+<td>Reset the counter (otherwise decrement)</td>
+<td>Option</td>
+<td>If checked, the counter is set to 0 when "Enable
+Standby" is called, regardless of the current counter value.<br>
+If unchecked, the counter is decremented by 1 on each call of "Enable
+Standby".<br></td>
+</tr>
+<tr>
+<td>Trigger standby timer <br>
+if&nbsp;counter is equal to zero</td>
+<td>Radio Group</td>
+<td>After all blocking counters have reached value 0, the next Trigger event can be&nbsp;scheduled with the&nbsp;following options:<br>- "Don't trigger": The time until next trigger event is continued from previous state before Pending state.<br>- "With default pending time": Next trigger event is scheduled with default pending time (as configured in the
+plugin configuration)<br>- "With default standby time": Next trigger event is scheduled with "standby default time" (as configured in the
+plugin configuration)<br>- "With following value": Specifies a special value for next</td>
+</tr>
+<tr>
+<td>Trigger standby timer <br>
+if&nbsp;counter is unequal to zero</td>
+<td>Radio Group</td>
+<td>Leave default: "Don't trigger". Other options rarely
+used.</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h4><a name="Action:_Trigger_Standby_Timer"></a>Action:
+Trigger Standby Timer</h4>This
+action can be used to reprogram the internal timer and therefore the
+time when the next "StandbyControl.Trigger" shall happen.&nbsp;A
+"StandbyControl.Trigger" event is fired after the specified amount of
+time and in case that standby&nbsp;is not inhibited by a standby
+blocker. <br>
+<br>
+<table border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td><b>Name</b></td>
+<td><b>Type</b></td>
+<td><b>Description</b></td>
+</tr>
+<tr>
+<td>Force standby time</td>
+<td>Option</td>
+<td>If checked, the time until the next trigger can be decreased. Otherwise, it can only be increased.</td>
+</tr>
+</tbody>
+</table>
+<br>
+<h4><a name="Action:_Was_triggered"></a>Action:
+Was triggered</h4>
+Returns 'True' in 'eg.result' if a trigger event has been fired before<br>
+<br>
+<h4><a name="Action:_OSD_Count_Down"></a>Action:
+OSD Count Down</h4>On
+screen display of a message, optionally with a decreasing
+countdown value. The execution of the OSD countdown runs
+asynchronously, i.e. it does not block further macro executions. It fires
+a configurable Event at the end of the countdown.<br><br>Field
+"Text to display" not only accepts normal (static) text phrases, but it
+also accepts Python expressions. This might be used for implementing
+multilingual support or anything else, where the final message is only
+known at runtime. The expression syntax is: <tt>${&lt;python expression&gt;}</tt> while <tt>&lt;python expression&gt;</tt> stands for a valid Python expression which is evaluated at runtime. <br>Examples: <tt><br>${eg.globals.myMessage}</tt> displays the value from <tt>eg.globals.myMessage</tt> (assuming that this variable is defined and has some text assigned). <tt><br>${eg.globals.myClass.getMessage()}</tt> would execute the method/function <tt>eg.globals.myClass.getMessage()</tt>&nbsp;and display its return value (assuming again that this class and method really exists and returns a String value).<br>
+<br>
+<h4><a name="Action:_Cancel_OSD_Count_Down"></a>Action:
+Cancel OSD Count Down</h4>Cancels a running OSD countdown.<br>
+<br>
+<h4><a name="Action:_Is_Monitored_Process_Running"></a>Action:
+Is Monitored Process Running</h4>Returns 'True' in 'eg.result' if a monitored process, as
+defined in the plugin configuration, is currently running.<br>
+<br>
+<h4><a name="Action:_Is_Keep_Alive"></a>Action:
+Is Keep Alive</h4>Returns 'True' in 'eg.result' if a scheduled keep
+alive entry is active at this time.<br>
+<br>
+<br>
+<div align="right">2012-03-11 /
+StandbyControl %s / db</div>
+<br>
+</body></html>

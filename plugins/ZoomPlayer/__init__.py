@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 #
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2018 EventGhost Project <http://www.eventghost.net/>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 2 of the License, or (at your option)
-# any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-# more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 Adds actions to control the famous `Zoom Player <http://www.inmatrix.com/>`_.
@@ -47,7 +45,7 @@ eg.RegisterPlugin(
     version = "1.0",
     kind = "program",
     guid = "{C5E2609E-C1C4-4432-A532-EDA79A7EE41D}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=3498",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=3498", 
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (
@@ -592,7 +590,7 @@ FN_ACTIONS = (
 ('fnOpenURL', '<b>All:</b> Open URL.'),
 ('fnAudioMode', '<b>Media:</b> Switch to Audio only mode (no video area) skin.'),
 ('fnSSaverToggle', '<b>All:</b> Internal Screen Saver Toggle.'),
-('fnTVMode', 'None: Not implemented.'),
+('fnTVMode', '<b>None:</b> Not implemented.'),
 ('fnSpace', '<b>All:</b> Call the user-selected Space function.'),
 ('fnIncHeight', '<b>All:</b> Increase Height 1 Pixel.'),
 ('fnDecHeight', '<b>All:</b> Decrease Height 1 Pixel.'),
@@ -635,32 +633,60 @@ FN_ACTIONS = (
 ('fnBlankMonitors', "<b>All:</b> Blank (cover with a black window) non-Active monitors."),
 ('fnFSActMonitor', "<b>All:</b> Fullscreen on active monitor."),
 ('fnDownloadNav', "<b>All:</b> Download Manager Navigator (show/hide)."),
-('fnPosToClipboard', "<b>All</b> Copy the current position to the Windows Clipboard"),
-('fnInfoNav', "<b>All</b> Information Navigator (show/hide)"),
-('fnSaveFileAs', "<b>All</b> Save currently playing file"),
-('fnDoSearch', "<b>All</b> Unused at this time"),
-('fnSearchList', "<b>All</b> Unused at this time"),
-('fnDeInterlace', "<b>All</b> DeInterlace Video (enabled/disabled)"),
-('fnSharpen', "<b>All</b> Sharpen Video (enabled/disabled)"),
-('fnOpenWebPage', "<b>All</b> Open Web Page Dialog"),
-('fnRingTone', "<b>All</b> Create a RingTone from a playing media section"),
-('fnZoomTo43Wide', "<b>All</b> Zoom on badly encoded 16:9 content (encoded with black bars)"),
-('fnVolumeWindow', "<b>All</b> Pop-up the Volume-Slider Window"),
-('fnWhiteWash', "<b>All</b> WhiteWash Screen-Burn repair"),
-('fnResetWindows', "<b>All</b> Reset user interface windows to their default location"),
-('fnIncRateEx', "<b>All</b> Increase Play Rate by a user specified value"),
-('fnDecRateEx', "<b>All</b> Decrease Play Rate by a user specified value"),
-('fnZoomInLevel', "<b>All</b> Cycle Zoom-in Levels (16.6%, 33.3%, 50%, 100%)"),
-('fnSkinSelectNav', "<b>All</b> Fullscreen navigation skin selection navigator (show/hide)"),
-('fnResetBright', "<b>All</b> Reset Brightness to default value."),
-('fnResetContrast', "<b>All</b> Reset Contrast to default value."),
-('fnResetGamma', "<b>All</b> Reset Gamma to default value."),
-('fnResetHue', "<b>All</b> Reset Hue to default value."),
-('fnResetSatur', "<b>All</b> Reset Saturation to default value."),
-('fnRandDirNedia', "<b>All</b> Random play a media file from the playing directory."),
-('fnRandDirFileExt', "<b>All</b> Random play a file with the same extension from the playing directory."),
-('fnSeekLongForward', "<b>All</b> Long seek forward a specified number of seconds (default 600 seconds = 10 minutes)."),
-('fnSeekLongBackward', "<b>All</b> Long seek backward a specified number of seconds (default 600 seconds = 10 minutes)."),
+('fnPosToClipboard', "<b>All:</b> Copy the current position to the Windows Clipboard"),
+('fnInfoNav', "<b>All:</b> Information Navigator (show/hide)"),
+('fnSaveFileAs', "<b>All:</b> Save currently playing file"),
+('fnDoSearch', "<b>All:</b> Unused at this time"),
+('fnSearchList', "<b>All:</b> Unused at this time"),
+('fnDeInterlace', "<b>All:</b> DeInterlace Video (enabled/disabled)"),
+('fnSharpen', "<b>All:</b> Sharpen Video (enabled/disabled)"),
+('fnOpenWebPage', "<b>All:</b> Open Web Page Dialog"),
+('fnRingTone', "<b>All:</b> Create a RingTone from a playing media section"),
+('fnZoomTo43Wide', "<b>All:</b> Zoom on badly encoded 16:9 content (encoded with black bars)"),
+('fnVolumeWindow', "<b>All:</b> Pop-up the Volume-Slider Window"),
+('fnWhiteWash', "<b>All:</b> WhiteWash Screen-Burn repair"),
+('fnResetWindows', "<b>All:</b> Reset user interface windows to their default location"),
+('fnIncRateEx', "<b>All:</b> Increase Play Rate by a user specified value"),
+('fnDecRateEx', "<b>All:</b> Decrease Play Rate by a user specified value"),
+('fnZoomInLevel', "<b>All:</b> Cycle Zoom-in Levels (16.6%, 33.3%, 50%, 100%)"),
+('fnSkinSelectNav', "<b>All:</b> Fullscreen navigation skin selection navigator (show/hide)"),
+('fnResetBright', "<b>All:</b> Reset Brightness to default value."),
+('fnResetContrast', "<b>All:</b> Reset Contrast to default value."),
+('fnResetGamma', "<b>All:</b> Reset Gamma to default value."),
+('fnResetHue', "<b>All:</b> Reset Hue to default value."),
+('fnResetSatur', "<b>All:</b> Reset Saturation to default value."),
+('fnRandDirNedia', "<b>All:</b> Random play a media file from the playing directory."),
+('fnRandDirFileExt', "<b>All:</b> Random play a file with the same extension from the playing directory."),
+('fnSeekLongForward', "<b>All:</b> Long seek forward a specified number of seconds (default 600 seconds = 10 minutes)."),
+('fnSeekLongBackward', "<b>All:</b> Long seek backward a specified number of seconds (default 600 seconds = 10 minutes)."),
+('fnMainContextMenu', "<b>All:</b> Pop-up the Main Context Menu."),
+('fnPLContextMenu', "<b>All:</b> Pop-up the Playlist Context Menu."),
+('fnResetBalance', "<b>All:</b> Reset the Audio Balance to Center."),
+('fnResetPlayRate', "<b>All:</b> Reset Play Rate to normal speed."),
+('fnIncDerivedAR', "<b>All:</b> Manually increase Derived Aspect Ratio width."),
+('fnDecDerivedAR', "<b>All:</b> Manually decrease Derived Aspect Ratio width."),
+('fnScheduler', "<b>All:</b> Show/Hide the Scheduler editor."),
+('fnRename', "<b>Media:</b> Rename/Move the playing media or selected playlist entry."),
+('fnMadVRSmoothMo', "<b>All:</b> Enable/Disable MadVR''s smooth motion."),
+('fnAutoPlayNext', "<b>Media:</b> Enable/Disable Auto-Play next file in the playlist."),
+('fnRotateVideo', "<b>All:</b> Rotate the video in 90 degree increments."),
+('fnFileAssociation', "<b>All:</b> Show the file format association dialog."),
+('fnDSZoomIn', "<b>All:</b> DirectShow Zoom-in (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnDSZoomOut', "<b>All:</b> DirectShow Zoom-out (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnDSPanLeft', "<b>All:</b> DirectShow Pan-left  (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnDSPanRight', "<b>All:</b> DirectShow Pan-right (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnDSPanUp', "<b>All:</b> DirectShow Pan-up (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnDSPanDown', "<b>All:</b> DirectShow Pan-down (only works for DirectShow based playback and may not work with all video renderers)."),
+('fnPLEditMetaData', "<b>All:</b> Open meta-data editor for the currently playing media or playlist selected media."),
+('fnPLAddUrl', "<b>All:</b> Add a media streaming URL (link) to the playlist."),
+('fnLockUI', "<b>All:</b> Lock the user interface."),
+('fnPreConfigPCType', "<b>All:</b> Open the PC/HTPC/Tablet configuration wizard."),
+('fnMediaScanner', "<b>All:</b> Show / Hide the Media Scanner Navigator dialog."),
+('fnStreamSelection', "<b>All:</b> Show / Hide the Stream Selection Navigator dialog."),
+('fnThumbViewMiniMenu', "<b>All:</b> Show/Hide ThumbView mode's Mini-Menu."),
+('fnpstogglepresize', "<b>All:</b> Toggle ON/OFF pre-image resize Pixel Shaders."),
+('fnpstogglepostsize', "<b>All:</b> Toggle ON/OFF post-image resize Pixel Shaders."),
+('fnpstoggleboth', "<b>All:</b> Toggle ON/OFF pre and post-image resize Pixel Shaders."),
 )
 
 EX_ACTIONS = (
@@ -692,6 +718,18 @@ EX_ACTIONS = (
 ('exRandomPlay', 'Set Random Play ON/OFF\n<br>value = 0=Off, 1=On'),
 ('exSkinTint', 'Set the User Interface color Tint\n<br>value = RGB Integer Value (Example: "$FF0000" = Red)'),
 ('exSkinMode', 'Enable Skin-Specific Mode\n<br>value = 1-6, by default assigned to F4-F9 keys'),
+('exScheduler','Enable/Disable the Scheduler'),
+('exPlayListMode', "Set ''On Playlist Complete'' mode"),
+('exPartLoader', 'Set the Multiple-Part file loader mode'),
+('exStayOnTop', "Set ''Stay on Top'' mode\n<br>0 = Disable Stay on Top<br>1 = Enable Stay on Top"),
+('exSlideshow', 'Set image slideshow duration\n<br>The number of seconds to display a still image, set to 0 to disable the slideshow feature.'),
+('exFastforward', 'Fast Forward\n<br>A value of 2500 = x2.5 fast forward rate, a positive value specifies an on/off toggle, a negative value (-2500) indicates the new value should be applied even if fast forward is already active.'),
+('exRewind', 'Rewind\n<br>A value of 2500 = x2.5 rewind rate, a positive value specifies an on/off toggle, a negative value (-2500) indicates the new value should be applied even if rewind is already active.'),
+('exSlowMotion', 'Slow Motion\n<br>A value of 500 = x0.5 slow motion rate, a positive value specifies an on/off toggle, a negative value (-500) indicates the new value should be applied even if slow motion is already active.'),
+('exDirectShowZoom', 'DirectShow Zoom\n<br>A value of 100-10000 (only works for DirectShow based playback and may not work with all video renderers).'),
+('exDirectShowPan', 'DirectShow Pan\n<br>A value of 0-10000 (only works for DirectShow based playback and may not work with all video renderers).'),
+('exLAVHWAccel', "LAV Hardware Acceleration\n<br>0 = Use LAV's setting<br>1 = None (software decoding)<br>2 = NVIDIA CUVID<br>3 = Intel QuickSync<br>4 = DXVA2 (copy-back)<br>5 = DXVA2 (native)"),
+('exPSPreset', 'Apply Pixel Shader preset\n<br>1-100 (requires using MadVR as the video renderer and pixel shaders presets created through the advanced options dialog'),
 )
 
 NV_ACTIONS = (
@@ -703,7 +741,7 @@ NV_ACTIONS = (
 ('KeyPgUp', 'Navigational Control Page Up', '33'),
 ('KeyPgDown', 'Navigational Control Page Down', '34'),
 ('KeyHome', 'Navigational Control Home', '36'),
-('KeyEnd', 'Navigational Control End', '36'),
+('KeyEnd', 'Navigational Control End', '35'),
 ('KeyInsert', 'Navigational Control Insert', '45'),
 ('KeyDelete', 'Navigational Control Delete', '46'),
 ('KeyBackspace', 'Navigational Control Backspace', '8'),
@@ -931,6 +969,9 @@ class ZoomPlayer(eg.PluginBase):
             "19": "SkinSelectNav",
             "20": "DownloadNav",
             "21": "InfoNav",
+            "22": "MediaScannerNav",
+            "23": "StreamSelectionNav",
+            "24": "MiniColorNav",
         },
        "3110": "NavigatorClosed",
     }
@@ -1004,6 +1045,9 @@ class ZoomPlayer(eg.PluginBase):
                 "19": "NavigationStyle",
                 "20": "Download",
                 "21": "Information",
+                "22": "MediaScanner",
+                "23": "StreamSelection",
+                "24": "MiniColor",
             },
         ),
         "3110": (
@@ -1031,6 +1075,9 @@ class ZoomPlayer(eg.PluginBase):
                 "19": "NavigationStyle",
                 "20": "Download",
                 "21": "Information",
+                "22": "MediaScanner",
+                "23": "StreamSelection",
+                "24": "MiniColor",
             },
         ),
         "3200": (
@@ -1123,6 +1170,8 @@ class ZoomPlayer(eg.PluginBase):
             else:
                 self.TriggerEvent("SubtitlesDisabled")
                 self.TriggerEvent("CurrentSubtitleName")
+        elif header == "2300":
+            self.TriggerEvent("Volume", int(state))
         else:
             self.TriggerEvent(header, [state])
 

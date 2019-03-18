@@ -35,8 +35,8 @@ class ObservViewerDialog(wx.MiniFrame):
             )
 
         if int(wx.__version__.split('.', 1)[0]) < 4:
-            observ_list_ctrl.InsertStringItem(0, text.colLabels[0])
-            observ_list_ctrl.SetStringItem(0, 2, time.strftime("%c"))
+            observ_list_ctrl.InsertItem(0, text.colLabels[0])
+            observ_list_ctrl.SetItem(0, 2, time.strftime("%c"))
         else:
             observ_list_ctrl.InsertItem(0, text.colLabels[0])
             observ_list_ctrl.SetItem(0, 2, time.strftime("%c"))
@@ -67,11 +67,11 @@ class ObservViewerDialog(wx.MiniFrame):
                 if ot.isAlive() and not ot.is_aborted():
                     timestamp = time.strftime("%c", time.localtime(ot.last_check)) if ot.last_check != 0 else ''
                     if int(wx.__version__.split('.', 1)[0]) < 4:
-                        observ_list_ctrl.InsertStringItem(row, ot.observ_name)
-                        observ_list_ctrl.SetStringItem(row, 1, str(ot.setup[1]))
-                        observ_list_ctrl.SetStringItem(row, 2, timestamp)
-                        observ_list_ctrl.SetStringItem(row, 3, ot.setup[3])
-                        observ_list_ctrl.SetStringItem(row, 4, ot.setup[12])
+                        observ_list_ctrl.InsertItem(row, ot.observ_name)
+                        observ_list_ctrl.SetItem(row, 1, str(ot.setup[1]))
+                        observ_list_ctrl.SetItem(row, 2, timestamp)
+                        observ_list_ctrl.SetItem(row, 3, ot.setup[3])
+                        observ_list_ctrl.SetItem(row, 4, ot.setup[12])
                     else:
                         observ_list_ctrl.InsertItem(row, ot.observ_name)
                         observ_list_ctrl.SetItem(row, 1, str(ot.setup[1]))

@@ -363,7 +363,7 @@ class WeatherTable(wx.ListCtrl, ListCtrlAutoWidthMixin):
         try:
             self.InsertItem(0, "dummy")
         except TypeError:
-            self.InsertStringItem(0, "dummy")
+            self.InsertItem(0, "dummy")
         rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hi = rect[3]  # item height
         self.DeleteAllItems()
@@ -375,8 +375,8 @@ class WeatherTable(wx.ListCtrl, ListCtrlAutoWidthMixin):
                 self.InsertItem(row, header[row])
                 self.SetItem(row, 1, data[row])
             except TypeError:
-                self.InsertStringItem(row, header[row])
-                self.SetStringItem(row, 1, data[row])
+                self.InsertItem(row, header[row])
+                self.SetItem(row, 1, data[row])
 
 
 # =============================================================================
@@ -477,7 +477,7 @@ class CurrentWeather(wx.Frame):
             try:
                 win.SetToolTip(plugin.text.tooltip)
             except TypeError:
-                win.SetToolTipString(plugin.text.tooltip)
+                win.SetToolTip(plugin.text.tooltip)
 
         self.timer = wx.Timer(self)
         if autoclose:
@@ -651,6 +651,12 @@ class extDialog(wx.Frame):
         self.grid = grid
         self.add = add
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
+
     def ShowExtDialog(self, title):
         self.panel.Enable(False)
         self.panel.dialog.buttonRow.cancelButton.Enable(False)
@@ -696,7 +702,7 @@ class extDialog(wx.Frame):
         mainSizer.Fit(self)
 
         def onClose(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -729,7 +735,7 @@ class extDialog(wx.Frame):
         w, h = self.GetSize()
         self.SetSize((max(w, 400), h))
         self.SetMinSize((max(w, 400), h))
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Show()
         self.Raise()
 
@@ -763,7 +769,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         try:
             self.InsertItem(0, "dummy")
         except TypeError:
-            self.InsertStringItem(0, "dummy")
+            self.InsertItem(0, "dummy")
         rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hh = rect[1]  # header height
         hi = rect[3]  # item height
@@ -794,7 +800,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         event.Skip()
 
     def OnItemSelected(self, evt):
-        self.SelRow(evt.m_itemIndex)
+        self.SelRow(evt.GetSelection())
         evt.Skip()
 
     # this is called by the base class when an item is checked/unchecked !!
@@ -834,7 +840,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         try:
             self.InsertItem(ix, "")
         except TypeError:
-            self.InsertStringItem(ix, "")
+            self.InsertItem(ix, "")
         self.CheckItem(ix)
         self.EnsureVisible(ix)
         self.SelRow(ix)
@@ -853,7 +859,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
             try:
                 self.SetItem(row, j, data)
             except TypeError:
-                self.SetStringItem(row, j, data)
+                self.SetItem(row, j, data)
 
     def GetSelectedItemIx(self):
         return self.selRow
@@ -1341,7 +1347,7 @@ class OpenWeatherMap(eg.PluginBase):
             try:
                 wxid = wx.NewIdRef()
             except AttributeError:
-                wxid = wx.NewId()
+                wxid = wx.NewIdRef()
             bttns.append(wxid)
             b = wx.Button(panel, wxid, bttn)
             bttnSizer1.Add(b, 1)

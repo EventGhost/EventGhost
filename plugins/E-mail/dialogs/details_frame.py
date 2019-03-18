@@ -205,10 +205,10 @@ class DetailsFrame(wx.MiniFrame):
         self.messages_list_ctrl.DeleteAllItems()
         if int(wx.__version__.split('.', 1)[0]) < 4:
             for row, item in enumerate(self.plugin.temp_data[indx][2]):
-                self.messages_list_ctrl.InsertStringItem(row, item[4])
-                self.messages_list_ctrl.SetStringItem(row, 1, item[3])
-                self.messages_list_ctrl.SetStringItem(row, 2, item[1])
-                self.messages_list_ctrl.SetStringItem(row, 3, item[2])
+                self.messages_list_ctrl.InsertItem(row, item[4])
+                self.messages_list_ctrl.SetItem(row, 1, item[3])
+                self.messages_list_ctrl.SetItem(row, 2, item[1])
+                self.messages_list_ctrl.SetItem(row, 3, item[2])
         else:
             for row, item in enumerate(self.plugin.temp_data[indx][2]):
                 self.messages_list_ctrl.InsertItem(row, item[4])

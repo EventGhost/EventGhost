@@ -21,6 +21,7 @@ import wx
 # Local imports
 import eg
 
+
 class ColourSelectButton(wx.BitmapButton):
     def __init__(
         self,
@@ -31,14 +32,14 @@ class ColourSelectButton(wx.BitmapButton):
         style=wx.BU_AUTODRAW,
         validator=wx.DefaultValidator,
         name="ColourSelectButton",
-        title = "Colour Picker"
+        title="Colour Picker"
     ):
         self.value = value
         self.title = title
         wx.BitmapButton.__init__(
             self, parent, -1, wx.NullBitmap, pos, size, style, validator, name
         )
-        self.SetValue(value)
+        wx.CallAfter(self.SetValue, value)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
 
     def GetValue(self):
@@ -60,13 +61,22 @@ class ColourSelectButton(wx.BitmapButton):
             colourData.GetCustomColour(i).Get() for i in range(16)
         ]
         dialog.Destroy()
-        evt = eg.ValueChangedEvent(self.GetId(), value = self.value)
+        evt = eg.ValueChangedEvent(self.GetId(), value=self.value)
         wx.PostEvent(self, evt)
 
     def SetValue(self, value):
         self.value = value
         width, height = self.GetSize()
-        image = wx.Image(width - 10, height - 10)
-        rct = wx.Rect(x=1, y=1, width=width - 12, height=height - 12)
+        image = wx.Image(
+            width=max((2, width - 10)),
+            height=max((2, height - 10)),
+            clear=True
+        )
+        rct = wx.Rect(
+            x=1,
+            y=1,
+            width=max((1, width - 12)),
+            height=max((1, height - 12)),
+        )
         image.SetRGB(rct, *value[:3])
         self.SetBitmapLabel(image.ConvertToBitmap())

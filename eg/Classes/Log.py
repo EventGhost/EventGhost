@@ -132,6 +132,7 @@ class Log(object):
                 platform.python_build(),
                 "[{0}]".format(platform.python_compiler())
             )
+            self.PrintDebugNotice("wxPython:", wx.version())
             self.PrintDebugNotice("----------------------------------------")
 
         # redirect all wxPython error messages to our log

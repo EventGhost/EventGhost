@@ -16,18 +16,18 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import wx
 from ctypes import (
     addressof, c_int, create_string_buffer, create_unicode_buffer, sizeof,
     Structure, WinError,
 )
 from ctypes.wintypes import INT, LPWSTR, UINT
+
+import wx
 from win32api import CloseHandle, EnumDisplayMonitors
 from win32con import (
     MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE, PROCESS_ALL_ACCESS,
 )
-from win32gui import GetClassName, GetParent, IsChild
-from win32gui import SendMessage as win32guiSendMessage
+from win32gui import GetClassName, GetParent, IsChild, SendMessage as win32guiSendMessage
 
 # Local imports
 import eg
@@ -35,17 +35,10 @@ from eg.WinApi import (
     GetWindowText, GetWindowThreadProcessId,
 )
 from eg.WinApi.Dynamic import (
-    _kernel32,
-    # functions:
-    byref, GetAncestor, GetForegroundWindow, GetWindowRect, IsWindow,
-    MoveWindow, PostMessage as WinApiPostMessage,
-    SendMessage as WinApiSendMessage, SetWindowPos, ShowWindow,
-    # types:
-    RECT,
-    # constants:
-    GA_ROOT, HWND_NOTOPMOST, HWND_TOPMOST, SW_MAXIMIZE, SW_MINIMIZE,
-    SW_RESTORE, SWP_NOMOVE, SWP_NOSIZE, WM_COMMAND,
-)
+    _kernel32, byref, GA_ROOT, GetAncestor, GetForegroundWindow, IsZoomed, IsIconic, GetWindowRect, HWND_NOTOPMOST,
+    HWND_TOPMOST, IsWindow, MoveWindow, PostMessage as WinApiPostMessage, RECT, SendMessage as WinApiSendMessage,
+    SetWindowPos, ShowWindow, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, SWP_NOMOVE, SWP_NOSIZE, WM_COMMAND,
+)  # functions:; types:; constants:
 from eg.WinApi.Utils import (
     BringHwndToFront, CloseHwnd, GetAlwaysOnTop, GetBestHwnd,
     GetContainingMonitor, GetHwndIcon, GetMonitorDimensions,
@@ -56,57 +49,58 @@ from SendKeys import SendKeys
 from win32_ctrls import win32_ctrls
 
 eg.RegisterPlugin(
-    name = "Window",
-    author = (
+    name="Window",
+    author=(
         "Bitmonster",
         "blackwind",
     ),
-    version = "1.1.2",
-    description = (
+    version="1.1.2",
+    description=(
         "Actions to control windows on your desktop, like finding specific "
         "windows, moving, resizing, and sending keypresses to them."
     ),
-    kind = "core",
-    guid = "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=3220",
-    icon = (
+    kind="core",
+    guid="{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",
+    url="http://www.eventghost.net/forum/viewtopic.php?f=9&t=3220",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"
         "YDJ+NNgMJ0OwUTo5GgvTfJUcDUxLWFVjHQAwFt2d0r0DwOwQ1eNdIALEzLnRtuQWqJOm"
         "tICIjGQz+wPfCozMB1cgd/dMG7k4AXr8XoPosfNpAAAAAElFTkSuQmCC"
     ),
 )
 
-PROCESS_VM_OPERATION      = 8
-PROCESS_VM_READ           = 16
-#PROCESS_VM_WRITE          = 32
+PROCESS_VM_OPERATION = 8
+PROCESS_VM_READ = 16
+# PROCESS_VM_WRITE          = 32
 PROCESS_QUERY_INFORMATION = 1024
 
-LVCF_FMT         = 1
-LVCF_WIDTH       = 2
-LVCF_TEXT        = 4
-LVCF_SUBITEM     = 8
-LVCF_IMAGE       = 16
-LVCF_ORDER       = 32
-LVM_GETCOLUMN    = 4121
-CB_GETCOUNT      = 326
-CB_GETCURSEL     = 327
-CB_GETLBTEXT     = 328
-LB_ERR           = -1
-LB_GETCOUNT      = 395
-LB_GETCURSEL     = 392
-LB_GETTEXT       = 393
-LB_GETSELCOUNT   = 400
-LB_GETSELITEMS   = 401
-SB_GETPARTS      = 1030
-SB_GETTEXTW      = 1037
-EM_GETLINECOUNT  = 186
-EM_GETLINE       = 196
+LVCF_FMT = 1
+LVCF_WIDTH = 2
+LVCF_TEXT = 4
+LVCF_SUBITEM = 8
+LVCF_IMAGE = 16
+LVCF_ORDER = 32
+LVM_GETCOLUMN = 4121
+CB_GETCOUNT = 326
+CB_GETCURSEL = 327
+CB_GETLBTEXT = 328
+LB_ERR = -1
+LB_GETCOUNT = 395
+LB_GETCURSEL = 392
+LB_GETTEXT = 393
+LB_GETSELCOUNT = 400
+LB_GETSELITEMS = 401
+SB_GETPARTS = 1030
+SB_GETTEXTW = 1037
+EM_GETLINECOUNT = 186
+EM_GETLINE = 196
 LVM_GETITEMCOUNT = 4100
 LVM_GETITEMSTATE = 4140
-LVM_GETITEMTEXT  = 4141
-#LVM_GETSELECTIONMARK = 4162
-#LVM_GETSELECTEDCOUNT = 4146
-LVIS_SELECTED    = 2
+LVM_GETITEMTEXT = 4141
+# LVM_GETSELECTIONMARK = 4162
+# LVM_GETSELECTEDCOUNT = 4146
+LVIS_SELECTED = 2
+
 
 class Window(eg.PluginBase):
     def __init__(self):
@@ -116,6 +110,9 @@ class Window(eg.PluginBase):
         self.AddAction(Close)
         self.AddAction(DockWindow)
         self.AddAction(GrabText)
+        self.AddAction(IsIconized)
+        self.AddAction(IsMaximized)
+        self.AddAction(IsMinimized)
         self.AddAction(Maximize)
         self.AddAction(Minimize)
         self.AddAction(MinimizeToTray)
@@ -165,7 +162,7 @@ class DockWindow(eg.ActionBase):
     hChoices = ["[no change]", "Left", "Center", "Right"]
     vChoices = ["[no change]", "Top", "Center", "Bottom"]
 
-    def __call__(self, h, v, hwnd = None):
+    def __call__(self, h, v, hwnd=None):
         hwnd = GetBestHwnd(hwnd)
         win = GetWindowDimensions(hwnd)
         mon, i = GetContainingMonitor(win)
@@ -193,10 +190,10 @@ class DockWindow(eg.ActionBase):
         # Move window to the specified location
         MoveWindow(hwnd, x, y, win.width, win.height, 1)
 
-    def Configure(self, h = 0, v = 0):
+    def Configure(self, h=0, v=0):
         panel = eg.ConfigPanel()
-        vCtrl = panel.ComboBox(self.vChoices[v], self.vChoices, style = wx.CB_READONLY)
-        hCtrl = panel.ComboBox(self.hChoices[h], self.hChoices, style = wx.CB_READONLY)
+        vCtrl = panel.ComboBox(self.vChoices[v], self.vChoices, style=wx.CB_READONLY)
+        hCtrl = panel.ComboBox(self.hChoices[h], self.hChoices, style=wx.CB_READONLY)
         panel.AddLine("Vertical Position:", vCtrl)
         panel.AddLine("Horizontal Position:", hCtrl)
         while panel.Affirmed():
@@ -213,16 +210,16 @@ class GrabText(eg.ActionBase):
     name = "Grab Text Item(s)"
     description = "Grabs text item(s) from the target window."
 
-#=========================================================================================================
-# Sources:
-# winGuiAuto.py (Simon Brunning - simon@brunningonline.net)
-# http://www.java2s.com/Open-Source/Python/Windows/Venster/venster-0.72/venster/comctl.py.htm
-# http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/common_controls.py.htm
-# http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/win32_controls.py.htm
-# http://stackoverflow.com/questions/1872480/use-python-to-extract-listview-items-from-another-application
-# Note: this only works on 32 bit Python, and only for 32 bit 'other' processes.
-# Pako
-#=========================================================================================================
+    # =========================================================================================================
+    # Sources:
+    # winGuiAuto.py (Simon Brunning - simon@brunningonline.net)
+    # http://www.java2s.com/Open-Source/Python/Windows/Venster/venster-0.72/venster/comctl.py.htm
+    # http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/common_controls.py.htm
+    # http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/win32_controls.py.htm
+    # http://stackoverflow.com/questions/1872480/use-python-to-extract-listview-items-from-another-application
+    # Note: this only works on 32 bit Python, and only for 32 bit 'other' processes.
+    # Pako
+    # =========================================================================================================
 
     class text:
         onlySel = "Return only selected item(s)"
@@ -231,7 +228,7 @@ class GrabText(eg.ActionBase):
             "ListView"
         )
 
-    def __call__(self, only_sel = False):
+    def __call__(self, only_sel=False):
         self.only_sel = only_sel
         res = []
         for hwnd in GetTargetWindows():
@@ -256,7 +253,7 @@ class GrabText(eg.ActionBase):
             res.append(val)
         return res
 
-    def Configure(self, only_sel = False):
+    def Configure(self, only_sel=False):
         panel = eg.ConfigPanel(self)
         onlySelCtrl = wx.CheckBox(panel, -1, self.text.onlySel)
         onlySelCtrl.SetValue(only_sel)
@@ -264,11 +261,11 @@ class GrabText(eg.ActionBase):
         panel.AddCtrl(onlySelCtrl)
 
         while panel.Affirmed():
-            panel.SetResult(onlySelCtrl.GetValue(),)
+            panel.SetResult(onlySelCtrl.GetValue(), )
 
     def getComboboxItems(self, hwnd):
         if self.only_sel:
-            items = (win32guiSendMessage(hwnd, CB_GETCURSEL, 0, 0), )
+            items = (win32guiSendMessage(hwnd, CB_GETCURSEL, 0, 0),)
         else:
             items = None
         return self.getMultipleValues(hwnd, CB_GETCOUNT, CB_GETLBTEXT, items)
@@ -276,14 +273,14 @@ class GrabText(eg.ActionBase):
     def getEditText(self, hwnd):
         return self.getMultipleValues(hwnd, EM_GETLINECOUNT, EM_GETLINE)
 
-    def GetLabel(self, only_sel = False):
+    def GetLabel(self, only_sel=False):
         return "%s: %s: %s" % (self.name, self.text.onlySel, str(only_sel))
 
     def getListboxItems(self, hwnd):
         if self.only_sel:
             num_selected = win32guiSendMessage(hwnd, LB_GETSELCOUNT, 0, 0)
             if num_selected == LB_ERR:  # if we got LB_ERR then it is a single selection list box
-                items = (win32guiSendMessage(hwnd, LB_GETCURSEL, 0, 0), )
+                items = (win32guiSendMessage(hwnd, LB_GETCURSEL, 0, 0),)
             else:  # otherwise it is a multiselection list box
                 items = (c_int * num_selected)()
                 win32guiSendMessage(hwnd, LB_GETSELITEMS, num_selected, addressof(items))
@@ -318,7 +315,7 @@ class GrabText(eg.ActionBase):
         num_items = win32guiSendMessage(hwnd, LVM_GETITEMCOUNT)
         res = []
         for column_index in range(col_count):
-            lvitem_buffer.__setslice__(8, 12, pack_int(column_index))  #column index increment
+            lvitem_buffer.__setslice__(8, 12, pack_int(column_index))  # column index increment
             _kernel32.WriteProcessMemory(hProcHnd, pLVI, addressof(lvitem_buffer), sizeof(lvitem_buffer), 0)
             target_buff = create_string_buffer(4096)
             item_texts = []
@@ -333,9 +330,9 @@ class GrabText(eg.ActionBase):
         _kernel32.VirtualFreeEx(hProcHnd, pBuffer, 0, MEM_RELEASE)
         _kernel32.VirtualFreeEx(hProcHnd, pLVI, 0, MEM_RELEASE)
         CloseHandle(hProcHnd)
-        return map(list, zip(*res))  #Transposing Two-Dimensional Arrays by Steve Holden
+        return map(list, zip(*res))  # Transposing Two-Dimensional Arrays by Steve Holden
 
-    def getMultipleValues(self, hwnd, CountMessg, ValMessg, selected = None):
+    def getMultipleValues(self, hwnd, CountMessg, ValMessg, selected=None):
         buf_size = 512
         buf = create_string_buffer(pack_int(buf_size), buf_size)
         indexes = selected if selected else range(win32guiSendMessage(hwnd, CountMessg, 0, 0))
@@ -345,7 +342,7 @@ class GrabText(eg.ActionBase):
             val.append(buf.value[:valLngth].decode(eg.systemEncoding))
         return val
 
-    def getStatusBarItems(self, hwnd, buf_len = 512):
+    def getStatusBarItems(self, hwnd, buf_len=512):
         """If success, return statusbar texts like list of strings.
         Otherwise return either '>>> No process ! <<<' or '>>> No parts ! <<<'.
         Mandatory argument: handle of statusbar.
@@ -362,12 +359,37 @@ class GrabText(eg.ActionBase):
                 locBuf = create_unicode_buffer(buf_len)
                 for item in range(parts):
                     win32guiSendMessage(hwnd, SB_GETTEXTW, item, remBuf)
-                    _kernel32.ReadProcessMemory(process, remBuf, locBuf, buf_len, None)  #copy remBuf to locBuf
+                    _kernel32.ReadProcessMemory(process, remBuf, locBuf, buf_len, None)  # copy remBuf to locBuf
                     partList.append(locBuf.value)
                 res_val = partList
                 _kernel32.VirtualFreeEx(process, remBuf, 0, MEM_RELEASE)
                 CloseHandle(process)
         return res_val
+
+
+class IsIconized(eg.ActionBase):
+    name = "IsIconicized"
+    description = "Determines if the target window is iconic."
+
+    def __call__(self):
+        return bool(IsIconic(GetTopLevelOfTargetWindows()[0]))
+
+
+class IsMaximized(eg.ActionBase):
+    name = "IsMaximized"
+    description = "Determines if the target window is maximized."
+
+    def __call__(self):
+        return bool(IsZoomed(GetTopLevelOfTargetWindows()[0]))
+
+
+class IsMinimized(eg.ActionBase):
+    name = "IsMinimized"
+    description = "Determines if the target window is not maximized and not iconic."
+
+    def __call__(self):
+        win = GetTopLevelOfTargetWindows()[0]
+        return not bool(IsZoomed(win)) and not bool(IsIconic(win))
 
 
 class Maximize(eg.ActionBase):
@@ -392,7 +414,7 @@ class MinimizeToTray(eg.ActionBase):
     name = "Minimize to Tray"
     description = "Minimizes the target window to the system tray."
 
-    def __call__(self, hwnd = None):
+    def __call__(self, hwnd=None):
         # Gather info about the target window
         hwnd = GetBestHwnd(hwnd)
         icon = GetHwndIcon(hwnd)
@@ -427,13 +449,13 @@ class MoveTo(eg.ActionBase):
     description = "Moves the target window."
 
     class text:
-        label   = "Move window to: Monitor: %i, X: %s, Y: %s"
-        text1   = "Set horizontal position X to"
-        text2   = "pixels"
-        text3   = "Set vertical position Y to"
+        label = "Move window to: Monitor: %i, X: %s, Y: %s"
+        text1 = "Set horizontal position X to"
+        text2 = "pixels"
+        text3 = "Set vertical position Y to"
         display = "Window show on monitor"
 
-    def __call__(self, x, y, displayNumber = 0):
+    def __call__(self, x, y, displayNumber=0):
         monitorDimensions = GetMonitorDimensions()
         try:
             displayRect = monitorDimensions[displayNumber]
@@ -461,19 +483,19 @@ class MoveTo(eg.ActionBase):
                 hwnd, x, y, rect.right - rect.left, rect.bottom - rect.top, 1
             )
 
-    def Configure(self, x=0, y=0, displayNumber = None):
+    def Configure(self, x=0, y=0, displayNumber=None):
         text = self.text
         panel = eg.ConfigPanel()
-#        enableDisplay = displayNumber is not None
+        #        enableDisplay = displayNumber is not None
         enableX = x is not None
         enableY = y is not None
         displayLabel = wx.StaticText(panel, -1, text.display)
-#        displayCheckBox = wx.CheckBox(panel, -1, text.display)
-#        displayCheckBox.SetValue(enableDisplay)
+        #        displayCheckBox = wx.CheckBox(panel, -1, text.display)
+        #        displayCheckBox.SetValue(enableDisplay)
         if displayNumber is None:
             displayNumber = 0
         displayChoice = eg.DisplayChoice(panel, displayNumber)
-#        displayChoice.Enable(enableDisplay)
+        #        displayChoice.Enable(enableDisplay)
         xCheckBox = wx.CheckBox(panel, -1, text.text1)
         xCheckBox.SetValue(enableX)
         xCtrl = eg.SpinIntCtrl(panel, -1, 0 if not enableX else x, min=-32768, max=32767)
@@ -483,27 +505,29 @@ class MoveTo(eg.ActionBase):
         yCtrl = eg.SpinIntCtrl(panel, -1, 0 if not enableY else y, min=-32768, max=32767)
         yCtrl.Enable(enableY)
 
-        monsCtrl = eg.MonitorsCtrl(panel, background = (224, 238, 238))
-        sizer = wx.GridBagSizer(vgap = 6, hgap = 5)
+        monsCtrl = eg.MonitorsCtrl(panel, background=(224, 238, 238))
+        sizer = wx.GridBagSizer(vgap=6, hgap=5)
         sizer.Add(xCheckBox, (0, 0), (1, 1))
         sizer.Add(xCtrl, (0, 1), (1, 1))
         sizer.Add(wx.StaticText(panel, -1, text.text2), (0, 2), (1, 1))
         sizer.Add(yCheckBox, (1, 0), (1, 1))
         sizer.Add(yCtrl, (1, 1), (1, 1))
         sizer.Add(wx.StaticText(panel, -1, text.text2), (1, 2), (1, 1))
-        sizer.Add(displayLabel, (2, 0), (1, 1), flag = wx.TOP, border = 18)
-        sizer.Add(displayChoice, (2, 1), (1, 2), flag = wx.TOP, border = 17)
+        sizer.Add(displayLabel, (2, 0), (1, 1), flag=wx.TOP, border=18)
+        sizer.Add(displayChoice, (2, 1), (1, 2), flag=wx.TOP, border=17)
         panel.sizer.Add(sizer, 1, wx.EXPAND)
         panel.sizer.Add(monsCtrl)
 
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
+
         xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
             event.Skip()
+
         yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         while panel.Affirmed():
@@ -550,11 +574,13 @@ class Resize(eg.ActionBase):
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
+
         xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
             event.Skip()
+
         yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         panel.AddLine(xCheckBox, xCtrl, text.text2)
@@ -639,7 +665,7 @@ class SendMessage(eg.ActionBase):
         panel.AddLine("Message:", mesgCtrl)
         panel.AddLine("wParam:", wParamCtrl)
         panel.AddLine("lParam:", lParamCtrl)
-        #panel.AddLine()
+        # panel.AddLine()
         panel.AddLine(kindCB)
 
         while panel.Affirmed():
@@ -727,11 +753,13 @@ def GetTargetWindows():
         return [GetForegroundWindow()]
     return hwnds
 
+
 def GetTopLevelOfTargetWindows():
     hwnds = eg.lastFoundWindows
     if not hwnds:
         return [GetForegroundWindow()]
     return list(set([GetAncestor(hwnd, GA_ROOT) for hwnd in hwnds]))
+
 
 def match_cls(cls, lst):
     if cls in lst:
@@ -742,6 +770,7 @@ def match_cls(cls, lst):
             match = True
             break
     return match
+
 
 def pack_int(x):
     res = []

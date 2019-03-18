@@ -30,7 +30,7 @@ eg.RegisterPlugin(
         'Adds actions to control Windows Media Center.'
     ),
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1838",
-    createMacrosOnAdd = False,
+    createMacrosOnAdd = True,
 )
 
 FindMCE = eg.WindowMatcher(u'ehshell.exe', u'Windows Media Center', None, None, None, 1, False, 0.0, 0)

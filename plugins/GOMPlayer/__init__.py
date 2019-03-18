@@ -20,22 +20,24 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
+import eg
 
 eg.RegisterPlugin(
-    name = "GOM Player",
-    author = "CHeitkamp",
-    version = "1.0.1093",
-    kind = "program",
-    guid = "{A4CF41AC-8813-4920-98E9-576D08711022}",
-    createMacrosOnAdd = True,
-    description = (
+    name="GOM Player",
+    author="CHeitkamp",
+    version="1.0.1093",
+    kind="program",
+    guid="{A4CF41AC-8813-4920-98E9-576D08711022}",
+    createMacrosOnAdd=True,
+    description=(
         "Adds support functions to control GOM Player.\n\n"
         "<p>Only tested with version <b>2.1.x.x</b>.</p>"
         "<p>The plugin may not work with other versions of GOM Player!</p>"
+        "<p>Only works with last actived window GOM player.</p>"
         "<p><a href=\"http://www.gomplayer.com/\">GOM Player Homepage</a></p>"
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=854",
-    icon = (
+    url="http://www.eventghost.net/forum/viewtopic.php?t=854",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACQUlEQVR4nKWTTUhVQRSA"
         "v7n/plj+BYKFKAlGi8pwEVZgLkqiRS0DSXla4MLaWFRuBFvloo1kGVSuo8gQoqhFWYtK"
         "AvvRfggrQnwVr3yivjf3TnOv9Z60KjswnDkz53wzZ+YcoUK52chyROwZRgRDu1VoVMfu"
@@ -52,7 +54,6 @@ eg.RegisterPlugin(
     ),
 )
 
-
 # changelog:
 # 1.0 by CHeitkamp
 #     - initial version
@@ -61,60 +62,70 @@ eg.RegisterPlugin(
 #       an item for the 'description' attribute, because the use of
 #       AddActionFromList without an argument for the description is now
 #       deprecated.
+# 1.1.1 by Somateri
+#     - added Fullscreen Stretched (Keep ratio)
+#     - added separately Pause and Play
+#     - added Mute
+#     - updated description BossKey
+#     - updated description plugin
+
 
 ACTIONS = (
-    ( eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
-        ( 'Exit', 'Quit Application', None, 0x8048 ),
-        ( 'PlayPause', 'Play/Pause', None, 0x800C ),
-        ( 'Stop', 'Stop', None, 0x8006 ),
-        ( 'Restart', 'Restart from the beginning', None, 0x8010 ),
-        ( 'JumpForwardSmall', 'Jump Forward Small', 'Jump Forward 10sec, if not configured otherwise', 0x8009 ),
-        ( 'JumpBackwardSmall', 'Jump Backward Small', 'Jump Backward 10sec, if not configured otherwise', 0x8008 ),
-        ( 'JumpForwardMedium', 'Jump Forward Medium', 'Jump Forward 60sec, if not configured otherwise', 0x800B ),
-        ( 'JumpBackwardMedium', 'Jump Backward Medium', 'Jump Backward 60sec, if not configured otherwise', 0x800A ),
-        ( 'JumpForwardLarge', 'Jump Forward Large', 'Jump Forward 300sec, if not configured otherwise', 0x8012 ),
-        ( 'JumpBackwardLarge', 'Jump Backward Large', 'Jump Backward 300sec, if not configured otherwise', 0x8011 ),
-        ( 'IncreaseRate', 'Increase Rate', None, 0x8060 ),
-        ( 'DecreaseRate', 'Decrease Rate', None, 0x8061 ),
-        ( 'ResetRate', 'Reset Rate', None, 0x8062 ),
-        ( 'VolumeUp', 'Volume Up', None, 0x8014 ),
-        ( 'VolumeDown', 'Volume Down', None, 0x8013 ),
-        ( 'VolumeMute', 'Volume Mute', None, 0x8016 ),
-        ( 'BossKey', 'Boss Key', None, 0x8022 ),
-        ( 'Next', 'Next', None, 0x809A ),
-        ( 'Previous', 'Previous', None, 0x8099 ),
-        ( 'OpenFile', 'Open File', None, 0x8003 ),
-        ( 'OpenDVD', 'Open DVD', None, 0x8045 ),
-        ( 'AudioDelayAdd100ms', 'Audio Delay +100ms', None, 0x827F ),
-        ( 'AudioDelaySub100ms', 'Audio Delay -100ms', None, 0x827E ),
-        ( 'AudioDelayReset', 'Audio Delay Reset', None, 0x8280 ),
-    ) ),
-    ( eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
-        ( 'Fullscreen', 'Fullscreen', None, 0x8154 ),
-        ( 'FullscreenStretched', 'Fullscreen Stretched', None, 0x801C ),
-        ( 'AlwaysOnTop', 'Always On Top', None, 0x8044 ),
-        ( 'OnTopWhilePlaying', 'On Top while playing', None, 0x8085 ),
-        ( 'Zoom50', 'Zoom 50%', None, 0x801D ),
-        ( 'Zoom100', 'Zoom 100%', None, 0x801E ),
-        ( 'Zoom150', 'Zoom 150%', None, 0x801F ),
-        ( 'Zoom200', 'Zoom 200%', None, 0x8020 ),
-        ( 'ZoomFit', 'Zoom Fit to Desktop Resolution', None, 0x8021 ),
-    ) ),
-    ( eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
-        ( 'DVDTitleMenu', 'DVD Title Menu', None, 0x8149 ),
-        ( 'DVDRootMenu', 'DVD Root Menu', None, 0x814A ),
-        ( 'DVDSubtitleMenu', 'DVD Subtitle Menu', None, 0x814B ),
-        ( 'DVDAudioMenu', 'DVD Audio Menu', None, 0x814D ),
-        ( 'DVDAngleMenu', 'DVD Angle Menu', None, 0x814D ),
-        ( 'DVDChapterMenu', 'DVD Chapter Menu', None, 0x814C ),
-    ) ),
-    ( eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
-        ( 'Close', 'Close File', None, 0x8045 ),
-        ( 'Options', 'Options', None, 0x8059 ),
-        ( 'OnOffSubtitle', 'On/Off Subtitle', None, 0x8029 ),
-    ) ),
+    (eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
+        ('Exit', 'Quit Application', None, 0x8048),
+        ('Play', 'Play', None, 0x8157),
+        ('Pause', 'Pause', None, 0x8158),
+        ('PlayPause', 'Play/Pause', None, 0x800C),
+        ('Stop', 'Stop', None, 0x8006),
+        ('Restart', 'Restart from the beginning', None, 0x8010),
+        ('JumpForwardSmall', 'Jump Forward Small', 'Jump Forward 10sec, if not configured otherwise', 0x8009),
+        ('JumpBackwardSmall', 'Jump Backward Small', 'Jump Backward 10sec, if not configured otherwise', 0x8008),
+        ('JumpForwardMedium', 'Jump Forward Medium', 'Jump Forward 60sec, if not configured otherwise', 0x800B),
+        ('JumpBackwardMedium', 'Jump Backward Medium', 'Jump Backward 60sec, if not configured otherwise', 0x800A),
+        ('JumpForwardLarge', 'Jump Forward Large', 'Jump Forward 300sec, if not configured otherwise', 0x8012),
+        ('JumpBackwardLarge', 'Jump Backward Large', 'Jump Backward 300sec, if not configured otherwise', 0x8011),
+        ('IncreaseRate', 'Increase Rate', None, 0x8060),
+        ('DecreaseRate', 'Decrease Rate', None, 0x8061),
+        ('Mute', 'Mute', None, 0x8016),
+        ('ResetRate', 'Reset Rate', None, 0x8062),
+        ('VolumeUp', 'Volume Up', None, 0x8014),
+        ('VolumeDown', 'Volume Down', None, 0x8013),
+        ('VolumeMute', 'Volume Mute', None, 0x8016),
+        ('BossKey', 'Bosskey', 'Pause and minimize to taskbar/restores the window', 0x8022),
+        ('Next', 'Next', None, 0x809A),
+        ('Previous', 'Previous', None, 0x8099),
+        ('OpenFile', 'Open File', None, 0x8003),
+        ('OpenDVD', 'Open DVD', None, 0x8045),
+        ('AudioDelayAdd100ms', 'Audio Delay +100ms', None, 0x827F),
+        ('AudioDelaySub100ms', 'Audio Delay -100ms', None, 0x827E),
+        ('AudioDelayReset', 'Audio Delay Reset', None, 0x8280),
+    )),
+    (eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
+        ('Fullscreen', 'Fullscreen', None, 0x8154),
+        ('FullscreenStretched', 'Fullscreen Stretched', None, 0x801C),
+        ('FullscreenStretchedKeepratio', 'Fullscreen Stretched (Keep ratio)', None, 0x80F5),
+        ('AlwaysOnTop', 'Always On Top', None, 0x8044),
+        ('OnTopWhilePlaying', 'On Top while playing', None, 0x8085),
+        ('Zoom50', 'Zoom 50%', None, 0x801D),
+        ('Zoom100', 'Zoom 100%', None, 0x801E),
+        ('Zoom150', 'Zoom 150%', None, 0x801F),
+        ('Zoom200', 'Zoom 200%', None, 0x8020),
+        ('ZoomFit', 'Zoom Fit to Desktop Resolution', None, 0x8021),
+    )),
+    (eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
+        ('DVDTitleMenu', 'DVD Title Menu', None, 0x8149),
+        ('DVDRootMenu', 'DVD Root Menu', None, 0x814A),
+        ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 0x814B),
+        ('DVDAudioMenu', 'DVD Audio Menu', None, 0x814D),
+        ('DVDAngleMenu', 'DVD Angle Menu', None, 0x814D),
+        ('DVDChapterMenu', 'DVD Chapter Menu', None, 0x814C),
+    )),
+    (eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
+        ('Close', 'Close File', None, 0x8045),
+        ('Options', 'Options', None, 0x8059),
+        ('OnOffSubtitle', 'On/Off Subtitle', None, 0x8029),
+    )),
 )
-
 
 from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 
@@ -123,7 +134,7 @@ class ActionPrototype(eg.ActionClass):
 
     def __call__(self):
         try:
-            hWnd = FindWindow( "GomPlayer1.x" )
+            hWnd = FindWindow("GomPlayer1.x")
             return SendMessageTimeout(hWnd, WM_COMMAND, self.value, 0)
         except:
             raise self.Exceptions.ProgramNotRunning

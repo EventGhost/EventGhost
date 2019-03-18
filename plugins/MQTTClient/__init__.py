@@ -783,19 +783,19 @@ class MQTTthreads(eg.PluginClass):
             for i, item in enumerate(self.MQTTThreads):
                 t = self.MQTTThreads[item]
                 if t.isAlive():
-                    testListCtrl.InsertStringItem(
+                    testListCtrl.InsertItem(
                         row,
                         t.name
                     )
-                    testListCtrl.SetStringItem(row,
+                    testListCtrl.SetItem(row,
                         1, t.cid)
-                    testListCtrl.SetStringItem(row,
+                    testListCtrl.SetItem(row,
                         2, t.host)
-                    testListCtrl.SetStringItem(row,
+                    testListCtrl.SetItem(row,
                         3, str(t.port))
-                    testListCtrl.SetStringItem(row,
+                    testListCtrl.SetItem(row,
                         4, str(t.persistentSession))
-                    testListCtrl.SetStringItem(row,
+                    testListCtrl.SetItem(row,
                         5, t.topic)
                     row += 1
             ListSelection(wx.CommandEvent())

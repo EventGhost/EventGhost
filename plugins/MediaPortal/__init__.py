@@ -15,27 +15,43 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Changelog
+# 1.0 Bitmonster
+#       - initial release
+# 1.1 Wiedmann
+#       - correct MediaPortal Message Plugin URL
+#       - add EG support URL
+#       - group/name actions like in MediaPortal
+#       - remove not existing actions
+#       - add missing actions
+#
 
 import eg
 
 eg.RegisterPlugin(
-    name = "MediaPortal",
-    kind = "program",
-    author = "Bitmonster",
-    version = "1.0",
-    guid = "{50B10A24-77AC-4248-85E5-16A04983170E}",
-    createMacrosOnAdd = True,
-    description = (
+    name="MediaPortal",
+    kind="program",
+    author="Bitmonster & Carsten Wiedmann",
+    version="1.1",
+    guid="{50B10A24-77AC-4248-85E5-16A04983170E}",
+    createMacrosOnAdd=True,
+    description=(
         "Adds actions to control <a href='http://www.team-mediaportal.com/'>"
         "MediaPortal</a>."
     ),
-    help = (
+    url="http://www.eventghost.org/forum/viewtopic.php?f=4&amp;t=3171",
+    help=(
         "<b>Note:</b> You have to install and enable this "
-        '<a href="http://www.team-mediaportal.com/extensions/messageplugin-for-mp1-2">'
+        "<a href='http://www.team-mediaportal.com/extensions/input-output/"
+        "message-plugin-for-mp1-2'>"
         "Message Plugin</a> inside MediaPortal. Please follow the supplied "
         "installation instructions in the ReadMe to accomplish this."
     ),
-    icon = (
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAABmUlEQVR4nNXSv08acRgG8EfCkUsOXNqpcSIm/iB26kCThqmL8eYb5CKKDCSM"
         "xvRvkKXYEIYGriecyH1PTuUSOSOogySYeHGD2EkcGItjmxTeTjRNWwKrT/IuT558phd4"
@@ -49,61 +65,71 @@ eg.RegisterPlugin(
     )
 )
 
-ACTIONS = [
-    ("Up", "Cursor Up", None, 30),
-    ("Down", "Cursor Down", None, 31),
-    ("Left", "Cursor Left", None, 32),
-    ("Right", "Cursor Right", None, 33),
-    ("Ok", "Ok", None, 34),
-    ("Back", "Back", None, 35),
-    ("NumPad0", "NumPad 0", None, 0),
-    ("NumPad1", "NumPad 1", None, 1),
-    ("NumPad2", "NumPad 2", None, 2),
-    ("NumPad3", "NumPad 3", None, 3),
-    ("NumPad4", "NumPad 4", None, 4),
-    ("NumPad5", "NumPad 5", None, 5),
-    ("NumPad6", "NumPad 6", None, 6),
-    ("NumPad7", "NumPad 7", None, 7),
-    ("NumPad8", "NumPad 8", None, 8),
-    ("NumPad9", "NumPad 9", None, 9),
-    ("Enter", "Enter", None, 11),
-    ("Power1", "Power1", None, 165),
-    ("Power2", "Power2", None, 12),
-    ("Start", "Start", None, 13),
-    ("Info", "Info", None, 15),
-    ("VolumeUp", "Volume Up", None, 16),
-    ("VolumeDown", "Volume Down", None, 17),
-    ("Mute", "Mute", None, 14),
-    ("ChannelUp", "Channel Up", None, 18),
-    ("ChannelDown", "Channel Down", None, 19),
-    ("Forward", "Forward", None, 20),
+ACTIONS_MCE = [
+    ("PowerTV", "Power TV", None, 101),
+    ("Record", "Record", None, 23),
+    ("Stop", "Stop", None, 25),
+    ("Pause", "Pause", None, 24),
     ("Rewind", "Rewind", None, 21),
     ("Play", "Play", None, 22),
-    ("Record", "Record", None, 23),
-    ("Pause", "Pause", None, 24),
-    ("Stop", "Stop", None, 25),
-    ("Skip", "Skip", None, 26),
+    ("Forward", "Forward", None, 20),
     ("Replay", "Replay", None, 27),
-    ("OemGate", "OemGate", None, 28),
-    ("Oem8", "Oem8", None, 29),
-    ("DVDMenu", "DVDMenu", None, 36),
-    ("LiveTV", "LiveTV", None, 37),
+    ("Skip", "Skip", None, 26),
+    ("Back", "Back", None, 35),
+
+    ("Info", "Info", None, 15),
+    ("VolumeUp", "Volume +", None, 16),
+    ("VolumeDown", "Volume -", None, 17),
+    ("Start", "Start", None, 13),
+    ("ChannelUp", "Channel Up", None, 18),
+    ("ChannelDown", "Channel Down", None, 19),
+    ("Mute", "Mute", None, 14),
+    ("RecordedTV", "Recorded TV", None, 72),
+
     ("Guide", "Guide", None, 38),
-    ("AspectRatio", "AspectRatio", None, 39),
-    ("MyTV", "MyTV", None, 70),
-    ("MyMusic", "MyMusic", None, 71),
-    ("RecordedTV", "RecordedTV", None, 72),
-    ("MyPictures", "MyPictures", None, 73),
-    ("MyVideos", "MyVideos", None, 74),
-    ("Print", "Print", None, 78),
-    ("MyRadio", "MyRadio", None, 80),
+    ("LiveTV", "Live TV", None, 37),
+    ("DVDMenu", "DVD Menu", None, 36)
+]
+
+ACTIONS_REPLACEMENT = [
+    ("PowerPC", "Power PC", None, 12),
+    ("Up", "Up", None, 30),
+    ("Down", "Down", None, 31),
+    ("Left", "Left", None, 32),
+    ("Right", "Right", None, 33),
+    ("Ok", "Ok", None, 34),
+    ("1", "1", None, 1),
+    ("2", "2", None, 2),
+    ("3", "3", None, 3),
+    ("4", "4", None, 4),
+    ("5", "5", None, 5),
+    ("6", "6", None, 6),
+    ("7", "7", None, 7),
+    ("8", "8", None, 8),
+    ("9", "9", None, 9),
+    ("0", "0", None, 0),
+    ("Asterisk", "*", None, 29),
+    ("NumberSign", "#", None, 28),
+    ("Clear", "Clear", None, 10),
+    ("Enter", "Enter", None, 11)
+]
+
+ACTIONS_TELETEXT = [
     ("Teletext", "Teletext", None, 90),
     ("Red", "Red", None, 91),
     ("Green", "Green", None, 92),
     ("Yellow", "Yellow", None, 93),
-    ("Blue", "Blue", None, 94),
-    ("PowerTV", "PowerTV", None, 101),
-    ("Messenger", "Messenger", None, 105),
+    ("Blue", "Blue", None, 94)
+]
+
+ACTIONS_EXTENDED = [
+    ("MyTV", "My TV", None, 70),
+    ("MyMusic", "My Music", None, 71),
+    ("MyPictures", "My Pictures", None, 73),
+    ("MyVideos", "My Videos", None, 74),
+    ("MyRadio", "My Radio", None, 80),
+    ("AspectRatio", "Aspect Ratio", None, 39),
+    ("Print", "Print", None, 78)
 ]
 
 from eg.WinApi import SendMessageTimeout
@@ -121,9 +147,25 @@ class ActionPrototype(eg.ActionBase):
             raise self.Exceptions.ProgramNotRunning
 
 
-
 class MediaPortal(eg.PluginBase):
 
     def __init__(self):
-        self.AddActionsFromList(ACTIONS, ActionPrototype)
+        GroupMce = self.AddGroup("Microsoft MCE Remote")
+        GroupMce.AddActionsFromList(
+            ACTIONS_MCE, ActionPrototype
+        )
 
+        GroupReplacement = self.AddGroup("Replacement driver buttons")
+        GroupReplacement.AddActionsFromList(
+            ACTIONS_REPLACEMENT, ActionPrototype
+        )
+
+        GroupTeletext = self.AddGroup("Teletext specific buttons")
+        GroupTeletext.AddActionsFromList(
+            ACTIONS_TELETEXT, ActionPrototype
+        )
+
+        GroupExtended = self.AddGroup("Extended buttons")
+        GroupExtended.AddActionsFromList(
+            ACTIONS_EXTENDED, ActionPrototype
+        )

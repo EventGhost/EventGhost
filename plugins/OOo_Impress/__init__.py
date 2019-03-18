@@ -1,4 +1,4 @@
-version="0.2"
+version = "0.2"
 # plugins/Impress/__init__.py
 #
 # Copyright (C)  2008-2013 Pako  (lubos.ruckl@quick.cz)
@@ -24,15 +24,17 @@ version="0.2"
 # 0.2 by Pako 2013-12-15 11:30 UTC+1
 #     - many changes and improvements
 # 0.1 by Pako 2009-01-01 17:00
-#===============================================================================
+# ===============================================================================
 
+import eg
 eg.RegisterPlugin(
-    name = "Impress",
-    author = "Pako",
-    guid = "{D8767FB1-CCC0-402D-AF65-D961D2D7C20F}",
-    version = version,
-    kind = "program",
-    description = ur'''<rst>
+
+    name="Impress",
+    author="Pako",
+    guid="{D8767FB1-CCC0-402D-AF65-D961D2D7C20F}",
+    version=version,
+    kind="program",
+    description=ur'''<rst>
 Adds actions to control ...
 
 | `Appache OpenOffice Impress`__
@@ -42,9 +44,9 @@ Adds actions to control ...
 __ http://www.openoffice.org/product/impress.html
 __ https://www.libreoffice.org/features/impress/
 ''',
-    createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1052",
-    icon = (
+    createMacrosOnAdd=True,
+    url="http://www.eventghost.net/forum/viewtopic.php?f=9&t=1052",
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAGk0lEQVR42pVWW4hdZxX+"
         "/svZ+5w517kkZzIzycyYiylpIjY2aZOaVJGaeEFDBQsFESuiCLUPVdAHiwhC6YM+iaUW"
         "RCRWEWqRgiDFti9KmiIk1prUJNMkzWRu57r32bd/reXDOTMxo82Mi/9hs/e/vm+t7//X"
@@ -82,27 +84,27 @@ __ https://www.libreoffice.org/features/impress/
         "TkSuQmCC"
     )
 )
-#===============================================================================
+# ===============================================================================
 
 import os
-import wx.grid as gridlib
-import wx.adv
-from os.path import join, exists
 from copy import deepcopy as cpy
-from time import sleep
-from threading import Thread, Event, Timer
-from win32com.client.dynamic import Dispatch
-from win32api import GetSystemMetrics
-from win32gui import SetFocus, SetForegroundWindow, SetActiveWindow, IsWindow
-from eg.WinApi import SendMessageTimeout
-from eg.WinApi.Dynamic import PostMessage, CreateEvent, SetEvent
-from eg.WinApi.Utils import GetMonitorDimensions
-from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
+from os.path import exists, join
+from threading import Timer
 
-SYS_VSCROLL_X    = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
-WM_CLOSE      = 16
+import wx.adv
+import wx.grid as gridlib
+from win32com.client.dynamic import Dispatch
+from win32gui import IsWindow, SetActiveWindow, SetForegroundWindow
+
+from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
+from eg.WinApi import SendMessageTimeout
+from eg.WinApi.Dynamic import CreateEvent, PostMessage, SetEvent
+from eg.WinApi.Utils import GetMonitorDimensions
+
+SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+WM_CLOSE = 16
 WM_SYSCOMMAND = 274
-SC_MINIMIZE   = 61472
+SC_MINIMIZE = 61472
 
 findPresentation = eg.WindowMatcher(
     None,
@@ -115,10 +117,12 @@ findPresentation = eg.WindowMatcher(
     0.0,
     0
 )
-#===============================================================================
+
+
+# ===============================================================================
 class Text:
-    err1 ='''Couldn't open file "%s" !'''
-    err2 =  "Couldn't find window with presentation!"
+    err1 = '''Couldn't open file "%s" !'''
+    err2 = "Couldn't find window with presentation!"
     err3 = '''Couldn't find file "%s" !'''
     opened = "Opened"
     closed = "Closed"
@@ -129,13 +133,11 @@ class Text:
     startLbl = 'Start slide number:'
 
 
-
 class MyTimer():
     def __init__(self, t, plugin):
         self.timer = Timer(t, self.Run)
         self.plugin = plugin
         self.timer.start()
-
 
     def Run(self):
         try:
@@ -144,10 +146,11 @@ class MyTimer():
         except:
             pass
 
-
     def Cancel(self):
         self.timer.cancel()
-#===============================================================================
+
+
+# ===============================================================================
 
 class NumDialog(wx.Frame):
 
@@ -162,12 +165,13 @@ class NumDialog(wx.Frame):
         )
         plugin.numDialog = self
 
-
     def CloseDialog(self):
         self.plugin.TriggerEvent("GoToFrame.%s" % self.plugin.text.closed)
         self.plugin.numDialog = None
         wx.CallAfter(self.Close, True)
-#===============================================================================
+
+
+# ===============================================================================
 
 class Menu(wx.Frame):
 
@@ -184,13 +188,13 @@ class Menu(wx.Frame):
         monitor,
         data,
         evtList,
-        ):
+    ):
         wx.Frame.__init__(
             self,
             None,
             -1,
             'Impress_menu',
-            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+            style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
         )
         self.data = data
         self.data.sort()
@@ -203,15 +207,15 @@ class Menu(wx.Frame):
             tmpLst = [i[1] for i in self.data]
             if actFile in tmpLst:
                 self.actFileIx = tmpLst.index(actFile)
-        self.fore     = fore
-        self.back     = back
-        self.foreSel  = foreSel
-        self.backSel  = backSel
+        self.fore = fore
+        self.back = back
+        self.foreSel = foreSel
+        self.backSel = backSel
         self.fontInfo = fontInfo
-        self.flag     = flag
-        self.plugin   = plugin
-        self.monitor  = monitor
-        self.evtList  = evtList
+        self.flag = flag
+        self.plugin = plugin
+        self.monitor = monitor
+        self.evtList = evtList
         self.plugin.TriggerEvent("OnScreenMenu.%s" % self.plugin.text.opened)
         for evt in self.evtList[0]:
             eg.Bind(evt, self.onUp)
@@ -237,88 +241,80 @@ class Menu(wx.Frame):
         self.menuGridCtrl.SetSelectionBackground(self.backSel)
         self.menuGridCtrl.SetSelectionForeground(self.foreSel)
         if self.flag:
-            self.timer = MyTimer(t = 5.0, plugin = self.plugin)
+            self.timer = MyTimer(t=5.0, plugin=self.plugin)
         self.menuGridCtrl.Set(self.data)
         self.DrawMenu()
         self.plugin.menuDlg = self
         wx.GetApp().Yield()
         SetEvent(event)
 
-
     def DrawMenu(self):
         self.Show(False)
         self.menuGridCtrl.SetGridCursor(-1, 0)
         monDim = GetMonitorDimensions()
         try:
-            x,y,ws,hs = monDim[self.monitor]
+            x, y, ws, hs = monDim[self.monitor]
         except IndexError:
-            x,y,ws,hs = monDim[0]
+            x, y, ws, hs = monDim[0]
         # menu height calculation:
-        h=self.GetCharHeight()+4
+        h = self.GetCharHeight() + 4
         for i in range(len(self.data)):
-            self.menuGridCtrl.SetRowSize(i,h)
-            self.menuGridCtrl.SetCellValue(i,0," "+self.data[i][0])
-        height0 = len(self.data)*h
-        height1 = h*((hs-20)/h)
-        height = min(height0, height1)+6
+            self.menuGridCtrl.SetRowSize(i, h)
+            self.menuGridCtrl.SetCellValue(i, 0, " " + self.data[i][0])
+        height0 = len(self.data) * h
+        height1 = h * ((hs - 20) / h)
+        height = min(height0, height1) + 6
         # menu width calculation:
-        width_lst=[]
+        width_lst = []
         for item in self.data:
-            width_lst.append(self.GetFullTextExtent(item[0]+' ')[0])
-        width = max(width_lst)+8
-        self.menuGridCtrl.SetColSize(0,width)
+            width_lst.append(self.GetFullTextExtent(item[0] + ' ')[0])
+        width = max(width_lst) + 8
+        self.menuGridCtrl.SetColSize(0, width)
         self.menuGridCtrl.ForceRefresh()
         if height1 < height0:
             width += SYS_VSCROLL_X
-        if width > ws-50:
+        if width > ws - 50:
             if height + SYS_HSCROLL_Y < hs:
                 height += SYS_HSCROLL_Y
-            width = ws-50
+            width = ws - 50
         width += 6
-        x_pos = x + (ws - width)/2
-        y_pos = y + (hs - height)/2
+        x_pos = x + (ws - width) / 2
+        y_pos = y + (hs - height) / 2
         self.SetSize(x_pos, y_pos, width, height)
-        self.menuGridCtrl.SetSize(2, 2, width-6, height-6, wx.SIZE_AUTO)
+        self.menuGridCtrl.SetSize(2, 2, width - 6, height - 6, wx.SIZE_AUTO)
         self.menuGridCtrl.SelectRow(self.actFileIx)
         self.menuGridCtrl.MakeCellVisible(self.actFileIx, 0)
         self.Show(True)
         self.Raise()
 
-
     def MoveCursor(self, step):
-        max=len(self.data)
+        max = len(self.data)
         if max > 0:
             self.menuGridCtrl.MoveCursor(step)
 
-
     def onUp(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, -1)
-        return True #stop processing this event !!!
-
+        return True  # stop processing this event !!!
 
     def onDown(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, 1)
-        return True #stop processing this event !!!
-
+        return True  # stop processing this event !!!
 
     def onRight(self, event):
         wx.CallAfter(self.DefaultAction)
-        return True #stop processing this event !!!
-
+        return True  # stop processing this event !!!
 
     def onEscape(self, event):
         wx.CallAfter(self.destroyMenu)
-        return True #stop processing this event !!!
-
+        return True  # stop processing this event !!!
 
     def DefaultAction(self):
         item = self.data[self.menuGridCtrl.GetSelection()]
         self.destroyMenu()
         self.plugin.TriggerEvent(
             "Menu.DefaultAction",
-            payload = item[1:]
+            payload=item[1:]
         )
-
 
     def onFrameCharHook(self, event):
         keyCode = event.GetKeyCode()
@@ -340,19 +336,16 @@ class Menu(wx.Frame):
         else:
             event.Skip()
 
-
     def onDoubleClick(self, event):
         self.DefaultAction()
         event.Skip()
-
 
     def onClose(self, event):
         self.Show(False)
         self.Destroy()
         self.plugin.menuDlg = None
 
-
-    def destroyMenu(self, event = None):
+    def destroyMenu(self, event=None):
         for evt in self.evtList[0]:
             eg.Unbind(evt, self.onUp)
         for evt in self.evtList[1]:
@@ -365,12 +358,16 @@ class Menu(wx.Frame):
             self.timer.Cancel()
         self.plugin.TriggerEvent("OnScreenMenu.%s" % self.plugin.text.closed)
         self.Close()
-#===============================================================================
+
+
+# ===============================================================================
 
 class MyFileBrowseButton(eg.FileBrowseButton):
-    def GetTextCtrl(self):          #  now I can make build-in textCtrl non-editable !!!
-        return self.textControl     #
-#===============================================================================
+    def GetTextCtrl(self):  # now I can make build-in textCtrl non-editable !!!
+        return self.textControl  #
+
+
+# ===============================================================================
 
 class MyTextDropTarget(EventDropTarget):
 
@@ -378,10 +375,8 @@ class MyTextDropTarget(EventDropTarget):
         EventDropTarget.__init__(self, object)
         self.object = object
 
-
     def OnDragOver(self, x, y, dragResult):
         return wx.DragMove
-
 
     def OnData(self, dummyX, dummyY, dragResult):
         if self.GetData() and self.customData.GetDataSize() > 0:
@@ -398,19 +393,21 @@ class MyTextDropTarget(EventDropTarget):
                 return wx.DragCopy
             else:
                 wx.Bell()
-                return wx.DragNone
-        return wx.DragError
+                return wx.DragError
+        return wx.DragNone
 
     def OnLeave(self):
         pass
-#===============================================================================
+
+
+# ===============================================================================
 
 class EventListCtrl(wx.ListCtrl):
 
     def __init__(self, parent, id, evtList, ix, action):
         width = 205
         wx.ListCtrl.__init__(self, parent, id, style=wx.LC_REPORT |
-            wx.LC_NO_HEADER | wx.LC_SINGLE_SEL, size = (width, -1))
+                                                     wx.LC_NO_HEADER | wx.LC_SINGLE_SEL, size=(width, -1))
         self.parent = parent
         self.id = id
         self.evtList = evtList
@@ -429,19 +426,16 @@ class EventListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
         self.SetToolTip(self.action.text.toolTip)
 
-
     def OnSelect(self, event):
         self.sel = event.GetIndex()
-        evt = eg.ValueChangedEvent(self.id, value = self)
+        evt = eg.ValueChangedEvent(self.id, value=self)
         wx.PostEvent(self, evt)
         event.Skip()
-
 
     def OnChange(self, event):
-        evt = eg.ValueChangedEvent(self.id, value = self)
+        evt = eg.ValueChangedEvent(self.id, value=self)
         wx.PostEvent(self, evt)
         event.Skip()
-
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
@@ -459,37 +453,34 @@ class EventListCtrl(wx.ListCtrl):
         self.PopupMenu(menu)
         menu.Destroy()
 
-
     def OnDeleteButton(self, event=None):
         self.DeleteItem(self.sel)
         self.evtList[self.ix].pop(self.sel)
-        evt = eg.ValueChangedEvent(self.id, value = self)
+        evt = eg.ValueChangedEvent(self.id, value=self)
         wx.PostEvent(self, evt)
         if event:
             event.Skip()
 
-
     def OnDeleteAllButton(self, event=None):
         self.DeleteAllItems()
-        evt = eg.ValueChangedEvent(self.id, value = self)
+        evt = eg.ValueChangedEvent(self.id, value=self)
         wx.PostEvent(self, evt)
         self.evtList[self.ix] = []
         if event:
             event.Skip()
 
-
     def GetEvtList(self):
         return self.ix, self.evtList
-
 
     def UpdateEvtList(self, ix, txt):
         self.evtList[ix].append(txt)
 
-
     def SetItems(self, evtList):
         for i in range(len(evtList)):
             self.InsertItem(index=i, label=evtList[i], imageIndex=0)
-#===============================================================================
+
+
+# ===============================================================================
 
 class MenuEventsDialog(wx.MiniFrame):
 
@@ -508,7 +499,6 @@ class MenuEventsDialog(wx.MiniFrame):
         self.ctrl = None
         self.sel = -1
 
-
     def ShowMenuEventsDialog(self, title, labels):
         self.panel.Enable(False)
         self.panel.dialog.buttonRow.cancelButton.Enable(False)
@@ -516,26 +506,26 @@ class MenuEventsDialog(wx.MiniFrame):
         self.SetTitle(title)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.SetMinSize((450, 308))
-        topSizer=wx.GridBagSizer(2, 20)
-        textLbl_0=wx.StaticText(self, -1, labels[0])
+        topSizer = wx.GridBagSizer(2, 20)
+        textLbl_0 = wx.StaticText(self, -1, labels[0])
         id = wx.NewIdRef()
         eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.action)
         eventsCtrl_0.SetItems(self.evtList[0])
         dt0 = MyTextDropTarget(eventsCtrl_0)
         eventsCtrl_0.SetDropTarget(dt0)
-        textLbl_1=wx.StaticText(self, -1, labels[1])
+        textLbl_1 = wx.StaticText(self, -1, labels[1])
         id = wx.NewIdRef()
         eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.action)
         eventsCtrl_1.SetItems(self.evtList[1])
         dt1 = MyTextDropTarget(eventsCtrl_1)
         eventsCtrl_1.SetDropTarget(dt1)
-        textLbl_2=wx.StaticText(self, -1, labels[2])
+        textLbl_2 = wx.StaticText(self, -1, labels[2])
         id = wx.NewIdRef()
         eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.action)
         eventsCtrl_2.SetItems(self.evtList[2])
         dt2 = MyTextDropTarget(eventsCtrl_2)
         eventsCtrl_2.SetDropTarget(dt2)
-        textLbl_3=wx.StaticText(self, -1, labels[3])
+        textLbl_3 = wx.StaticText(self, -1, labels[3])
         id = wx.NewIdRef()
         eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.action)
         eventsCtrl_3.SetItems(self.evtList[3])
@@ -544,22 +534,22 @@ class MenuEventsDialog(wx.MiniFrame):
         deleteSizer = wx.BoxSizer(wx.VERTICAL)
         delOneBtn = wx.Button(self, -1, self.action.text.popup[0])
         delBoxBtn = wx.Button(self, -1, self.action.text.popup[1])
-        clearBtn  = wx.Button(self, -1, self.action.text.clear)
+        clearBtn = wx.Button(self, -1, self.action.text.clear)
         deleteSizer.Add(delOneBtn, 1, wx.EXPAND)
-        deleteSizer.Add(delBoxBtn, 1, wx.EXPAND|wx.TOP,5)
-        deleteSizer.Add(clearBtn, 1, wx.EXPAND|wx.TOP,5)
+        deleteSizer.Add(delBoxBtn, 1, wx.EXPAND | wx.TOP, 5)
+        deleteSizer.Add(clearBtn, 1, wx.EXPAND | wx.TOP, 5)
 
-        topSizer.Add(textLbl_0, (0,0))
-        topSizer.Add(eventsCtrl_0, (1,0), flag = wx.EXPAND)
-        topSizer.Add(textLbl_1, (0,1))
-        topSizer.Add(eventsCtrl_1, (1,1), flag = wx.EXPAND)
-        topSizer.Add(textLbl_2, (2,0),flag = wx.TOP, border = 8)
-        topSizer.Add(eventsCtrl_2, (3,0), flag = wx.EXPAND)
-        topSizer.Add(textLbl_3, (2,1), flag = wx.TOP, border = 8)
-        topSizer.Add(eventsCtrl_3, (3,1), flag = wx.EXPAND)
-        topSizer.Add(deleteSizer, (5,1), flag = wx.EXPAND)
+        topSizer.Add(textLbl_0, (0, 0))
+        topSizer.Add(eventsCtrl_0, (1, 0), flag=wx.EXPAND)
+        topSizer.Add(textLbl_1, (0, 1))
+        topSizer.Add(eventsCtrl_1, (1, 1), flag=wx.EXPAND)
+        topSizer.Add(textLbl_2, (2, 0), flag=wx.TOP, border=8)
+        topSizer.Add(eventsCtrl_2, (3, 0), flag=wx.EXPAND)
+        topSizer.Add(textLbl_3, (2, 1), flag=wx.TOP, border=8)
+        topSizer.Add(eventsCtrl_3, (3, 1), flag=wx.EXPAND)
+        topSizer.Add(deleteSizer, (5, 1), flag=wx.EXPAND)
 
-        line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
+        line = wx.StaticLine(self, -1, size=(20, -1), pos=(200, 0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(self.action.text.ok)
         btn1.SetDefault()
@@ -569,13 +559,12 @@ class MenuEventsDialog(wx.MiniFrame):
         btnsizer.AddButton(btn1)
         btnsizer.AddButton(btn2)
         btnsizer.Realize()
-        sizer.Add(topSizer,0,wx.ALL,10)
-        sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
-        sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
-        sizer.Add((1,6))
+        sizer.Add(topSizer, 0, wx.ALL, 10)
+        sizer.Add(line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 5)
+        sizer.Add(btnsizer, 0, wx.EXPAND | wx.RIGHT, 10)
+        sizer.Add((1, 6))
         self.SetSizer(sizer)
         sizer.Fit(self)
-
 
         def onFocus(evt):
             ctrl = evt.GetValue()
@@ -590,27 +579,27 @@ class MenuEventsDialog(wx.MiniFrame):
             delOneBtn.Enable(flag)
             delBoxBtn.Enable(flag)
             evt.Skip()
+
         eventsCtrl_0.Bind(eg.EVT_VALUE_CHANGED, onFocus)
         eventsCtrl_1.Bind(eg.EVT_VALUE_CHANGED, onFocus)
         eventsCtrl_2.Bind(eg.EVT_VALUE_CHANGED, onFocus)
         eventsCtrl_3.Bind(eg.EVT_VALUE_CHANGED, onFocus)
-
 
         def onDelOneBtn(evt):
             self.ctrl.OnDeleteButton()
             delOneBtn.Enable(False)
             delBoxBtn.Enable(False)
             evt.Skip()
-        delOneBtn.Bind(wx.EVT_BUTTON, onDelOneBtn)
 
+        delOneBtn.Bind(wx.EVT_BUTTON, onDelOneBtn)
 
         def onDelBoxBtn(evt):
             self.ctrl.OnDeleteAllButton()
             delOneBtn.Enable(False)
             delBoxBtn.Enable(False)
             evt.Skip()
-        delBoxBtn.Bind(wx.EVT_BUTTON, onDelBoxBtn)
 
+        delBoxBtn.Bind(wx.EVT_BUTTON, onDelBoxBtn)
 
         def onClearBtn(evt):
             eventsCtrl_0.DeleteAllItems()
@@ -621,8 +610,8 @@ class MenuEventsDialog(wx.MiniFrame):
             delBoxBtn.Enable(False)
             self.evtList = [[], [], [], []]
             evt.Skip()
-        clearBtn.Bind(wx.EVT_BUTTON, onClearBtn)
 
+        clearBtn.Bind(wx.EVT_BUTTON, onClearBtn)
 
         def onClose(evt):
             self.panel.Enable(True)
@@ -630,31 +619,34 @@ class MenuEventsDialog(wx.MiniFrame):
             self.panel.EnableButtons(True)
             self.GetParent().GetParent().Raise()
             self.Destroy()
-        self.Bind(wx.EVT_CLOSE, onClose)
 
+        self.Bind(wx.EVT_CLOSE, onClose)
 
         def onCancel(evt):
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
             self.Close()
-        btn2.Bind(wx.EVT_BUTTON,onCancel)
 
+        btn2.Bind(wx.EVT_BUTTON, onCancel)
 
         def onOK(evt):
             self.panel.evtList = self.evtList
             self.Close()
+
         btn1.Bind(wx.EVT_BUTTON, onOK)
 
         sizer.Layout()
         self.Raise()
         self.Show()
-#===============================================================================
+
+
+# ===============================================================================
 
 class MenuGrid(gridlib.Grid):
 
     def __init__(self, parent, lngth, size):
-        gridlib.Grid.__init__(self, parent, size = size)
+        gridlib.Grid.__init__(self, parent, size=size)
         self.CreateGrid(lngth, 1)
         self.SetRowLabelSize(0)
         self.SetColLabelSize(0)
@@ -673,27 +665,21 @@ class MenuGrid(gridlib.Grid):
         self.Bind(gridlib.EVT_GRID_CMD_SELECT_CELL, self.onGridSelectCell, self)
         self.oldSel = -1
 
-
     def SetSelection(self, row):
         self.SelectRow(row)
         self.oldSel = row
 
-
     def SetBackgroundColour(self, colour):
         self.SetDefaultCellBackgroundColour(colour)
-
 
     def SetForegroundColour(self, colour):
         self.SetDefaultCellTextColour(colour)
 
-
     def SetFont(self, font):
         self.SetDefaultCellFont(font)
 
-
     def GetSelection(self):
         return self.oldSel
-
 
     def Set(self, choices):
         oldLen = self.GetNumberRows()
@@ -708,7 +694,6 @@ class MenuGrid(gridlib.Grid):
             self.SetRowSize(i, h)
         self.oldSel = 0 if newLen else -1
 
-
     def onGridSelectCell(self, event):
         row = event.GetRow()
         self.oldSel = row
@@ -717,21 +702,21 @@ class MenuGrid(gridlib.Grid):
             self.MakeCellVisible(row, 0)
         event.Skip()
 
-
     def MoveCursor(self, step):
         max = self.GetNumberRows()
         sel = self.GetSelectedRows()[0]
         new = sel + step
         if new < 0:
             new += max
-        elif new > max-1:
+        elif new > max - 1:
             new -= max
         self.SetGridCursor(new, 0)
         self.SelectRow(new)
-#===============================================================================
+
+
+# ===============================================================================
 
 class StartPresentation(eg.ActionClass):
-
     class text:
         pathLabel = 'Presentation file:'
         filemask = 'Presentations (*.pps, *.ppt, *.pptx, *.odp)|*.pps; *.ppt;\
@@ -739,14 +724,12 @@ class StartPresentation(eg.ActionClass):
         toolTipFile = 'Click browse button to choose file'
         title = "Choose a file"
 
-
-    def __call__(self, url = None, strt = 0, endless = False, pause = 0):
+    def __call__(self, url=None, strt=0, endless=False, pause=0):
         if self.plugin.menuDlg is None and url is not None and exists(url):
             strt = strt if isinstance(strt, int) else self.plugin.str2int(strt)
             self.plugin.StartPresentation(url, strt, endless, pause)
 
-
-    def Configure(self, url = None, start = 1, endless = False, pause = 0):
+    def Configure(self, url=None, start=1, endless=False, pause=0):
         panel = eg.ConfigPanel(self)
         label = wx.StaticText(
             panel,
@@ -772,18 +755,18 @@ class StartPresentation(eg.ActionClass):
         label4.SetToolTip(self.plugin.text.pauseToolTip)
         filepathCtrl = MyFileBrowseButton(
             panel,
-            initialValue = url if (url is not None) else '',
-            startDirectory = eg.folderPath.Documents,
-            fileMask = self.text.filemask,
-            toolTip = self.text.toolTipFile,
-            dialogTitle = self.text.title,
+            initialValue=url if (url is not None) else '',
+            startDirectory=eg.folderPath.Documents,
+            fileMask=self.text.filemask,
+            toolTip=self.text.toolTipFile,
+            dialogTitle=self.text.title,
         )
         startCtrl = eg.SmartSpinIntCtrl(
             panel,
             -1,
             start,
-            min = 1,
-            max = 999
+            min=1,
+            max=999
         )
         filepathCtrl.GetTextCtrl().SetEditable(False)
         endlessCtrl = wx.CheckBox(panel, -1, "")
@@ -796,14 +779,15 @@ class StartPresentation(eg.ActionClass):
             pauseCtrl.Enable(flag)
             if evt:
                 evt.Skip()
+
         endlessCtrl.Bind(wx.EVT_CHECKBOX, onEndless)
 
         pauseCtrl = eg.SmartSpinIntCtrl(
             panel,
             -1,
             pause,
-            min = 0,
-            max = 999
+            min=0,
+            max=999
         )
         pauseCtrl.SetToolTip(self.plugin.text.pauseToolTip)
         onEndless()
@@ -818,7 +802,7 @@ class StartPresentation(eg.ActionClass):
         sizer.Add(label4, 0, wx.TOP, 3)
         sizer.Add(pauseCtrl)
         sizer.AddGrowableCol(1)
-        panel.sizer.Add(sizer, 1, wx.EXPAND|wx.ALL, 10)
+        panel.sizer.Add(sizer, 1, wx.EXPAND | wx.ALL, 10)
 
         while panel.Affirmed():
             panel.SetResult(
@@ -827,7 +811,9 @@ class StartPresentation(eg.ActionClass):
                 endlessCtrl.GetValue(),
                 pauseCtrl.GetValue(),
             )
-#===============================================================================
+
+
+# ===============================================================================
 
 class ShowMenu(eg.ActionClass):
     panel = None
@@ -851,7 +837,7 @@ class ShowMenu(eg.ActionClass):
         OSELabel = 'Menu show on:'
         eventsBtn = "Events ..."
         dialog = "Playlist menu events assignement ..."
-        btnToolTip ="""Press this button to assign events to control the menu !!!"""
+        btnToolTip = """Press this button to assign events to control the menu !!!"""
         evtAssignTitle = "Menu control - events assignement"
         events = (
             "Cursor up:",
@@ -866,23 +852,23 @@ class ShowMenu(eg.ActionClass):
         toolTip = "Drag-and-drop an event from the log into the box."
         cancel = 'Cancel'
         ok = 'OK'
-        clear  = "Clear all"
+        clear = "Clear all"
 
     def Move(self, index, direction):
         tmpList = self.choices[:]
-        max = len(self.choices)-1
-        #Last to first position, other down
+        max = len(self.choices) - 1
+        # Last to first position, other down
         if index == max and direction == 1:
             tmpList[1:] = self.choices[:-1]
             tmpList[0] = self.choices[max]
             index2 = 0
-        #First to last position, other up
+        # First to last position, other up
         elif index == 0 and direction == -1:
             tmpList[:-1] = self.choices[1:]
             tmpList[max] = self.choices[0]
             index2 = max
         else:
-            index2 = index+direction
+            index2 = index + direction
             tmpList[index] = self.choices[index2]
             tmpList[index2] = self.choices[index]
         self.choices = tmpList
@@ -894,11 +880,11 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
-        foreSel = (180, 180, 180),
-        backSel = (75, 75, 75),
-        inverted = True,
-        monitor = 0,
-        evtList = [[],[],[],[]],
+        foreSel=(180, 180, 180),
+        backSel=(75, 75, 75),
+        inverted=True,
+        monitor=0,
+        evtList=[[], [], [], []],
 
     ):
         if not self.plugin.menuDlg:
@@ -919,7 +905,6 @@ class ShowMenu(eg.ActionClass):
             )
             eg.actionThread.WaitOnEvent(event)
 
-
     def GetLabel(
         self,
         choices,
@@ -932,26 +917,25 @@ class ShowMenu(eg.ActionClass):
         monitor,
         evtList,
     ):
-        res = self.text.showMenu+' '
-        for n in range(0,min(3, len(choices))):
-            res=res + choices[n][0]+', '
+        res = self.text.showMenu + ' '
+        for n in range(0, min(3, len(choices))):
+            res = res + choices[n][0] + ', '
         res = res[:-2]
         if len(choices) > 3:
             res += ', ...'
         return res
 
-
     def Configure(
         self,
-        choices = [],
-        fore = (0, 0, 0),
-        back = (255, 255, 255),
-        fontInfo = None,
-        foreSel = (180, 180, 180),
-        backSel = (75, 75, 75),
-        inverted = True,
-        monitor = 0,
-        evtList = [[],[],[],[]],
+        choices=[],
+        fore=(0, 0, 0),
+        back=(255, 255, 255),
+        fontInfo=None,
+        foreSel=(180, 180, 180),
+        backSel=(75, 75, 75),
+        inverted=True,
+        monitor=0,
+        evtList=[[], [], [], []],
     ):
         self.choices = choices
         self.fore = fore
@@ -964,7 +948,7 @@ class ShowMenu(eg.ActionClass):
         panel.evtList = cpy(evtList)
         w1 = panel.GetFullTextExtent(self.text.label)[0]
         w2 = panel.GetFullTextExtent(self.text.path)[0]
-        w = max((w1,w2))
+        w = max((w1, w2))
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         bottomSizer = wx.GridBagSizer(5, 5)
@@ -974,14 +958,14 @@ class ShowMenu(eg.ActionClass):
         previewLblSizer.Add(previewLbl)
         mainSizer.Add(previewLblSizer)
         mainSizer.Add(topSizer, 0, wx.TOP, 5)
-        mainSizer.Add(bottomSizer, 0, flag = wx.TOP|wx.EXPAND, border = 16)
+        mainSizer.Add(bottomSizer, 0, flag=wx.TOP | wx.EXPAND, border=16)
         panel.sizer.Add(mainSizer)
 
         wl = w + 165
         listBoxCtrl = MenuGrid(
             panel,
             len(self.choices),
-            size = wx.Size(wl, -1)
+            size=wx.Size(wl, -1)
         )
         listBoxCtrl.SetColSize(0, wl - SYS_VSCROLL_X)
 
@@ -1008,7 +992,6 @@ class ShowMenu(eg.ActionClass):
         listBoxCtrl.SetFont(font)
         previewLbl.SetFont(oldFont)
 
-
         label3 = wx.StaticText(
             panel,
             -1,
@@ -1028,26 +1011,26 @@ class ShowMenu(eg.ActionClass):
             panel,
             -1,
             0,
-            min = 0,
-            max = 999
+            min=0,
+            max=999
         )
         pauseCtrl.SetToolTip(self.plugin.text.pauseToolTip)
 
-        topSizer.Add(listBoxCtrl,0,wx.EXPAND)
-        topSizer.Add((10,1))
+        topSizer.Add(listBoxCtrl, 0, wx.EXPAND)
+        topSizer.Add((10, 1))
         topSizer.Add(topMiddleSizer, 1, wx.EXPAND)
-        topSizer.Add((20,1))
-        labelLbl=wx.StaticText(panel, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(panel,-1,'',size=wx.Size(260,-1))
+        topSizer.Add((20, 1))
+        labelLbl = wx.StaticText(panel, -1, self.text.label)
+        labelCtrl = wx.TextCtrl(panel, -1, '', size=wx.Size(260, -1))
         labelCtrlSizer = wx.BoxSizer(wx.HORIZONTAL)
-        labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
-        filepathLbl=wx.StaticText(panel, -1, self.text.path)
+        labelCtrlSizer.Add(labelCtrl, 0, wx.EXPAND)
+        filepathLbl = wx.StaticText(panel, -1, self.text.path)
         filepathCtrl = MyFileBrowseButton(
             panel,
             startDirectory=eg.folderPath.Documents,
-            fileMask = self.text.filemask,
+            fileMask=self.text.filemask,
             toolTip=self.text.toolTipFile,
-            dialogTitle = self.text.title,
+            dialogTitle=self.text.title,
         )
         label2 = wx.StaticText(
             panel,
@@ -1058,96 +1041,96 @@ class ShowMenu(eg.ActionClass):
             panel,
             -1,
             1,
-            min = 1,
-            max = 999
+            min=1,
+            max=999
         )
         filepathCtrl.GetTextCtrl().SetEditable(False)
-        bottomSizer.Add(filepathLbl,(0,0),flag = wx.TOP, border = 3)
-        bottomSizer.Add(filepathCtrl,(0,1),(1,2),wx.EXPAND)
-        bottomSizer.Add(labelLbl,(1,0),flag=wx.TOP,border=3)
-        bottomSizer.Add(labelCtrlSizer,(1,1))
-        bottomSizer.Add(label2,(2,0),flag = wx.TOP, border = 3)
-        bottomSizer.Add(startCtrl,(2,1))
-        bottomSizer.Add(label3,(3,0))
-        bottomSizer.Add(endlessCtrl,(3,1))
-        bottomSizer.Add(label4,(4,0),flag = wx.TOP, border = 3)
-        bottomSizer.Add(pauseCtrl,(4,1))
+        bottomSizer.Add(filepathLbl, (0, 0), flag=wx.TOP, border=3)
+        bottomSizer.Add(filepathCtrl, (0, 1), (1, 2), wx.EXPAND)
+        bottomSizer.Add(labelLbl, (1, 0), flag=wx.TOP, border=3)
+        bottomSizer.Add(labelCtrlSizer, (1, 1))
+        bottomSizer.Add(label2, (2, 0), flag=wx.TOP, border=3)
+        bottomSizer.Add(startCtrl, (2, 1))
+        bottomSizer.Add(label3, (3, 0))
+        bottomSizer.Add(endlessCtrl, (3, 1))
+        bottomSizer.Add(label4, (4, 0), flag=wx.TOP, border=3)
+        bottomSizer.Add(pauseCtrl, (4, 1))
         bottomSizer.AddGrowableCol(2)
-        #Button UP
+        # Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
         btnUP.Enable(False)
         topMiddleSizer.Add(btnUP)
-        #Button DOWN
+        # Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(panel, -1, bmp)
         btnDOWN.Enable(False)
-        topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
-        #Buttons 'Delete' and 'Insert new'
+        topMiddleSizer.Add(btnDOWN, 0, wx.TOP, 3)
+        # Buttons 'Delete' and 'Insert new'
         w1 = panel.GetFullTextExtent(self.text.delete)[0]
         w2 = panel.GetFullTextExtent(self.text.insert)[0]
         if w1 > w2:
-            btnDEL=wx.Button(panel,-1,self.text.delete)
-            btnApp=wx.Button(panel,-1,self.text.insert,size=btnDEL.GetSize())
+            btnDEL = wx.Button(panel, -1, self.text.delete)
+            btnApp = wx.Button(panel, -1, self.text.insert, size=btnDEL.GetSize())
         else:
-            btnApp=wx.Button(panel,-1,self.text.insert)
-            btnDEL=wx.Button(panel,-1,self.text.delete,size=btnApp.GetSize())
+            btnApp = wx.Button(panel, -1, self.text.insert)
+            btnDEL = wx.Button(panel, -1, self.text.delete, size=btnApp.GetSize())
         btnDEL.Enable(False)
 
         evtButton = wx.Button(panel, -1, self.text.eventsBtn)
-        topMiddleSizer.Add(btnDEL,0,wx.TOP,5)
-        topMiddleSizer.Add(btnApp,0,wx.TOP,5)
-        topMiddleSizer.Add((-1, -1),1,wx.EXPAND)
+        topMiddleSizer.Add(btnDEL, 0, wx.TOP, 5)
+        topMiddleSizer.Add(btnApp, 0, wx.TOP, 5)
+        topMiddleSizer.Add((-1, -1), 1, wx.EXPAND)
         topMiddleSizer.Add(evtButton)
-        #Font button
-        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = eg.FontSelectButton(panel, value = fontInfo)
-        #Button Text Colour
-        foreLbl=wx.StaticText(panel, -1, self.text.txtColour + ':')
+        # Font button
+        fontLbl = wx.StaticText(panel, -1, self.text.menuFont)
+        fontButton = eg.FontSelectButton(panel, value=fontInfo)
+        # Button Text Colour
+        foreLbl = wx.StaticText(panel, -1, self.text.txtColour + ':')
         foreColourButton = eg.ColourSelectButton(
             panel,
             fore,
-            title = self.text.txtColour
+            title=self.text.txtColour
         )
-        #Button Background Colour
-        backLbl=wx.StaticText(panel, -1, self.text.background+':')
+        # Button Background Colour
+        backLbl = wx.StaticText(panel, -1, self.text.background + ':')
         backColourButton = eg.ColourSelectButton(
             panel,
             back,
-            title = self.text.background
+            title=self.text.background
         )
-        foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = eg.ColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
-        #Button Selected Background Colour
-        backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = eg.ColourSelectButton(panel,backSel,title = self.text.backgroundSel)
+        foreSelLbl = wx.StaticText(panel, -1, self.text.txtColourSel + ':')
+        foreSelColourButton = eg.ColourSelectButton(panel, foreSel, title=self.text.txtColourSel)
+        # Button Selected Background Colour
+        backSelLbl = wx.StaticText(panel, -1, self.text.backgroundSel + ':')
+        backSelColourButton = eg.ColourSelectButton(panel, backSel, title=self.text.backgroundSel)
         useInvertedCtrl = wx.CheckBox(panel, -1, self.text.inverted)
         useInvertedCtrl.SetValue(inverted)
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
         displayChoice = eg.DisplayChoice(panel, monitor)
         topRightSizer = wx.GridBagSizer(2, 5)
         displaySizer = wx.BoxSizer(wx.HORIZONTAL)
-        displaySizer.Add(OSElbl, 0,wx.TOP,3)
+        displaySizer.Add(OSElbl, 0, wx.TOP, 3)
         displaySizer.Add((-1, -1), 1, wx.EXPAND)
         displaySizer.Add(displayChoice)
         topSizer.Add(topRightSizer)
-        topRightSizer.Add(displaySizer, (0,0), (1,2),flag = wx.EXPAND)
-        topRightSizer.Add(fontLbl, (1, 0), flag = wx.TOP, border = 5)
-        topRightSizer.Add(fontButton, (1, 1), flag = wx.TOP, border = 2)
-        topRightSizer.Add(foreLbl, (2, 0), flag = wx.TOP, border = 3)
+        topRightSizer.Add(displaySizer, (0, 0), (1, 2), flag=wx.EXPAND)
+        topRightSizer.Add(fontLbl, (1, 0), flag=wx.TOP, border=5)
+        topRightSizer.Add(fontButton, (1, 1), flag=wx.TOP, border=2)
+        topRightSizer.Add(foreLbl, (2, 0), flag=wx.TOP, border=3)
         topRightSizer.Add(foreColourButton, (2, 1))
-        topRightSizer.Add(backLbl, (3, 0), flag = wx.TOP, border = 3)
+        topRightSizer.Add(backLbl, (3, 0), flag=wx.TOP, border=3)
         topRightSizer.Add(backColourButton, (3, 1))
-        topRightSizer.Add(foreSelLbl, (4, 0), flag = wx.TOP, border = 3)
+        topRightSizer.Add(foreSelLbl, (4, 0), flag=wx.TOP, border=3)
         topRightSizer.Add(foreSelColourButton, (4, 1))
-        topRightSizer.Add(backSelLbl, (5, 0), flag = wx.TOP, border = 3)
+        topRightSizer.Add(backSelLbl, (5, 0), flag=wx.TOP, border=3)
         topRightSizer.Add(backSelColourButton, (5, 1))
-        topRightSizer.Add(useInvertedCtrl,(6,0),(1,2),flag = wx.TOP,border = 3)
+        topRightSizer.Add(useInvertedCtrl, (6, 0), (1, 2), flag=wx.TOP, border=3)
 
         def OnEvtBtn(evt):
             dlg = MenuEventsDialog(
-                parent = panel,
-                action = self,
+                parent=panel,
+                action=self,
             )
             dlg.Centre()
             wx.CallAfter(
@@ -1156,15 +1139,16 @@ class ShowMenu(eg.ActionClass):
                 self.text.events
             )
             evt.Skip()
+
         evtButton.Bind(wx.EVT_BUTTON, OnEvtBtn)
 
         def OnMonitor(evt):
             listBoxCtrl.SetFocus()
             evt.Skip
+
         displayChoice.Bind(wx.EVT_CHOICE, OnMonitor)
 
-
-        def OnInverted(evt = None):
+        def OnInverted(evt=None):
             flag = useInvertedCtrl.IsChecked()
             foreSelLbl.Enable(not flag)
             foreSelColourButton.Enable(not flag)
@@ -1181,17 +1165,17 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetFocus()
             if evt:
                 evt.Skip
+
         useInvertedCtrl.Bind(wx.EVT_CHECKBOX, OnInverted)
         OnInverted()
-
 
         def onStart(evt):
             sel = listBoxCtrl.GetSelection()
             val = startCtrl.GetValue()
-            self.choices[sel][2]=val
+            self.choices[sel][2] = val
             evt.Skip()
-        startCtrl.Bind(wx.EVT_TEXT, onStart)
 
+        startCtrl.Bind(wx.EVT_TEXT, onStart)
 
         def onEndless(evt=None):
             if self.choices:
@@ -1201,19 +1185,20 @@ class ShowMenu(eg.ActionClass):
                 pauseCtrl.Enable(val)
                 if not val:
                     pauseCtrl.numCtrl.ChangeValue(0)
-                    self.choices[sel][4]=0
-                self.choices[sel][3]=val
+                    self.choices[sel][4] = 0
+                self.choices[sel][3] = val
             if evt:
                 evt.Skip()
+
         endlessCtrl.Bind(wx.EVT_CHECKBOX, onEndless)
 
         def onPause(evt):
             sel = listBoxCtrl.GetSelection()
             val = pauseCtrl.GetValue()
-            self.choices[sel][4]=val
+            self.choices[sel][4] = val
             evt.Skip()
-        pauseCtrl.Bind(wx.EVT_TEXT, onPause)
 
+        pauseCtrl.Bind(wx.EVT_TEXT, onPause)
 
         def FillData(item):
             labelCtrl.ChangeValue(item[0])
@@ -1227,22 +1212,21 @@ class ShowMenu(eg.ActionClass):
             sel = listBoxCtrl.GetSelection()
             label = labelCtrl.GetValue()
             filepath = filepathCtrl.GetValue()
-            if label.strip()<>"":
+            if label.strip() <> "":
                 if os.path.isfile(filepath):
-                    if [item[0] for item in self.choices].count(label)==1:
-                        if [item[1] for item in self.choices].count(filepath)==1:
-                            self.oldSel=sel
+                    if [item[0] for item in self.choices].count(label) == 1:
+                        if [item[1] for item in self.choices].count(filepath) == 1:
+                            self.oldSel = sel
                             item = self.choices[sel]
                             FillData(item)
             listBoxCtrl.SetSelection(self.oldSel)
             listBoxCtrl.SetFocus()
 
-
         def OnClick(evt):
             wx.CallAfter(OnClickAfter)
             evt.Skip()
-        listBoxCtrl.Bind(gridlib.EVT_GRID_CMD_SELECT_CELL, OnClick)
 
+        listBoxCtrl.Bind(gridlib.EVT_GRID_CMD_SELECT_CELL, OnClick)
 
         def OnColourBtn(evt):
             id = evt.GetId()
@@ -1266,11 +1250,11 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
+
         foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
         backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
         foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
         backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
-
 
         def OnFontBtn(evt):
             value = evt.GetValue()
@@ -1289,8 +1273,8 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetFocus()
             if evt:
                 evt.Skip()
-        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
         def OnButtonUp(evt):
             newSel = self.Move(listBoxCtrl.GetSelection(), -1)
@@ -1299,8 +1283,8 @@ class ShowMenu(eg.ActionClass):
             self.oldSel = newSel
             listBoxCtrl.SetFocus()
             evt.Skip()
-        btnUP.Bind(wx.EVT_BUTTON, OnButtonUp)
 
+        btnUP.Bind(wx.EVT_BUTTON, OnButtonUp)
 
         def OnButtonDown(evt):
             newSel = self.Move(listBoxCtrl.GetSelection(), 1)
@@ -1309,8 +1293,8 @@ class ShowMenu(eg.ActionClass):
             self.oldSel = newSel
             listBoxCtrl.SetFocus()
             evt.Skip()
-        btnDOWN.Bind(wx.EVT_BUTTON, OnButtonDown)
 
+        btnDOWN.Bind(wx.EVT_BUTTON, OnButtonDown)
 
         def EnableCtrls(flag):
             labelCtrl.Enable(flag)
@@ -1323,7 +1307,6 @@ class ShowMenu(eg.ActionClass):
             label3.Enable(flag)
             pauseCtrl.Enable(flag)
             label4.Enable(flag)
-
 
         def OnButtonDelete(evt):
             lngth = len(self.choices)
@@ -1359,6 +1342,7 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetFocus()
             onEndless()
             evt.Skip()
+
         btnDEL.Bind(wx.EVT_BUTTON, OnButtonDelete)
 
         def OnTextChange(evt):
@@ -1371,17 +1355,17 @@ class ShowMenu(eg.ActionClass):
                 self.choices[sel][1] = filepath
                 listBoxCtrl.Set(self.choices)
                 listBoxCtrl.SetSelection(sel)
-                if label.strip()<>"":
+                if label.strip() <> "":
                     if os.path.isfile(filepath):
-                        if [item[0] for item in self.choices].count(label)==1:
-                            if [item[1] for item in self.choices].count(filepath)==1:
+                        if [item[0] for item in self.choices].count(label) == 1:
+                            if [item[1] for item in self.choices].count(filepath) == 1:
                                 flag = True
                 panel.EnableButtons(flag)
                 btnApp.Enable(flag)
             evt.Skip()
+
         labelCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         filepathCtrl.Bind(wx.EVT_TEXT, OnTextChange)
-
 
         def OnButtonAppend(evt):
             if len(self.choices) == 1:
@@ -1396,6 +1380,7 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetSelection(sel)
             FillData(item)
             evt.Skip()
+
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
 
         # re-assign the test button
@@ -1409,7 +1394,7 @@ class ShowMenu(eg.ActionClass):
                     backColourButton.GetValue(),
                     foreSelColourButton.GetValue(),
                     backSelColourButton.GetValue(),
-                    fontButton.GetValue(),#self.fontInfo,
+                    fontButton.GetValue(),  # self.fontInfo,
                     True,
                     self.plugin,
                     CreateEvent(None, 0, 0, None),
@@ -1417,6 +1402,7 @@ class ShowMenu(eg.ActionClass):
                     self.choices,
                     panel.evtList,
                 )
+
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         if len(self.choices) > 0:
@@ -1428,7 +1414,7 @@ class ShowMenu(eg.ActionClass):
             startCtrl.SetValue(item[2])
             endlessCtrl.SetValue(item[3])
             pauseCtrl.SetValue(item[4])
-            self.oldSel=0
+            self.oldSel = 0
             btnUP.Enable(True)
             btnDOWN.Enable(True)
             btnDEL.Enable(True)
@@ -1440,19 +1426,21 @@ class ShowMenu(eg.ActionClass):
 
         while panel.Affirmed():
             panel.SetResult(
-            self.choices,
-            foreColourButton.GetValue(),
-            backColourButton.GetValue(),
-            fontButton.GetValue(),
-            foreSelColourButton.GetValue(),
-            backSelColourButton.GetValue(),
-            useInvertedCtrl.GetValue(),
-            displayChoice.GetSelection(),
-            panel.evtList,
-        )
-#======================================================================
+                self.choices,
+                foreColourButton.GetValue(),
+                backColourButton.GetValue(),
+                fontButton.GetValue(),
+                foreSelColourButton.GetValue(),
+                backSelColourButton.GetValue(),
+                useInvertedCtrl.GetValue(),
+                displayChoice.GetSelection(),
+                panel.evtList,
+            )
 
-#Group GoTo slide ...:
+
+# ======================================================================
+
+# Group GoTo slide ...:
 class DigitAction(eg.ActionClass):
 
     def __call__(self):
@@ -1461,33 +1449,39 @@ class DigitAction(eg.ActionClass):
             self.plugin.number += self.value
             self.plugin.ShowNumLabel()
             eg.event.skipEvent = True
-#======================================================================
+
+
+# ======================================================================
 
 class Enter(eg.ActionClass):
 
     def __call__(self):
         cntrllr = self.plugin.controller
         if cntrllr and cntrllr.isRunning():
-            if (self.plugin.numDialog is not None) and (len(self.plugin.number)>0):
+            if (self.plugin.numDialog is not None) and (len(self.plugin.number) > 0):
                 last = cntrllr.getSlideCount()
                 dest = min(last, self.plugin.str2int(self.plugin.number))
                 self.plugin.numDialog.CloseDialog()
                 cntrllr.gotoSlideIndex(dest - 1)
                 self.plugin.number = ''
                 eg.event.skipEvent = True
-#======================================================================
+
+
+# ======================================================================
 
 class Backspace(eg.ActionClass):
 
     def __call__(self):
-        if (self.plugin.numDialog is not None) and (len(self.plugin.number)>0):
-                self.plugin.number = self.plugin.number[:-1]
-                if len(self.plugin.number) == 0:
-                    self.plugin.numDialog.CloseDialog()
-                else:
-                    self.plugin.ShowNumLabel()
-                eg.event.skipEvent = True
-#======================================================================
+        if (self.plugin.numDialog is not None) and (len(self.plugin.number) > 0):
+            self.plugin.number = self.plugin.number[:-1]
+            if len(self.plugin.number) == 0:
+                self.plugin.numDialog.CloseDialog()
+            else:
+                self.plugin.ShowNumLabel()
+            eg.event.skipEvent = True
+
+
+# ======================================================================
 
 class Cancel(eg.ActionClass):
 
@@ -1496,7 +1490,9 @@ class Cancel(eg.ActionClass):
             self.plugin.number = ''
             self.plugin.numDialog.CloseDialog()
             eg.event.skipEvent = True
-#======================================================================
+
+
+# ======================================================================
 
 class ComAction(eg.ActionClass):
 
@@ -1504,14 +1500,15 @@ class ComAction(eg.ActionClass):
         cntrllr = self.plugin.controller
         if cntrllr and cntrllr.isRunning():
             return getattr(cntrllr, self.value)()
-#======================================================================
+
+
+# ======================================================================
 
 class blankScreen(eg.ActionClass):
-
     class text:
         color = 'Choose a blank screen color'
 
-    def __call__(self, color = (0, 0, 0)):
+    def __call__(self, color=(0, 0, 0)):
         cntrllr = self.plugin.controller
         if cntrllr and cntrllr.isRunning():
             color = color[2] + 256 * color[1] + 65536 * color[0]
@@ -1519,21 +1516,21 @@ class blankScreen(eg.ActionClass):
                 cntrllr.resume()
                 return cntrllr.blankScreen(color)
 
-
-    def Configure(self, color = (0, 0, 0)):
+    def Configure(self, color=(0, 0, 0)):
         panel = eg.ConfigPanel()
         colorLbl = wx.StaticText(panel, -1, self.text.color + ':')
         colorButton = eg.ColourSelectButton(panel, color, title=self.text.color)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(colorLbl,0,wx.TOP,3)
-        sizer.Add(colorButton,0,wx.LEFT,5)
-        panel.sizer.Add(sizer,0,wx.ALL,20)
+        sizer.Add(colorLbl, 0, wx.TOP, 3)
+        sizer.Add(colorButton, 0, wx.LEFT, 5)
+        panel.sizer.Add(sizer, 0, wx.ALL, 20)
         while panel.Affirmed():
             panel.SetResult(
                 colorButton.GetValue(),
             )
 
-#======================================================================
+
+# ======================================================================
 
 class Exit(eg.ActionClass):
 
@@ -1543,52 +1540,57 @@ class Exit(eg.ActionClass):
             self.plugin.StopPresentation()
 
 
-#===============================================================================
+# ===============================================================================
 
 ACTIONS = (
-    ( eg.ActionGroup, 'GotoSlide', 'GoTo slide actions', 'GoTo slide actions', (
-        (DigitAction, 'Digit0', 'Digit 0', 'Type Digit 0', '0' ),
-        (DigitAction, 'Digit1', 'Digit 1', 'Type Digit 1', '1' ),
-        (DigitAction, 'Digit2', 'Digit 2', 'Type Digit 2', '2' ),
-        (DigitAction, 'Digit3', 'Digit 3', 'Type Digit 3', '3' ),
-        (DigitAction, 'Digit4', 'Digit 4', 'Type Digit 4', '4' ),
-        (DigitAction, 'Digit5', 'Digit 5', 'Type Digit 5', '5' ),
-        (DigitAction, 'Digit6', 'Digit 6', 'Type Digit 6', '6' ),
-        (DigitAction, 'Digit7', 'Digit 7', 'Type Digit 7', '7' ),
-        (DigitAction, 'Digit8', 'Digit 8', 'Type Digit 8', '8' ),
-        (DigitAction, 'Digit9', 'Digit 9', 'Type Digit 9', '9' ),
+    (eg.ActionGroup, 'GotoSlide', 'GoTo slide actions', 'GoTo slide actions', (
+        (DigitAction, 'Digit0', 'Digit 0', 'Type Digit 0', '0'),
+        (DigitAction, 'Digit1', 'Digit 1', 'Type Digit 1', '1'),
+        (DigitAction, 'Digit2', 'Digit 2', 'Type Digit 2', '2'),
+        (DigitAction, 'Digit3', 'Digit 3', 'Type Digit 3', '3'),
+        (DigitAction, 'Digit4', 'Digit 4', 'Type Digit 4', '4'),
+        (DigitAction, 'Digit5', 'Digit 5', 'Type Digit 5', '5'),
+        (DigitAction, 'Digit6', 'Digit 6', 'Type Digit 6', '6'),
+        (DigitAction, 'Digit7', 'Digit 7', 'Type Digit 7', '7'),
+        (DigitAction, 'Digit8', 'Digit 8', 'Type Digit 8', '8'),
+        (DigitAction, 'Digit9', 'Digit 9', 'Type Digit 9', '9'),
         (Enter, 'Enter', 'Enter', 'Enter - Goto slide.', None),
         (Backspace, 'Backspace', 'Backspace', 'Backspace (delete last digit).', None),
         (Cancel, 'Cancel', 'Cancel', 'Cancel - Do not goto a slide.', None),
     )),
-    ( eg.ActionGroup, 'Other', 'Other actions', 'Other actions', (
+    (eg.ActionGroup, 'Other', 'Other actions', 'Other actions', (
         (StartPresentation, 'StartPresentation', 'Start presentation', 'Start presentation.', None),
-        (Exit, 'Exit', 'End presentation', 'End presentation.', None ),
-        (ComAction, 'stopSound', 'Stop all sounds', 'Stop all currently played sounds.', u'stopSound' ),
-        (blankScreen, 'Blank', 'Blank screen', 'Pauses the slide show and blanks the screen in the given color.', None ),
-        (ComAction, 'getCurrentSlideIndex', 'Get current slide index', 'Returns the index of the current slide.', u'getCurrentSlideIndex'),
+        (Exit, 'Exit', 'End presentation', 'End presentation.', None),
+        (ComAction, 'stopSound', 'Stop all sounds', 'Stop all currently played sounds.', u'stopSound'),
+        (blankScreen, 'Blank', 'Blank screen', 'Pauses the slide show and blanks the screen in the given color.', None),
+        (ComAction, 'getCurrentSlideIndex', 'Get current slide index', 'Returns the index of the current slide.',
+         u'getCurrentSlideIndex'),
         (ShowMenu, 'ShowMenu', 'Show menu', 'Show menu.', None),
-        (ComAction, 'Pause', 'Pause presentation', 'Pause presentation.', u'pause' ),
-        (ComAction, 'Resume', 'Resume presentation', 'Resume presentation.', u'resume' ),
-        (ComAction, 'Next', 'Play next effect/slide', 'Play next effect (if any, else go to next slide).', u'gotoNextEffect' ),
+        (ComAction, 'Pause', 'Pause presentation', 'Pause presentation.', u'pause'),
+        (ComAction, 'Resume', 'Resume presentation', 'Resume presentation.', u'resume'),
+        (ComAction, 'Next', 'Play next effect/slide', 'Play next effect (if any, else go to next slide).',
+         u'gotoNextEffect'),
         (ComAction,
-            'Previous', 'Play previous effect/slide',
-            'Play previous effect again. If no previous effect exists on this slide, show previous slide.',
-            u'gotoPreviousEffect'
-        ),
-        (ComAction, 'NextWithout', 'Next slide without effects', 'Go to next slide without playing effects.', u'gotoNextSlide' ),
-        (ComAction, 'PreviousWithout', 'Previous slide without effects', 'Go to the previous slide without playing effects.', u'gotoPreviousSlide' ),
-        (ComAction, 'First', 'First slide', 'Jump to first slide in the slide show.', u'gotoFirstSlide' ),
-        (ComAction, 'Last', 'Last slide', 'Jump to the last slide in the slide show.', u'gotoLastSlide' ),
-        (ComAction, 'GetSlide', 'GetSlide', 'GetSlide.', u'getCurrentSlide' ),
-        (ComAction, 'getNextSlideIndex', 'getNextSlideIndex', 'getNextSlideIndex.', u'getNextSlideIndex' ),
+         'Previous', 'Play previous effect/slide',
+         'Play previous effect again. If no previous effect exists on this slide, show previous slide.',
+         u'gotoPreviousEffect'
+         ),
+        (ComAction, 'NextWithout', 'Next slide without effects', 'Go to next slide without playing effects.',
+         u'gotoNextSlide'),
+        (ComAction, 'PreviousWithout', 'Previous slide without effects',
+         'Go to the previous slide without playing effects.', u'gotoPreviousSlide'),
+        (ComAction, 'First', 'First slide', 'Jump to first slide in the slide show.', u'gotoFirstSlide'),
+        (ComAction, 'Last', 'Last slide', 'Jump to the last slide in the slide show.', u'gotoLastSlide'),
+        (ComAction, 'GetSlide', 'GetSlide', 'GetSlide.', u'getCurrentSlide'),
+        (ComAction, 'getNextSlideIndex', 'getNextSlideIndex', 'getNextSlideIndex.', u'getNextSlideIndex'),
     )),
 )
-#====================================================================
+
+
+# ====================================================================
 
 
 class Impress(eg.PluginClass):
-
     menuDlg = None
     numDialog = None
     number = ''
@@ -1599,17 +1601,14 @@ class Impress(eg.PluginClass):
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
 
-
     def __start__(self):
         eg.Bind("Impress.Menu.DefaultAction", self.OnGui)
         self.controller = None
         self.presentation = None
 
-
     def __stop__(self):
         eg.Unbind("Impress.Menu.DefaultAction", self.OnGui)
         self.StopPresentation()
-
 
     def str2int(self, s):
         s = eg.ParseString(s)
@@ -1619,17 +1618,14 @@ class Impress(eg.PluginClass):
             s = 0
         return s
 
-
     def OnGui(self, event):
         self.StartPresentation(*event.payload)
         return True
-
 
     def ImprIsRunning(self, hwnd):
         self.sched = eg.scheduler.AddTask(2, self.ImprIsRunning, hwnd)
         if not IsWindow(hwnd):
             self.StopPresentation()
-
 
     def StopPresentation(self):
         if hasattr(self, 'sched') and self.sched:
@@ -1640,7 +1636,6 @@ class Impress(eg.PluginClass):
             PostMessage(self.hWnd, WM_CLOSE, 0, 0)
         self.controller = None
         self.presentation = None
-
 
     def StartPresentation(self, url, start, endless, pause):
         if not exists(url):
@@ -1662,14 +1657,14 @@ class Impress(eg.PluginClass):
         try:
             doc = desktop.loadComponentfromURL(
                 "private:factory/simpress",
-                "_default", #"_blank",
+                "_default",  # "_blank",
                 0,
                 []
             )
             win = doc.CurrentController.Frame.ContainerWindow
-            hWnd = win.getWindowHandle([], 1) # 1 ~ for MS Windows env.
+            hWnd = win.getWindowHandle([], 1)  # 1 ~ for MS Windows env.
             SendMessageTimeout(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0)
-            doc = desktop.loadComponentfromURL("file:///"+url,'_default',0,[])
+            doc = desktop.loadComponentfromURL("file:///" + url, '_default', 0, [])
         except:
             self.PrintError(self.text.err1 % url)
             return
@@ -1678,7 +1673,8 @@ class Impress(eg.PluginClass):
         val0 = makePropertyValue("IsFullScreen", True)
         val1 = makePropertyValue("IsAlwaysOnTop", True)
         val2 = makePropertyValue("IsEndless", endless)
-        val3 = makePropertyValue("Pause", pause)  #Duration of black screen after last slide  [integer, seconds]  // only when presentation is Endless
+        val3 = makePropertyValue("Pause",
+                                 pause)  # Duration of black screen after last slide  [integer, seconds]  // only when presentation is Endless
         presentation.startWithArguments([val0, val1, val2, val3])
         self.controller = presentation.getController()
         if start > 1:
@@ -1694,7 +1690,6 @@ class Impress(eg.PluginClass):
         else:
             self.PrintError(self.text.err2)
 
-
     def ShowNumLabel(self):
         if self.numDialog is not None:
             statText = self.numDialog.GetSizer().GetChildren()[0].GetWindow()
@@ -1702,27 +1697,26 @@ class Impress(eg.PluginClass):
         else:
             self.TriggerEvent("GoToFrame.%s" % self.text.opened)
             NumDialog(self)
-            statText=wx.StaticText(
+            statText = wx.StaticText(
                 self.numDialog,
                 -1,
                 self.number,
-                style = wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
+                style=wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
             )
             font = statText.GetFont()
             font.SetPointSize(100)
             font.SetWeight(wx.BOLD)
             statText.SetFont(font)
-            self.numDialog.SetBackgroundColour(wx.Colour(0,255,255))
-            statText.SetForegroundColour(wx.Colour(0,255,255))
+            self.numDialog.SetBackgroundColour(wx.Colour(0, 255, 255))
+            statText.SetForegroundColour(wx.Colour(0, 255, 255))
             statText.SetBackgroundColour(wx.Colour(0, 0, 139))
-            w,h = statText.GetFullTextExtent('8888')
-            self.numDialog.SetSize((w+16,h+16))
-            statText.SetPosition((7,7))
-            statText.SetSize((w,h))
-            mainSizer =wx.BoxSizer(wx.VERTICAL)
+            w, h = statText.GetFullTextExtent('8888')
+            self.numDialog.SetSize((w + 16, h + 16))
+            statText.SetPosition((7, 7))
+            statText.SetSize((w, h))
+            mainSizer = wx.BoxSizer(wx.VERTICAL)
             self.numDialog.SetSizer(mainSizer)
             mainSizer.Add(statText, 0, wx.EXPAND)
             self.numDialog.Centre()
             self.numDialog.Show()
-#===============================================================================
-
+# ===============================================================================

@@ -17,11 +17,17 @@ eg.RegisterPlugin(
 #     - removed mbcs decoding everywhere, because eg.WinApi.Dynamic now uses the
 #       unicode versions of all functions as default.
 #     - root node of tree now starts expanded.
+#
+# 1.1.x dexter
+# - printError changed to PrintError (didn't cause problems earlier)
+# - Windows API sucks again.... mixerGetDevCaps accepts only deviceId as first argument, instead of hmixer
+#    maybe problem with upgrades ctypes/python
 
 
 from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
     HMIXER,
+    HMIXEROBJ,
     MIXERCAPS,
     MIXERCONTROL,
     MIXERLINECONTROLS,
@@ -288,7 +294,7 @@ class SoundMixerWin32():
         result = []
 
         hmixer = self.GetMixer(deviceId)
-        if mixerGetDevCaps(hmixer, byref(mixercaps), sizeof(MIXERCAPS)):
+        if mixerGetDevCaps(deviceId, byref(mixercaps), sizeof(MIXERCAPS)):
             raise SoundMixerException()
 
         for i in range(mixercaps.cDestinations):
@@ -335,7 +341,11 @@ class SoundMixerWin32():
             mixerControl = mixerControlArray[i]
             dwControlType = mixerControl.dwControlType
             controlClass = MIXER_CONTROL_CLASSES[dwControlType & MIXERCONTROL_CT_CLASS_MASK]
-            controlClassTypeName = controlClass["types"][dwControlType]
+            try:
+                controlClassTypeName = controlClass["types"][dwControlType]
+            except:
+                controlClassTypeName = "<UNKNOWN>"
+                print controlClassTypeName, mixerControl.szName, mixerControl.dwControlID, controlClass["name"]
             flagNames = []
             fdwControl =  mixerControl.fdwControl
             if fdwControl & MIXERCONTROL_CONTROLF_DISABLED:
@@ -432,7 +442,7 @@ class SoundMixerEx(eg.PluginClass):
             else:
                 name = "'%s'" % (name)
 
-            treeCtrl.SetPyData(item, (mixerid, controlid, name))
+            treeCtrl.SetItemData(item, (mixerid, controlid, name))
 
             if mixerid == mixerSelect and controlid == controlSelect:
                     treeCtrl.SelectItem(item)
@@ -449,7 +459,7 @@ class SetSoundSwitch(eg.ActionClass):
 
     def __call__(self, deviceId=-1, controlId=-1, name="", value=0):
         if deviceId == -1 or controlId == -1:
-            self.printError("No device/control selected")
+            self.PrintError("SoundMixerEx: No device/control selected")
         else:
             if value == 0:
                 value = False
@@ -487,7 +497,7 @@ class SetSoundSwitch(eg.ActionClass):
         panel.sizer.Add(actionCtrl)
 
         while panel.Affirmed():
-            data = treeCtrl.GetPyData(treeCtrl.GetSelection())
+            data = treeCtrl.GetItemData(treeCtrl.GetSelection())
             if data is not None:
                 (deviceId, controlId, name) = data
                 value = actionCtrl.GetValue()
@@ -501,7 +511,7 @@ class SetSoundFader(eg.ActionClass):
 
     def __call__(self, deviceId=-1, controlId=-1, name="", value=0, relative=1):
         if deviceId == -1 or controlId == -1:
-            self.printError("No device/control selected")
+            self.PrintError("SoundMixerEx: No device/control selected")
         else:
             if relative == 1:
                 value += self.plugin.mixer.GetFaderValue(deviceId, controlId)

@@ -41,6 +41,9 @@ Added Blu-Link Universal/PS3 Remote support (VID=0x609/PID=0x306).
 4.0.4:<br>
 Fix batteryLevel "out of range" error.
 
+4.0.5:<br>
+Added PS3 Remote support without VID and PID (productString = BD Remote Control).
+
 """
 
 eg.RegisterPlugin(
@@ -52,7 +55,7 @@ eg.RegisterPlugin(
         "Peter Mathiasson",
         "Eric Hodgerson",
     ),
-    version = "4.0.4",
+    version = "4.0.5",
     kind = "remote",
     guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=640",
@@ -473,8 +476,12 @@ class HIDPS3(eg.PluginClass):
             # eg.Print("VID=%X, PID=%X, name=%s" %(item.vendorId, item.productId, item.productString))
             # filter device list - list only match VID:PID
             if(
-                ( ( item.vendorId == 0x054C or item.vendorId == 0x609 ) and item.productId == 0x0306 ) or
-                item.devicePath == path
+                (
+                    (item.vendorId == 0x054C or item.vendorId == 0x609)
+                    and item.productId == 0x0306
+                )
+                or item.devicePath == path
+                or item.productString == 'BD Remote Control'
             ):
                 idx = hidList.InsertItem(sys.maxint, item.productString)
                 hidList.SetItem(idx, 1, item.vendorString)

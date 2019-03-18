@@ -430,13 +430,17 @@ class VariableDialog(wx.Frame):
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
         self.pers = pers
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def ShowVariableDialog(self, title):
         self.panel.Enable(False)
         self.panel.dialog.buttonRow.cancelButton.Enable(False)
         self.panel.EnableButtons(False)
         self.SetTitle(title)
-
 
         text = self.plugin.text
         panel = wx.Panel(self)
@@ -529,7 +533,7 @@ class VariableDialog(wx.Frame):
         sizer.Fit(self)
 
         def onClose(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -545,7 +549,7 @@ class VariableDialog(wx.Frame):
         self.SetMinSize((500, -1))
         sizer.Layout()
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Show()
 #===============================================================================
 
@@ -564,6 +568,11 @@ class ClientsDialog(wx.Frame):
         self.text = plugin.text
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def ShowClientsDialog(self):
         text = self.plugin.text
@@ -667,7 +676,7 @@ class ClientsDialog(wx.Frame):
         abortButtonCli.Enable(False)
 
         def onClose(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -682,8 +691,14 @@ class ClientsDialog(wx.Frame):
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Show()
+
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def RefreshTable(self):
         table = self.table
@@ -714,6 +729,11 @@ class ServersDialog(wx.Frame):
         self.text = plugin.text
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def ShowServersDialog(self):
         text = self.plugin.text
@@ -817,7 +837,7 @@ class ServersDialog(wx.Frame):
         abortButtonSrv.Enable(False)
 
         def onClose(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -832,7 +852,7 @@ class ServersDialog(wx.Frame):
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Show()
 
     def RefreshTable(self):
@@ -1478,6 +1498,8 @@ class WsBroadcastMessage(eg.ActionBase):
         period = "Sending period [s]:"
 
     def Task(self, _, cond, message):
+        if not self.plugin:
+            return
         if self.plugin.info.isStarted:
             self.task = eg.scheduler.AddTask(
                     self.period,
@@ -3861,6 +3883,7 @@ class WsStopPeriodicTasks(eg.ActionBase):
         taskCtrl = wx.TextCtrl(panel,-1,taskName)
         if self.value[1] is None:
             taskCtrl.Show(False)
+            panel.dialog.buttonRow.okButton.Enable(True)
             panel.dialog.buttonRow.applyButton.Enable(False)
             panel.dialog.buttonRow.testButton.Show(False)
             label = panel.StaticText(

@@ -19,6 +19,7 @@ global globalSOAPStrings  #This will store the SOAP strings for the http connect
 
 eg.RegisterPlugin(
     name = "Sony TV Network Remote Plugin",
+    guid='{D814F63D-D2BB-4119-8B94-C487A2C4AAD4}',
     author = "Toby Gerenger, paseant, blaher", 
     version = "0.0.3",
     kind = "external",

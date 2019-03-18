@@ -25,8 +25,8 @@ import eg
 
 eg.RegisterPlugin(
     name = "Speed-Link SL-6399 Media Remote",
-    author = "Bitmonster",
-    version = "1.0.0",
+    author = "Bitmonster, moti_r",
+    version = "1.1.0",
     kind = "remote",
     guid = "{ED814A18-5379-46B5-9A3B-65449C21871E}",
     description = __doc__,
@@ -63,6 +63,25 @@ CODES1 = {
     (3, 0, 29): "Aspect",
     (4, 0, 40): "Desktop",
     (4, 0, 61): "PC",
+    (1, 0, 23): 'TV',
+    (1, 0, 8): 'Red',
+    (1, 0, 16): 'Yellow',
+    (1, 0, 12): 'Blue',
+    (3, 0, 23): 'Green',
+    (0, 0, 101): 'More',
+    (1, 0, 18): 'RTV',
+    (1, 0, 10): 'Guide',
+    (12, 0, 40): 'Green Start',
+    (3, 0, 5): 'Rew',
+    (3, 0, 9): 'FW',
+    (1, 0, 5): 'Replay',
+    (1, 0, 9): 'Skip',
+    (3, 0, 19): 'Play',
+    (1, 0, 19): 'Pause',
+    (3, 0, 22): 'Stop',
+    (1, 0, 21): 'Record',
+    (0, 0, 76): 'Clear',
+    (0, 0, 10): 'Guide (Mouse Mode)',
 }
 
 CODES2 =  {
@@ -86,6 +105,15 @@ CODES2 =  {
     (3, 226, 0): "Mute",
     (3, 141, 0): "Guide",
     (4, 64, 0): "RTV",
+    (1, 1, 0): "Back (Mouse Mode)",
+    (1, 2, 0): "More (Mouse Mode)",
+}
+
+CODES_MOUSE =  {
+    (1, 0, 251, 0): "Mouse Left",
+    (1, 0, 0, 251): "Mouse Up",
+    (1, 0, 5, 0): "Mouse Right",
+    (1, 0, 0, 5): "Mouse Down",
 }
 
 
@@ -121,9 +149,10 @@ class Speedlink(eg.PluginBase):
         if data[1:] == (0, 0, 0):
             self.EndLastEvent()
             return
-        code = data[:3]
-        if code in CODES2:
-            self.TriggerEnduringEvent(CODES2[code])
+        if data[:3] in CODES2:
+            self.TriggerEnduringEvent(CODES2[data[:3]])
+        elif data[:4] in CODES_MOUSE:
+            self.TriggerEnduringEvent(CODES_MOUSE[data[:4]])
         else:
             print "#2", data
 

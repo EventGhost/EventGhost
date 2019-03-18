@@ -201,6 +201,9 @@ class LogCtrl(wx.ListCtrl):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
 
+    def OnCmdDelete(self, dummyEvent=None):
+        eg.PrintNotice('Not Implemented.')
+
     def OnCmdReplay(self, dummyEvent=None):
         item = self.GetFirstSelected()
         while item != -1:

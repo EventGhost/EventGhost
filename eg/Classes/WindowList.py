@@ -40,8 +40,8 @@ class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             imageIdx = 0
             icon = GetHwndIcon(hwnd)
             if icon:
-                imageIdx = imageList.AddIcon(icon)
-            idx = self.InsertImageStringItem(
+                imageIdx = imageList.Add(icon)
+            idx = self.InsertItem(
                 sys.maxint,
                 GetWindowProcessName(hwnd),
                 imageIdx

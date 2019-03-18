@@ -1,14 +1,9 @@
-# Python Imports
-import wx.lib.agw.floatspin as FS
-
-# Local Imports
-import globals
-from client import *
-from yamaha import *
+import eg
 
 # expose some information about the plugin through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Yamaha RX-V Network Receiver",
+    guid='{6D7CEECD-AEF1-4914-96EC-8DB036CE05FA}',
     author = "Anthony Casagrande (BirdAPI), Jason Kloepping (Dragon470)",
     version = "1.1",
     kind = "external",
@@ -18,6 +13,11 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=3382",
     description = "Control Yamaha RX-V network receivers."
 )
+
+
+from client import *
+from yamaha import *
+
 
 class YamahaRX(eg.PluginClass):
     def __init__(self):

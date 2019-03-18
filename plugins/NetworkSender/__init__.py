@@ -19,15 +19,15 @@
 import eg
 
 eg.RegisterPlugin(
-    name = "Network Event Sender",
-    version = "1.0",
-    author = "Bitmonster",
-    guid = "{B4F0DAFE-2E0B-47F3-A155-ED72C7A4E270}",
-    description = (
+    name="Network Event Sender",
+    version="1.1",
+    author="Bitmonster",
+    guid="{B4F0DAFE-2E0B-47F3-A155-ED72C7A4E270}",
+    description=(
         "Sends events to an Network Event Receiver plugin through TCP/IP."
     ),
-    canMultiLoad = True,
-    icon = (
+    canMultiLoad=True,
+    icon=(
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1gIQFgQOuRVmrAAAAVRJREFUOMud"
         "kjFLw2AQhp+kMQ7+jJpCF+ni1lFEwUXq5g+wgiCCgoNUrG5Oltb2DygGYwUXwbmbg+Li"
@@ -38,6 +38,7 @@ eg.RegisterPlugin(
         "XV1ZEyplWaZQzGUVL8lx+qhv7yM78NRqtYJ30KhVucynAq8AoJ+fBhqUjLKe/uXPZzI7"
         "e/tBBumN9U1s2/at9FiBQANM0+S/UsL4/qIvHUp+5VOP+PAAAAAASUVORK5CYII="
     ),
+    url="http://www.eventghost.net/forum/viewtopic.php?f=9&t=5762"
 )
 
 import wx
@@ -51,9 +52,9 @@ class Text:
     password = "Password:"
     tcpBox = "TCP/IP Settings"
     securityBox = "Security"
+
     class Map:
         parameterDescription = "Event name to send:"
-
 
 
 class NetworkSender(eg.PluginBase):
@@ -61,13 +62,12 @@ class NetworkSender(eg.PluginBase):
 
     def __init__(self):
         self.AddAction(Map)
-
+        self.AddAction(Send)
 
     def __start__(self, host, port, password):
         self.host = host
         self.port = port
         self.password = password
-
 
     def Configure(self, host="127.0.0.1", port=1024, password=""):
         text = self.text
@@ -91,7 +91,7 @@ class NetworkSender(eg.PluginBase):
         )
 
         panel.sizer.Add(tcpBox, 0, wx.EXPAND)
-        panel.sizer.Add(securityBox, 0, wx.TOP|wx.EXPAND, 10)
+        panel.sizer.Add(securityBox, 0, wx.TOP | wx.EXPAND, 10)
 
         while panel.Affirmed():
             panel.SetResult(
@@ -100,10 +100,9 @@ class NetworkSender(eg.PluginBase):
                 passwordCtrl.GetValue()
             )
 
-
-    def Send(self, eventString, payload=None):
+    def Send(self, eventString, payload=None, send_func=None):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.socket = sock
+        # self.socket = sock
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(2.0)
         try:
@@ -150,14 +149,7 @@ class NetworkSender(eg.PluginBase):
                 return False
 
             # now just pipe those commands to the server
-            if (payload is not None) and (len(payload) > 0):
-                for pld in payload:
-                    sock.sendall(
-                        "payload %s\n" % pld.encode(eg.systemEncoding)
-                    )
-
-            sock.sendall("payload withoutRelease\n")
-            sock.sendall(eventString.encode(eg.systemEncoding) + "\n")
+            send_func(payload, sock, eventString)
 
             return sock
 
@@ -168,19 +160,145 @@ class NetworkSender(eg.PluginBase):
             self.PrintError("NetworkSender failed")
             return None
 
-
-    def MapUp(self, sock):
+    @staticmethod
+    def MapUp(sock):
         # tell the server that we are done nicely.
         sock.sendall("close\n")
         sock.close()
 
 
-
 class Map(eg.ActionWithStringParameter):
 
     def __call__(self, mesg):
-        res = self.plugin.Send(eg.ParseString(mesg))
+        res = self.plugin.Send(eg.ParseString(mesg), send_func=self.do_send)
         if res:
             eg.event.AddUpFunc(self.plugin.MapUp, res)
         return res
 
+    @staticmethod
+    def do_send(payload, sock, eventString):
+        if (payload is not None) and (len(payload) > 0):
+            for pld in payload:
+                sock.sendall(
+                    "payload %s\n" % pld.encode(eg.systemEncoding)
+                )
+
+        sock.sendall("payload withoutRelease\n")
+        sock.sendall(eventString.encode(eg.systemEncoding) + "\n")
+
+
+class Send(eg.ActionBase):
+    name = "Send event"
+    description = "Sends event including payload."
+
+    class text:
+        eventBox = "Event construction"
+        prefix = "Event prefix or whole event string:"
+        suffix = "Event suffix:"
+        payload = "Event payload:"
+        choices = (
+            "{eg.event.string}",
+            "{eg.event.prefix}",
+            "{eg.event.suffix}",
+            "{eg.event.payload}",
+            "{eg.result}",
+        )
+        radioboxMode = "Event send ... "
+        modes = (
+            "Always",
+            "If last action was successful",
+            "If last action was unsuccessful",
+        )
+
+    def __call__(self, prefix="EventGhost", suffix="", pld="", mode=0):
+        if mode == 0 or bool(eg.result) != bool(mode - 1):
+            evt = eg.ParseString(prefix)
+            # evt = prefix
+            if suffix:
+                evt += ".%s" % eg.ParseString(suffix)
+                # evt += ".%s" % suffix
+            res = self.plugin.Send(evt, pld, send_func=self.do_send)
+            if res:
+                eg.event.AddUpFunc(self.plugin.MapUp, res)
+            return res
+
+    @staticmethod
+    def do_send(payload, sock, eventString):
+        if (payload is not None) and (len(payload) > 0):
+
+            if isinstance(payload, (str, unicode)):
+                payload = eg.ParseString(payload)
+            try:
+                payload = eval(payload)
+            except:
+                pass
+            if not isinstance(payload, (list, tuple)):
+                # payload = (str(payload),)
+                payload = (payload,)
+            for pld in payload:
+                if isinstance(pld, (int, float)):
+                    pld = unicode(float(pld))
+                if not isinstance(pld, (unicode)):
+                    try:
+                        pld = pld.decode(eg.systemEncoding)
+                    except:
+                        pld = unicode(pld, errors="replace")
+                sock.sendall(
+                    "payload %s\n" % pld.encode("utf-8")
+                )
+        sock.sendall("payload withoutRelease\n")
+        if not isinstance(eventString, (unicode)):
+            try:
+                eventString = eventString.decode(eg.systemEncoding)
+            except:
+                eventString = unicode(eventString, errors="replace")
+        sock.sendall(eventString.encode("utf-8") + "\n")
+
+    def GetLabel(self, prefix, suffix, pld, mode):
+        lbl = "%s: %s" % (self.name, prefix)
+        if suffix:
+            lbl += ".%s" % suffix
+        if pld:
+            lbl += " %s" % pld
+        return lbl
+
+    def Configure(self, prefix="EventGhost", suffix="", pld="", mode=0):
+        text = self.text
+        panel = eg.ConfigPanel()
+        panel.GetParent().GetParent().SetIcon(self.info.icon.GetWxIcon())
+        radioBoxMode = wx.RadioBox(
+            panel,
+            -1,
+            text.radioboxMode,
+            choices=text.modes,
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBoxMode.SetSelection(mode)
+        prefixCtrl = wx.ComboBox(panel, -1, prefix, choices=text.choices)
+        suffixCtrl = wx.ComboBox(panel, -1, suffix, choices=text.choices)
+        pldCtrl = wx.ComboBox(panel, -1, pld, choices=text.choices)
+        st1 = wx.StaticText(panel, -1, text.prefix)
+        st2 = wx.StaticText(panel, -1, text.suffix)
+        st3 = wx.StaticText(panel, -1, text.payload)
+        eg.EqualizeWidths((st1, st2, st3))
+        box1 = wx.StaticBox(panel, -1, text.eventBox)
+        boxSizer = wx.StaticBoxSizer(box1, wx.VERTICAL)
+        eventSizer = wx.FlexGridSizer(3, 2, 15, 10)
+        eventSizer.AddGrowableCol(1)
+        eventSizer.Add(st1, 0)
+        eventSizer.Add(prefixCtrl, 0, wx.EXPAND)
+        eventSizer.Add(st2, 0)
+        eventSizer.Add(suffixCtrl, 0, wx.EXPAND)
+        eventSizer.Add(st3, 0)
+        eventSizer.Add(pldCtrl, 0, wx.EXPAND)
+        boxSizer.Add(eventSizer, 0, wx.ALL | wx.EXPAND, 8)
+        panel.sizer.Add(radioBoxMode, 0, wx.EXPAND)
+        panel.sizer.Add(boxSizer, 0, wx.TOP | wx.EXPAND, 10)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                prefixCtrl.GetValue(),
+                suffixCtrl.GetValue(),
+                pldCtrl.GetValue(),
+                radioBoxMode.GetSelection(),
+            )

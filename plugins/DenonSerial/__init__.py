@@ -357,7 +357,7 @@ class DenonSerial(eg.PluginClass):
 
     def __init__(self):
         self.serial = None
-        self.readerkiller = None
+        self.readerkiller = False
         group = self
 
         for cmd_name, cmd_text, cmd_cmd, cmd_rangespec in cmdList:
@@ -423,6 +423,7 @@ class DenonSerial(eg.PluginClass):
                 line = ""
             else:
                 line += ch
+        self.readerkiller = None
 
 
     def __start__(self, port):
@@ -435,13 +436,15 @@ class DenonSerial(eg.PluginClass):
         self.serial.setDTR(1)
         self.serial.setRTS(1)
         self.readerkiller = False
-        thread.start_new_thread(self.reader, ());
+        thread.start_new_thread(self.reader, ())
         # Do an initial master volume query so we can track it
         self.serial.write("MV?\r")
 
 
     def __stop__(self):
         self.readerkiller = True
+        while self.readerkiller is not None:
+            wx.MilliSleep(100)
         if self.serial is not None:
             self.serial.close()
             self.serial = None

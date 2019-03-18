@@ -132,6 +132,7 @@ import eg
 
 eg.RegisterPlugin(
     name="LimitlessLED",
+    guid='{D07941C7-E0A6-44BE-95F9-A57D1F997AC8}',
     author="SupahNoob",
     version="1.4.0",
     kind="external",

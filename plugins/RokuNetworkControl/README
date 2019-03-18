@@ -1,0 +1,15 @@
+NOTICE:
+
+When the plugin first starts up, a SSDP broadcast is sent out to find all Roku players on the
+network. The plugin is set to only look for about 1-1.5 seconds. There is nothing that needs
+to be done to the code before starting the plugin.
+
+Also, it is probably wise to set your router so that the Roku box gets a static DHCP lease
+(same IP address all the time), or to use a host name (if you have a DNS server on your network).
+with version 0.2, the action commands store the Roku's SN (part of the USN) instead of a static IP address. The statement
+above still holds true for a more reliable experience. But, when ever the plugin restarts it will
+automatically look for the Roku players and store the new IP address and the actions will continue
+to work. If the IP address changes and the plugin has not restarted, the plugin will catch the exception
+when sending an action and search the network one more time and try the action again.  
+
+More info can be found in the comments of the __init__.py file.

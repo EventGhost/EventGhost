@@ -115,6 +115,7 @@ class H79Serial(eg.PluginClass):
 
     def __init__(self):
         self.serial = None
+        self.readerkiller = False
         group = topGroup = self
 
         def createWriter(cmd):
@@ -166,7 +167,7 @@ class H79Serial(eg.PluginClass):
                     line=""
             else:
                 line+=ch
-
+        self.readerkiller = None
 
     def __start__(self, port):
         try:
@@ -183,6 +184,8 @@ class H79Serial(eg.PluginClass):
 
     def __stop__(self):
         self.readerkiller = True
+        while self.readerkiller is not None:
+            wx.MilliSleep(100)
         if self.serial is not None:
             self.serial.close()
             self.serial = None

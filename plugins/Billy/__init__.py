@@ -58,6 +58,7 @@ eg.RegisterPlugin(
 )
 
 import os
+import wx
 from shutil import copyfile
 from win32gui import GetWindowText, MessageBox
 from threading import Thread

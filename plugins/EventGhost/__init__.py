@@ -52,6 +52,7 @@ class EventGhost(eg.PluginBase):
         self.AddAction(FlushEvents)
         self.AddAction(Comment)
         self.AddAction(DisableItem)
+        self.AddAction(DisableExclusive)
         self.AddAction(DumpResult)
         self.AddAction(EnableItem)
         self.AddAction(EnableExclusive)
@@ -263,24 +264,49 @@ class EnableExclusive(EnableItem):
         )
 
     def __call__(self, link):
+        self._do_action(link, True)
+
+    @staticmethod
+    def _do_action(link, flag=True):
         if not link:
             return
         node = link.target
         if not node:
             return
 
-        def DoIt():
-            node.SetEnable(True)
+        def do_it():
+            flag2 = not flag
+            node.SetEnable(flag)
             for child in node.parent.childs:
                 if child is not node and child.isDeactivatable:
-                    child.SetEnable(False)
-        eg.actionThread.Call(DoIt)
+                    child.SetEnable(flag2)
+        eg.actionThread.Call(do_it)
 
     def FilterFunc(self, item):
         return isinstance(item, (FolderItem, MacroItem))
 
     def IsSelectableItem(self, item):
         return item.isDeactivatable
+
+
+class DisableExclusive(EnableExclusive):
+    name = "Disable Item Exclusively"
+    description = (
+        "Disables a specified folder or macro in your configuration, but "
+        "also enables all other folders and macros that are siblings on "
+        "the same level in that branch of the tree."
+    )
+
+    class text:
+        label = "Disable Exclusively: %s"
+        text1 = "Please select the folder/macro which should be disabled:"
+        cantSelect = (
+            "The selected item type can't change its disable state.\n\n"
+            "Please select another item."
+        )
+
+    def __call__(self, link):
+        self._do_action(link, False)
 
 
 class FlushEvents(eg.ActionBase):

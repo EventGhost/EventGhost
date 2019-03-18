@@ -596,7 +596,7 @@ class namedDialog(wx.Frame):
         self.grid = grid
         self.add = add
         self.Centre()
-        self.textId = wx.NewId()
+        self.textId = wx.NewIdRef()
 
 
     def getNickname(self, txt):
@@ -1374,7 +1374,7 @@ class ListCtrl(wx.ListCtrl):
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupIDs"):
-            self.popupIDs = (wx.NewId(), wx.NewId(), wx.NewId(), wx.NewId())
+            self.popupIDs = (wx.NewIdRef(), wx.NewIdRef(), wx.NewIdRef(), wx.NewIdRef())
             self.Bind(wx.EVT_MENU, self.PostEvent, id=self.popupIDs[0])
             self.Bind(wx.EVT_MENU, self.PostEvent, id=self.popupIDs[1])
             self.Bind(wx.EVT_MENU, self.PostEvent, id=self.popupIDs[2])
@@ -2190,7 +2190,7 @@ class Nmap(eg.PluginBase):
         bttns = []
         def createButtons(szr):
             for i, bttn in enumerate(text.buttons1):
-                id = wx.NewId()
+                id = wx.NewIdRef()
                 bttns.append(id)
                 b = wx.Button(panel, id, bttn)
                 szr.Add(b,1)

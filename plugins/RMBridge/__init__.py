@@ -40,6 +40,7 @@ the Android RM Bridge software available at: http://rm-bridge.fun2code.de/
 
 eg.RegisterPlugin(
     name=name,
+    guid='{431332FC-EB8C-4266-A74A-FC72D9DE660B}',
     description=description,
     author=author,
     version=version,

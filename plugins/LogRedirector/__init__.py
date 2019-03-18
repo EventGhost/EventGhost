@@ -166,8 +166,11 @@ class MyTextDropTarget(EventDropTarget):
                     break
             if flag:
                 self.object.InsertItem(txt)
+                return wx.DragCopy
             else:
                 PlaySound('SystemExclamation', SND_ASYNC)
+                return wx.DragError
+        return wx.DragNone
 
     def OnLeave(self):
         pass

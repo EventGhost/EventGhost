@@ -128,6 +128,12 @@ class PushGroupDialog(wx.Frame):
         self.plugin = plugin
         self.groups = deepcopy(self.panel.push_groups)
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
+
     def show_push_groups_dlg(self):
         text = self.plugin.text
         self.SetTitle(text.pushGroupsTitle)
@@ -236,13 +242,13 @@ class PushGroupDialog(wx.Frame):
             ts_ctrl.Enable(False)
 
         sizer.Layout()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.SetFocus()
         self.Center()
         self.Show()
 
         def on_close(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.GetParent().GetParent().Raise()
             self.Destroy()
             evt.Skip()
@@ -413,6 +419,12 @@ class SmsGroupDialog(wx.Frame):
         self.panel = parent
         self.plugin = plugin
         self.groups = deepcopy(self.panel.sms_groups)
+
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def show_sms_groups_dlg(self):
         text = self.plugin.text
@@ -613,13 +625,13 @@ class SmsGroupDialog(wx.Frame):
             enable_box(False)
 
         sizer.Layout()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.SetFocus()
         self.Center()
         self.Show()
 
         def on_close(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.GetParent().GetParent().Raise()
             self.Destroy()
             evt.Skip()
@@ -1039,6 +1051,12 @@ class EnableDialog(wx.Frame):
         self.enabled = []
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
+
     def get_items(self):
         pl = self.plugin
         return [pl.get_device(i[1]) for i in self.disabled]
@@ -1110,7 +1128,7 @@ class EnableDialog(wx.Frame):
         panel.SetSizer(main_sizer)
 
         def on_close(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -1134,7 +1152,7 @@ class EnableDialog(wx.Frame):
         main_sizer.Fit(self)
         main_sizer.Layout()
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Show()
 
 
@@ -1323,6 +1341,12 @@ class ReplyDialog(wx.Frame):
         self.pushDict = push_dict
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
 
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
+
     def show_reply_dialog(self):
         pl = self.plugin
         self.SetTitle(pl.text.title4 % self.title)
@@ -1434,7 +1458,7 @@ class ReplyDialog(wx.Frame):
         msg.Bind(wx.EVT_SET_FOCUS, on_focus)
 
         # def on_close(evt):
-        #     # self.MakeModal(False)
+        #     self.MakeModal(False)
         #     self.Destroy()
         #
         # self.Bind(wx.EVT_CLOSE, on_close)
@@ -1449,7 +1473,7 @@ class ReplyDialog(wx.Frame):
         main_sizer.Fit(self)
         main_sizer.Layout()
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         w, h = self.GetSize()
         self.SetSize((max(w, msg_w + brdrs), 320))
         self.SetMinSize((min(w, msg_w + brdrs), min(h, 290)))
@@ -1472,6 +1496,12 @@ class ProxyDialog(wx.Frame):
         self.labels = labels
         self.data = data
         self.password = None
+
+    def MakeModal(self, modal=True):
+        if modal and not hasattr(self, '_disabler'):
+            self._disabler = wx.WindowDisabler(self)
+        if not modal and hasattr(self, '_disabler'):
+            del self._disabler
 
     def show_proxy_dlg(self, title):
         self.panel.Enable(False)
@@ -1539,7 +1569,7 @@ class ProxyDialog(wx.Frame):
         main_sizer.Fit(self)
 
         def on_close(evt):
-            # self.MakeModal(False)
+            self.MakeModal(False)
             self.panel.Enable(True)
             self.panel.dialog.buttonRow.cancelButton.Enable(True)
             self.panel.EnableButtons(True)
@@ -1576,7 +1606,7 @@ class ProxyDialog(wx.Frame):
         self.SetSize((max(w, 300), h))
         self.SetMinSize((max(w, 300), h))
         self.Raise()
-        # self.MakeModal(True)
+        self.MakeModal(True)
         self.Centre()
         self.Show()
 

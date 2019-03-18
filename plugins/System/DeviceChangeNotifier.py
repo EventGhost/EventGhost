@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-# Local imports
 import eg
 from eg.WinApi.Dynamic import (
     CLSIDFromString,
@@ -34,6 +33,7 @@ from eg.WinApi.Dynamic import (
     WM_DEVICECHANGE,
     wstring_at,
 )
+
 
 class DeviceChangeNotifier:
     def __init__(self, plugin):
@@ -108,7 +108,10 @@ class DeviceChangeNotifier:
                     self.TriggerEvent("DriveMounted." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
                 deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
-                self.TriggerEvent("DeviceAttached", [deviceName])
+                if '\\DISPLAY' in deviceName:
+                    self.TriggerEvent("DisplayAttached", "#".join(deviceName.split('#')[1:]))
+                else:
+                    self.TriggerEvent("DeviceAttached", [deviceName])
         elif wparam == DBT_DEVICEREMOVECOMPLETE:
             dbch = DEV_BROADCAST_HDR.from_address(lparam)
             if dbch.dbch_devicetype == DBT_DEVTYP_VOLUME:
@@ -117,7 +120,10 @@ class DeviceChangeNotifier:
                     self.TriggerEvent("DriveRemoved." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
                 deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
-                self.TriggerEvent("DeviceRemoved", [deviceName])
+                if '\\DISPLAY' in deviceName:
+                    self.TriggerEvent("DisplayRemoved","#".join(deviceName.split('#')[1:]))
+                else:
+                    self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1
 
 

@@ -21,6 +21,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.15 by Pako 2013-04-28 13:20 UTC+1
+#      - fixed ' "eg.programCounter = None" missing' bug
 # 0.2.14 by Pako 2012-07-16 07:08 UTC+1
 #      - fixed "hide menu" bug
 #      - fixed "unicode character in filename" bug
@@ -62,7 +64,7 @@
 eg.RegisterPlugin(
     name = "On Screen Explorer",
     author = "Pako",
-    version = "0.2.14",
+    version = "0.2.15",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -660,6 +662,8 @@ class MoveCursor(eg.ActionBase):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.MoveCursor(step * self.value)
             eg.event.skipEvent = True
+        else:
+             eg.programCounter = None
 
 
     def Configure(self, step = 1):
@@ -678,6 +682,9 @@ class PageUpDown(eg.ActionBase):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.PageUpDown(self.value)
             eg.event.skipEvent = True
+        else:
+             eg.programCounter = None
+
 #===============================================================================
 
 class Cancel(eg.ActionBase):
@@ -687,6 +694,9 @@ class Cancel(eg.ActionBase):
             self.plugin.menuDlg.destroyMenu()
             self.plugin.menuDlg = None
             eg.event.skipEvent = True
+        else:
+             eg.programCounter = None
+
 #===============================================================================
 
 class GoToParent(eg.ActionBase):
@@ -694,6 +704,10 @@ class GoToParent(eg.ActionBase):
     def __call__(self):
         if self.plugin.menuDlg:
             wx.CallAfter(self.plugin.menuDlg.GoToParent)
+            eg.event.skipEvent = True
+        else:
+             eg.programCounter = None
+
 #===============================================================================
 
 class GoBack(eg.ActionBase):
@@ -701,6 +715,10 @@ class GoBack(eg.ActionBase):
     def __call__(self):
         if self.plugin.menuDlg:
             wx.CallAfter(self.plugin.menuDlg.GoBack)
+            eg.event.skipEvent = True
+        else:
+             eg.programCounter = None
+
 #===============================================================================
 
 class GetValue(eg.ActionBase):
@@ -721,7 +739,8 @@ class GetValue(eg.ActionBase):
                 return self.plugin.menuDlg.GetValue()[val]
             else:
                 return self.plugin.menuDlg.GetValue()
-
+        else:
+             eg.programCounter = None
 
     def GetLabel(self,val):
         return "%s: %s %s" % (self.name, self.text.labelGet, self.text.boxLbls[val])
@@ -860,7 +879,9 @@ class Execute(eg.ActionBase):
                     res = fpList
                 if res:
                     return res
-        elif val&(4+32+128):
+        # elif val&(4+32+128):
+        #    eg.programCounter = None
+        else:
             eg.programCounter = None
 
 

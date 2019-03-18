@@ -104,7 +104,7 @@ install:
         PipInstall "sphinx 1.8.0" "sphinx==1.8.0"
         PipInstall "websocket-client 0.54.0" "websocket-client==0.54.0"
         #PipInstall "wxPython 4.0.4" "wxPython==4.0.4"
-        pip install --disable-pip-version-check --no-cache-dir -q -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
+        pip install --disable-pip-version-check --no-cache-dir -q -q -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
         PipInstall "commonmark 0.8.1" "commonmark==0.8.1"
         PipInstall "pillow 5.4.1" "pillow==5.4.1"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"

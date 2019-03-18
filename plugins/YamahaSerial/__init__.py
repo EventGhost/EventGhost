@@ -130,6 +130,7 @@ class YamahaSerial(eg.PluginClass):
 
     def __init__(self):
         self.serial = None
+        self.readerkiller = False
         group = self
         self.currentVolume = -99
         self.TypList = {
@@ -448,6 +449,7 @@ class YamahaSerial(eg.PluginClass):
                 line=""
             else:
                 line+=ch
+        self.readerkiller = None
 
     def __start__(self, port):
         self.serial = eg.SerialPort(port)
@@ -463,6 +465,8 @@ class YamahaSerial(eg.PluginClass):
 
     def __stop__(self):
         self.readerkiller = True
+        while self.readerkiller is not None:
+            wx.MilliSleep(100)
         if self.serial is not None:
             self.serial.close()
             self.serial = None

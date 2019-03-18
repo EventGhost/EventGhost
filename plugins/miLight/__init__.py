@@ -2,6 +2,7 @@ import eg
 
 eg.RegisterPlugin(
     name = "Mi-Light Controller",
+    guid='{C057ED37-B9A6-4A47-AFC8-DEA3EAF5B321}',
     author = "Right.Hook@live.com",
     version = "0.1.0",
     kind = "other",
@@ -14,6 +15,7 @@ import socket
 import time
 import random
 import binascii
+
 
 class miLight(eg.PluginBase):
 

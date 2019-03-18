@@ -27,6 +27,8 @@ version="0.1.7"
 # 0.1.6  by Pako 2010-04-15 15:27 GMT+1
 #===============================================================================
 
+import eg
+
 eg.RegisterPlugin(
     name = "File Operations",
     author = "Pako",

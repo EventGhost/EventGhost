@@ -402,7 +402,7 @@ class TreeCtrl(wx.TreeCtrl):
         finally:
             if not self.IsVisible(item_id):
                 self.EnsureVisible(item_id)
-            self.Thaw()
+        self.Thaw()
 
     @eg.AssertInMainThread
     def CollapseAll(self):
@@ -513,16 +513,18 @@ class TreeCtrl(wx.TreeCtrl):
         finally:
             if not self.IsVisible(item_id):
                 self.EnsureVisible(item_id)
-            self.Thaw()
+        self.Thaw()
 
     @eg.AssertInMainThread
     def ExpandAll(self):
         """
         Expands all items in the tree.
         """
+        self.Freeze()
         self.ExpandAllChildren(self.GetRootItem())
         if not self.IsVisible(self.GetSelection()):
             self.EnsureVisible(self.GetSelection())
+        self.Thaw()
 
     @eg.AssertInMainThread
     def GetEditCmdState(self):
@@ -572,11 +574,13 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.AssertInMainThread
     def TraverseDelete(self, itemId):
         childId, cookie = self.GetFirstChild(itemId)
+        self.Freeze()
         while childId.IsOk():
             self.TraverseDelete(childId)
             node = self.GetItemData(childId)
             del self.visibleNodes[node]
             childId, cookie = self.GetNextChild(childId, cookie)
+        self.Thaw()
 
     #-------------------------------------------------------------------------
     # wx.Event Handlers

@@ -31,7 +31,7 @@ import eg
 eg.RegisterPlugin(
     name = "eSpeak",
     author = "obermann",
-    version = "1.48.15",
+    version = "1.48.15.01",
     kind = "program",
     canMultiLoad = False,
     description = __doc__,
@@ -471,7 +471,7 @@ class GetParameter(eg.ActionBase):
     
     def __call__(self, type, default=False):
         if not self.plugin.is_off() and PARAMETERS.search(type.capitalize()): 
-            return self.plugin.espeak_GetParameter(PARAMETERS.search(type.capitalize()), int(default))
+            return self.plugin.espeak_GetParameter(PARAMETERS.search(type.capitalize()), int(not default))
 
             
     def Configure(self, type="Ignore", default=False):

@@ -182,10 +182,10 @@ class StartObservation(eg.ActionClass):
         choic_len = len(ctrl_2.GetStrings())
         if choic_len == 2 and indx != 3:
             ctrl_2.Clear()
-            ctrl_2.AppendItems(strings=self.text.field_2)
+            ctrl_2.AppendItems(items=self.text.field_2)
         elif choic_len == 6 and indx == 3:
             ctrl_2.Clear()
-            ctrl_2.AppendItems(strings=self.text.field_2[:2])
+            ctrl_2.AppendItems(items=self.text.field_2[:2])
         self.validation()
 
     def create_widgets(self):

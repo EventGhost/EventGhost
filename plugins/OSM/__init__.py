@@ -46,7 +46,7 @@
 #===============================================================================
 
 eg.RegisterPlugin(
-    name = "OS Menu",
+    name = "On Screen Menu",
     author = "Pako",
     version = "0.2.11",
     kind = "other",
@@ -996,23 +996,23 @@ class CreateMenuFromList(eg.ActionBase):
                                 chcs.append((item[0], item[0]))
                             else:
                                 chcs.append(item)
-                        wx.CallAfter(
-                            Menu,
-                            chcs,
-                            foreColourButton.GetValue(),
-                            backColourButton.GetValue(),
-                            foreSelColourButton.GetValue(),
-                            backSelColourButton.GetValue(),
-                            fontButton.GetValue(),
-                            True,
-                            self.plugin,
-                            prefixCtrl.GetValue(),
-                            displayChoice.GetSelection(),
-                            modeCtrl.GetSelection(),
-                            CreateEvent(None, 0, 0, None),
-                            triggEvtCtrl.GetValue(),
-                            focusCtrl.GetValue(),
-                        )
+                    wx.CallAfter(
+                        Menu,
+                        chcs,
+                        foreColourButton.GetValue(),
+                        backColourButton.GetValue(),
+                        foreSelColourButton.GetValue(),
+                        backSelColourButton.GetValue(),
+                        fontButton.GetValue(),
+                        True,
+                        self.plugin,
+                        prefixCtrl.GetValue(),
+                        displayChoice.GetSelection(),
+                        modeCtrl.GetSelection(),
+                        CreateEvent(None, 0, 0, None),
+                        triggEvtCtrl.GetValue(),
+                        focusCtrl.GetValue(),
+                    )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
