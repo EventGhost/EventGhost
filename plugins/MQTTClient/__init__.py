@@ -21,6 +21,7 @@
 ##############################################################################
 # Revision history:
 #
+# 2018-03-31  Adds Exception catching for unicode decoding in TriggerEvents - K
 # 2017-09-09  Dialog GUI improvements - based on suggestions from Snowbird
 # 2017-08-11  Bugfix in config settings for selection of TLS/SSL protocol
 # 2017-07-08  Re-designed to improve TLS/SSL connections using certificates
@@ -64,7 +65,7 @@ import eg
 eg.RegisterPlugin(
     name = "MQTT Client",
     author = "Walter Kraembring (krambriw)",
-    version = "1.2.2",
+    version = "1.2.3",
     canMultiLoad = False,
     kind = "other",
     url = "http://www.eventghost.org",
@@ -87,6 +88,7 @@ import paho.mqtt.client as mqtt
 import ssl
 import time
 import random
+import win32api
 import wx
 from threading import Event, Thread
 from ast import literal_eval
@@ -250,8 +252,22 @@ class ThreadMQTT(Thread):
 
 
         def TriggerEvent(msg):
-            smsg = msg.topic.decode('utf-8')
-            pl = str(msg.payload).decode('utf-8')
+            try:
+                smsg = msg.topic.decode('utf-8')
+            except UnicodeEncodeError:
+                try:
+                    smsg = msg.topic.decode('latin-1').decode('utf-8')
+                except UnicodeEncodeError:
+                    smsg = msg.topic
+
+            try:
+                pl = str(msg.payload).decode('utf-8')
+            except UnicodeEncodeError:
+                try:
+                    pl = str(msg.payload).decode('latin-1').decode('utf-8')
+                except UnicodeEncodeError:
+                    pl = str(msg.payload)
+
             if self.topicTrigger:
                 smsg = smsg + '.' + pl
             eg.TriggerEvent(
@@ -312,21 +328,26 @@ class ThreadMQTT(Thread):
 
 
         def TriggerEvent2(msg, result):
-            smsg = (msg.topic.decode('utf-8')+
-                '/'+
-                str(result[2])+
-                '/'+
-                str(result[4])
-            )
+            try:
+                smsg = msg.topic.decode('utf-8')
+            except UnicodeEncodeError:
+                try:
+                    smsg = msg.topic.decode('latin-1').decode('utf-8')
+                except UnicodeEncodeError:
+                    smsg = msg.topic
+
             if result[-2] == "On/Off" or result[-2] == "Motion Sensor":
-                smsg = (msg.topic.decode('utf-8')+
-                    '/'+
-                    str(result[2])+
-                    '/'+
-                    str(result[4])+
-                    '/'+
-                    str(result[6])
+                smsg += (
+                    '/%s/%s/%s' %
+                    (str(result[2]), str(result[4]), str(result[6]))
                 )
+
+            else:
+                smsg += (
+                    '/%s/%s' %
+                    (str(result[2]), str(result[4]))
+                )
+
             eg.TriggerEvent(
                 smsg,
                 payload = result,

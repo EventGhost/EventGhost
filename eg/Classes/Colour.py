@@ -19,20 +19,6 @@
 import colorsys
 import wx
 
-# Local imports
-from eg.WinApi.Dynamic import (
-    COLOR_ACTIVECAPTION,
-    COLOR_CAPTIONTEXT,
-    COLOR_GRADIENTACTIVECAPTION,
-    COLOR_GRADIENTINACTIVECAPTION,
-    COLOR_INACTIVECAPTION,
-    COLOR_INACTIVECAPTIONTEXT,
-    GetSysColor,
-)
-
-def GetWinSysColour(nIndex):
-    val = GetSysColor(nIndex)
-    return val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF
 
 class Colour:
     """
@@ -50,12 +36,12 @@ class Colour:
     waningBackground = (255, 246, 110)
     debugText = (0, 0, 0)
     debugBackground = (165, 217, 255)
-    activeCaption = GetWinSysColour(COLOR_ACTIVECAPTION)
-    activeCaptionGradient = GetWinSysColour(COLOR_GRADIENTACTIVECAPTION)
-    activeCaptionTextColour = GetWinSysColour(COLOR_CAPTIONTEXT)
-    inactiveCaption = GetWinSysColour(COLOR_INACTIVECAPTION)
-    inactiveCaptionGradient = GetWinSysColour(COLOR_GRADIENTINACTIVECAPTION)
-    inactiveCaptionTextColour = GetWinSysColour(COLOR_INACTIVECAPTIONTEXT)
+    activeCaption = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVECAPTION).Get()
+    activeCaptionGradient = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRADIENTACTIVECAPTION).Get()
+    activeCaptionTextColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_CAPTIONTEXT).Get()
+    inactiveCaption = wx.SystemSettings.GetColour(wx.SYS_COLOUR_INACTIVECAPTION).Get()
+    inactiveCaptionGradient = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRADIENTINACTIVECAPTION).Get()
+    inactiveCaptionTextColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_INACTIVECAPTIONTEXT).Get()
 
     def GetOddLogColour(self, even_colour):
         """

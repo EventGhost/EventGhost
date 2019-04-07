@@ -26,6 +26,8 @@ Enable the RC Interface or start VLC with:
 
 **vlc.exe --extraintf=rc --rc-host=localhost:1234 --rc-quiet --rc-show-pos**
 
+**ATTENTION!** Starting with version 1.1.0 you must use **--extraintf=oldrc**
+
 If you are using "MyCommand" remember that you can only execute commands that
 are enabled in VLC!
 
