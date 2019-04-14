@@ -375,7 +375,7 @@ class GrabText(eg.ActionBase):
 
 class IsIconized(eg.ActionBase):
     name = "IsIconicized"
-    description = "Determines if the target window is iconic."
+    description = "Determines if the target window is iconized."
 
     def __call__(self):
         return bool(IsIconic(GetTopLevelOfTargetWindows()[0]))
@@ -391,7 +391,7 @@ class IsMaximized(eg.ActionBase):
 
 class IsMinimized(eg.ActionBase):
     name = "IsMinimized"
-    description = "Determines if the target window is not maximized and not iconic."
+    description = "Determines if the target window is not maximized and not iconized."
 
     def __call__(self):
         win = GetTopLevelOfTargetWindows()[0]
