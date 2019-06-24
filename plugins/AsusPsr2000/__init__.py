@@ -23,20 +23,18 @@ A plugin for the ASUS PSR-2000 remote.
 import eg
 
 eg.RegisterPlugin(
-    name = "ASUS PSR-2000",
-    author = "Bitmonster",
-    version = "1.0.0",
-    kind = "remote",
-    guid = "{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}",
-    description = __doc__,
-    hardwareId = "USB\\VID_147A&PID_E006",
+    name="ASUS PSR-2000",
+    author="Bitmonster",
+    version="1.0.0",
+    kind="remote",
+    guid="{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}",
+    description=__doc__,
+    hardwareId="USB\\VID_147A&PID_E006",
 )
 
 from math import atan2, pi
-from os.path import dirname, join
-import sys
 from eg.WinApi.Dynamic import (
-    mouse_event, WinDLL, DWORD, BOOL, byref, FormatError
+    mouse_event
 )
 
 BUTTONS = {
@@ -93,11 +91,9 @@ class AsusPsr2000(eg.PluginBase):
         self.tick = 0
         self.receiveQueue = eg.plugins.Mouse.plugin.thread.receiveQueue
 
-
     def __stop__(self):
         self.timer.Stop()
         self.winUsb.Stop()
-
 
     def Callback(self, code):
         if code[0] & 0x88:
@@ -137,7 +133,6 @@ class AsusPsr2000(eg.PluginBase):
             else:
                 self.EndLastEvent()
 
-
     def OnTimeOut(self):
         self.receiveQueue.put(-2)
         self.lastDirection = None
@@ -147,4 +142,3 @@ class AsusPsr2000(eg.PluginBase):
         if self.rightDown:
             self.rightDown = None
             mouse_event(0x0010, 0, 0, 0, 0)
-

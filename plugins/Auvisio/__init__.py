@@ -23,13 +23,13 @@ Plugin for the Auvisio PC-Remote.
 import eg
 
 eg.RegisterPlugin(
-    name = "auvisio VRC-1100 Ro",
-    author = "Bitmonster",
-    version = "1.0.0",
-    kind = "remote",
-    guid = "{96F3D335-C941-4F4E-A196-AAD190E3E255}",
-    description = __doc__,
-    hardwareId = "USB\VID_05A4&PID_9881",
+    name="auvisio VRC-1100 Ro",
+    author="Bitmonster",
+    version="1.0.0",
+    kind="remote",
+    guid="{96F3D335-C941-4F4E-A196-AAD190E3E255}",
+    description=__doc__,
+    hardwareId="USB\VID_05A4&PID_9881",
 )
 
 from math import atan2, pi
@@ -99,17 +99,14 @@ class Auvisio(eg.PluginBase):
         )
         self.winUsb.Start()
 
-
     def __stop__(self):
         self.winUsb.Stop()
-
 
     def Callback1(self, data):
         if data in BUTTONS1:
             self.TriggerEnduringEvent(BUTTONS1[data])
         else:
             self.EndLastEvent()
-
 
     def Callback2(self, data):
         if data[0] == 1:

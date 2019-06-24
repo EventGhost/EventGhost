@@ -2,13 +2,13 @@
 import eg
 
 eg.RegisterPlugin(
-    name = "Advanced IR-Transceiver",
-    author = "Bitmonster",
-    version = "1.0.1093",
-    kind = "remote",
-    guid = "{9BE52B40-66A0-46D4-B88B-A8C1B6B42CAA}",
-    description = 'Hardware plugin for the "Advanced IR-Transceiver".',
-    canMultiLoad = True,
+    name="Advanced IR-Transceiver",
+    author="Bitmonster",
+    version="1.0.1093",
+    kind="remote",
+    guid="{9BE52B40-66A0-46D4-B88B-A8C1B6B42CAA}",
+    description='Hardware plugin for the "Advanced IR-Transceiver".',
+    canMultiLoad=True,
 )
 
 import wx
@@ -73,7 +73,7 @@ ATI_REMOTE_TABLE = {
     0x7C: "RButtonDown",
     0x7D: "RButtonDown2",
     0x7E: "RButtonDoubleClick",
-    }
+}
 
 MEDION_REMOTE_TABLE = {
     0x00: "Mute",
@@ -131,7 +131,7 @@ MEDION_REMOTE_TABLE = {
     0x38: "EditImage",
     0x39: "Fullscreen",
     0x3A: "DVDAudio",
-    }
+}
 
 
 def bin2hexstring(data):
@@ -141,7 +141,7 @@ def bin2hexstring(data):
 def hexstring2bin(str):
     val = 0
     count = 0
-    str2=''
+    str2 = ''
     str = str.upper()
     for ch in str:
         if ch >= '0' and ch <= '9':
@@ -157,7 +157,6 @@ def hexstring2bin(str):
     return str2
 
 
-
 class AIRT(eg.PluginClass):
 
     def __init__(self):
@@ -166,9 +165,27 @@ class AIRT(eg.PluginClass):
         self.AddEvents()
         self.AddAction(SendIR)
 
-
     @eg.LogIt
-    def __start__(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
+    def __start__(
+        self,
+        port=0,
+        remotes=[
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0]):
         self.remotes = remotes
         self.port = port
         self.lastActionEvent = None
@@ -178,10 +195,8 @@ class AIRT(eg.PluginClass):
         self.serialThread.Start()
         self.serialThread.Write("\x00\x00\x00")
 
-
     def __stop__(self):
         self.serialThread.Close()
-
 
     def HandleReceive(self, serial):
         byte = ord(serial.Read(1))
@@ -233,8 +248,26 @@ class AIRT(eg.PluginClass):
             data = serial.Read()
             self.TriggerEvent('Received', [bin2hexstring(byte + data)])
 
-
-    def Configure(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
+    def Configure(
+        self,
+        port=0,
+        remotes=[
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0]):
         panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         remoteCtrl = eg.RadioButtonGrid(
@@ -251,7 +284,6 @@ class AIRT(eg.PluginClass):
 
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue(), remoteCtrl.GetValue())
-
 
 
 class SendIR(eg.ActionClass):
@@ -271,12 +303,10 @@ class SendIR(eg.ActionClass):
             eg.event.AddUpFunc(sp.Write, '\xAB')
         if block and repeats != 0:
             event.wait(2.0)
-            #print "block done"
-
+            # print "block done"
 
     def GetLabel(self, data, repeats=1, block=True):
         return bin2hexstring(data)
-
 
     def Configure(
         self,
@@ -292,4 +322,3 @@ class SendIR(eg.ActionClass):
             datastr = dataCtrl.GetValue()
             data = hexstring2bin(datastr)
             panel.SetResult(data, 1, True)
-

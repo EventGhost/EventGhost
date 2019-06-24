@@ -1,5 +1,0 @@
-# Settings for flake8 <https://flake8.readthedocs.io/>
-
-[flake8]
-ignore = E114,E116,E221,E251,E262,E265,E302,E731,F403,F999
-max-line-length = 80

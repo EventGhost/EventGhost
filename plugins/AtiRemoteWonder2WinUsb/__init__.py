@@ -27,7 +27,6 @@ Plugin for the `ATI Remote Wonder II`__ remote.
 __ http://ati.amd.com/products/remotewonder2/index.html
 """
 
-
 import eg
 
 eg.RegisterPlugin(
@@ -37,13 +36,12 @@ eg.RegisterPlugin(
     author="Bitmonster",
     version="1.0.2",
     kind="remote",
-    hardwareId = "USB\\VID_0471&PID_0602",
+    hardwareId="USB\\VID_0471&PID_0602",
     guid="{74DBFE39-FEF6-41E5-A047-96454512B58D}",
 )
 
 from math import atan2, pi
 from eg.WinApi.Dynamic import mouse_event
-
 
 CODES = {
     0: "Num0",
@@ -116,13 +114,12 @@ class AtiRemoteWonder2(eg.PluginBase):
         self.timer = eg.ResettableTimer(self.OnTimeOut)
         self.receiveQueue = eg.plugins.Mouse.plugin.thread.receiveQueue
 
-
     def __stop__(self):
         self.winUsb.Stop()
         self.timer.Stop()
 
-
-    def Callback1(self, (device, x, y)):
+    def Callback1(self, xxx_todo_changeme):
+        (device, x, y) = xxx_todo_changeme
         if x > 127:
             x -= 256
         if y > 127:
@@ -133,8 +130,8 @@ class AtiRemoteWonder2(eg.PluginBase):
             self.lastDirection = degree
         self.timer.Reset(100)
 
-
-    def Callback2(self, (device, event, code)):
+    def Callback2(self, xxx_todo_changeme1):
+        (device, event, code) = xxx_todo_changeme1
         if device != self.currentDevice:
             self.currentDevice = device
             self.TriggerEvent(DEVICES[device])
@@ -152,7 +149,6 @@ class AtiRemoteWonder2(eg.PluginBase):
                 mouse_event(0x0010, 0, 0, 0, 0)
             else:
                 self.EndLastEvent()
-
 
     @eg.LogIt
     def OnTimeOut(self):
