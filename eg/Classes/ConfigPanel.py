@@ -155,6 +155,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.Bind(eg.EVT_VALUE_CHANGED, OnEvent)
         self.Bind(wx.EVT_CHECKLISTBOX, OnEvent)
         self.Bind(wx.EVT_SCROLL, OnEvent)
+        self.Bind(wx.EVT_LISTBOX, OnEvent)
 
     def SetColumnFlags(self, colNum, flags):
         self.colFlags[colNum] = flags
