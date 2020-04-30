@@ -81,7 +81,7 @@ class OptionsDialog(eg.TaskletDialog):
         )
 
         languageNames = eg.Translation.languageNames
-        languageList = ["en_EN"]
+        languageList = ["en_US"]
         for item in os.listdir(eg.languagesDir):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
@@ -191,10 +191,10 @@ class OptionsDialog(eg.TaskletDialog):
                 languageChoice.Append(name, bmp)
             else:
                 languageChoice.Append(name)
-        
+
         if config.language not in languageList:
             config.language='en_EN'
-        
+
         languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 
