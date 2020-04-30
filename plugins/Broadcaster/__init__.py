@@ -212,7 +212,6 @@ class Broadcast(eg.ActionWithStringParameter):
             UDPSock.sendto(eg.ParseString(eventString).encode(eg.systemEncoding) + self.plugin.payDelim.encode(eg.systemEncoding) + payload,addr)
         UDPSock.close()
 
-
     def Configure(self, command="", payload="", port=0):
         text = self.text
         panel = eg.ConfigPanel(self)
