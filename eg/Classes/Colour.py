@@ -47,7 +47,7 @@ class Colour:
     errorText = (0, 0, 0)
     errorBackground = (255, 130, 130)
     warningText = (0, 0, 0)
-    waningBackground = (255, 246, 110)
+    warningBackground = (255, 246, 110)
     debugText = (0, 0, 0)
     debugBackground = (165, 217, 255)
     activeCaption = GetWinSysColour(COLOR_ACTIVECAPTION)

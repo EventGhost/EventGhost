@@ -84,7 +84,7 @@ class LogCtrl(wx.ListCtrl):
         )
         self.warningColours = _create_colour_attributes(
             eg.colour.warningText,
-            eg.colour.waningBackground
+            eg.colour.warningBackground
         )
 
         self.InsertColumn(0, "")
