@@ -1,10 +1,26 @@
 # -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
+#
+# EventGhost is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 import sys
 import ctypes
 import locale as _locale
-from ctypes.wintypes import WORD, LCID, DWORD, INT, WCHAR, LPCWSTR, BOOL
+from ctypes.wintypes import WORD, LCID, DWORD, INT, LPCWSTR, BOOL
 
 
 PY3 = sys.version_info[0] >= 3
@@ -58,25 +74,99 @@ LOCALE_SLONGDATE = 0x00000020
 LOCALE_STIMEFORMAT = 0x00001003
 
 
+def FormatTime(value):
+    hour_formats = ['', '%-I', '%I']
+    minute_formats = ['', '%-M', '%M']
+    second_formats = ['', '%-S', '%S']
+    suffix_formats = ['', '%p', '%p']
+
+    hour_count = value.count('h')
+    minute_count = value.count('m')
+    second_count = value.count('s')
+    suffix_count = value.count('t')
+
+    if hour_count == 0:
+        hour_formats = ['', '%-H', '%H']
+        hour_count = value.count('H')
+
+    if hour_count > 0:
+        hour_format = hour_formats[hour_count]
+        value = value.replace('h' * hour_count, hour_format)
+        value = value.replace('H' * hour_count, hour_format)
+
+    if minute_count > 0:
+        minute_format = minute_formats[minute_count]
+        value = value.replace('m' * minute_count, minute_format)
+
+    if second_count > 0:
+        second_format = second_formats[second_count]
+        value = value.replace('s' * second_count, second_format)
+
+    if suffix_count > 0:
+        suffix_format = suffix_formats[suffix_count]
+        value = value.replace('t' * suffix_count, suffix_format)
+
+    return value
+
+
+def FormatDate(value):
+    month_formats = ['', '%-m', '%m', '%b', '%B']
+    day_formats = ['', '%-d', '%d', '%a', '%A']
+    year_formats = ['', '%y', '%y', '', '%Y', '%Y']
+
+    items = value.split(' ')
+    for i, item in enumerate(items):
+        month_count = item.count('M')
+        day_count = item.count('d')
+        year_count = item.count('y')
+
+        if month_count > 0:
+            month_format = month_formats[month_count]
+            item = item.replace('M' * month_count, month_format)
+
+        if day_count > 0:
+            day_format = day_formats[day_count]
+            item = item.replace('d' * day_count, day_format)
+
+        if year_count > 0:
+            year_format = year_formats[year_count]
+            item = item.replace('y' * year_count, year_format)
+
+        items[i] = item
+
+    value = ' '.join(items)
+    return value
+
+
+def GetLCType(index, cat):
+    mapping = {
+        wx.LOCALE_THOUSANDS_SEP: LOCALE_STHOUSAND,
+        wx.LOCALE_SHORT_DATE_FMT: LOCALE_SSHORTDATE,
+        wx.LOCALE_LONG_DATE_FMT: LOCALE_SLONGDATE,
+        wx.LOCALE_TIME_FMT: LOCALE_STIMEFORMAT
+    }
+
+    if index == wx.LOCALE_DECIMAL_POINT:
+        if cat == wx.LOCALE_CAT_MONEY:
+            lc_type = LOCALE_SMONDECIMALSEP
+        else:
+            lc_type = LOCALE_SDECIMAL
+    elif index in mapping:
+        lc_type = mapping[index]
+
+    else:
+        raise ValueError('locale format identifier not supported')
+
+    return lc_type
+
+
 def GetLocaleInfo(
     lpLocaleName,
     index,
     cat=wx.LOCALE_CAT_DEFAULT
 ):
-    if index == wx.LOCALE_THOUSANDS_SEP:
-        LCType = LOCALE_STHOUSAND
-    elif index == wx.LOCALE_DECIMAL_POINT:
-        if cat == wx.LOCALE_CAT_MONEY:
-            LCType = LOCALE_SMONDECIMALSEP
-        else:
-            LCType = LOCALE_SDECIMAL
-    elif index == wx.LOCALE_SHORT_DATE_FMT:
-        LCType = LOCALE_SSHORTDATE
-    elif index == wx.LOCALE_LONG_DATE_FMT:
-        LCType = LOCALE_SLONGDATE
-    elif index == wx.LOCALE_TIME_FMT:
-        LCType = LOCALE_STIMEFORMAT
-    elif index == wx.LOCALE_DATE_TIME_FMT:
+
+    if index == wx.LOCALE_DATE_TIME_FMT:
         date_fmt = GetLocaleInfo(lpLocaleName, wx.LOCALE_SHORT_DATE_FMT)
         if not date_fmt:
             return ''
@@ -86,108 +176,16 @@ def GetLocaleInfo(
             return ''
 
         return date_fmt + ' ' + time_fmt
-    else:
-        raise RuntimeError('unknown wxLocaleInfo')
 
-    value = GetLocaleInfoEx(lpLocaleName, LCType)
+    else:
+        lc_type = GetLCType(index, cat)
+
+    value = GetLocaleInfoEx(lpLocaleName, lc_type)
 
     if index == wx.LOCALE_TIME_FMT:
-        hour_formats = [
-            '',
-            '%-I',
-            '%I'
-        ]
-        hour_count = value.count('h')
-        if not hour_count:
-            hour_formats = [
-                '',
-                '%-H',
-                '%H'
-            ]
-            hour_count = value.count('H')
-
-        minute_count = value.count('m')
-        second_count = value.count('s')
-        suffix_count = value.count('t')
-
-        minute_formats = [
-            '',
-            '%-M',
-            '%M'
-        ]
-        second_formats = [
-            '',
-            '%-S',
-            '%S'
-        ]
-        suffix_formats = [
-            '',
-            '%p',
-            '%p'
-        ]
-
-        if hour_count > 0:
-            hour_format = hour_formats[hour_count]
-            value = value.replace('h' * hour_count, hour_format)
-            value = value.replace('H' * hour_count, hour_format)
-
-        if minute_count > 0:
-            minute_format = minute_formats[minute_count]
-            value = value.replace('m' * minute_count, minute_format)
-
-        if second_count > 0:
-            second_format = second_formats[second_count]
-            value = value.replace('s' * second_count, second_format)
-
-        if suffix_count > 0:
-            suffix_format = suffix_formats[suffix_count]
-            value = value.replace('t' * suffix_count, suffix_format)
-
+        value = FormatTime(value)
     elif index in (wx.LOCALE_SHORT_DATE_FMT, wx.LOCALE_LONG_DATE_FMT):
-        items = value.split(' ')
-        for i, item in enumerate(items):
-            month_count = item.count('M')
-            day_count = item.count('d')
-            year_count = item.count('y')
-
-            month_formats = [
-                '',
-                '%-m',
-                '%m',
-                '%b',
-                '%B'
-            ]
-            day_formats = [
-                '',
-                '%-d',
-                '%d',
-                '%a',
-                '%A'
-            ]
-            year_formats = [
-                '',
-                '%y',
-                '%y',
-                '',
-                '%Y',
-                '%Y'
-            ]
-
-            if month_count > 0:
-                month_format = month_formats[month_count]
-                item = item.replace('M' * month_count, month_format)
-
-            if day_count > 0:
-                day_format = day_formats[day_count]
-                item = item.replace('d' * day_count, day_format)
-
-            if year_count > 0:
-                year_format = year_formats[year_count]
-                item = item.replace('y' * year_count, year_format)
-
-            items[i] = item
-
-        value = ' '.join(items)
+        value = FormatDate(value)
 
     return value
 
@@ -304,29 +302,27 @@ def LCIDFROMLANGID(lang_id):
     return LCID(lang_id)
 
 
-def LANGIDFROMLCID(lcid):
-    return LANGID(lcid.value)
+def GetInfoDefaults(index):
+    if index == wx.LOCALE_THOUSANDS_SEP:
+        value = ''
+    elif index == wx.LOCALE_DECIMAL_POINT:
+        value = '.'
+    elif index == wx.LOCALE_SHORT_DATE_FMT:
+        value = '%m/%d/%y'
+    elif index == wx.LOCALE_LONG_DATE_FMT:
+        value = '%A, %B %d, %Y'
+    elif index == wx.LOCALE_TIME_FMT:
+        value = '%H:%M:%S'
+    elif index == wx.LOCALE_DATE_TIME_FMT:
+        value = '%m/%d/%y %H:%M:%S'
+    else:
+        raise ValueError('locale format identifier not supported')
+
+    return value
 
 
 def GetInfo(index, cat=wx.LOCALE_CAT_DEFAULT):
     locale = wx.GetLocale()
-
-    def get_defaults():
-        if index == wx.LOCALE_THOUSANDS_SEP:
-            return ''
-        if index == wx.LOCALE_DECIMAL_POINT:
-            return '.'
-        if index == wx.LOCALE_SHORT_DATE_FMT:
-            return '%m/%d/%y'
-        if index == wx.LOCALE_LONG_DATE_FMT:
-            return '%A, %B %d, %Y'
-        if index == wx.LOCALE_TIME_FMT:
-            return '%H:%M:%S'
-        if index == wx.LOCALE_DATE_TIME_FMT:
-            return '%m/%d/%y %H:%M:%S'
-
-        raise RuntimeError
-
     res = GetLocaleInfo(locale.CanonicalName.replace('_', '-'), index, cat)
 
     if not res and index in (
@@ -335,7 +331,7 @@ def GetInfo(index, cat=wx.LOCALE_CAT_DEFAULT):
         wx.LOCALE_TIME_FMT,
         wx.LOCALE_DATE_TIME_FMT
     ):
-        return get_defaults()
+        return GetInfoDefaults(index)
 
     return res
 
