@@ -19,8 +19,7 @@
 import locale as _locale
 import os
 from functools import update_wrapper
-from . import code_pages
-from . import win_api
+from .. import Locale
 
 
 _original_getdefaultlocale = _locale.getdefaultlocale
@@ -37,9 +36,6 @@ def getdefaultlocale(envvars=('LC_ALL', 'LC_CTYPE', 'LANG', 'LANGUAGE')):
 
         if code and code[:2] == "0x":
             code = _locale.windows_locale.get(int(code, 0))
-
-        if encoding.startswith('cp'):
-            encoding = code_pages.CODE_PAGES.get(int(encoding[2:]), encoding)
 
         res = (code, encoding)
 
@@ -68,8 +64,8 @@ def getlocale(category=_locale.LC_CTYPE):
 
     code_page = locale[1]
 
-    if code_page.isdigit() and int(code_page) in code_pages.CODE_PAGES:
-        code_page = code_pages.CODE_PAGES[int(code_page)]
+    if code_page.isdigit() and int(code_page) in Locale.CODE_PAGES:
+        code_page = Locale.CODE_PAGES[int(code_page)].replace('windows-', 'cp')
 
     return locale[0], code_page
 
@@ -93,25 +89,25 @@ def setlocale(category, locale=None):
         else:
             code_page = ''
 
-        iso_code = locale.replace('_', '-')
-        lang_name = win_api.GetLocaleInfoEx(
-            iso_code,
-            win_api.LOCALE_SENGLISHLANGUAGENAME
-        )
-        country_name = win_api.GetLocaleInfoEx(
-            iso_code,
-            win_api.LOCALE_SENGLISHCOUNTRYNAME
-        )
-
-        locale = lang_name + '_' + country_name + code_page
-
-        res = try_locale(category, locale)
+        if code_page:
+            locale = locale + code_page.replace('cp', '').replace('windows-', '')
+            res = try_locale(category, locale)
+            locale = locale.rsplit('.', 1)[0]
 
         if res is False:
-            code_page = code_page.replace('cp', '').replace('windows-', '')
+
+            iso_code = locale.replace('_', '-')
+            lang_name, country_name = Locale.GetEnglishNames(iso_code)
+
             locale = lang_name + '_' + country_name + code_page
 
             res = try_locale(category, locale)
+
+            if res is False:
+                code_page = code_page.replace('cp', '').replace('windows-', '')
+                locale = lang_name + '_' + country_name + code_page
+
+                res = try_locale(category, locale)
 
     if res is False:
         raise
