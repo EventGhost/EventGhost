@@ -117,7 +117,7 @@ if args.isMain:
         arg = arg.lower()
 
         if arg in ('-e', '-event'):
-            eventstring = argvIter.next()
+            eventstring = str(argvIter.next())
             payloads = list()
             for payload in argvIter:
                 if payload.startswith('-'):
@@ -127,7 +127,18 @@ if args.isMain:
 
             if len(payloads) == 0:
                 payloads = None
-            args.startupEvent = (str(eventstring), payloads)
+
+            if '.' not in eventstring:
+                prefix = 'Main'
+                suffix = eventstring
+            else:
+                prefix, suffix = eventstring.split('.', 1)
+            
+            args.startupEvent = (
+                suffix,
+                payloads,
+                prefix
+            )
 
         if arg.startswith('-debug'):
             args.debugLevel = 1
