@@ -2,7 +2,7 @@
 version = "3.13.3"
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2020 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -211,7 +211,7 @@ METHODS = (
 
 def replInstVal(strng):
     return strng.replace("eg.event","eg_event").replace("eg.result","eg_result")
-    
+
 
 def ClientChoice(evt, text, panel, id3, id4, cl_ip, cl_port, size2, rBMC):
     middleSizer = panel.sizer.GetItem(0).GetSizer()
@@ -538,11 +538,11 @@ class VariableDialog(wx.Frame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-   
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON, onCancel)
-        
+
         self.SetSize((500, -1))
         self.SetMinSize((500, -1))
         sizer.Layout()
@@ -676,11 +676,11 @@ class ClientsDialog(wx.Frame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-   
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON, onCancel)
-        
+
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
@@ -826,11 +826,11 @@ class ServersDialog(wx.Frame):
             self.GetParent().GetParent().Raise()
             self.Destroy()
         self.Bind(wx.EVT_CLOSE, onClose)
-   
+
         def onCancel(evt):
             self.Close()
         btn2.Bind(wx.EVT_BUTTON, onCancel)
-        
+
         self.SetMinSize(self.GetSize())
         sizer.Layout()
         self.Raise()
@@ -948,7 +948,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     repeatTimer = None
     environment = None
     plugin = None
-    
+
     def getClientAddress(self):
         ip = self.client_address
         return (ip[0].replace('::ffff:', ''), ip[1])
@@ -1110,8 +1110,8 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             elif opcode == _stream or opcode == _text or opcode == _binary:
                 self.on_ws_message(decoded)
 ###
-    
-    
+
+
     def write_message(self, message):
         try:
 ### Filandre
@@ -1848,7 +1848,7 @@ class WsBroadcastData(eg.ActionBase):
         onlyChange = "Data send only if it has been changed"
         cond = "Condition for data sending (python expression):"
         period = "Sending period [s]:"
- 
+
 
     def Task(self, _, cond, dataName, data2send):
         if self.plugin.info.isStarted:
@@ -1872,7 +1872,7 @@ class WsBroadcastData(eg.ActionBase):
                     )
                 )
         self.data = data
-        
+
 
     def __call__(
         self,
@@ -1950,7 +1950,7 @@ class WsBroadcastData(eg.ActionBase):
             perSizer.Add((-1,-1),1,wx.EXPAND)
             perSizer.Add(changeCtrl,0,wx.TOP,4)
             mainSizer.Add(perSizer,0,wx.EXPAND|wx.TOP,10)
-       
+
         while panel.Affirmed():
             change = changeCtrl.GetValue() if self.value else None
             period = periodCtrl.GetValue() if self.value else None
@@ -1977,7 +1977,7 @@ class WsBroadcastCommand(eg.ActionBase):
         kwArgs = "Keyw. arguments:"
         onlyChange = "Data send only if it has been changed"
         period = "Sending period [s]:"
-        
+
 
     def Task(self, _, cond, cmdName, arg1, arg2, arg3, othArgs, kwArgs):
         if self.plugin.info.isStarted:
@@ -2193,7 +2193,7 @@ class WsBroadcastUniversal(eg.ActionBase):
         kwArgs = "Keyw. arguments:"
         onlyChange = "Data send only if it has been changed"
         period = "Sending period [s]:"
-        
+
 
     def Task(self, _, cond, method, othArgs, kwArgs):
         if self.plugin.info.isStarted:
@@ -2354,7 +2354,7 @@ class WsBroadcastUniversal(eg.ActionBase):
             perSizer.Add(changeCtrl,0,wx.TOP,4)
             mainSizer.Add(perSizer,0,wx.EXPAND)
         panel.sizer.Add(mainSizer,0,wx.ALL|wx.EXPAND,8)
-       
+
         while panel.Affirmed():
             change = changeCtrl.GetValue() if self.value else None
             period = periodCtrl.GetValue() if self.value else None
@@ -3457,7 +3457,7 @@ class WsSendCommand(eg.ActionBase):
             perSizer.Add(changeCtrl,0,wx.TOP,4)
             mainSizer.Add(perSizer,0,wx.EXPAND)
         panel.sizer.Add(mainSizer,0,wx.ALL|wx.EXPAND,8)
-       
+
         while panel.Affirmed():
             modeClient = radioBoxModeClient.GetSelection()
             if not modeClient:
@@ -3728,7 +3728,7 @@ class WsSendUniversal(eg.ActionBase):
             perSizer.Add(changeCtrl,0,wx.TOP,4)
             mainSizer.Add(perSizer,0,wx.EXPAND)
         panel.sizer.Add(mainSizer,0,wx.ALL|wx.EXPAND,8)
-       
+
         while panel.Affirmed():
             modeClient = radioBoxModeClient.GetSelection()
             if not modeClient:
@@ -3933,7 +3933,7 @@ class GetValue(eg.ActionBase):
                 eg.PrintError(self.text.err2 % str(varname))
             else:
                 eg.PrintError(self.text.err % str(varname))
-       
+
     def Configure(self, varname = "", pars = False):
         panel = eg.ConfigPanel(self)
         varnameCtrl = panel.TextCtrl(varname)
@@ -3945,7 +3945,7 @@ class GetValue(eg.ActionBase):
         mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
         mainSizer.Add(parsCtrl, 0, wx.TOP, 4)
         panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
-       
+
         while panel.Affirmed():
             panel.SetResult(
                 varnameCtrl.GetValue(),
@@ -4000,7 +4000,7 @@ class SetValue(eg.ActionBase):
 
     def GetLabel(self, varname, value, pars1, pars2, mode):
         return "%s: %s: %s" % (self.name, varname, value)
-       
+
     def Configure(
         self,
         varname = "",
@@ -4454,7 +4454,7 @@ class Webserver(eg.PluginBase):
             self.text.started % (self.text.secur[sr], port)
         )
         eg.PrintNotice("Persistent values: " + repr(self.pubPerVars))
-        
+
 
     def __stop__(self):
         clnts = list(self.wsClients.iterkeys())
@@ -4472,8 +4472,8 @@ class Webserver(eg.PluginBase):
     def EndLastEnduringEvent(self):
         if self.lastEnduringEvent:
             self.lastEnduringEvent.SetShouldEnd()
-        
-        
+
+
     def GetValue(self, key, client = None):
         if key in self.pubVars:
             if client:
@@ -4538,7 +4538,7 @@ class Webserver(eg.PluginBase):
             if key not in self.pubVars or value != self.pubVars[key]:
                 self.pubVars[key] = unicode(value)
                 self.knowlClients[key] = []
-           
+
 
     def SetPersistentValue(self, key, value):
         if key not in self.pubVars:
@@ -4546,13 +4546,13 @@ class Webserver(eg.PluginBase):
                 self.pubPerVars[key] = unicode(value)
                 self.pubPerClients[key] = []
                 wx.CallAfter(self.SetDocIsDirty)
-           
+
 
     def SetClientsFlags(self, key):
         if key not in self.pubVars:
             self.pubVars[key] = "dummy"
         self.knowlClients[key] = []
-        
+
 
     def GetChangedValues(self, client):
         tmpDict = {}
@@ -4849,7 +4849,7 @@ class Webserver(eg.PluginBase):
                     pass
         else:
             eg.PrintNotice(self.text.keyErr % repr(client))
-       
+
 
     def StartClient(
         self,
@@ -5068,7 +5068,7 @@ class Webserver(eg.PluginBase):
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
-        
+
 #        def ConfigureTargets(event):
 #            dialog = ConfigureTargetsDialog(panel, [])
 #            dialog.ShowModal()
@@ -5284,7 +5284,7 @@ class StartClient(eg.ActionBase):
         panel.sizer.Add(urlSizer, 0, wx.EXPAND|wx.TOP,8)
         panel.sizer.Add(topSizer, 0, wx.EXPAND|wx.TOP,8)
         panel.sizer.Add(noCertCtrl, 0, wx.TOP,8)
-        
+
         def onTitleCtrl(evt):
             title = evt.GetString()
             actions = self.plugin.GetActions(StartClient.actionId, self)
@@ -5578,7 +5578,7 @@ class ClSendData(eg.ActionBase):
         dataName = replInstVal(dataName)
         data2send = replInstVal(data2send)
         cond = replInstVal(cond)
- 
+
         dataName = self.plugin.EvalString(dataName, self)
         data = self.plugin.EvalString(data2send, self)
         cond = self.plugin.EvalString(cond, self) if cond != "" else True
@@ -5661,7 +5661,7 @@ class ClSendCommand(eg.ActionBase):
         kwArgs = "Keyw. arguments:"
         onlyChange = "Data send only if it has been changed"
         period = "Sending period [s]:"
-        
+
 
     def __call__(
         self,
@@ -5799,7 +5799,7 @@ class ClSendCommand(eg.ActionBase):
         )
         messSizer.Add(mainSizer,0,wx.EXPAND)
         panel.sizer.Add(messSizer,0,wx.TOP|wx.BOTTOM|wx.EXPAND,5)
-       
+
         while panel.Affirmed():
             panel.SetResult(
                 titleCtrl.GetValue(),
@@ -5824,7 +5824,7 @@ class ClSendUniversal(eg.ActionBase):
         kwArgs = "Keyw. arguments:"
         onlyChange = "Data send only if it has been changed"
         period = "Sending period [s]:"
-        
+
 
     def __call__(
         self,
@@ -5932,7 +5932,7 @@ class ClSendUniversal(eg.ActionBase):
         )
         messSizer.Add(mainSizer, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
         panel.sizer.Add(messSizer, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
-       
+
         while panel.Affirmed():
             panel.SetResult(
                 titleCtrl.GetValue(),
@@ -5987,7 +5987,7 @@ class JumpIf(eg.ActionBase):
         var = "",
         val = ""
     ):
-    
+
         conds = [
             '%s.find("%s") > -1',
             'not %s.find("%s") > -1',
@@ -5996,7 +5996,7 @@ class JumpIf(eg.ActionBase):
             '%s.startswith("%s")',
             '%s.endswith("%s")'
         ]
-        
+
         if var in self.plugin.pubVars:
             vr = 'self.plugin.pubVars["%s"]' % var
         elif var in self.plugin.pubPerVars:
@@ -6113,7 +6113,7 @@ class JumpIf(eg.ActionBase):
 
         panel.sizer.Add(topSizer, 0, wx.TOP|wx.EXPAND, 10)
         panel.sizer.Add(sizer,0,wx.TOP|wx.EXPAND, 25)
-        
+
         panel.dialog.buttonRow.testButton.Show(False)
 
         while panel.Affirmed():
@@ -6399,7 +6399,7 @@ This action allows you to specify a universal data packet.
             'WsPeriodicallyBroadcastMessage',
             'Periodically broadcast message',
             '''Periodically broadcasts message to all WebSocket clients.
-            
+
 Same as Broadcast message action, but the broadcasting is automatically
  repeated periodically after a predetermined time.''',
             True
@@ -6408,7 +6408,7 @@ Same as Broadcast message action, but the broadcasting is automatically
             'WsPeriodicallyBroadcastValue',
             'Periodically broadcast values',
             '''Periodically broadcasts values to all WebSocket clients.
-            
+
 Same as Broadcast values action, but the broadcasting is automatically
  repeated periodically after a predetermined time.''',
             True
@@ -6417,7 +6417,7 @@ Same as Broadcast values action, but the broadcasting is automatically
             'WsPeriodicallyBroadcastAllValues',
             'Periodically broadcast all values',
             '''Periodically broadcasts all values to all WebSocket clients.
-            
+
 Same as Broadcast all values action, but the broadcasting is automatically
  repeated periodically after a predetermined time.''',
             True
@@ -6426,7 +6426,7 @@ Same as Broadcast all values action, but the broadcasting is automatically
             'WsPeriodicallyBroadcastData',
             'Periodically broadcast data',
             '''Periodically broadcasts data to all WebSocket clients.
-            
+
 Same as "Broadcast data" action, but the broadcasting is automatically repeated
  periodically after a predetermined time.''',
             True
@@ -6453,7 +6453,7 @@ Same as "Broadcast universal packet" action, but the broadcasting is
             'WsPeriodicallySendMessage',
             'Periodically send message',
             '''Periodically sends message to one WebSocket client.
-            
+
 Same as Send message action, but the sending is automatically repeated
  periodically after a predetermined time.''',
             True
@@ -6462,7 +6462,7 @@ Same as Send message action, but the sending is automatically repeated
             'WsPeriodicallySendValue',
             'Periodically send values',
             '''Periodically sends values to one WebSocket client.
-            
+
 Same as Send values action, but the sending is automatically repeated
  periodically after a predetermined time.''',
             True
@@ -6482,7 +6482,7 @@ Same as Send all values action, but the sending is automatically repeated
             'WsPeriodicallySendData',
             'Periodically send data',
             '''Periodically sends data to one WebSocket client.
-            
+
 Same as Send data action, but the sending is automatically repeated
  periodically after a predetermined time.''',
             True
