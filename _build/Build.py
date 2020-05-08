@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2020 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@ class MyBuilder(builder.Builder):
     name = "EventGhost"
     description = "EventGhost Automation Tool"
     companyName = "EventGhost Project"
-    copyright = u"Copyright © 2005-2019 EventGhost Project"
+    copyright = u"Copyright © 2005-2020 EventGhost Project"
     mainScript = "EventGhost.pyw"
 
     includeModules = [

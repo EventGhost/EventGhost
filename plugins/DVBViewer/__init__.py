@@ -6,7 +6,7 @@ SUPPORTED_DVBVIEWER_VERSIONS         = '4.9.x (older versions might work but are
 SUPPORTED_RECORDING_SERVICE_VERSIONS = '1.10.x (older versions might work but are untested)'
 
 # This file is a plugin for EventGhost.
-# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2020 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free

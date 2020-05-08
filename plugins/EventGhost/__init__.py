@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright © 2005-2019 EventGhost Project <http://www.eventghost.net/>
+# Copyright © 2005-2020 EventGhost Project <http://www.eventghost.net/>
 #
 # EventGhost is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -595,7 +595,7 @@ class StopProcessing(eg.ActionBase):
         eg.event.skipEvent = True
 
 
-DESCRIPTION = """<md>Triggers an event with options.  
+DESCRIPTION = """<md>Triggers an event with options.
 
 * ***Event String***
   ______
@@ -603,22 +603,22 @@ DESCRIPTION = """<md>Triggers an event with options.
 together. As an example if you wanted to group events together by a
 device type this can be done by using the following example.
 
-        Remote.StopButton  
+        Remote.StopButton
 
   So you would be able to group all of the various buttons to a remote.
 Plugins use this same grouping mechanism for generating events. You also
 have the ability to go one step further and group a group.
 
-        Remote.Volume.Up  
-        Remote.Volume.Down  
+        Remote.Volume.Up
+        Remote.Volume.Down
         Remote.Volume.Mute
 
   The purpose for this is when you add an event to an action you can
 target specific groups by using the * so if you wanted to target all of
 the events that take place for Remote.Volume you would add an event to
-the macro like this.  
+the macro like this.
 
-        Remote.Volume.*  
+        Remote.Volume.*
 
   This will run that macro for any event that begins with Remote.Volume.
 
@@ -628,11 +628,11 @@ added automatically. So if you specify an event of VolumeUp the actual
 event that will be triggered will be.
 
         Main.VolumeUp
-        
-There is also a check box to enable or disable the Main prefix. 
+
+There is also a check box to enable or disable the Main prefix.
 You will only be able to disable the Main if there is more then single group
 
-  You also have the ability to set the event string using a python 
+  You also have the ability to set the event string using a python
 expression (see below).
 <br><br>
 * ***Wait Time***
@@ -657,7 +657,7 @@ event. This data packet can be any kind of a python object.
   * and strings ""
 
   When there is an attached payload you will see the payload in the log.
-  
+
   You also have the ability just like the Event String to attach a
 python expression (see below).
 <br><br>
@@ -669,8 +669,8 @@ event that caused this action has processed all of it's macros and also
 after processing any events that have come in while the event that
 triggered this action was running.
 
-  If unchecked the event will get triggered right away Not being added 
-to the queue and not waiting until the event that started this action 
+  If unchecked the event will get triggered right away Not being added
+to the queue and not waiting until the event that started this action
 has finished processing.
 <br><br>
 * ***Restore eg.event***
@@ -686,7 +686,7 @@ ran this action then check this box.
 <br><br>
 * ***Using a Python Expression***
   ______
-  You can use a python expression in several ways. The expression 
+  You can use a python expression in several ways. The expression
 **MUST** be wrapped in curly braces {}. This is the identifier that
 tells EventGhost that it needs to do some work.
 
@@ -699,9 +699,9 @@ wrapping the variable name in the curly braces.
 as well.
 
         {eg.plugins.SomePlugin.SomeAction()}
-  
+
   ***Or maybe you want to do something a little more complex.***
-  
+
   A different value passed based on if a global is True or False.
 
         {"TV.On" if eg.globals.tv_power else "TV.Off"}
@@ -717,7 +717,7 @@ accounted for this so don't worry.
   These expressions get run when the TriggerAction gets run. So if you
 have a programmed wait time (see below) the data may be different at the
 start of the wait time then at the end.
-  
+
 """
 class TriggerEvent(eg.ActionBase):
     __doc__ = DESCRIPTION
