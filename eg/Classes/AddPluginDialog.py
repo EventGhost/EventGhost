@@ -136,10 +136,14 @@ class AddPluginDialog(eg.TaskletDialog):
         for info in eg.pluginManager.GetPluginInfoList():
             if info.kind in ("hidden", "core"):
                 continue
+
             if info.icon and info.icon != eg.Icons.PLUGIN_ICON:
-                idx = imageList.Add(
-                    eg.Icons.PluginSubIcon(info.icon).GetBitmap()
-                )
+                try:
+                    idx = imageList.Add(
+                        eg.Icons.PluginSubIcon(info.icon).GetBitmap()
+                    )
+                except TypeError:
+                    idx = 0
             else:
                 idx = 0
 

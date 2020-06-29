@@ -1,0 +1,4 @@
+# -*- coding: utf-8 -*-
+
+ERROR_NO_MORE_ITEMS = 0x00000103
+ERROR_IO_PENDING = 0x000003E5
