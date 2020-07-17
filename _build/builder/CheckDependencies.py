@@ -216,12 +216,6 @@ DEPENDENCIES = [
         version = "1.1.2",
     ),
     ModuleDependency(
-        name = "ctypeslib",
-        module = "ctypeslib",
-        version = "0.5.6",
-        url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
-    ),
-    ModuleDependency(
         name = "future",
         module = "future",
         version = "0.15.2",
