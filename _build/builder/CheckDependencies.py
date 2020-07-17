@@ -18,17 +18,17 @@
 
 import glob
 import os
-import pip
 import platform
 import re
 import sys
 import warnings
 from os.path import basename, exists, expandvars, join
-from pip._vendor import requests
 from shutil import copy2
 from string import digits
 
-# Local imports
+import pip._internal
+import requests
+
 from builder import VirtualEnv
 from builder.DllVersionInfo import GetFileVersion
 from builder.InnoSetup import GetInnoCompilerPath
@@ -36,6 +36,7 @@ from builder.Utils import (
     GetEnvironmentVar, GetHtmlHelpCompilerPath, IsAdmin, StartProcess,
     WrapText,
 )
+
 
 # Exceptions
 class MissingChocolatey(Exception):
@@ -160,7 +161,7 @@ class ModuleDependency(DependencyBase):
         else:
             result = [
                 p.version
-                for p in pip.get_installed_distributions()
+                for p in pip._internal.get_installed_distributions()
                 if str(p).startswith(self.name + " ")
             ]
             if result:

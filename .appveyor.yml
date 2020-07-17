@@ -59,7 +59,7 @@ install:
           " "
           "--- " + $msg
           "    Installing..."
-          pip install -q $mod
+          pip install --disable-pip-version-check -q $mod
           "    Done."
         }
         " "
@@ -80,15 +80,17 @@ install:
         Start-Process $WXInstaller -Arg "/VERYSILENT /SUPPRESSMSGBOXES" -NoNewWindow -Wait
         "    Done."
         " "
-        "--- pip 9.0.1"
+        "--- pip 10.0.1"
         "    Updating..."
-        python -m pip install --no-cache-dir -q -U "pip==9.0.1"
+        python -m pip install --disable-pip-version-check --no-cache-dir -q -U "pip==10.0.1"
         "    Done."
         " "
         "--- setuptools 34.3.0"
         "    Updating..."
-        pip install -q -U "setuptools==34.3.0"
+        pip install --disable-pip-version-check -q -U "setuptools==34.3.0"
         "    Done."
+        PipInstall "pycurl 7.43.0.2" "pycurl==7.43.0.2"
+        PipInstall "request 2.21.0" "requests==2.21.0"
         PipInstall "wheel 0.29.0" "wheel==0.29.0"
         PipInstall "sphinx 1.7.5" "sphinx==1.7.5"
         PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
