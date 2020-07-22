@@ -134,6 +134,7 @@ class Default:
 
             ViewMenu = "&View"
             HideShowToolbar = "&Toolbar"
+            IRDecoderConfig = "IR Decoder Config"
             ExpandCollapseMenu = "Expand/Collapse"
             Expand = "Expand"
             Collapse = "Collapse"

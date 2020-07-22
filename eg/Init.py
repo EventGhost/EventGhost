@@ -155,6 +155,12 @@ def InitPathsAndBuiltins():
         except:
             pass
 
+    if not exists(join(eg.configDir, 'ir_decoders')):
+        try:
+            makedirs(join(eg.configDir, 'ir_decoders'))
+        except:
+            pass
+
     if not exists(eg.localPluginDir):
         try:
             makedirs(eg.localPluginDir)

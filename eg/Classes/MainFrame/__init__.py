@@ -107,7 +107,7 @@ class MainFrame(wx.Frame):
         document.frame = self
         auiManager = wx.aui.AuiManager(self, wx.aui.AUI_MGR_DEFAULT)
         self.auiManager = auiManager
-
+        self.decoder_pane = None
         self.logCtrl = self.CreateLogCtrl()
         self.corConst = self.logCtrl.GetWindowBorderSize()[0] + \
             wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
@@ -316,6 +316,13 @@ class MainFrame(wx.Frame):
         menu = wx.Menu()
         menuBar.Append(menu, text.ViewMenu)
         Append("HideShowToolbar", kind=wx.ITEM_CHECK).Check(Config.showToolbar)
+
+        remote_bmp = GetInternalBitmap("remote")
+        remote_img = remote_bmp.ConvertToImage()
+        remote_img = remote_img.Rescale(16, 16, wx.IMAGE_QUALITY_HIGH)
+        remote_bmp = remote_img.ConvertToBitmap()
+
+        Append("IRDecoderConfig", image=remote_bmp)
         menu.AppendSeparator()
         Append("Expand", image=GetInternalBitmap("expand"))
         Append("Collapse", image=GetInternalBitmap("collapse"))
@@ -417,6 +424,14 @@ class MainFrame(wx.Frame):
         Append("CollapseChilds", GetInternalBitmap("collapse_children"))
         Append("ExpandAll", GetInternalBitmap("expand_all"))
         Append("CollapseAll", GetInternalBitmap("collapse_all"))
+        toolBar.AddSeparator()
+
+        remote_bmp = GetInternalBitmap("remote")
+        remote_img = remote_bmp.ConvertToImage()
+        remote_img = remote_img.Rescale(16, 16, wx.IMAGE_QUALITY_HIGH)
+        remote_bmp = remote_img.ConvertToBitmap()
+
+        Append("IRDecoderConfig", remote_bmp)
 
         toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
@@ -693,18 +708,23 @@ class MainFrame(wx.Frame):
             Config.showToolbar = False
             self.menuBar.Check(ID["HideShowToolbar"], False)
 
-    def OnPaneMaximize(self, dummyEvent):
+        event.Skip()
+
+    def OnPaneMaximize(self, event):
         """
         React to a wx.aui.EVT_AUI_PANE_MAXIMIZE event.
         """
         Config.perspective2 = self.auiManager.SavePerspective()
+        event.Skip()
 
-    def OnPaneRestore(self, dummyEvent):
+    def OnPaneRestore(self, event):
         """
         React to a wx.aui.EVT_AUI_PANE_RESTORE event.
         """
         if Config.perspective2 is not None:
             self.auiManager.LoadPerspective(Config.perspective2)
+
+        event.Skip()
 
     def OnRemoveDialog(self, dialog):
         try:
@@ -928,6 +948,21 @@ class MainFrame(wx.Frame):
         #self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
         #self.auiManager.Update()
         self.toolBar.Show(Config.showToolbar)
+        self.Layout()
+        self.SendSizeEvent()
+
+    def OnCmdIRDecoderConfig(self):
+        if self.decoder_pane is None:
+            self.decoder_pane = eg.IrDecoderPane()
+
+        else:
+            for pane in self.auiManager.GetAllPanes():
+                if pane.name.startswith('ir_code_'):
+                    pane.Maximize()
+                    found_pane = True
+
+            self.auiManager.Update()
+
         self.Layout()
         self.SendSizeEvent()
 
