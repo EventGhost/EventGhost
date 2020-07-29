@@ -377,6 +377,9 @@ class MCEIrReceiver(eg.PluginBase):
             t.start()
 
     def Configure(self, device_name='', use_server=True):
+        if self.device is not None:
+            self.__stop__()
+
         panel = eg.ConfigPanel()
 
         devices = ir_class_ioctl.get_ir_devices()
@@ -437,6 +440,11 @@ class MCEIrReceiver(eg.PluginBase):
         self.ir_decoder.DecodeStream(rlc, frequency=frequency)
 
     def __stop__(self):
-        self.device.unbind(self._callback)
-        self.device.stop_receive()
-        self.ir_decoder.Close()
+        if self.device is not None:
+            self.device.unbind(self._callback)
+            self.device.stop_receive()
+            self.device = None
+
+        if self.ir_decoder is not None:
+            self.ir_decoder.Close()
+            self.ir_decoder = None

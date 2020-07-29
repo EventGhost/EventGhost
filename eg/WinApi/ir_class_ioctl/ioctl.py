@@ -483,36 +483,40 @@ def _get_ir_capabilities(hDevice):
 
 
 _found_devices = []
-
+_get_ir_device_lock = threading.Lock()
 
 def get_ir_devices():
-    for device_path in _get_ir_receiver_paths():
-        hDevice = _open_ir_receiver(device_path)
+    with _get_ir_device_lock:
+        if _found_devices:
+            return _found_devices
 
-        if hDevice == INVALID_HANDLE_VALUE:
-            continue
+        for device_path in _get_ir_receiver_paths():
+            hDevice = _open_ir_receiver(device_path)
 
-        hDevice = HANDLE(hDevice)
-
-        try:
-            caps = _get_ir_capabilities(hDevice)
-
-            if caps is None:
-                CloseHandle(hDevice)
+            if hDevice == INVALID_HANDLE_VALUE:
                 continue
 
-            desc, hw_id, mfg, name, model = _get_device_data(_get_device_hw_ids()[0])
-            device = IRDevice(device_path, desc, hw_id, mfg, name, model, caps)
-            if device not in _found_devices:
-                _found_devices.append(device)
-        except WindowsError as err:
-            if err.errno == 121:
-                continue
+            hDevice = HANDLE(hDevice)
 
-            else:
-                raise err
+            try:
+                caps = _get_ir_capabilities(hDevice)
 
-    return _found_devices
+                if caps is None:
+                    CloseHandle(hDevice)
+                    continue
+
+                desc, hw_id, mfg, name, model = _get_device_data(_get_device_hw_ids()[0])
+                device = IRDevice(device_path, desc, hw_id, mfg, name, model, caps)
+                if device not in _found_devices:
+                    _found_devices.append(device)
+            except WindowsError as err:
+                if err.errno == 121:
+                    continue
+
+                else:
+                    raise err
+
+        return _found_devices
 
 
 def _io_control(ioControlCode, hDevice, inBuffer, outBuffer, outBufferSize=None):
@@ -663,6 +667,8 @@ class Handle(object):
 SetEvent = kernel32.SetEvent
 SetEvent.restype = BOOL
 
+LONG_MIN = -2147483648
+
 
 @six.add_metaclass(IRDeviceInstanceSingleton)
 class IRDevice(object):
@@ -693,7 +699,7 @@ class IRDevice(object):
             self._wake_protocols = None
             self.tuner_id = None
 
-        self._packet_timeout = 10
+        self._packet_timeout = 20
 
         self._end_event = threading.Event()
         self._process_event = threading.Event()
@@ -840,17 +846,19 @@ class IRDevice(object):
                     if self.use_alternate_receive:
                         dwIoControlCode = IOCTL_IR_PRIORITY_RECEIVE
                         outBuffer = IR_PRIORITY_RECEIVE_PARAMS()
+
+                        outBuffer.DataEnd = ctypes.c_ulonglong(0)
+                        outBuffer.CarrierFrequency = ULONG(0)
                         outBuffer.ByteCount = 36
+                        outBuffer.Data = (LONG * 36)(*([LONG_MIN] * 36))
                         outBufferSize = ctypes.sizeof(IR_PRIORITY_RECEIVE_PARAMS)
-                        offset = ctypes.sizeof(ULONG)
                     else:
                         dwIoControlCode = IOCTL_IR_RECEIVE
                         outBuffer = IR_RECEIVE_PARAMS()
+                        outBuffer.DataEnd = ctypes.c_ulonglong(0)
                         outBuffer.ByteCount = 36
+                        outBuffer.Data = (LONG * 36)(*([LONG_MIN] * 36))
                         outBufferSize = ctypes.sizeof(IR_RECEIVE_PARAMS)
-                        offset = 0
-
-                    offset += ctypes.sizeof(IR_ULONG_PTR) * 2
 
                     lpNumberOfBytesTransferred = DWORD()
                     lpOverlapped = OVERLAPPED()
@@ -952,32 +960,25 @@ class IRDevice(object):
 
                     CloseHandle(lpOverlapped.hEvent)
 
-                    byte_count = lpNumberOfBytesTransferred.value
-
-                    byte_count -= offset
-                    byte_count //= ctypes.sizeof(LONG)
-
-                    if not byte_count:
-                        continue
+                    for i in range(outBuffer.ByteCount):
+                        data = outBuffer.Data[i]
+                        if data not in (LONG_MIN, 0):
+                            buf += [data]
 
                     if dwIoControlCode == IOCTL_IR_PRIORITY_RECEIVE:
                         freq = outBuffer.CarrierFrequency
+                        if outBuffer.DataEnd:
+                            for callback in self._callbacks[:]:
+                                callback(self, freq, buf[:])
+
+                            del buf[:]
                     else:
-                        freq = 0
-
-                    for i in range(byte_count):
-                        buf += [outBuffer.Data[i]]
-
-                    if outBuffer.DataEnd:
-                        while 0 in buf:
-                            buf.remove(0)
-
                         for callback in self._callbacks[:]:
-                            callback(self, freq, buf[:])
+                            callback(self, 0, buf[:])
 
-                        # self._process_queue.append((freq, buf[:]))
-                        # self._process_event.set()
                         del buf[:]
+                    # self._process_queue.append((freq, buf[:]))
+                    # self._process_event.set()
 
             if self.use_alternate_receive:
                 _io_control(IOCTL_IR_EXIT_PRIORITY_RECEIVE, hDevice, NULL, NULL)
