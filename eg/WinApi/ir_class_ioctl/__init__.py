@@ -30,6 +30,7 @@ project https://github.com/kdschlosser/pyWinMCERemote
 import ioctl
 import version
 
+reset_device_list = ioctl.reset_device_list
 get_ir_devices = ioctl.get_ir_devices
 load_device_data = ioctl.load_device_data
 

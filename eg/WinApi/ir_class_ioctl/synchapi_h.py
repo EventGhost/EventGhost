@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import ctypes
-from ctypes.wintypes import HANDLE, DWORD
+from ctypes.wintypes import HANDLE, DWORD, BOOL
 
 kernel32 = ctypes.windll.Kernel32
 
@@ -30,3 +30,9 @@ CreateEvent = CreateEventW
 # );
 WaitForMultipleObjects = kernel32.WaitForMultipleObjects
 WaitForMultipleObjects.restype = DWORD
+
+# BOOL ResetEvent(
+#   HANDLE hEvent
+# );
+ResetEvent = kernel32.ResetEvent
+ResetEvent.restype = BOOL

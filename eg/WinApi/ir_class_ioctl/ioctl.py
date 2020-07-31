@@ -109,6 +109,10 @@ def load_device_data():
 
                 current_vendor[pid] = product_name
 
+    import json
+    with open(r'C:\Users\Administrator\Desktop\New folder (99)\data.json', 'w') as f:
+        f.write(json.dumps(DEVICE_MAPPING, indent=4))
+
 
 BASE_PATH = os.path.dirname(__file__)
 
@@ -124,6 +128,35 @@ UCHAR = ctypes.c_ubyte
 PUCHAR = POINTER(UCHAR)
 UBYTE = ctypes.c_ubyte
 BYTE = ctypes.c_byte
+
+
+def _first_high_bit(mask):
+    for i in range(32):
+        if mask & (1 << i) != 0:
+            return i
+
+    return -1
+
+
+def _first_low_bit(mask):
+    for i in range(32):
+        if mask & (1 << i) == 0:
+            return i
+
+    return -1
+
+
+def _get_high_bit(mask, bit_count):
+    count = 0
+    for i in range(32):
+        bit_mask = 1 << i
+        if mask & bit_mask:
+            if count + 1 == bit_count:
+                return bit_mask
+            else:
+                count += 1
+
+    return 0
 
 
 def _get_reg_value(path, key):
@@ -485,6 +518,12 @@ def _get_ir_capabilities(hDevice):
 _found_devices = []
 _get_ir_device_lock = threading.Lock()
 
+
+def reset_device_list():
+    with _get_ir_device_lock:
+        del _found_devices[:]
+
+
 def get_ir_devices():
     with _get_ir_device_lock:
         if _found_devices:
@@ -699,7 +738,7 @@ class IRDevice(object):
             self._wake_protocols = None
             self.tuner_id = None
 
-        self._packet_timeout = 20
+        self._packet_timeout = 14
 
         self._end_event = threading.Event()
         self._process_event = threading.Event()
@@ -813,6 +852,26 @@ class IRDevice(object):
             self._process_event.clear()
 
     def __receive_loop(self):
+        # self._process_thread = threading.Thread(target=self.__process_loop)
+        # self._process_thread.daemon = True
+        # self._process_thread.start()
+        buf = []
+
+        lpNumberOfBytesTransferred = DWORD()
+        lpOverlapped = OVERLAPPED()
+
+        lpEventAttributes = NULL
+        bManualReset = BOOL(False)
+        bInitialState = BOOL(False)
+        lpName = NULL
+
+        lpOverlapped.hEvent = CreateEvent(
+            lpEventAttributes,
+            bManualReset,
+            bInitialState,
+            lpName
+        )
+
         with self.handle as hDevice:
             if self.use_alternate_receive:
                 port = self.__get_first_rx_port()
@@ -836,44 +895,29 @@ class IRDevice(object):
                         NULL
                     )
 
-            # self._process_thread = threading.Thread(target=self.__process_loop)
-            # self._process_thread.daemon = True
-            # self._process_thread.start()
-            buf = []
+                dwIoControlCode = IOCTL_IR_PRIORITY_RECEIVE
+                outBuffer = IR_PRIORITY_RECEIVE_PARAMS()
+
+                outBuffer.DataEnd = ctypes.c_ulonglong(0)
+                outBuffer.CarrierFrequency = ULONG(0)
+                outBuffer.ByteCount = 392
+                outBuffer.Data = (LONG * 100)(*([LONG_MIN] * 100))
+                outBufferSize = ctypes.sizeof(IR_PRIORITY_RECEIVE_PARAMS)
+
+            else:
+                dwIoControlCode = IOCTL_IR_RECEIVE
+                outBuffer = IR_RECEIVE_PARAMS()
+                outBuffer.DataEnd = ctypes.c_ulonglong(0)
+                outBuffer.ByteCount = 396
+                outBuffer.Data = (LONG * 100)(*([LONG_MIN] * 100))
+                outBufferSize = ctypes.sizeof(IR_RECEIVE_PARAMS)
 
             while not self._end_event.is_set():
                 with self._learn_lock:
-                    if self.use_alternate_receive:
-                        dwIoControlCode = IOCTL_IR_PRIORITY_RECEIVE
-                        outBuffer = IR_PRIORITY_RECEIVE_PARAMS()
-
-                        outBuffer.DataEnd = ctypes.c_ulonglong(0)
+                    outBuffer.Data = (LONG * 100)(*([LONG_MIN] * 100))
+                    outBuffer.DataEnd = ctypes.c_ulonglong(0)
+                    if dwIoControlCode == IOCTL_IR_PRIORITY_RECEIVE:
                         outBuffer.CarrierFrequency = ULONG(0)
-                        outBuffer.ByteCount = 36
-                        outBuffer.Data = (LONG * 36)(*([LONG_MIN] * 36))
-                        outBufferSize = ctypes.sizeof(IR_PRIORITY_RECEIVE_PARAMS)
-                    else:
-                        dwIoControlCode = IOCTL_IR_RECEIVE
-                        outBuffer = IR_RECEIVE_PARAMS()
-                        outBuffer.DataEnd = ctypes.c_ulonglong(0)
-                        outBuffer.ByteCount = 36
-                        outBuffer.Data = (LONG * 36)(*([LONG_MIN] * 36))
-                        outBufferSize = ctypes.sizeof(IR_RECEIVE_PARAMS)
-
-                    lpNumberOfBytesTransferred = DWORD()
-                    lpOverlapped = OVERLAPPED()
-
-                    lpEventAttributes = NULL
-                    bManualReset = BOOL(False)
-                    bInitialState = BOOL(False)
-                    lpName = NULL
-
-                    lpOverlapped.hEvent = CreateEvent(
-                        lpEventAttributes,
-                        bManualReset,
-                        bInitialState,
-                        lpName
-                    )
 
                     if not DeviceIoControl(
                         hDevice,
@@ -937,8 +981,10 @@ class IRDevice(object):
                                     self.hEvent = None
 
                                 CancelIo(hDevice)
-                                CloseHandle(lpOverlapped.hEvent)
-                                raise ctypes.WinError(err)
+                                ResetEvent(HANDLE(lpOverlapped.hEvent))
+                                continue
+
+                                # raise ctypes.WinError(err)
 
                         else:
                             if self.hEvent is not None:
@@ -946,32 +992,26 @@ class IRDevice(object):
                                 self.hEvent = None
 
                             CancelIo(hDevice)
-                            CloseHandle(lpOverlapped.hEvent)
-
-                            if self.hEvent is not None:
-                                CloseHandle(self.hEvent)
-                                self.hEvent = None
-
                             break
 
                     if self.hEvent is not None:
                         CloseHandle(self.hEvent)
                         self.hEvent = None
 
-                    CloseHandle(lpOverlapped.hEvent)
+                    ResetEvent(HANDLE(lpOverlapped.hEvent))
 
-                    for i in range(outBuffer.ByteCount):
+                    for i in range(100):
                         data = outBuffer.Data[i]
                         if data not in (LONG_MIN, 0):
                             buf += [data]
 
                     if dwIoControlCode == IOCTL_IR_PRIORITY_RECEIVE:
                         freq = outBuffer.CarrierFrequency
-                        if outBuffer.DataEnd:
-                            for callback in self._callbacks[:]:
-                                callback(self, freq, buf[:])
+                        for callback in self._callbacks[:]:
+                            callback(self, freq, buf[:])
 
-                            del buf[:]
+                        del buf[:]
+
                     else:
                         for callback in self._callbacks[:]:
                             callback(self, 0, buf[:])
@@ -982,6 +1022,8 @@ class IRDevice(object):
 
             if self.use_alternate_receive:
                 _io_control(IOCTL_IR_EXIT_PRIORITY_RECEIVE, hDevice, NULL, NULL)
+
+        CloseHandle(lpOverlapped.hEvent)
 
         # del self._process_queue[:]
         # self._process_event.set()
@@ -1365,94 +1407,3 @@ class IRDevice(object):
 
     def __del__(self):
         self.stop_receive()
-
-#
-# @six.add_metaclass(IRCodeMetaClass)
-# class IRCode(str):
-#
-#     def __init__(self, code, *args, **kargs):
-#         self._pronto_code = code
-#         self.repeat_count = 0
-#
-#         try:
-#             str.__init__(self, code)
-#         except TypeError:
-#             str.__init__(self)
-#
-#     @property
-#     def pronto(self):
-#         return self._pronto_code
-#
-#     @property
-#     def pronto_raw(self):
-#         _, code = pronto.pronto_to_mce(self._pronto_code, self.repeat_count)
-#         return code
-#
-#     @property
-#     def raw(self):
-#         output = []
-#         for item in self.pronto_raw:
-#             item = abs(item)
-#             remaining = item % 50
-#             if remaining >= 25:
-#                 remaining = 50 - remaining
-#             else:
-#                 remaining = -remaining
-#
-#             item += remaining
-#
-#             output += [item]
-#
-#         return output
-#
-#     @property
-#     def frequency(self):
-#         m_freq, _ = pronto.pronto_to_mce(self._pronto_code, self.repeat_count)
-#         return m_freq
-#
-#     def decode(self, *_, **__):
-#         decoder = IrDecoder(1.0)
-#         raw = self.raw
-#
-#         try:
-#             return decoder.Decode(raw, len(raw))
-#         except:
-#             import traceback
-#             traceback.print_exc()
-#             return ''
-#
-#     @property
-#     def mce(self):
-#         freq, transmit_values = pronto.pronto_to_mce(self._pronto_code, self.repeat_count)
-#         transmit_code = pronto.round_and_pack_timings(transmit_values)
-#
-#         header = pack(7 * PACK_FORMAT, 2, int(1000000. / freq), 0, 0, 0, 1, len(transmit_code))
-#         return header + transmit_code
-
-#
-# if __name__ == '__main__':
-#     for dvc in get_ir_devices():
-#         print dvc.reset()
-#         print 'device path:', dvc.device_path
-#         print 'protocol version:', dvc.version
-#         print 'can flash led:', dvc.can_flash_led
-#         print '# of TX ports:', dvc.num_tx_ports
-#         print '# of connected TX ports:', dvc.num_connected_tx_ports
-#         print 'connected TX port id\'s:', ', '.join(hex(port) for port in dvc.tx_ports)
-#         print
-#         print '# of RX ports:', dvc.num_rx_ports
-#         print 'RX port id\'s:', ', '.join(hex(port) for port in dvc.rx_ports)
-#         print 'test tx ports:', dvc.test_tx_ports()
-#
-#
-#         def cb(data):
-#             print repr(data)
-#
-#
-#         dvc.bind(cb)
-#
-#         dvc.start_receive()
-#
-#         evt = threading.Event()
-#         evt.wait()
-#         dvc.close()

@@ -16,43 +16,85 @@
 # You should have received a copy of the GNU General Public License along
 # with EventGhost. If not, see <http://www.gnu.org/licenses/>.
 
-import _winreg as reg
+import _winreg
+
+REG_PATH = 'SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes'
+
+
+def _set_value(path, key, name, value):
+    try:
+        handle = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE,
+            path + '\\' + key,
+            0,
+            _winreg.KEY_ALL_ACCESS
+        )
+    except WindowsError:
+        return False
+
+    try:
+        _winreg.SetValueEx(handle, name, 0, _winreg.REG_DWORD, value)
+        return True
+    except WindowsError:
+        return False
+    finally:
+        _winreg.CloseKey(handle)
+
+
+def _delete_value(path, key, value):
+    try:
+        handle = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE,
+            path + '\\' + key,
+            0,
+            _winreg.KEY_ALL_ACCESS
+        )
+    except WindowsError:
+        return False
+
+    try:
+        _winreg.DeleteValue(handle, value)
+        return True
+    except WindowsError:
+        return False
+    finally:
+        _winreg.CloseKey(handle)
+
+
+def _read_reg_keys(key):
+    try:
+        handle = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key, 0, _winreg.KEY_ALL_ACCESS)
+    except WindowsError:
+        return []
+
+    res = []
+
+    for i in range(_winreg.QueryInfoKey(handle)[0]):
+        res += [_winreg.EnumKey(handle, i)]
+
+    _winreg.CloseKey(handle)
+    return res
 
 
 def remove_keys():
-    key1 = 'SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\745a17a0-74d3-11d0-b6fe-00a0c90f57da'
-    key2 = 'SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\745a17a0-74d3-11d0-b6fe-00a0c90f57db'
+    res = False
 
-    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, key1, 0, reg.KEY_ALL_ACCESS)
-    reg.DeleteValue(key, 'CodeSetNum0')
-    reg.DeleteValue(key, 'CodeSetNum1')
-    reg.DeleteValue(key, 'CodeSetNum2')
-    reg.DeleteValue(key, 'CodeSetNum3')
-    reg.CloseKey(key)
+    for key in _read_reg_keys(REG_PATH):
+        res = True if _delete_value(REG_PATH, key, 'CodeSetNum0') else res
+        res = True if _delete_value(REG_PATH, key, 'CodeSetNum1') else res
+        res = True if _delete_value(REG_PATH, key, 'CodeSetNum2') else res
+        res = True if _delete_value(REG_PATH, key, 'CodeSetNum3') else res
 
-    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, key2, 0, reg.KEY_ALL_ACCESS)
-    reg.DeleteValue(key, 'CodeSetNum0')
-    reg.DeleteValue(key, 'CodeSetNum1')
-    reg.DeleteValue(key, 'CodeSetNum2')
-    reg.DeleteValue(key, 'CodeSetNum3')
-
-    reg.CloseKey(key)
+    return res
 
 
 def add_keys():
-    key1 = 'SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\745a17a0-74d3-11d0-b6fe-00a0c90f57da'
-    key2 = 'SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\745a17a0-74d3-11d0-b6fe-00a0c90f57db'
+    res = False
 
-    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, key1, 0, reg.KEY_ALL_ACCESS)
-    reg.SetValueEx(key, 'CodeSetNum0', 0, reg.REG_DWORD, 1)
-    reg.SetValueEx(key, 'CodeSetNum1', 0, reg.REG_DWORD, 2)
-    reg.SetValueEx(key, 'CodeSetNum2', 0, reg.REG_DWORD, 3)
-    reg.SetValueEx(key, 'CodeSetNum3', 0, reg.REG_DWORD, 4)
+    for key in _read_reg_keys(REG_PATH):
+        res = True if _set_value(REG_PATH, key, 'CodeSetNum0', 1) else res
+        res = True if _set_value(REG_PATH, key, 'CodeSetNum1', 2) else res
+        res = True if _set_value(REG_PATH, key, 'CodeSetNum2', 3) else res
+        res = True if _set_value(REG_PATH, key, 'CodeSetNum3', 4) else res
 
-    key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, key2, 0, reg.KEY_ALL_ACCESS)
-    reg.SetValueEx(key, 'CodeSetNum0', 0, reg.REG_DWORD, 1)
-    reg.SetValueEx(key, 'CodeSetNum1', 0, reg.REG_DWORD, 2)
-    reg.SetValueEx(key, 'CodeSetNum2', 0, reg.REG_DWORD, 3)
-    reg.SetValueEx(key, 'CodeSetNum3', 0, reg.REG_DWORD, 4)
-
-    reg.CloseKey(key)
+    return res

@@ -225,7 +225,7 @@ class _IR_RECEIVE_PARAMS(ctypes.Structure):
     _fields_ = [
         ('DataEnd', IR_ULONG_PTR),  # out
         ('ByteCount', IR_ULONG_PTR),  # in
-        ('Data', LONG * 36),  # out
+        ('Data', LONG * 100),  # out
     ]
 
 
@@ -264,7 +264,7 @@ class _IR_PRIORITY_RECEIVE_PARAMS(ctypes.Structure):
         ('DataEnd', IR_ULONG_PTR),  # out
         ('ByteCount', IR_ULONG_PTR),  # in
         ('CarrierFrequency', ULONG),  # out
-        ('Data', LONG * 36),  # out
+        ('Data', LONG * 100),  # out
     ]
 
 
@@ -283,7 +283,6 @@ IOCTL_IR_HANDSHAKE = CTL_CODE(
     METHOD_BUFFERED,
     FILE_ANY_ACCESS,
 )
-
 
 # + + IOCTL_IR_ENTER_PRIORITY_RECEIVE This request is sent to prepare
 # the port to enter Priority Receive mode. While the device is in

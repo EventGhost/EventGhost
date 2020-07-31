@@ -18,6 +18,7 @@
 
 import os
 import pyIRDecoder
+from pyIRDecoder import high_precision_timers
 
 # Local imports
 import eg
@@ -43,6 +44,7 @@ class IrDecoder(object):
         self.event = None
         self.mapTable = {}
         self._stream_registered = False
+        self.timer = high_precision_timers.TimerUS()
 
     @property
     def config(self):
@@ -66,10 +68,11 @@ class IrDecoder(object):
         self._decoder.stream_decode(data, frequency)
 
     def _stream_callback(self, code):
-        if self._last_code is None or self._last_code != code:
-            if code.decoder != self._decoder.Universal:
-                code.save()
+        if code.decoder != self._decoder.Universal:
+            code.save()
 
+        if self._last_code is None or self._last_code != code:
+            self.timer.reset()
             self.event = self.plugin.TriggerEnduringEvent(str(code), code)
             self._last_code = code
             self.last_code = code

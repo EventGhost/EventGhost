@@ -77,6 +77,7 @@ class Text(eg.TranslatableStrings):
     frequency_label = 'Frequency:'
     code_label = 'Code'
     pronto_tab = 'Pronto Hex'
+    pronto_label = 'Pronto Code'
     rlc_tab = 'Run-Length Code'
     code_tab = 'Saved Code'
 
@@ -325,6 +326,9 @@ class GetDeviceInfo(eg.ActionBase):
         res = dict(
             manufacturer=device.manufacturer,
             model=device.model,
+            device_path=device.device_path,
+            vid=device.vid,
+            pid=device.pid,
             num_connected_tx_ports=device.num_connected_tx_ports,
             tx_ports=device.tx_ports,
             num_rx_ports=device.num_rx_ports,
@@ -366,10 +370,13 @@ class MCEIrReceiver(eg.PluginBase):
     text = Text
 
     def __init__(self):
+        super(MCEIrReceiver, self).__init__()
         self.AddAction(GetDeviceInfo)
         self.AddAction(TransmitIR)
         self.AddAction(TestIR)
-        self.device = None
+        self._device = None
+        self.startup_event = threading.Event()
+        self.startup_event.set()
 
         if not ioctl.DATA_LOADED:
             t = threading.Thread(target=ir_class_ioctl.load_device_data)
@@ -377,11 +384,13 @@ class MCEIrReceiver(eg.PluginBase):
             t.start()
 
     def Configure(self, device_name='', use_server=True):
+        self.startup_event.wait()
+
         if self.device is not None:
             self.__stop__()
 
         panel = eg.ConfigPanel()
-
+        ir_class_ioctl.reset_device_list()
         devices = ir_class_ioctl.get_ir_devices()
         choices = list(device.name for device in devices if not device.is_running)
 
@@ -404,42 +413,90 @@ class MCEIrReceiver(eg.PluginBase):
 
     @eg.LogIt
     def __start__(self, device_name, use_server):
+        self.startup_event.wait()
+        self.startup_event.clear()
+
+        self.info.eventPrefix = device_name
         config_filename = self.info.name + '(' + device_name + ').xml'
         config_path = os.path.join(eg.configDir, 'ir_decoders', config_filename)
 
-        devices = ir_class_ioctl.get_ir_devices()
-        for device in devices:
-            if device.name == device_name:
-                if device.is_running:
-                    raise self.Exception(
-                        'MCE receiver "{0}" is already in use'.format(device_name)
-                    )
-                self.device = device
-                break
-        else:
-            raise self.Exception(
-                'unable to locate MCE receiver "{0}"'.format(device_name)
-            )
-
-        self.info.eventPrefix = device_name
         self.ir_decoder = eg.IrDecoder(self, config_path=config_path)
-
         if use_server:
             self.ir_decoder.config.database_url = 'http://eventghost.net:43847'
         else:
             self.ir_decoder.config.database_url = None
 
-        if self.ir_decoder.config.run_setup:
-            reg_keys.remove_keys()
-            self.ir_decoder.config.run_setup = False
+        def _do():
+            ir_class_ioctl.reset_device_list()
+            devices = ir_class_ioctl.get_ir_devices()
 
-        self.device.bind(self._callback)
-        self.device.start_receive()
+            for device in devices:
+                if device.name == device_name:
+                    if device.is_running:
+                        eg.PrintError(
+                            'MCE receiver "{0}" is already in use'.format(device_name)
+                        )
+                    else:
+                        if self.ir_decoder.config.run_setup:
+                            if reg_keys.remove_keys():
+                                eg.PrintNotice(
+                                    'MCE IR: You need to go into device manager and \n'
+                                    'Disable then Enable the device\n'
+                                    '"Universal Serial Bus controllers/{0}"'.format(device_name)
+                                )
+
+                            self.ir_decoder.config.run_setup = False
+
+                        self._device = device
+                        device.bind(self._callback)
+                        device.start_receive()
+                    break
+            else:
+                eg.PrintError(
+                    'MCE IR: Unable to locate MCE receiver "{0}"'.format(device_name)
+                )
+
+            self.startup_thread = None
+            self.startup_event.set()
+
+        t = threading.Thread(target=_do)
+        t.daemon = True
+        t.start()
+
+    @property
+    def device(self):
+        if self._device is None:
+            raise self.Exception('Plugin is not started')
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        self._device = value
 
     def _callback(self, _, frequency, rlc):
-        self.ir_decoder.DecodeStream(rlc, frequency=frequency)
+        if self.ir_decoder is not None:
+            self.ir_decoder.DecodeStream(rlc, frequency=frequency)
+
+    def OnDelete(self):
+        for plugin in eg.pluginList:
+            if (
+                isinstance(plugin.info.instance, MCEIrReceiver) and
+                plugin.info.instance != self
+            ):
+                return
+        if reg_keys.add_keys():
+            eg.PrintNotice(
+                'MCE IR: You need to go into device manager and \n'
+                'Disable then Enable the device\n'
+                '"Universal Serial Bus controllers/{0}"'.format(self.info.eventPrefix)
+            )
+
+        self.ir_decoder.config.run_setup = True
+        self.ir_decoder.config.save()
 
     def __stop__(self):
+        self.startup_event.wait()
+
         if self.device is not None:
             self.device.unbind(self._callback)
             self.device.stop_receive()
