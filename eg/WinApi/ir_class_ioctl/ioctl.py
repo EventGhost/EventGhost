@@ -346,15 +346,16 @@ def _get_device_property(DeviceInfoSet, DeviceInfoData, PropertyKey):
         Flags
     )
 
-    res = ''
+    res = bytearray()
     for i in range(PropertyBufferSize.value):
         char = PropertyBuffer[i]
 
         if char == 0x00:
             continue
-        res += chr(char)
 
-    return res
+        res.append(char)
+
+    return res.decode('utf-8').encode('utf-8')
 
 
 def _get_device_data(hardware_id):

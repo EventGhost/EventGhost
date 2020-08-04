@@ -118,7 +118,7 @@ class OriginalCodePanel(CodePanelBase):
             self.mce_pronto_ctrl.SetValue('')
         else:
             self.rlc_ctrl.SetValue(value.original_rlc)
-            self.pronto_ctrl.SetValue(value.original_rlc_pronto)
+            self.pronto_ctrl.SetValue(value.original_pronto)
 
             self.mce_rlc_ctrl.SetValue(value.original_mce_rlc)
             self.mce_pronto_ctrl.SetValue(value.original_mce_pronto)
@@ -135,7 +135,7 @@ class NormalizedCodePanel(CodePanelBase):
             self.mce_pronto_ctrl.SetValue('')
         else:
             self.rlc_ctrl.SetValue(value.normalized_rlc)
-            self.pronto_ctrl.SetValue(value.normalized_rlc_pronto)
+            self.pronto_ctrl.SetValue(value.normalized_pronto)
 
             self.mce_rlc_ctrl.SetValue(value.normalized_mce_rlc)
             self.mce_pronto_ctrl.SetValue(value.normalized_mce_pronto)
@@ -734,6 +734,7 @@ class CodesPanel(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDragEvent)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnChar)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.lastFocus = None
 
         self.dropTarget = DropTarget(self)
@@ -756,6 +757,15 @@ class CodesPanel(wx.TreeCtrl):
 
             for protocol in decoder:
                 self.CreateTreeItem(protocol, itemId)
+
+    def on_destroy(self, evt):
+        child, cookie = self.GetFirstChild(self.root)
+        while child.IsOk():
+            decoder = self.GetPyData(child)
+            decoder.close()
+            child, cookie = self.GetNextChild(child, cookie)
+
+        evt.Skip()
 
     def OnGetFocusEvent(self, event):
         """
@@ -1272,6 +1282,8 @@ class CodesPanel(wx.TreeCtrl):
         if not event.IsEditCancelled() and obj.name != newLabel:
             obj.name = newLabel
 
+        event = wx.TreeEvent(wx.wxEVT_TREE_ITEM_ACTIVATED, self, item=itemId)
+        self.GetEventHandler().ProcessEvent(event)
         event.Skip()
 
     def OnItemMenuEvent(self, event):
@@ -1300,7 +1312,7 @@ class CodesPanel(wx.TreeCtrl):
         self.SelectItem(itemId)
 
 
-TIME_FORMAT = '''\
+TIME_FORMAT = u'''\
 {0}μs
 {1}ms
 {2}sec
@@ -1840,7 +1852,7 @@ def OriginalCodePane(icon):
     pane.FloatingSize((400, 400))
     pane.Float()
     pane.CloseButton(True)
-    pane.DestroyOnClose(False)
+    pane.DestroyOnClose(True)
     pane.Show()
 
     return pane
@@ -1856,7 +1868,7 @@ def NormalizedCodePane(icon):
     pane.FloatingSize((400, 400))
     pane.Float()
     pane.CloseButton(True)
-    pane.DestroyOnClose(False)
+    pane.DestroyOnClose(True)
     pane.Show()
 
     return pane
@@ -1872,7 +1884,7 @@ def OriginalOscilloscopePane(icon):
     pane.FloatingSize((600, 300))
     pane.Float()
     pane.CloseButton(True)
-    pane.DestroyOnClose(False)
+    pane.DestroyOnClose(True)
     pane.Show()
 
     return pane
@@ -1888,7 +1900,7 @@ def MCEOscilloscopePane(icon):
     pane.FloatingSize((600, 300))
     pane.Float()
     pane.CloseButton(True)
-    pane.DestroyOnClose(False)
+    pane.DestroyOnClose(True)
     pane.Show()
 
     return pane
@@ -1954,15 +1966,12 @@ class IrDecoderPane(object):
         if Config.IrDecoderPane is not None:
             self.manager.LoadPaneInfo(Config.IrDecoderPane, self.pane)
 
-        def _attach_pane(pane):
-            pane_info = getattr(Config, pane.__name__)
-            self.manager.AddPane(pane.ctrl, pane)
-            if pane_info is not None:
-                self.manager.LoadPaneInfo(pane_info, pane)
-
         self.info_pane = CodeInfoPane(icon)
 
-        _attach_pane(self.info_pane)
+        pane_info = getattr(Config, self.info_pane.__name__)
+        self.manager.AddPane(self.info_pane.ctrl, self.info_pane)
+        if pane_info is not None:
+            self.manager.LoadPaneInfo(pane_info, self.info_pane)
 
         self.manager.Update()
 
@@ -2007,15 +2016,12 @@ class IrDecoderPane(object):
         if evt.GetPane() == self.pane:
             eg.mainFrame.Unbind(aui.EVT_AUI_PANE_CLOSE, handler=self.on_pane_close)
 
-            def _detach(pane):
-                pane_info = self.manager.SavePaneInfo(pane)
-                setattr(Config, pane.__name__, pane_info)
-                pane.ctrl.Hide()
-                pane.Hide()
-                self.manager.DetachPane(pane.ctrl)
-                pane.ctrl.Destroy()
-
-            _detach(self.info_pane)
+            pane_info = self.manager.SavePaneInfo(self.info_pane)
+            setattr(Config, self.info_pane.__name__, pane_info)
+            self.info_pane.ctrl.Hide()
+            self.info_pane.Hide()
+            self.manager.DetachPane(self.info_pane.ctrl)
+            self.info_pane.ctrl.Destroy()
 
             Config.IrDecoderPane = self.manager.SavePaneInfo(self.pane)
             self.ctrl.Hide()
