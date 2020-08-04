@@ -59,13 +59,33 @@ from ctypes.wintypes import (
     LONG
 )
 
+import json
 
-DEVICE_MAPPING = {}
-DATA_LOADED = False
+BASE_PATH = os.path.dirname(__file__)
+
+data_file = os.path.join(BASE_PATH, 'usb_vendors.json')
+
+try:
+    with open(data_file, 'r') as f:
+        data_file = f.read()
+
+    DEVICE_MAPPING = json.loads(data_file)
+    DATA_LOADED = True
+except (OSError, ValueError):
+    DEVICE_MAPPING = {}
+    DATA_LOADED = False
+
+
+del data_file
+del json
 
 
 def load_device_data():
     global DATA_LOADED
+
+    if DATA_LOADED:
+        return
+
     DATA_LOADED = True
 
     try:
@@ -109,12 +129,6 @@ def load_device_data():
 
                 current_vendor[pid] = product_name
 
-    import json
-    with open(r'C:\Users\Administrator\Desktop\New folder (99)\data.json', 'w') as f:
-        f.write(json.dumps(DEVICE_MAPPING, indent=4))
-
-
-BASE_PATH = os.path.dirname(__file__)
 
 os.environ['PATH'] = ';'.join([item for item in os.environ['PATH'].split(';') if item.strip()] + [BASE_PATH])
 
@@ -174,7 +188,7 @@ def _read_reg_keys(path, key):
 
     try:
         handle = _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE, key)
-    except _winreg.error:
+    except WindowsError:
         return []
 
     res = []
@@ -198,7 +212,7 @@ def _read_reg_values(path, key):
 
     try:
         handle = _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE, key)
-    except _winreg.error:
+    except WindowsError:
         return {}
 
     res = {}
@@ -238,7 +252,7 @@ def _get_device_hw_ids():
             str(i)
         )
         if hw_id is not None:
-            hw_id = [item for item in hw_id.split('\\') if item.upper().startswith('VID')]
+            hw_id = [itm for itm in hw_id.split('\\') if itm.upper().startswith('VID')]
             if hw_id:
                 found_devices += [hw_id[0]]
 
@@ -401,9 +415,9 @@ def _get_device_data(hardware_id):
 
         if hardware_id in hw_id:
             desc = _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_BusReportedDeviceDesc)
-            mfg = '' # _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_Manufacturer)
+            mfg = ''  # _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_Manufacturer)
             name = _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_DeviceDesc)
-            model = '' # _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_Model)
+            model = ''  # _get_device_property(DeviceInfoSet, DeviceInfoData, DEVPKEY_Device_Model)
 
             device_info = [desc, hw_id, mfg, name, model]
             break
