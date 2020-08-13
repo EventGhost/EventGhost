@@ -120,6 +120,7 @@ MONITOR_STATES = dict(
 def MonitorState(state):
     if state == 'ON':
         ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, 0)
+        ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, 0, -1, 0, 0)
     else:
         win32gui.SendMessage(
             win32con.HWND_BROADCAST,
