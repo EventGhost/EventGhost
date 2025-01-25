@@ -18,7 +18,7 @@
 
 import glob
 import os
-import pip
+import pkg_resources
 import platform
 import re
 import sys
@@ -131,7 +131,7 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
-    version = "5.5.8"
+    version = "6.4.0"
     package = "innosetup"
     #url = "http://www.innosetup.com/isdl.php"
     url = "http://www.innosetup.com/download.php/is-unicode.exe"
@@ -158,15 +158,25 @@ class ModuleDependency(DependencyBase):
         elif hasattr(module, "version"):
             version = module.version
         else:
-            result = [
-                p.version
-                for p in pip.get_installed_distributions()
-                if str(p).startswith(self.name + " ")
-            ]
+            # result = [
+            #     p.version
+            #     for p in pip.get_installed_distributions()
+            #     if str(p).startswith(self.name + " ")
+            # ]
+            result = None
+            try:
+                dist = pkg_resources.get_distribution(self.name)
+            except pkg_resources.DistributionNotFound:
+                pass
+            else:
+                if dist.has_version():
+                    result = dist.version
+
             if result:
-                version = result[0]
+                version = result
             else:
                 raise Exception("Can't get version information")
+
         if not isinstance(version, basestring):
             version = ".".join(str(x) for x in version)
         if CompareVersion(version, self.version) < 0:
@@ -175,7 +185,7 @@ class ModuleDependency(DependencyBase):
 
 class PyWin32Dependency(DependencyBase):
     name = "pywin32"
-    version = "220"
+    version = "228"
     url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
 
     def Check(self):
@@ -213,10 +223,10 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "comtypes",
         module = "comtypes",
-        version = "1.1.2",
+        version = "1.2.1",
     ),
     ModuleDependency(
-        name = "ctypeslib",
+        name = "ctypeslib3",
         module = "ctypeslib",
         version = "0.5.6",
         url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
@@ -259,7 +269,7 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "Sphinx",
         module = "sphinx",
-        version = "1.7.5",
+        version = "1.8.6",
     ),
     StacklessDependency(),
     ModuleDependency(
