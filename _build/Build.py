@@ -38,7 +38,7 @@ class MyBuilder(builder.Builder):
     mainScript = "EventGhost.pyw"
 
     includeModules = [
-        "CommonMark",
+        "commonmark",
         "comtypes",
         "Crypto",
         "docutils",

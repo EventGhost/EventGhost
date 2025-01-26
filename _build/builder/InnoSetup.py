@@ -89,13 +89,26 @@ def GetInnoCompilerPath():
             _winreg.HKEY_LOCAL_MACHINE,
             (
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
-                "Uninstall\\Inno Setup 5_is1"
+                "Uninstall\\Inno Setup 6_is1"
             )
         )
         installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
         _winreg.CloseKey(key)
     except WindowsError:
-        return None
+        try:
+            # Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1
+            key = _winreg.OpenKey(
+                _winreg.HKEY_LOCAL_MACHINE,
+                (
+                    "SOFTWARE\\Microsoft\\WOW6432Node\\Windows\\CurrentVersion\\"
+                    "Uninstall\\Inno Setup 6_is1"
+                )
+            )
+            installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
+            _winreg.CloseKey(key)
+        except WindowsError:
+            return None
+
     installPath = join(installPath, "ISCC.exe")
     if not exists(installPath):
         return None

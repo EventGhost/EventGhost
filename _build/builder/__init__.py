@@ -104,7 +104,7 @@ class Builder(object):
             self.args.sync
         )
         if os.environ.get(
-                "APPVEYOR_REPO_COMMIT_MESSAGE", ""
+            "APPVEYOR_REPO_COMMIT_MESSAGE", ""
         ).upper().startswith("VERBOSE:"):
             self.args.verbose = True
 
@@ -134,7 +134,7 @@ class Builder(object):
                 token = ""
                 print msg
             else:
-                token = os.environ["GITHUB_TOKEN"]
+                token = os.environ.get("GITHUB_TOKEN")
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {

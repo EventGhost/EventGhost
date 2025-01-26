@@ -1,34 +1,33 @@
-# In AppVeyor's web config add an enviremont variable named GITHUB_TOKEN.
+# In AppVeyor's web config add an environment variable named GITHUB_TOKEN.
 # Set it to a token you've created on GitHub.
 # To draft a release on GitHub with AppVeyor, create a tag on master.
 
-
 version: '{build}-{branch}'
 
+image: Visual Studio 2015
 
 #init:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
+clone_depth: 2
 
 environment:
   PYTHON: 'C:\Stackless27'
   PYTHONPATH: 'C:\Stackless27;C:\Stackless27\Scripts;C:\Stackless27\DLLs;C:\Stackless27\Lib;C:\Stackless27\Lib\site-packages;'
 
-
 matrix:
   fast_finish: true
 
-
 cache:
   # Invalidate cache if .appveyor.yml has changed
-  - C:\Stackless27 -> .appveyor.yml
+  - C:\stackless27 -> .appveyor.yml
+
   # Manually clear cache:
   # from agithub.AppVeyor import AppVeyor
   # ci = AppVeyor(<your appveyor API token>)
   # status, data = ci.api.projects.<appveyor username>.<appveyor projectname>.buildcache.delete()
   # print status  # 204 = Ok, cache deleted
-
 
 install:
   # HTML Help Workshop 1.32
@@ -39,8 +38,8 @@ install:
 
   #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - ps: |
-      $Env:PATH = $Env:PATH -replace "Python27", "Stackless27"
-      $PythonFolder = $Env:PYTHON
+      $Env:PATH = $Env:PATH -replace "python27", "stackless27"
+      $PythonFolder = "c:\stackless27"
       $PythonScripts = $PythonFolder + "\Scripts"
       $SitePackages = $PythonFolder + "\lib\site-packages"
       $SysWOW = $Env:SYSTEMROOT + "\SysWOW64"
@@ -54,22 +53,36 @@ install:
       "=============== prepare EventGhost build environment ==============="
       If (-not (Test-Path $PythonFolder))
       {
+        Function Execute ($command)
+        {
+          $result = $(cmd /c "$command  2>&1")
+          If ($result) { "    " + "$result" }
+        }
+
+        Function PySl ($command)
+        {
+          $cmmd = "$PythonFolder\python.exe " + $command
+          Execute "$cmmd"
+        }
+
         Function PipInstall ($msg, $mod)
         {
           " "
           "--- " + $msg
           "    Installing..."
-          pip install -q $mod
+          $cmmd = "-m pip install -q --disable-pip-version-check --no-python-version-warning " + $mod
+          PySl $cmmd
           "    Done."
         }
+
         " "
-        "--- Stackless 2.7.12150 x86"
+        "--- Stackless 2.7.16150 x86"
         $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
         $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
-        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.12150-stackless.msi"
+        $StacklessURL = "http://www.stackless.com/binaries/python-2.7.16150-stackless.msi"
         Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
         "    Installing..."
-        Start-Process MsiExec.exe -Arg "/I $StacklessInstaller /quiet /passive /qn /norestart $StacklessInstallDir" -Wait
+        Execute "MsiExec.exe /I $StacklessInstaller /quiet /passive /norestart /qn TARGETDIR=c:\stackless27"
         "    Done."
         " "
         "--- wxPython 3.0.2.0"
@@ -77,41 +90,44 @@ install:
         $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
         Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
         "    Installing..."
-        Start-Process $WXInstaller -Arg "/VERYSILENT /SUPPRESSMSGBOXES" -NoNewWindow -Wait
+        Execute "$WXInstaller /VERYSILENT /SUPPRESSMSGBOXES"
         "    Done."
         " "
-        "--- pip 9.0.1"
+        "--- pip 20.3.4"
+        $PIP_URL = "https://files.pythonhosted.org/packages/27/79/8a850fe3496446ff0d584327ae44e7500daf6764ca1a382d2d02789accf7/pip-20.3.4-py2.py3-none-any.whl#sha256=217ae5161a0e08c0fb873858806e3478c9775caffce5168b50ec885e358c199d"
+        Start-FileDownload $PIP_URL -Timeout 60000
         "    Updating..."
-        python -m pip install --no-cache-dir -q -U "pip==9.0.1"
+        PySl '-m pip install --disable-pip-version-check -q -U .\pip-20.3.4-py2.py3-none-any.whl'
         "    Done."
         " "
-        "--- setuptools 34.3.0"
+        "--- setuptools 44.1.1"
         "    Updating..."
-        pip install -q -U "setuptools==34.3.0"
+        PySl '-m pip install --disable-pip-version-check --no-python-version-warning -q -U "setuptools==44.1.1"'
         "    Done."
-        PipInstall "wheel 0.29.0" "wheel==0.29.0"
-        PipInstall "sphinx 1.7.5" "sphinx==1.7.5"
-        PipInstall "commonmark 0.7.3" "commonmark==0.7.3"
-        PipInstall "pillow 3.4.2" "pillow==3.4.2"
+        PipInstall "wheel 0.37.1" "wheel==0.37.1"
+        PipInstall "Jinja2 2.8.1" "jinja2==2.8.1"
+        PipInstall "sphinx 1.8.6" "sphinx==1.8.6"
+        PipInstall "commonmark 0.9.1" "commonmark==0.9.1"
+        PipInstall "pillow 6.2.2" "pillow==6.2.2"
         PipInstall "py2exe 0.6.9" "py2exe_py2==0.6.9"
-        PipInstall "pycrypto 2.6.1" "pycrypto==2.6.1"
-        PipInstall "comtypes 1.1.3" "https://github.com/enthought/comtypes/archive/1.1.3.zip"
-        PipInstall "ctypeslib 0.5.6" "svn+http://svn.python.org/projects/ctypes/trunk/ctypeslib/#ctypeslib=0.5.6"
-        PipInstall "paramiko 2.2.1" "paramiko==2.2.1"
-        PipInstall "pywin32 223" pywin32==223
+        PipInstall "PyCrypto 2.6.1" "PyCrypto==2.6.1"
+        PipInstall "comtypes 1.2.1" "comtypes==1.2.1"
+        PipInstall "ctypeslib 0.5.8" "ctypeslib3==0.5.8"
+        PipInstall "paramiko 2.12.0" "paramiko==2.12.0"
+        PipInstall "pywin32 228" pywin32==228
       }
       " "
       "--- pywin32 post install"
       $PywinPostInstall = $PythonScripts +"\pywin32_postinstall.py"
-      Start-Process python -Arg "$PywinPostInstall -install -silent -quiet" -Wait
+      PySl "$PywinPostInstall -install -silent -quiet"
       "    Done."
       " "
-      "--- Inno Setup 5.6.1"
-      $InnoInstaller = $InstallersFolder + "innosetup-5.6.1-unicode.exe"
-      $InnoURL = "http://files.jrsoftware.org/is/5/innosetup-5.6.1-unicode.exe"
+      "--- Inno Setup 6.4.0"
+      $InnoInstaller = $InstallersFolder + "innosetup-6.4.0.exe"
+      $InnoURL = "https://files.innosetup.nl/innosetup-6.4.0.exe"
       Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
       "    Installing..."
-      Start-Process $InnoInstaller -Arg "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS" -NoNewWindow -Wait
+      Execute "$InnoInstaller /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS"
       "    Done."
       " "
       " "
@@ -120,17 +136,18 @@ install:
       If ($Env:APPVEYOR_REPO_TAG.tolower() -eq "true" -and
         $Env:APPVEYOR_REPO_TAG_NAME.tolower().startswith("deploy"))
       {
+        "--- DEPLOY ---"
         # to do a release, create a tag in the form "Deploy_VERSION"
         # VERSION must be a valid version string (without leading 'v')
         # this tag will be deleted and a new release "vVERSION" created.
         git checkout -q master
         $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
         $url = if($Env:SFTP_URL){' --docs --url "' + $env:SFTP_URL + '"'} else {''}
-        python "_build\Build.py" --build --package --release --version $release $url
+        PySl "_build\Build.py --build --package --release --version $release $url"
       } Else {
-        # WIP
-        python "_build\Build.py" --build --package
-        .\EventGhost.exe -install
+        "--- WIP ---"
+        PySl "_build\Build.py --build --package"
+        Execute ".\EventGhost.exe -install"
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
 
@@ -141,7 +158,9 @@ install:
       Update-AppveyorBuild -Version "$build_version"
 
       # Make sure the appveyor cache is only saved if our build was successfull
-      If (-Not (Test-Path(".\EventGhost.exe"))) {$env:APPVEYOR_CACHE_SKIP_SAVE = "true"}
+      If (-Not (Test-Path(".\EventGhost.exe"))) {
+        $env:APPVEYOR_CACHE_SKIP_SAVE = "true"
+      }
 
       " "
 
@@ -195,33 +214,10 @@ notifications:
   on_build_failure: true
   on_build_status_changed: false
 
-- provider: Slack
-  incoming_webhook:
-    secure: jvFmrrWYdHWb5+Lou7xIXMvjZTjR4/o7YwVMeMBUPH3KKYti85fsycwk0GxveESFGlyxIPfgy3HwZDtb1xhaFlQJlvInvYXUpDfBZQHe4EM=
 
-  template: >-
-    <{{buildUrl}}|{{projectName}} {{buildVersion}} {{status}}>
-
-    Commit <{{commitUrl}}|{{commitId}}> by {{commitAuthor}} on {{commitDate}}:
-
-    Commit message: _{{commitMessage}}_
-
-
-    Artifacts:
-
-    {{#jobs}}{{#artifacts}}<{{permalink}}|{{name}}>
-
-    {{/artifacts}}{{/jobs}}
-
-  on_build_success: true
-  on_build_failure: true
-  on_build_status_changed: true
-
-
-
-#on_finish:
-#  # Enable Remotedesktop and pause the build execution
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# on_finish:
+#   # Enable Remotedesktop and pause the build execution
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 
 # notifications:

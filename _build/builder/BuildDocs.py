@@ -20,7 +20,7 @@ import codecs
 import os
 import re
 import shutil
-import sphinx
+import sphinx.cmd.build
 from os.path import join
 
 # Local imports
@@ -99,7 +99,6 @@ def call_sphinx(builder, build_setup, dest_dir):
     Prepare(build_setup.docsDir)
     sphinx.build_main(
         [
-            None,
             "-D", "project=EventGhost",
             "-D", "copyright=2005-2017 EventGhost Project",
             # "-D", "templates_path=[]",
