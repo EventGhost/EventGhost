@@ -134,7 +134,7 @@ class Builder(object):
                 token = ""
                 print msg
             else:
-                token = os.environ["GITHUB_TOKEN"]
+                token = os.environ.get("GITHUB_TOKEN")
             self.gitConfig = {
                 "all_repos": {
                     "EventGhost/EventGhost": {

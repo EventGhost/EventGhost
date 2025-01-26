@@ -134,7 +134,7 @@ class InnoSetupDependency(DependencyBase):
     version = "6.4.0"
     package = "innosetup"
     #url = "http://www.innosetup.com/isdl.php"
-    url = "http://www.innosetup.com/download.php/is-unicode.exe"
+    url = "https://files.jrsoftware.org/is/6/innosetup-6.4.0.exe"
 
     def Check(self):
         if not GetInnoCompilerPath():
@@ -158,11 +158,6 @@ class ModuleDependency(DependencyBase):
         elif hasattr(module, "version"):
             version = module.version
         else:
-            # result = [
-            #     p.version
-            #     for p in pip.get_installed_distributions()
-            #     if str(p).startswith(self.name + " ")
-            # ]
             result = None
             try:
                 dist = pkg_resources.get_distribution(self.name)
@@ -185,8 +180,8 @@ class ModuleDependency(DependencyBase):
 
 class PyWin32Dependency(DependencyBase):
     name = "pywin32"
+    module = "pywin32"
     version = "228"
-    url = "https://eventghost.github.io/dist/dependencies/pywin32-220-cp27-none-win32.whl"
 
     def Check(self):
         versionFilePath = join(
@@ -202,8 +197,8 @@ class PyWin32Dependency(DependencyBase):
 
 class StacklessDependency(DependencyBase):
     name = "Stackless Python"
-    version = "2.7.9"
-    url = "http://www.stackless.com/binaries/python-2.7.9150-stackless.msi"
+    version = "2.7.16"
+    url = "http://www.stackless.com/binaries/python-2.7.16150-stackless.msi"
 
     def Check(self):
         try:
@@ -216,9 +211,9 @@ class StacklessDependency(DependencyBase):
 
 DEPENDENCIES = [
     ModuleDependency(
-        name = "CommonMark",
-        module = "CommonMark",
-        version = "0.7.0",
+        name = "commonmark",
+        module = "commonmark",
+        version = "0.9.1",
     ),
     ModuleDependency(
         name = "comtypes",
@@ -229,12 +224,11 @@ DEPENDENCIES = [
         name = "ctypeslib3",
         module = "ctypeslib",
         version = "0.5.6",
-        url = "https://eventghost.github.io/dist/dependencies/ctypeslib-0.5.6-cp27-none-any.whl"
     ),
     ModuleDependency(
         name = "future",
         module = "future",
-        version = "0.15.2",
+        version = "1.0.0",
     ),
     #GitDependency(),
     HtmlHelpWorkshopDependency(),
@@ -252,7 +246,7 @@ DEPENDENCIES = [
         name = "Pillow",
         module = "PIL",
         attr = "PILLOW_VERSION",
-        version = "3.1.1",
+        version = "6.2.2",
     ),
     ModuleDependency(
         name = "py2exe_py2",
@@ -263,9 +257,13 @@ DEPENDENCIES = [
         name = "PyCrypto",
         module = "Crypto",
         version = "2.6.1",
-        url = "https://eventghost.github.io/dist/dependencies/pycrypto-2.6.1-cp27-none-win32.whl",
     ),
     PyWin32Dependency(),
+    ModuleDependency(
+        name = "Jinja2",
+        module = "jinja2",
+        version = "2.8.1",
+    ),
     ModuleDependency(
         name = "Sphinx",
         module = "sphinx",
