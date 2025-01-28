@@ -49,32 +49,33 @@ install:
 
       Remove-Item $PythonWindowsDLL
       New-Item $InstallersFolder -type directory | Out-Null
+
+      Function Execute ($command)
+      {
+        $result = $(cmd /c "$command  2>&1")
+        If ($result) { "    " + "$result" }
+      }
+
+      Function PySl ($command)
+      {
+        $cmmd = "$PythonFolder\python.exe " + $command
+        Execute "$cmmd"
+      }
+
+      Function PipInstall ($msg, $mod)
+      {
+        " "
+        "--- " + $msg
+        "    Installing..."
+        $cmmd = "-m pip install -q --disable-pip-version-check --no-python-version-warning " + $mod
+        PySl $cmmd
+        "    Done."
+      }
+
       " "
       "=============== prepare EventGhost build environment ==============="
       If (-not (Test-Path $PythonFolder))
       {
-        Function Execute ($command)
-        {
-          $result = $(cmd /c "$command  2>&1")
-          If ($result) { "    " + "$result" }
-        }
-
-        Function PySl ($command)
-        {
-          $cmmd = "$PythonFolder\python.exe " + $command
-          Execute "$cmmd"
-        }
-
-        Function PipInstall ($msg, $mod)
-        {
-          " "
-          "--- " + $msg
-          "    Installing..."
-          $cmmd = "-m pip install -q --disable-pip-version-check --no-python-version-warning " + $mod
-          PySl $cmmd
-          "    Done."
-        }
-
         " "
         "--- Stackless 2.7.16150 x86"
         $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
