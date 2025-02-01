@@ -141,7 +141,9 @@ install:
         # VERSION must be a valid version string (without leading 'v')
         # this tag will be deleted and a new release "vVERSION" created.
         git checkout -q master
+        "   APPVEYOR_REPO_TAG_NAME: " + $Env:APPVEYOR_REPO_TAG_NAME
         $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
+        "   release: " + $release
         $url = if($Env:SFTP_URL){' --docs --url "' + $env:SFTP_URL + '"'} else {''}
         PySl "_build\Build.py --build --package --release --version $release $url"
       } Else {
