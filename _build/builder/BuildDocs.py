@@ -20,12 +20,14 @@ import codecs
 import os
 import re
 import shutil
-import sphinx.cmd.build
+import warnings
 from os.path import join
+
+import sphinx.cmd.build
 
 # Local imports
 import builder
-from builder.Utils import EncodePath, GetHtmlHelpCompilerPath, StartProcess
+from builder.Utils import GetHtmlHelpCompilerPath, StartProcess
 
 GUI_CLASSES = [
     "SpinIntCtrl",
@@ -97,30 +99,38 @@ class BuildHtmlDocs(builder.Task):
 def call_sphinx(builder, build_setup, dest_dir):
     WritePluginList(join(build_setup.docsDir, "pluginlist.rst"))
     Prepare(build_setup.docsDir)
-    sphinx.build_main(
-        [
-            "-D", "project=EventGhost",
-            "-D", "copyright=2005-2017 EventGhost Project",
-            # "-D", "templates_path=[]",
-            '-q',    # be quiet
-            # "-a",  # always write all output files
-            # "-E",  # Don’t use a saved environment (the structure
-                     # caching all cross-references),
-            # "-N",  # Prevent colored output.
-            # "-P",  # (Useful for debugging only.) Run the Python debugger,
-                     # pdb, if an unhandled exception occurs while building.
-            # '-v',  # verbosity, can be given up to three times
-            # '-v',
-            # write warnings and errors to file:
-            # '-w', join('output', 'sphinx_log_chm.txt'),
-            "-b", builder,
-            "-D", "version=%s" % build_setup.appVersion,
-            "-D", "release=%s" % build_setup.appVersion,
-            "-d", join(build_setup.tmpDir, ".doctree"),
-            build_setup.docsDir,
-            dest_dir,
-        ]
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            action="ignore",
+            category=FutureWarning,
+        )
+        sphinx.cmd.build.main(
+            [
+                "-D", "project=EventGhost",
+                "-D", "copyright=2005-2017 EventGhost Project",
+                "-j", "auto",  # build in parallel with N processes where 'possible
+                               # (special value "auto" will set N to cpu-count
+                # "-D", "templates_path=[]",
+                # '-q',    # no output on stdout, just warnings on stderr
+                '-Q',    # no output at all, not even warnings
+                # "-a",  # always write all output files
+                # "-E",  # Don’t use a saved environment (the structure
+                         # caching all cross-references),
+                # "-N",  # Prevent colored output.
+                # "-P",  # (Useful for debugging only.) Run the Python debugger,
+                         # pdb, if an unhandled exception occurs while building.
+                # '-v',  # verbosity, can be given up to three times
+                # '-v',
+                # write warnings and errors to file:
+                # '-w', join('output', 'sphinx_log_chm.txt'),
+                "-b", builder,
+                "-D", "version=%s" % build_setup.appVersion,
+                "-D", "release=%s" % build_setup.appVersion,
+                "-d", join(build_setup.tmpDir, ".doctree"),
+                build_setup.docsDir,
+                dest_dir,
+            ]
+        )
 
 
 def BuildClsDocs(clsNames, doc_src_dir):

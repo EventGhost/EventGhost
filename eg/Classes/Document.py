@@ -485,8 +485,7 @@ class Document(object):
                 if self.frame is None:
                     self.frame = eg.mainFrame = eg.MainFrame(self)
                     self.frame.Show()
-                else:
-                    self.frame.Raise()
+                wx.CallAfter(self.frame.Raise)
                 event.set()
 
             if not threading.current_thread() == eg.mainThread:
