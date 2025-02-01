@@ -33,8 +33,8 @@ install:
   # HTML Help Workshop 1.32
   # - cinst html-help-workshop
 
-  # Microsoft Visual C++ Redistributable 2008 (version min: 9.0.21022.8)
-  # - cinst vcredist2008
+  # Microsoft Visual C++ Redistributable 2008 (version min: 30729.6161)
+  - cmd: choco install vcredist2008 --version=9.0.30729.6161 --ignore-checksums --x86 --no-progress --limit-output
 
   #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - ps: |
@@ -55,13 +55,11 @@ install:
         $result = $(cmd /c "$command  2>&1")
         If ($result) { "    " + "$result" }
       }
-
       Function PySl ($command)
       {
         $cmmd = "$PythonFolder\python.exe " + $command
         Execute "$cmmd"
       }
-
       Function PipInstall ($msg, $mod)
       {
         " "
@@ -74,11 +72,12 @@ install:
 
       " "
       "=============== prepare EventGhost build environment ==============="
+
       If (-not (Test-Path $PythonFolder))
       {
         " "
         "--- Stackless 2.7.16150 x86"
-        $StacklessInstaller = $InstallersFolder + "python-2.7.12150-stackless.msi"
+        $StacklessInstaller = $InstallersFolder + "python-2.7.16150-stackless.msi"
         $StacklessInstallDir = "TARGETDIR=" + $PythonFolder
         $StacklessURL = "http://www.stackless.com/binaries/python-2.7.16150-stackless.msi"
         Start-FileDownload $StacklessURL -Timeout 60000 -FileName $StacklessInstaller
@@ -88,16 +87,16 @@ install:
         " "
         "--- wxPython 3.0.2.0"
         $WXInstaller = $InstallersFolder + "wxPython3.0-win32-3.0.2.0-py27.exe"
-        $WXURL = "http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
+        $WXURL = "https://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe"
         Start-FileDownload $WXURL -Timeout 60000 -FileName $WXInstaller
         "    Installing..."
         Execute "$WXInstaller /VERYSILENT /SUPPRESSMSGBOXES"
         "    Done."
         " "
         "--- pip 20.3.4"
+        "    Updating..."
         $PIP_URL = "https://files.pythonhosted.org/packages/27/79/8a850fe3496446ff0d584327ae44e7500daf6764ca1a382d2d02789accf7/pip-20.3.4-py2.py3-none-any.whl#sha256=217ae5161a0e08c0fb873858806e3478c9775caffce5168b50ec885e358c199d"
         Start-FileDownload $PIP_URL -Timeout 60000
-        "    Updating..."
         PySl '-m pip install --disable-pip-version-check -q -U .\pip-20.3.4-py2.py3-none-any.whl'
         "    Done."
         " "
@@ -123,9 +122,9 @@ install:
       PySl "$PywinPostInstall -install -silent -quiet"
       "    Done."
       " "
-      "--- Inno Setup 6.4.0"
-      $InnoInstaller = $InstallersFolder + "innosetup-6.4.0.exe"
-      $InnoURL = "https://files.innosetup.nl/innosetup-6.4.0.exe"
+      "--- Inno Setup 5.6.1"
+      $InnoInstaller = $InstallersFolder + "innosetup-5.6.1-unicode.exe"
+      $InnoURL = "https://files.jrsoftware.org/is/5/innosetup-5.6.1-unicode.exe"
       Start-FileDownload $InnoURL -Timeout 60000 -FileName $InnoInstaller | ForEach-Object { Write-Host "    " + $_ }
       "    Installing..."
       Execute "$InnoInstaller /SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPPLICATIONS /NOICONS"
@@ -147,8 +146,9 @@ install:
         PySl "_build\Build.py --build --package --release --version $release $url"
       } Else {
         "--- WIP ---"
-        PySl "_build\Build.py --build --package"
-        Execute ".\EventGhost.exe -install"
+        # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+        c:\stackless27\python.exe "_build\Build.py" --build --package
+        .\EventGhost.exe -install
       }
       $Env:SetupExe = gci -recurse -filter "_build\output\*Setup.exe" -name
 

@@ -92,7 +92,11 @@ def send_message(message):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(2.0)
-    sys.stderr._displayMessage = False
+    try:
+        # if running from source (our Py2ExeBootScript.py isn't used)
+        sys.stderr._displayMessage = False
+    except AttributeError:
+        pass
     sys.stderr.write('New Instance: send message ' + repr(message) + '\n')
     res = None
 

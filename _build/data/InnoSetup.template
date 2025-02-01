@@ -180,9 +180,8 @@ Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; IconIndex: 1
 
 [Languages]
 Name: English; MessagesFile: "compiler:Default.isl"
-Name: Armenian; MessagesFile: "compiler:Languages\Armenian.isl"
+Name: Armenian; MessagesFile: "compiler:Languages\Armenian.islu"
 Name: BrazilianPortuguese; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
-Name: Bulgarian; MessagesFile: "compiler:Languages\Bulgarian.isl"
 Name: Catalan; MessagesFile: "compiler:Languages\Catalan.isl"
 Name: Corsican; MessagesFile: "compiler:Languages\Corsican.isl"
 Name: Czech; MessagesFile: "compiler:Languages\Czech.isl"
@@ -191,21 +190,21 @@ Name: Dutch; MessagesFile: "compiler:Languages\Dutch.isl"
 Name: Finnish; MessagesFile: "compiler:Languages\Finnish.isl"
 Name: French; MessagesFile: "compiler:Languages\French.isl"
 Name: German; MessagesFile: "compiler:Languages\German.isl"
+Name: Greek; MessagesFile: "compiler:Languages\Greek.isl"
 Name: Hebrew; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: Hungarian; MessagesFile: "compiler:Languages\Hungarian.isl"
-Name: Icelandic; MessagesFile: "compiler:Languages\Icelandic.isl"
 Name: Italian; MessagesFile: "compiler:Languages\Italian.isl"
 Name: Japanese; MessagesFile: "compiler:Languages\Japanese.isl"
-Name: Korean; MessagesFile: "compiler:Languages\Korean.isl"
+Name: Nepali; MessagesFile: "compiler:Languages\Nepali.islu"
 Name: Norwegian; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: Polish; MessagesFile: "compiler:Languages\Polish.isl"
 Name: Portuguese; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: Russian; MessagesFile: "compiler:Languages\Russian.isl"
-Name: Slovak; MessagesFile: "compiler:Languages\Slovak.isl"
+Name: ScottishGaelic; MessagesFile: "compiler:Languages\ScottishGaelic.isl"
+Name: SerbianCyrillic; MessagesFile: "compiler:Languages\SerbianCyrillic.isl"
+Name: SerbianLatin; MessagesFile: "compiler:Languages\SerbianLatin.isl"
 Name: Slovenian; MessagesFile: "compiler:Languages\Slovenian.isl"
 Name: Spanish; MessagesFile: "compiler:Languages\Spanish.isl"
-Name: Swedish; MessagesFile: "compiler:Languages\Swedish.isl"
-Name: Tamil; MessagesFile: "compiler:Languages\Tamil.isl"
 Name: Turkish; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: Ukrainian; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
@@ -221,6 +220,9 @@ Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueNam
 Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1"""
 
 [Run]
+Filename: "{tmp}\vcredist_x86.exe"; \
+  StatusMsg: "installing Microsoft Visual C++ 2008 Service Pack 1 Redistributable Package"; \
+  Parameters: "/q"; Flags: waituntilterminated
 ; EG -install needs to be called with admin rights to install the COM-server
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"
 Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent

@@ -131,10 +131,9 @@ class HtmlHelpWorkshopDependency(DependencyBase):
 
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
-    version = "6.4.0"
+    version = "5.6.1"
     package = "innosetup"
-    #url = "http://www.innosetup.com/isdl.php"
-    url = "https://files.jrsoftware.org/is/6/innosetup-6.4.0.exe"
+    url = "https://files.jrsoftware.org/is/5/innosetup-5.6.1-unicode.exe"
 
     def Check(self):
         if not GetInnoCompilerPath():

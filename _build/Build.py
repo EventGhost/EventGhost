@@ -20,7 +20,7 @@
 This script creates the EventGhost setup installer.
 """
 
-from os.path import dirname, exists, join
+from os.path import dirname, exists, join, abspath
 
 # Local imports
 import builder
@@ -133,6 +133,10 @@ class MyBuilder(builder.Builder):
             join(self.tmpDir, "VersionInfo.py"),
             destDir="eg\\Classes"
         )
+        line = 'Source: "%s"; DestDir: "{tmp}"; Flags: deleteafterinstall' % (
+            abspath(join(self.dataDir, "vcredist_x86.exe"))
+        )
+        inno.Add("Files", line)
 
         inno.ExecuteInnoSetup()
 

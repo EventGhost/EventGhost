@@ -3,9 +3,6 @@ EventGhost.chm
 EventGhost.exe
 Example.egtree
 LICENSE.TXT
-msvcm90.dll
-msvcp90.dll
-msvcr90.dll
 //py.exe
 //pyw.exe
 python27.dll
