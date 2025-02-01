@@ -1,6 +1,10 @@
 # In AppVeyor's web config add an environment variable named GITHUB_TOKEN.
 # Set it to a token you've created on GitHub.
-# To draft a release on GitHub with AppVeyor, create a tag on master.
+#
+# To deploy a release with AppVeyor, create a tag/release on GitHub in the
+# form "deploy_VERSION" where VERSION must be a valid version string (without
+# leading 'v') (for example: deploy_0.5.0-rc7)
+# The "deploy_VERSION" tag will be deleted and a new release "vVERSION" created.
 
 version: '{build}-{branch}'
 
@@ -9,8 +13,6 @@ image: Visual Studio 2015
 #init:
 #  # Enable Remotedesktop and pause the build execution
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
-clone_depth: 2
 
 environment:
   PYTHON: 'C:\Stackless27'
@@ -136,16 +138,11 @@ install:
       If ($Env:APPVEYOR_REPO_TAG.tolower() -eq "true" -and
         $Env:APPVEYOR_REPO_TAG_NAME.tolower().startswith("deploy"))
       {
-        "--- DEPLOY ---"
-        # to do a release, create a tag in the form "Deploy_VERSION"
-        # VERSION must be a valid version string (without leading 'v')
-        # this tag will be deleted and a new release "vVERSION" created.
-        git checkout -q master
-        "   APPVEYOR_REPO_TAG_NAME: " + $Env:APPVEYOR_REPO_TAG_NAME
         $release = $Env:APPVEYOR_REPO_TAG_NAME.split("_", 2)[1]
-        "   release: " + $release
+        "--- DEPLOY " + $release + " ---"
+        " "
         $url = if($Env:SFTP_URL){' --docs --url "' + $env:SFTP_URL + '"'} else {''}
-        PySl "_build\Build.py --build --package --release --version $release $url"
+        c:\stackless27\python.exe "_build\Build.py" --build --package --release --version $release $url
       } Else {
         "--- WIP ---"
         # $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

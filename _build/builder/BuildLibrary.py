@@ -24,7 +24,7 @@ from os.path import basename, exists, join
 
 # Local imports
 import builder
-from builder.Utils import EncodePath
+from builder.Utils import EncodePath, ParseVersion
 
 
 _compile = __builtin__.compile
@@ -153,13 +153,14 @@ class Target:
         manifest = file(
             join(buildSetup.pyVersionDir, "Manifest.xml")
         ).read() % buildSetup.__dict__
+        v = ParseVersion(buildSetup.appVersion)
         self.other_resources = [(RT_MANIFEST, 1, manifest)]
         self.name = buildSetup.name
         self.description = buildSetup.description
         self.company_name = buildSetup.companyName
         self.copyright = buildSetup.copyright
         self.dest_base = buildSetup.name
-        self.version = buildSetup.appVersion
+        self.version = ".".join(v[1][:3])
         self.script = join(buildSetup.sourceDir, buildSetup.mainScript)
 
 
