@@ -1,3 +1,34 @@
+## [0.5.0-rc7](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc7) (2025-02-01)
+
+**Enhancements:**
+
+* \[VLC\] add 64 bit support, fix play, volup and voldown [\#341](https://github.com/EventGhost/EventGhost/pull/341) ([GruberMarkus](https://github.com/GruberMarkus))
+* \[EventGhost\] TriggerEvent: option to remove the 'Main' prefix [\#355](https://github.com/EventGhost/EventGhost/pull/355) ([kdschlosser](https://github.com/kdschlosser))
+* Add hotkey to clear logpanel \(suggested by Snowbird\) [\#368](https://github.com/EventGhost/EventGhost/pull/368) ([topic2k](https://github.com/topic2k))
+* enable OK button for config dialog without options [\#375](https://github.com/EventGhost/EventGhost/pull/375) ([topic2k](https://github.com/topic2k))
+* \[Window\] add actions to determine window state [\#380](https://github.com/EventGhost/EventGhost/pull/380) ([topic2k](https://github.com/topic2k))
+
+**Fixed bugs:**
+
+* Fix right click on empty space in log didn't show context menu [\#353](https://github.com/EventGhost/EventGhost/pull/353) ([topic2k](https://github.com/topic2k))
+* Fix issue when locale has no translation \(OptionsDialog.py\), and right to left bug on \(SpinNumCtrl.py\) [\#356](https://github.com/EventGhost/EventGhost/pull/356) ([thecode](https://github.com/thecode))
+* ConfigPanel.py: Enables Apply button on first configure [\#367](https://github.com/EventGhost/EventGhost/pull/367) ([kdschlosser](https://github.com/kdschlosser))
+* setting locale when Windows has no LCID for user selected locale settings [\#373](https://github.com/EventGhost/EventGhost/pull/373) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes traceback when opening options dialog. [\#397](https://github.com/EventGhost/EventGhost/pull/397) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes non functioning mouse in the ATI Remote Wonder II plugin [\#398](https://github.com/EventGhost/EventGhost/pull/398) ([kdschlosser](https://github.com/kdschlosser))
+* Broadcaster plugin bugfix [\#399](https://github.com/EventGhost/EventGhost/pull/399) ([kdschlosser](https://github.com/kdschlosser))
+* Fix appveyor and build scripts [\#430](https://github.com/EventGhost/EventGhost/pull/430) ([topic2k](https://github.com/topic2k))
+
+**Other changes:**
+
+* \[Atric IR-WakeupUSB\] New plugin [\#342](https://github.com/EventGhost/EventGhost/pull/342) ([GruberMarkus](https://github.com/GruberMarkus))
+* Typo fix [\#387](https://github.com/EventGhost/EventGhost/pull/387) ([DanEdens](https://github.com/DanEdens))
+* ConfigPanel missing EventHandler [\#392](https://github.com/EventGhost/EventGhost/pull/392) ([insane66613](https://github.com/insane66613))
+* copyright update. [\#403](https://github.com/EventGhost/EventGhost/pull/403) ([kdschlosser](https://github.com/kdschlosser))
+* Fixes Main prefix when triggering an event from the command line. [\#404](https://github.com/EventGhost/EventGhost/pull/404) ([kdschlosser](https://github.com/kdschlosser))
+* Fix appveyor and build scripts \(this time really\) [\#435](https://github.com/EventGhost/EventGhost/pull/435) ([topic2k](https://github.com/topic2k))
+
+
 ## [0.5.0-rc6](https://github.com/EventGhost/EventGhost/releases/tag/v0.5.0-rc6) (2018-12-24)
 
 **Enhancements:**
