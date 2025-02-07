@@ -75,9 +75,11 @@ def ImportAll():
     Traverse(join(eg.mainDir, "eg"), "eg")
     Traverse(eg.corePluginDir, "eg.CorePluginModule")
 
+
 def Init():
-    import WinApi.pywin32_patches # NOQA
-    import WinApi.wx_patches # NOQA
+    import WinApi.locale_patches  # NOQA
+    import WinApi.pywin32_patches  # NOQA
+    import WinApi.wx_patches  # NOQA
     import WinApi.GenPaths  # NOQA
 
 

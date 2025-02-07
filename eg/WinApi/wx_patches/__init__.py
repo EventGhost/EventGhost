@@ -19,6 +19,7 @@
 
 import sys
 from wx.lib.masked import NumCtrl
+import WXLocale
 
 _num_ctrl = NumCtrl
 
