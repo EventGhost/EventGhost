@@ -340,10 +340,17 @@ class SendKeysParser:
         if keyData:
             needGetFocus = False
             sendToFront = False
+            
             if hwnd is None:
                 sendToFront = True
                 hwnd = GetForegroundWindow()
                 needGetFocus = True
+            else:
+                focus_hwnd = GetFocus()
+                if focus_hwnd == hwnd:
+                    hwnd = GetForegroundWindow()
+                    sendToFront = True
+                    needGetFocus = True
 
             dwProcessId = DWORD()
             threadID = GetWindowThreadProcessId(hwnd, byref(dwProcessId))
@@ -391,31 +398,57 @@ class SendKeysParser:
         Uses the SendInput-API function to send the virtual keycode.
         Can only send to the frontmost window.
         """
-        sendInputStruct = self.sendInputStruct
-        sendInputStructPointer = pointer(sendInputStruct)
-        sendInputStructSize = sizeof(sendInputStruct)
-        keyboardStruct = sendInputStruct.ki
+
+        inputs = []
         for block in keyData:
             if mode == 1 or mode == 2:
-                keyboardStruct.dwFlags = 0
                 for virtualKey in block:
+                    sendInputStruct = INPUT()
+                    sendInputStruct.type = INPUT_KEYBOARD
+
+                    keyboardStruct = sendInputStruct.ki
+                    keyboardStruct.dwFlags = 0
                     keyboardStruct.wVk = virtualKey & 0xFF
-                    SendInput(1, sendInputStructPointer, sendInputStructSize)
-                    self.WaitForInputProcessed()
+
+                    inputs += [sendInputStruct]
             if mode == 0 or mode == 2:
-                keyboardStruct.dwFlags = KEYEVENTF_KEYUP
                 for virtualKey in reversed(block):
+                    sendInputStruct = INPUT()
+                    sendInputStruct.type = INPUT_KEYBOARD
+
+                    keyboardStruct = sendInputStruct.ki
+                    keyboardStruct.dwFlags = KEYEVENTF_KEYUP
                     keyboardStruct.wVk = virtualKey & 0xFF
-                    SendInput(1, sendInputStructPointer, sendInputStructSize)
-                    self.WaitForInputProcessed()
+
+                    inputs += [sendInputStruct]
+
+        nInputs = len(inputs)
+        LPINPUT = INPUT * nInputs
+        pInputs = LPINPUT(*inputs)
+        cbSize = sizeof(INPUT)
+
+        SendInput(nInputs, pInputs, cbSize)
+        self.WaitForInputProcessed()
 
     def SendRawCodes2(self, keyData, hwnd, mode):
         """
         Uses PostMessage and SetKeyboardState to emulate the the virtual
         keycode. Can send to a specified window handle.
         """
+
         keyboardStateBuffer = self.keyboardStateBuffer
-        for block in keyData:
+        for i, block in enumerate(keyData):
+
+            def wait():
+                if len(block) > 1:
+                    self.WaitForInputProcessed()
+                else:
+                    try:
+                        if len(keyData[i + 1]) > 1:
+                            self.WaitForInputProcessed()
+                    except IndexError:
+                        pass
+
             if mode == 1 or mode == 2:
                 for virtualKey in block:
                     keyCode = virtualKey & 0xFF
@@ -439,7 +472,9 @@ class SendKeysParser:
 
                     SetKeyboardState(byref(keyboardStateBuffer))
                     PostMessage(hwnd, mesg, keyCode, lparam)
-                    self.WaitForInputProcessed()
+
+            if mode == 2:
+                wait()
 
             if mode == 0 or mode == 2:
                 for virtualKey in reversed(block):
@@ -466,7 +501,9 @@ class SendKeysParser:
 
                     SetKeyboardState(byref(keyboardStateBuffer))
                     PostMessage(hwnd, mesg, keyCode, lparam)
-                    self.WaitForInputProcessed()
+            wait()
+
+        self.WaitForInputProcessed()
 
     def WaitForInputProcessed(self):
         if self.procHandle:
