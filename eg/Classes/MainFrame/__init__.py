@@ -20,7 +20,7 @@ import inspect
 import re
 import types
 import wx
-import wx.aui
+from wx.lib.agw import aui
 from collections import defaultdict
 from os.path import join
 
@@ -59,6 +59,7 @@ ID = defaultdict(wx.NewId, {
 })
 
 Text = eg.text.MainFrame
+
 
 class Config(eg.PersistentData):
     position = (50, 50)
@@ -105,18 +106,29 @@ class MainFrame(wx.Frame):
         )
         self.SetMinSize((400, 200))
         document.frame = self
-        auiManager = wx.aui.AuiManager(self, wx.aui.AUI_MGR_DEFAULT)
-        self.auiManager = auiManager
+        self.auiManager = auiManager = aui.AuiManager(
+            self,
+            agwFlags=(
+                aui.AUI_MGR_ALLOW_ACTIVE_PANE |
+                aui.AUI_MGR_TRANSPARENT_DRAG |
+                aui.AUI_MGR_LIVE_RESIZE |
+                aui.AUI_MGR_ANIMATE_FRAMES |
+                aui.AUI_MGR_AERO_DOCKING_GUIDES |
+                aui.AUI_MGR_SMOOTH_DOCKING |
+                aui.AUI_MGR_DEFAULT
+            )
+        )
 
         self.logCtrl = self.CreateLogCtrl()
-        self.corConst = self.logCtrl.GetWindowBorderSize()[0] + \
+        self.corConst = (
+            self.logCtrl.GetWindowBorderSize()[0] +
             wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+        )
         self.treeCtrl = self.CreateTreeCtrl()
         self.toolBar = self.CreateToolBar()
         self.menuBar = self.CreateMenuBar()
         self.statusBar = StatusBar(self)
         self.SetStatusBar(self.statusBar)
-
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
@@ -135,9 +147,9 @@ class MainFrame(wx.Frame):
         self.ratio = Config.ratio
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_MOVE, self.OnMove)
-        self.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
-        self.Bind(wx.aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
-        self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
+        self.Bind(aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
+        self.Bind(aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
+        self.Bind(aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
         eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
@@ -153,34 +165,53 @@ class MainFrame(wx.Frame):
         self.OnFocusChange(self.treeCtrl)
         eg.Bind("ClipboardChange", self.OnClipboardChange)
         # tell FrameManager to manage this frame
-        if (Config.perspective is not None):
+        if Config.perspective is not None:
             try:
                 auiManager.LoadPerspective(Config.perspective, False)
+                if Config.perspective.find('name=toolBar') == -1:
+                    treePane = auiManager.GetPane(self.treeCtrl)
+                    logPane = auiManager.GetPane(self.logCtrl)
+
+                    treeFloating = treePane.IsFloating()
+                    logPane.Dock()
+                    treePane.Dock()
+                    auiManager.Update()
+
+                    self.SetPaneProperties()
+
+                    toolBarPane = auiManager.GetPane(self.toolBar)
+                    toolBarPane.Show(False)
+                    toolBarPane.Show(Config.showToolbar)
+
+                    if treeFloating:
+                        treePane.Float()
+
+                    auiManager.Update()
+                    Config.perspective = self.auiManager.SavePerspective()
+                    eg.config.Save()
             except:
-                pass
+                self.SetPaneProperties()
+        else:
+            self.SetPaneProperties()
+
         artProvider = auiManager.GetArtProvider()
-        artProvider.SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
+        artProvider.SetMetric(aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         artProvider.SetMetric(
-            wx.aui.AUI_DOCKART_GRADIENT_TYPE,
-            wx.aui.AUI_GRADIENT_HORIZONTAL
+            aui.AUI_DOCKART_GRADIENT_TYPE,
+            aui.AUI_GRADIENT_HORIZONTAL
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_COLOUR,
             eg.colour.inactiveCaption
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR,
             eg.colour.inactiveCaptionGradient
         )
         artProvider.SetColour(
-            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,
+            aui.AUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,
             eg.colour.inactiveCaptionTextColour
         )
-        auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
-        self.toolBar.Show(Config.showToolbar)
-        auiManager.Update()
-        auiManager.GetPane("logger").MinSize((100, 100))\
-            .Caption(" " + Text.Logger.caption)
 
         # create an accelerator for the "Log only assigned and activated
         # events" checkbox. An awful hack.
@@ -234,6 +265,18 @@ class MainFrame(wx.Frame):
         def __del__(self):
             pass
 
+    def SetPaneProperties(self):
+        treePane = self.auiManager.GetPane(self.treeCtrl)
+        logPane = self.auiManager.GetPane(self.logCtrl)
+
+        treePane.MaximizeButton(True).MinimizeButton(True).Right()
+        treePane.CloseButton(False).Floatable(True).Dockable(True)
+
+        logPane.MaximizeButton(True).MinimizeButton(True).Center()
+        logPane.CloseButton(False).Floatable(False).Dockable(True)
+
+        self.auiManager.Update()
+
     def CreateLogCtrl(self):
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
@@ -242,17 +285,14 @@ class MainFrame(wx.Frame):
         if not Config.logTime:
             logCtrl.SetTimeLogging(False)
         logCtrl.SetIndent(Config.indentLog)
-        self.auiManager.AddPane(
-            logCtrl,
-            wx.aui.AuiPaneInfo().
-            Name("logger").
-            Left().
-            MinSize((280, 300)).
-            MaximizeButton(True).
-            CloseButton(False).
-            Caption(" " + Text.Logger.caption)
-        )
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("logger").Caption(" " + Text.Logger.caption)
+        pane.Center().MinSize((100, 100))
+
+        self.auiManager.AddPane(logCtrl, pane)
         self.auiManager.Update()
+
         logCtrl.Thaw()
         return logCtrl
 
@@ -375,12 +415,23 @@ class MainFrame(wx.Frame):
         """
         Creates the toolbar of the frame.
         """
-        toolBar = wx.ToolBar(self, style=wx.TB_FLAT)
+        toolBar = aui.AuiToolBar(
+            self,
+            # size=(self.GetSizeTuple()[0], 16),
+            agwStyle=aui.AUI_TB_PLAIN_BACKGROUND | aui.AUI_TB_GRIPPER
+        )
         toolBar.SetToolBitmapSize((16, 16))
+        toolBar.SetAuiManager(self.auiManager)
         text = Text.Menu
 
         def Append(ident, image):
-            toolBar.AddSimpleTool(ID[ident], image, getattr(text, ident))
+            toolText = getattr(text, ident).replace('&', '')
+            toolBar.AddSimpleTool(
+                ID[ident],
+                label=toolText,
+                bitmap=image,
+                short_help_string=toolText
+            )
 
         Append("New", GetInternalBitmap("New"))
         Append("Open", GetInternalBitmap("Open"))
@@ -405,10 +456,12 @@ class MainFrame(wx.Frame):
         # the execute button must be added with unique id, because otherwise
         # the menu command OnCmdExecute will be used in conjunction to
         # our special mouse click handlers
+        executeText = getattr(text, "Execute").replace('&', '')
         toolBar.AddSimpleTool(
             ID_TOOLBAR_EXECUTE,
-            GetInternalBitmap("Execute"),
-            getattr(text, "Execute")
+            label=executeText,
+            bitmap=GetInternalBitmap("Execute"),
+            short_help_string=executeText
         )
         toolBar.AddSeparator()
         Append("Expand", GetInternalBitmap("expand"))
@@ -420,27 +473,33 @@ class MainFrame(wx.Frame):
 
         toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
-        self.SetToolBar(toolBar)
+        # self.SetToolBar(toolBar)
 
         toolBar.Bind(wx.EVT_LEFT_DOWN, self.OnToolBarLeftDown)
         toolBar.Bind(wx.EVT_LEFT_UP, self.OnToolBarLeftUp)
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("toolBar").Caption(" Toolbar").Top().Row(0)
+        pane.MaximizeButton(False).MinimizeButton(True).CloseButton(True)
+        pane.Floatable(True).Dockable(True).ToolbarPane()
+        self.auiManager.AddPane(toolBar, pane)
+        self.auiManager.Update()
+
+        pane.Show(Config.showToolbar)
+        self.auiManager.Update()
+
         return toolBar
 
     def CreateTreeCtrl(self):
         treeCtrl = TreeCtrl(self, document=self.document)
-        self.auiManager.AddPane(
-            treeCtrl,
-            wx.aui.AuiPaneInfo().
-            Name("tree").
-            Center().
-            MinSize((100, 100)).
-            Floatable(True).
-            Dockable(True).
-            MaximizeButton(True).
-            Caption(" " + Text.Tree.caption).
-            CloseButton(False)
-        )
+
+        pane = aui.AuiPaneInfo()
+        pane.Name("tree").Caption(" " + Text.Tree.caption)
+        pane.Right().MinSize((100, 100))
+
+        self.auiManager.AddPane(treeCtrl, pane)
         self.auiManager.Update()
+
         treeCtrl.SetFocus()
         return treeCtrl
 
@@ -683,7 +742,7 @@ class MainFrame(wx.Frame):
 
     def OnPaneClose(self, event):
         """
-        React to a wx.aui.EVT_AUI_PANE_CLOSE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_CLOSE event.
 
         Monitors if the toolbar gets closed and updates the check menu
         entry accordingly
@@ -695,13 +754,13 @@ class MainFrame(wx.Frame):
 
     def OnPaneMaximize(self, dummyEvent):
         """
-        React to a wx.aui.EVT_AUI_PANE_MAXIMIZE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_MAXIMIZE event.
         """
         Config.perspective2 = self.auiManager.SavePerspective()
 
     def OnPaneRestore(self, dummyEvent):
         """
-        React to a wx.aui.EVT_AUI_PANE_RESTORE event.
+        React to a wx.lib.agw.aui.EVT_AUI_PANE_RESTORE event.
         """
         if Config.perspective2 is not None:
             self.auiManager.LoadPerspective(Config.perspective2)
@@ -771,9 +830,9 @@ class MainFrame(wx.Frame):
         self.popupMenu.SetLabel(wx.ID_REDO, redoName)
 
         self.toolBar.EnableTool(wx.ID_UNDO, hasUndos)
-        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName)
+        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName.replace('&', ''))
         self.toolBar.EnableTool(wx.ID_REDO, hasRedos)
-        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName)
+        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName.replace('&', ''))
 
     def Raise(self):
         BringHwndToFront(self.GetHandle())
@@ -794,55 +853,53 @@ class MainFrame(wx.Frame):
             0,
             self.logCtrl.GetSizeTuple()[0] - self.corConst
         )
-        if not eg.config.propResize:
-            return
-        panel = self.auiManager.GetPane("logger")
-        if panel.IsDocked():
+
+        ratioValues = self.GetRatioValues()
+        if ratioValues is not None:
             if self.ratioLock:
                 self.ratioLock = False
                 self.UpdateSize()
                 #self.UpdateSize(False)
-            dir = self.GetPanelDirection(panel)
-            coord = None
-            if dir in ("2", "4"):
-                coord = 0
-            elif dir in ("1", "3"):
-                coord = 1
-            if coord is not None:
-                l_val = self.logCtrl.GetSizeTuple()[coord]
-                t_val = self.treeCtrl.GetSizeTuple()[coord]
-                self.ratio = float(t_val) / float(l_val)
-                Config.ratio = self.ratio
+
+            self.ratio = float(ratioValues[2]) / float(ratioValues[1])
+            Config.ratio = self.ratio
         else:
             self.ratioLock = True
 
+    def GetRatioValues(self):
+        pane = self.auiManager.GetPane('tree')
+        if eg.config.propResize and pane.IsDocked():
+            dir = pane.dock_direction_get()
+            if dir in (2, 4):
+                coord = 0
+            elif dir in (1, 3):
+                coord = 1
+            else:
+                return None
+            return (
+                self.logCtrl.GetSizeTuple()[coord],
+                self.treeCtrl.GetSizeTuple()[coord],
+                self.GetClientSizeTuple()[coord]
+            )
+
     def UpdateSize(self):
-        if eg.config.propResize:
-            panel = self.auiManager.GetPane("logger")
-            if panel.IsDocked():
-                s = self.auiManager.SavePerspective()
-                dir = self.GetPanelDirection(panel)
-                coord = None
-                if dir in ("2", "4"):
-                    coord = 0
-                elif dir in ("1", "3"):
-                    coord = 1
-                if coord is not None:
-                    l_val = self.logCtrl.GetSizeTuple()[coord]
-                    t_val = self.treeCtrl.GetSizeTuple()[coord]
-                    c_val = self.GetClientSizeTuple()[coord]
-                    k = c_val - l_val - t_val
-                    l_val = int((c_val - k) / (1 + self.ratio))
-                    #t_val = (c_val-k)-l_val
-                    b1 = s.find("|dock_size(%s," % dir) + 1
-                    b2 = s.find("=", b1) + 1
-                    e = s.find("|", b1)
-                    s = "%s%i%s" % (s[:b2], l_val, s[e:])
-                    self.auiManager.LoadPerspective(s, True)
-                    self.logCtrl.SetColumnWidth(
-                        0,
-                        self.logCtrl.GetSizeTuple()[0] - self.corConst
-                    )
+        ratioValues = self.GetRatioValues()
+        if ratioValues is not None:
+            c_val, l_val, t_val = ratioValues
+            s = self.auiManager.SavePerspective()
+            k = c_val - l_val - t_val
+            l_val = int((c_val - k) / (1 + self.ratio))
+            #t_val = (c_val-k)-l_val
+            b1 = s.find("|dock_size(5,") + 1
+            b2 = s.find("=", b1) + 1
+            e = s.find("|", b1)
+            s = "%s%i%s" % (s[:b2], l_val, s[e:])
+            self.auiManager.LoadPerspective(s, True)
+            self.logCtrl.SetColumnWidth(
+                0,
+                self.logCtrl.GetSizeTuple()[0] - self.corConst
+            )
+
         self.mainSizeFlag = True
         if not self.IsMaximized() and not self.IsIconized():
             Config.size = self.GetSizeTuple()
@@ -925,11 +982,8 @@ class MainFrame(wx.Frame):
     #---- View ---------------------------------------------------------------
     def OnCmdHideShowToolbar(self):
         Config.showToolbar = not Config.showToolbar
-        #self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
-        #self.auiManager.Update()
-        self.toolBar.Show(Config.showToolbar)
-        self.Layout()
-        self.SendSizeEvent()
+        self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
+        self.auiManager.Update()
 
     def OnCmdExpand(self):
         self.treeCtrl.Expand(self.treeCtrl.GetSelection())
