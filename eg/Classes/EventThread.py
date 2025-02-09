@@ -31,6 +31,7 @@ from eg.WinApi.Dynamic import (
 
 # some shortcuts
 EventGhostEvent = eg.EventGhostEvent
+EventGhostEnduringEvent = eg.EventGhostEnduringEvent
 actionThread = eg.actionThread
 ActionThreadCall = actionThread.Call
 
@@ -90,7 +91,7 @@ class EventThread(ThreadWorker):
         prefix="Main",
         source=eg
     ):
-        event = EventGhostEvent(suffix, payload, prefix, source)
+        event = EventGhostEnduringEvent(suffix, payload, prefix, source)
         if event.source in self.filters:
             for filterFunc in self.filters[event.source]:
                 if filterFunc(event) is True:

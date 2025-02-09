@@ -18,6 +18,7 @@
 
 # Local imports
 import eg
+from TreeLink import TreeLink
 from TreeItem import HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, TreeItem
 
 class Text(eg.TranslatableStrings):
@@ -41,7 +42,13 @@ class EventItem(TreeItem):
     }
 
     def __init__(self, parent, node):
+        if (
+            'EventType' in node.attrib and
+            node.attrib['EventType'] == 'Enduring'
+        ):
+            self.icon = eg.Icons.ENDURING_EVENT_ICON
         TreeItem.__init__(self, parent, node)
+
         self.RegisterEvent(self.name)
 
     def Configure(self, name):
@@ -75,6 +82,30 @@ class EventItem(TreeItem):
         # so we also have no base path
         return ""
 
+    def GetData(self):
+        """
+        This method returns the needed data to construct its XML
+        representation.
+
+        The return values should be:
+            1. a list of (name, value) tuples of the attributes
+            2. the text of the node
+        """
+        attr = []
+        if self.name:
+            attr.append(('Name', self.name))
+        if self.dependants or TreeLink.inUndo:
+            attr.append(('id', self.xmlId))
+        if not self.isEnabled:
+            attr.append(('Enabled', 'False'))
+        if self.icon == eg.Icons.ENDURING_EVENT_ICON:
+            attr.append(('EventType', 'Enduring'))
+        else:
+            attr.append(('EventType', 'Event'))
+
+        attr.append(('XML_Guid', str(self.guid)))
+        return attr, None
+
     def GetDescription(self):
         return ""
 
@@ -86,6 +117,17 @@ class EventItem(TreeItem):
         if eventString not in eventTable:
             eventTable[eventString] = []
         eventTable[eventString].append(self)
+
+        if (
+            self.icon != eg.Icons.ENDURING_EVENT_ICON and
+            '?' not in self.name and
+            '*' not in self.name
+        ):
+            for item in eventTable[eventString][:-1]:
+                if item.icon == eg.Icons.ENDURING_EVENT_ICON:
+                    self.icon = eg.Icons.ENDURING_EVENT_ICON
+                    self.Refresh()
+                    break
 
     @eg.AssertInActionThread
     def RenameTo(self, newName):

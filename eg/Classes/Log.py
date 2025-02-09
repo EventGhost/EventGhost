@@ -176,7 +176,7 @@ class Log(object):
                 mesg = eventstring + ' ' + repr(payload)
         else:
             mesg = eventstring
-        self.Write(mesg + "\n", eg.EventItem.icon, eventstring)
+        self.Write(mesg + "\n", event.icon, eventstring)
 
     def NativeLogOn(self, value):
         self.NativeLog = value
