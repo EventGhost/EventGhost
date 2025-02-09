@@ -60,8 +60,6 @@ class Config(Section):
     hideOnStartup = False
     lastUpdateCheckDate = None
     lastUpdateCheckVersion = None
-    limitMemory = False
-    limitMemorySize = 8
     logActions = True
     logDebug = False
     logMacros = True

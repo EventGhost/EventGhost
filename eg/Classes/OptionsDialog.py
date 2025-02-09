@@ -50,8 +50,6 @@ class Text(eg.TranslatableStrings):
     HideOnClose = "Keep running in background when window closed"
     HideOnStartup = "Hide on startup"
     LanguageGroup = "Language"
-    limitMemory1 = "Limit memory consumption while minimized to"
-    limitMemory2 = "MB"
     propResize = "Resize window proportionally"
     refreshEnv = 'Refresh environment before executing "Run" actions'
     showTrayIcon = "Display EventGhost icon in system tray"
@@ -123,18 +121,6 @@ class OptionsDialog(eg.TaskletDialog):
             text.HideOnClose
         )
 
-        memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
-        memoryLimitSpinCtrl = page1.SpinIntCtrl(
-            config.limitMemorySize,
-            min=4,
-            max=999
-        )
-
-        def OnMemoryLimitCheckBox(dummyEvent):
-            memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
-        memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
-        OnMemoryLimitCheckBox(None)
-
         refreshEnvCtrl = page1.CheckBox(
             config.refreshEnv,
             text.refreshEnv
@@ -203,11 +189,6 @@ class OptionsDialog(eg.TaskletDialog):
         # construction of the layout with sizers
 
         flags = wx.ALIGN_CENTER_VERTICAL
-        memoryLimitSizer = eg.HBoxSizer(
-            (memoryLimitCtrl, 0, flags),
-            (memoryLimitSpinCtrl, 0, flags),
-            (page1.StaticText(text.limitMemory2), 0, flags | wx.LEFT, 2),
-        )
 
         startGroupSizer = wx.GridSizer(cols=1, vgap=2, hgap=2)
         startGroupSizer.AddMany(
@@ -218,7 +199,6 @@ class OptionsDialog(eg.TaskletDialog):
                 (confirmDeleteCtrl, 0, flags),
                 (showTrayIconCtrl, 0, flags),
                 (hideOnCloseCtrl, 0, flags),
-                (memoryLimitSizer, 0, flags),
                 (refreshEnvCtrl, 0, flags),
                 (propResizeCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
@@ -256,8 +236,6 @@ class OptionsDialog(eg.TaskletDialog):
             config.confirmDelete = confirmDeleteCtrl.GetValue()
             config.showTrayIcon = showTrayIconCtrl.GetValue()
             config.hideOnClose = hideOnCloseCtrl.GetValue()
-            config.limitMemory = bool(memoryLimitCtrl.GetValue())
-            config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.refreshEnv = refreshEnvCtrl.GetValue()
             config.propResize = propResizeCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
