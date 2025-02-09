@@ -86,6 +86,12 @@ eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.GUID = eg.GUID()
 
+
+class NoPayloadData:
+    pass
+
+eg.NoPayloadData = NoPayloadData
+
 def _CommandEvent():
     """Generate new (CmdEvent, Binder) tuple
         e.g. MooCmdEvent, EVT_MOO = EgCommandEvent()

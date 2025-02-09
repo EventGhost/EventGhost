@@ -169,7 +169,7 @@ class Log(object):
         """
         payload = event.payload
         eventstring = event.string
-        if payload is not None:
+        if payload != event.NoPayloadData:
             if type(payload) == UnicodeType:
                 mesg = eventstring + ' u"' + payload + '"'
             else:

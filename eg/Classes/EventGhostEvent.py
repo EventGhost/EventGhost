@@ -82,8 +82,15 @@ class EventGhostEvent(object):
 
     """
     skipEvent = False
+    NoPayloadData = eg.NoPayloadData
 
-    def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
+    def __init__(
+        self,
+        suffix="",
+        payload=eg.NoPayloadData,
+        prefix="Main",
+        source=eg
+    ):
         self.string = prefix + "." + suffix
         self.prefix = prefix
         self.suffix = suffix
@@ -93,6 +100,9 @@ class EventGhostEvent(object):
         self.isEnded = False
         self.shouldEnd = Event()
         self.upFuncList = []
+
+    def HasPayload(self):
+        return self.payload != eg.NoPayloadData
 
     def AddUpFunc(self, func, *args, **kwargs):
         if self.isEnded:

@@ -86,7 +86,7 @@ class EventThread(ThreadWorker):
     def TriggerEnduringEvent(
         self,
         suffix,
-        payload=None,
+        payload=eg.NoPayloadData,
         prefix="Main",
         source=eg
     ):
@@ -102,7 +102,13 @@ class EventThread(ThreadWorker):
 
         return event
 
-    def TriggerEvent(self, suffix, payload=None, prefix="Main", source=eg):
+    def TriggerEvent(
+        self,
+        suffix,
+        payload=eg.NoPayloadData,
+        prefix="Main",
+        source=eg
+    ):
         """
         Trigger an event
         """
@@ -122,7 +128,7 @@ class EventThread(ThreadWorker):
     def TriggerEventWait(
         self,
         suffix,
-        payload=None,
+        payload=eg.NoPayloadData,
         prefix="Main",
         source=eg
     ):
