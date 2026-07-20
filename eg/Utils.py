@@ -137,7 +137,7 @@ def AssertInActionThread(func):
         return func
 
     def AssertWrapper(*args, **kwargs):
-        if eg.actionThread._ThreadWorker__thread != threading.currentThread():
+        if eg.actionThread._ThreadWorker__thread != threading.current_thread():
             try:
                 raise AssertionError(
                     "Called outside ActionThread: %s() in %s" %
@@ -155,7 +155,7 @@ def AssertInMainThread(func):
         return func
 
     def AssertWrapper(*args, **kwargs):
-        if eg.mainThread != threading.currentThread():
+        if eg.mainThread != threading.current_thread():
             try:
                 raise AssertionError(
                     "Called outside MainThread: %s in %s" %
@@ -347,7 +347,7 @@ def GetFirstParagraph(text):
 
 def GetFuncArgString(func, args, kwargs):
     classname = ""
-    argnames = inspect.getargspec(func)[0]
+    argnames = inspect.getfullargspec(func)[0]
     start = 0
     if argnames:
         if argnames[0] == "self":
@@ -607,3 +607,4 @@ def UpdateStartupShortcut(create):
             arguments="-h -e OnInitAfterBoot",
             startIn=os.path.dirname(os.path.abspath(sys.executable)),
         )
+
