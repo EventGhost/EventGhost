@@ -347,7 +347,7 @@ def GetFirstParagraph(text):
 
 def GetFuncArgString(func, args, kwargs):
     classname = ""
-    argnames = inspect.getargspec(func)[0]
+    argnames = inspect.getfullargspec(func)[0]
     start = 0
     if argnames:
         if argnames[0] == "self":
