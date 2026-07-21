@@ -137,7 +137,7 @@ def AssertInActionThread(func):
         return func
 
     def AssertWrapper(*args, **kwargs):
-        if eg.actionThread._ThreadWorker__thread != threading.currentThread():
+        if eg.actionThread._ThreadWorker__thread != threading.current_thread():
             try:
                 raise AssertionError(
                     "Called outside ActionThread: %s() in %s" %
@@ -155,7 +155,7 @@ def AssertInMainThread(func):
         return func
 
     def AssertWrapper(*args, **kwargs):
-        if eg.mainThread != threading.currentThread():
+        if eg.mainThread != threading.current_thread():
             try:
                 raise AssertionError(
                     "Called outside MainThread: %s in %s" %
